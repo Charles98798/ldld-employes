@@ -1,0 +1,16 @@
+{
+  "appId": "com.lafonddesjardins.employes",
+  "appName": "LDLD",
+  "webDir": "www",
+  "backgroundColor": "#000000",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": [
+        "profile",
+        "email"
+      ],
+      "serverClientId": "119628465733-bj1vpk49ofto8391c16qpnctl9jo2n1b.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": false
+    }
+  }
+}
