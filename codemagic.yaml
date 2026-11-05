@@ -2,7 +2,7 @@ workflows:
   android-test:
     name: LDLD employes - Android (test)
     max_build_duration: 30
-    instance_type: linux_x2
+    instance_type: mac_mini_m2
     environment:
       node: 20
       java: 17
@@ -31,7 +31,7 @@ workflows:
   creer-cle-android:
     name: LDLD - Creer la cle Android (une seule fois)
     max_build_duration: 10
-    instance_type: linux_x2
+    instance_type: mac_mini_m2
     environment:
       java: 17
       groups:
