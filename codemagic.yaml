@@ -34,14 +34,14 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       java: 17
-      groups:
-        - cle
     scripts:
       - name: Creer la cle
         script: |
-          if [ -z "$MOT_DE_PASSE_CLE" ]; then echo "Variable MOT_DE_PASSE_CLE manquante"; exit 1; fi
-          keytool -genkeypair -keystore ldld_keystore.jks -storetype PKCS12 -alias ldld -keyalg RSA -keysize 2048 -validity 10000 -storepass "$MOT_DE_PASSE_CLE" -keypass "$MOT_DE_PASSE_CLE" -dname "CN=LDLD Employes, O=Lafond Desjardins, C=CA"
-          keytool -list -v -keystore ldld_keystore.jks -storepass "$MOT_DE_PASSE_CLE" | grep -E "SHA1|SHA256" > empreintes.txt
+          MDP=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20)
+          keytool -genkeypair -keystore ldld_keystore.jks -storetype PKCS12 -alias ldld -keyalg RSA -keysize 2048 -validity 10000 -storepass "$MDP" -keypass "$MDP" -dname "CN=LDLD Employes, O=Lafond Desjardins, C=CA"
+          printf 'Fichier: ldld_keystore.jks\nAlias: ldld\nMot de passe du keystore ET de la cle: %s\nA GARDER A L ABRI. Ne pas partager.\n' "$MDP" > codes_cle.txt
+          keytool -list -v -keystore ldld_keystore.jks -storepass "$MDP" | grep -E "SHA1|SHA256" > empreintes.txt
     artifacts:
       - ldld_keystore.jks
+      - codes_cle.txt
       - empreintes.txt
