@@ -1,0 +1,45 @@
+workflows:
+  android-test:
+    name: LDLD employes - Android (test)
+    max_build_duration: 30
+    instance_type: linux_x2
+    environment:
+      node: 20
+      java: 17
+      android_signing:
+        - ldld_keystore
+    scripts:
+      - name: Installer les modules
+        script: npm install
+      - name: Ajouter Android
+        script: |
+          npx cap add android
+          npx cap sync android
+      - name: Construire l'application
+        script: |
+          cd android
+          ./gradlew assembleRelease
+      - name: Signer l'application
+        script: |
+          BT=$(ls -d $ANDROID_SDK_ROOT/build-tools/* | sort -V | tail -1)
+          UNSIGNED=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
+          $BT/zipalign -f -p 4 "$UNSIGNED" aligned.apk
+          $BT/apksigner sign --ks "$CM_KEYSTORE_PATH" --ks-pass "pass:$CM_KEYSTORE_PASSWORD" --ks-key-alias "$CM_KEY_ALIAS" --key-pass "pass:$CM_KEY_PASSWORD" --out ldld-employes.apk aligned.apk
+          keytool -list -v -keystore "$CM_KEYSTORE_PATH" -storepass "$CM_KEYSTORE_PASSWORD" -alias "$CM_KEY_ALIAS" | grep -E "SHA1|SHA-1" || true
+    artifacts:
+      - ldld-employes.apk
+  creer-cle-android:
+    name: LDLD - Creer la cle Android (une seule fois)
+    max_build_duration: 10
+    instance_type: linux_x2
+    environment:
+      java: 17
+    scripts:
+      - name: Creer la cle
+        script: |
+          if [ -z "$MOT_DE_PASSE_CLE" ]; then echo "Variable MOT_DE_PASSE_CLE manquante"; exit 1; fi
+          keytool -genkeypair -keystore ldld_keystore.jks -storetype PKCS12 -alias ldld -keyalg RSA -keysize 2048 -validity 10000 -storepass "$MOT_DE_PASSE_CLE" -keypass "$MOT_DE_PASSE_CLE" -dname "CN=LDLD Employes, O=Lafond Desjardins, C=CA"
+          keytool -list -v -keystore ldld_keystore.jks -storepass "$MOT_DE_PASSE_CLE" | grep -E "SHA1|SHA256" > empreintes.txt
+    artifacts:
+      - ldld_keystore.jks
+      - empreintes.txt
