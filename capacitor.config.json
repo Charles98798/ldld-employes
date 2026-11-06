@@ -1,7 +1,7 @@
 {
   "appId": "com.lafonddesjardins.employes",
   "appName": "LDLD",
-  "webDir": "www",
+  "webDir": "docs",
   "backgroundColor": "#000000",
   "plugins": {
     "GoogleAuth": {
