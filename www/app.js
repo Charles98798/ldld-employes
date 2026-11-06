@@ -4,27 +4,56 @@ var app = document.getElementById("app");
 
 function demarrage(){
   app.innerHTML = '<div class="demarrage"><img src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins laboratoire dentaire"></div>';
-  setTimeout(connexion, 1500);
+  setTimeout(ouvrirSession, 1500);
 }
-// Service LDLD (Google Apps Script) : il vérifie le jeton Google et ne répond qu'avec les données de l'employé connecté.
+// Service LDLD (Google Apps Script) : connexion par code envoyé au courriel LDLD; il ne répond qu'avec les données de l'employé connecté.
 var URL_SERVICE = "https://script.google.com/macros/s/AKfycbwq9SXysg5GHL6GsPFBSTmoKZzm9_wGr4E3W0e-RzXcHeknz5_DMBFIxBarHHczgpwnZw/exec";
 var MOI = null;   // {nom, poste, responsable} après connexion
-function appelService(action, jeton){
-  return fetch(URL_SERVICE, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify({action:action, jeton:jeton})})
+function appelService(corps){
+  return fetch(URL_SERVICE, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(corps)})
     .then(function(r){ return r.json(); });
 }
-function connexion(){
-  var natif = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.GoogleAuth;
+function sessionGardee(){ try { return localStorage.getItem("ldld-session"); } catch(e){ return null; } }
+function garderSession(s){ try { if(s) localStorage.setItem("ldld-session", s); else localStorage.removeItem("ldld-session"); } catch(e){} }
+function ouvrirSession(){
+  var s = sessionGardee();
+  if(!s) return connexion();
+  appelService({action:"moi", session:s}).then(function(r){
+    if(r && r.ok){ MOI = r; menu(); } else { garderSession(null); connexion(); }
+  }).catch(function(){ connexion("Pas de réseau. Réessayez."); });
+}
+function deconnecter(){
+  var s = sessionGardee(); garderSession(null); MOI = null;
+  if(s) appelService({action:"sortie", session:s}).catch(function(){});
+  connexion();
+}
+function connexion(message){
   app.innerHTML = '<div class="connexion"><img class="logo" src="assets/LDLD_logo_complet_noir_transparent.png" alt="Lafond Desjardins">' +
-    '<button class="bouton" id="google" style="margin-top:140px">Se connecter avec Google →</button>' +
-    '<p class="aide" id="msg">'+(natif ? "Utilisez votre compte lafonddesjardins.com." : "Mode essai (navigateur) : la connexion Google réelle fonctionne dans l'application installée.")+'</p></div>';
-  document.getElementById("google").onclick = function(){
-    var msg = document.getElementById("msg");
-    if(!natif){ MOI = {nom:"Marie Exemple", poste:"Technologue", responsable:"Élise Desjardins"}; return menu(); }
-    msg.textContent = "Connexion en cours…";
-    natif.signIn().then(function(u){ return appelService("moi", u.authentication.idToken); })
-      .then(function(r){ if(r && r.ok){ MOI = r; menu(); } else { msg.textContent = "Accès refusé. Votre compte n'est pas autorisé."; } })
-      .catch(function(){ msg.textContent = "Connexion impossible. Réessayez."; });
+    '<div style="margin-top:110px"><input class="champ" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="Courriel prenom@lafonddesjardins.com">' +
+    '<button class="bouton" id="envoi">Recevoir mon code →</button></div>' +
+    '<p class="aide" id="msg">'+(message||"Un code à 6 chiffres sera envoyé à votre courriel LDLD.")+'</p></div>';
+  document.getElementById("envoi").onclick = function(){
+    var c = document.getElementById("courriel").value.trim().toLowerCase(), msg = document.getElementById("msg");
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c)){ msg.textContent = "Entrez votre courriel LDLD."; return; }
+    msg.textContent = "Envoi du code…";
+    appelService({action:"code", courriel:c}).then(function(){ saisieCode(c); })
+      .catch(function(){ msg.textContent = "Envoi impossible. Vérifiez le réseau et réessayez."; });
+  };
+}
+function saisieCode(c){
+  app.innerHTML = '<div class="connexion"><img class="logo" src="assets/LDLD_logo_complet_noir_transparent.png" alt="Lafond Desjardins">' +
+    '<div style="margin-top:110px"><input class="champ" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Code à 6 chiffres" style="letter-spacing:6px;font-size:24px">' +
+    '<button class="bouton" id="valider">Se connecter →</button></div>' +
+    '<p class="aide" id="msg">Code envoyé à '+esc(c)+'. Il est valide 10 minutes. Vérifiez aussi les indésirables.</p>' +
+    '<p class="aide"><a href="#" id="autre" style="color:#111">← Changer de courriel</a></p></div>';
+  document.getElementById("autre").onclick = function(e){ e.preventDefault(); connexion(); };
+  document.getElementById("valider").onclick = function(){
+    var code = document.getElementById("code").value.replace(/\D/g,""), msg = document.getElementById("msg");
+    if(code.length !== 6){ msg.textContent = "Entrez les 6 chiffres du code."; return; }
+    msg.textContent = "Vérification…";
+    appelService({action:"verifier", courriel:c, code:code}).then(function(r){
+      if(r && r.ok){ garderSession(r.session); MOI = r; menu(); } else { msg.textContent = "Code invalide ou expiré. Demandez-en un nouveau."; }
+    }).catch(function(){ msg.textContent = "Connexion impossible. Réessayez."; });
   };
 }
 function menu(){
@@ -35,7 +64,7 @@ function menu(){
   Array.prototype.forEach.call(app.querySelectorAll("a[data-i]"), function(a){
     a.onclick = function(e){ e.preventDefault(); section(+a.getAttribute("data-i")); };
   });
-  document.getElementById("sortie").onclick = function(e){ e.preventDefault(); connexion(); };
+  document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
 }
 // Étape 2 : messages. Données de démonstration; plus tard les messages viendront du service Google Apps Script, filtrés par compte.
 var DIRECTION = true;   // démonstration : la page de rédaction n'apparaît que pour les comptes de la direction
@@ -186,7 +215,7 @@ function profil(){
     '<label class="ligne"><span>Rappels d\'évaluation</span><input type="checkbox" checked></label>' +
     '<a class="doc" href="#" id="sortir" style="margin-top:20px"><span>Déconnexion</span><em>→</em></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  document.getElementById("sortir").onclick = function(e){ e.preventDefault(); connexion(); };
+  document.getElementById("sortir").onclick = function(e){ e.preventDefault(); deconnecter(); };
 }
 function section(i){
   if(i === 0) return messages();
@@ -200,3 +229,5 @@ function section(i){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
 }
 if(location.hash === "#evaluations") evaluations(); else demarrage();
+
+if("serviceWorker" in navigator){ window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); }); }
