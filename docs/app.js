@@ -278,6 +278,16 @@ function aeAfficher(d){
 }
 // Étape 6 : tableau de bord (Charges de travail) et profil. Chiffres d'essai; les vrais viendront d'un fichier de Gestion fourni par Michel.
 // Tableau de bord : les 12 derniers mois, un par un (aucune moyenne). Données du service (mêmes fichiers de Gestion que le portail).
+// Graphique par jour: s'affiche seulement si le service fournit m.jours = [{j,ce,cn,dispo}] (en %, pas encore disponible).
+function graphJours(m){
+  if(!m.jours || !m.jours.length) return "";
+  var haut = 160, cible = m.cibleCe || 80;
+  return '<div class="gj"><div class="gjl"><span class="gc">▬</span> Cible <span class="ge">▪</span> Effectuée <span class="gn">▪</span> Non terminée <span class="gd">▪</span> Disponible</div><div class="gjb">' +
+    m.jours.map(function(d){
+      var tot = (d.ce||0)+(d.cn||0), dp = Math.max(0,(d.dispo||0));
+      return '<div class="gjj"><div class="gjv">'+Math.round(tot)+'</div><div class="gjc" style="height:'+Math.min(100,(tot+dp)/160*100)+'%"><i class="d" style="height:'+(dp/(tot+dp||1)*100)+'%"></i><i class="n" style="height:'+((d.cn||0)/(tot+dp||1)*100)+'%"></i><i class="e" style="height:'+((d.ce||0)/(tot+dp||1)*100)+'%"></i></div><div class="gjd">'+esc(d.j)+'</div></div>';
+    }).join("") + '<u style="bottom:calc(18px + '+(cible/160)+' * (100% - 34px))"></u></div></div>';
+}
 function tableau(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1 class="vert">Charges de travail</h1><div id="tb"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
@@ -306,7 +316,7 @@ function tableau(){
         '<div class="etiq">▪ '+esc((MOI && MOI.nom) || "").toUpperCase()+'</div>';
       if(m.absent) h += '<div class="bandeau">▪ AUCUN TRAVAIL CE MOIS-LÀ</div>';
       else h += carte("CHARGE EFFECTUÉE", m.ce, m.cibleCe, "plus", m, "ce") + carte("CHARGE NON TERMINÉE", m.cn, 5, "moins", m, "cn") + carte("OBJECTIFS ATTEINTS", m.obj, 80, "plus", m, "obj") +
-        '<p class="aide">Heures par semaine : '+(m.heures === null ? "—" : String(m.heures).replace(".", ","))+(m.cibleHeures ? ' · cible '+m.cibleHeures : "")+'</p>';
+        graphJours(m) + '<p class="aide">Heures par semaine : '+(m.heures === null ? "—" : String(m.heures).replace(".", ","))+(m.cibleHeures ? ' · cible '+m.cibleHeures : "")+'</p>';
       el.innerHTML = h;
       document.getElementById("tp").onclick = function(){ i++; dessiner(); };
       document.getElementById("ts").onclick = function(){ i--; dessiner(); };
