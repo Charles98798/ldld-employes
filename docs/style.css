@@ -103,3 +103,11 @@ h1{font-weight:400}
 .tbm{border-top:1px solid var(--fil);padding:14px 0}.tbm.gris{opacity:.55}.tbh{font-size:13px;letter-spacing:.14em;color:#8D806A;margin-bottom:8px;font-weight:500}
 .tbl{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:5px 0;font-size:15px}.tbl small{color:#8D806A;font-size:12px}.tbl b{font-size:20px;font-weight:500}
 .tok{color:#8EFF60}.tno{color:var(--tx2)}
+
+.tnav{display:flex;gap:8px;align-items:stretch;margin:14px 0}.tnav button{width:44px;border:1px solid var(--fil);background:none;color:var(--tx);font-size:20px}.tnav button:disabled{opacity:.3}
+.tmois{flex:1;display:flex;align-items:center;justify-content:center;background:#2A2926;letter-spacing:.14em;font-size:14px}
+.tcarte{border:1px solid var(--fil);padding:14px;margin:12px 0}.tct{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.14em;color:#8D806A}
+.pas{padding:2px 6px;font-size:11px;letter-spacing:0;text-transform:none}.pas.dans{background:#8EFF60;color:#1D1D1B}.pas.sous{border:1px solid var(--tx);color:var(--tx)}
+.tgros{font-size:52px;font-weight:300;line-height:1.1;margin-top:6px}.tgros small{font-size:16px;margin-left:4px;color:var(--tx2)}.tcib{font-size:13px;color:var(--tx2)}
+.tbarre{position:relative;height:8px;background:#3a3834;margin:10px 0}.tbarre i{display:block;height:100%;background:var(--tx)}.tbarre u{position:absolute;top:-3px;bottom:-3px;width:2px;background:#8EFF60}
+.tcum{display:flex;justify-content:space-between;font-size:13px;color:var(--tx2)}.tcum b{color:var(--tx);font-weight:500}

@@ -279,28 +279,39 @@ function aeAfficher(d){
 // Étape 6 : tableau de bord (Charges de travail) et profil. Chiffres d'essai; les vrais viendront d'un fichier de Gestion fourni par Michel.
 // Tableau de bord : les 12 derniers mois, un par un (aucune moyenne). Données du service (mêmes fichiers de Gestion que le portail).
 function tableau(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1 class="vert">Tableau de bord</h1><div id="tb"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1 class="vert">Charges de travail</h1><div id="tb"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   appelService({action:"tableau", session:sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
     var el = document.getElementById("tb");
     if(!r.mois){ el.innerHTML = '<div class="bandeau">▪ PAS DE TABLEAU DE BORD POUR VOTRE POSTE</div>'; return; }
-    function ligne(nom, val, cible, sens, unite){
-      var c = (cible === null || cible === undefined) ? null : aeNum(cible);
-      var lib = c === null ? '' : '<small> · cible '+String(cible).replace(".",",")+unite+(sens === "plus" ? " et +" : " et −")+'</small>';
-      if(val === null || val === undefined) return '<div class="tbl"><span>'+nom+lib+'</span><b>—</b></div>';
-      var ok = c === null ? null : (sens === "plus" ? val >= c : val <= c);
-      return '<div class="tbl"><span>'+nom+lib+'</span><b class="'+(ok ? "tok" : "tno")+'">'+String(val).replace(".",",")+unite+'</b></div>';
+    var ms = r.mois, i = 0;
+    function annee(m){ return String(m.label).split(" ").pop(); }
+    function cumul(m, cle){
+      var t = 0, n = 0;
+      ms.forEach(function(x){ if(!x.absent && annee(x) === annee(m) && x[cle] !== null && x[cle] !== undefined){ t += x[cle]; n++; } });
+      return n ? Math.round(t / n) + " %" : "—";
     }
-    el.innerHTML = '<div class="etiq">▪ '+esc((MOI && MOI.nom) || "").toUpperCase()+' · 12 DERNIERS MOIS</div><p class="aide">Chaque mois est présenté séparément, sans moyenne.</p>' +
-      r.mois.map(function(m){
-        if(m.absent) return '<div class="tbm gris"><div class="tbh">'+esc(m.label)+'</div><div class="aide">Aucun travail ce mois-là</div></div>';
-        return '<div class="tbm"><div class="tbh">'+esc(m.label)+'</div>' +
-          ligne("Heures par semaine", m.heures, m.cibleHeures, "plus", "") +
-          ligne("Charge effectuée", m.ce, m.cibleCe, "plus", " %") +
-          ligne("Charge non terminée", m.cn, 5, "moins", " %") +
-          ligne("Objectifs atteints", m.obj, 80, "plus", " %") + '</div>';
-      }).join("");
+    function carte(nom, val, cible, sens, m, cle, ct){
+      var vide = val === null || val === undefined, ok = vide ? null : (sens === "plus" ? val >= cible : val <= cible);
+      var pastille = vide ? "" : '<span class="pas '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>';
+      var larg = vide ? 0 : Math.min(100, val), pc = Math.min(100, cible);
+      return '<div class="tcarte"><div class="tct"><span>'+nom+'</span>'+pastille+'</div>' +
+        '<div class="tgros">'+(vide ? "—" : val)+'<small>%</small></div><div class="tcib">Cible '+cible+' % '+(sens === "plus" ? "et +" : "et −")+'</div>' +
+        '<div class="tbarre"><i style="width:'+larg+'%"></i><u style="left:'+pc+'%"></u></div>' +
+        '<div class="tcum"><span>Cumul de l\'année</span><b>'+cumul(m, cle)+'</b></div></div>';
+    }
+    function dessiner(){
+      var m = ms[i], h = '<div class="tnav"><button id="tp" '+(i >= ms.length - 1 ? "disabled" : "")+'>‹</button><div class="tmois">'+esc(m.label).toUpperCase()+'</div><button id="ts" '+(i <= 0 ? "disabled" : "")+'>›</button></div>' +
+        '<div class="etiq">▪ '+esc((MOI && MOI.nom) || "").toUpperCase()+'</div>';
+      if(m.absent) h += '<div class="bandeau">▪ AUCUN TRAVAIL CE MOIS-LÀ</div>';
+      else h += carte("CHARGE EFFECTUÉE", m.ce, m.cibleCe, "plus", m, "ce") + carte("CHARGE NON TERMINÉE", m.cn, 5, "moins", m, "cn") + carte("OBJECTIFS ATTEINTS", m.obj, 80, "plus", m, "obj") +
+        '<p class="aide">Heures par semaine : '+(m.heures === null ? "—" : String(m.heures).replace(".", ","))+(m.cibleHeures ? ' · cible '+m.cibleHeures : "")+'</p>';
+      el.innerHTML = h;
+      document.getElementById("tp").onclick = function(){ i++; dessiner(); };
+      document.getElementById("ts").onclick = function(){ i--; dessiner(); };
+    }
+    dessiner();
   }).catch(function(){ document.getElementById("tb").innerHTML = '<div class="bandeau">▪ TABLEAU DE BORD INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function profil(){
