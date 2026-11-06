@@ -150,6 +150,7 @@ function prechargerManuel(){
     return Promise.all(r.documents.filter(function(d){ return etat(d) !== "ok"; }).map(function(d){ return telechargerManuel(d).catch(function(){}); }));
   }).catch(function(){});
 }
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && sessionGardee() && MOI) prechargerManuel(); });
 function manuel(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Manuel d\'employé</h1>' +
     '<div class="bandeau">▪ DISPONIBLE HORS LIGNE</div><div id="liste"></div>' +
