@@ -138,23 +138,35 @@ function manuel(){
     '<p class="aide">Vos documents sont personnalisés à votre nom et à votre poste. Ils se téléchargent seuls et restent lisibles sans Internet.</p></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   var liste = document.getElementById("liste");
-  function dessiner(docs){
+  // Le PDF personnel (féminin ou masculin, sans signature) vient du service; il est gardé sur l'appareil pour lecture hors ligne.
+  function cle(d){ return "manuel/"+d.id+".pdf"; }
+  function ouvrir(d){
+    (self.caches ? caches.open(CACHE).then(function(c){ return c.match(cle(d)); }) : Promise.resolve(null)).then(function(r){
+      if(!r) throw 0; return r.blob(); }).then(function(b){ window.open(URL.createObjectURL(b), "_blank"); }).catch(function(){});
+  }
+  function dessinerM(docs){
     liste.innerHTML = docs.map(function(d){ var e = etat(d);
       return '<a class="doc" href="#" data-id="'+d.id+'"><span>▪ '+esc(d.nom)+'</span><em class="'+e+'">'+(e === "ok" ? "✓" : e === "maj" ? "MISE À JOUR" : "À TÉLÉCHARGER")+'</em></a>'; }).join("");
     Array.prototype.forEach.call(liste.querySelectorAll("a.doc"), function(a){
       a.onclick = function(ev){ ev.preventDefault(); var d = docs.filter(function(x){ return x.id === a.getAttribute("data-id"); })[0];
-        (self.caches ? caches.open(CACHE).then(function(c){ return c.match(d.fichier); }) : Promise.resolve(null)).then(function(r){
-          return r ? r.blob().then(function(b){ return URL.createObjectURL(b); }) : d.fichier; }).then(function(u){ window.open(u, "_blank"); }); };
+        if(etat(d) === "ok") return ouvrir(d);
+        a.querySelector("em").textContent = "TÉLÉCHARGEMENT…"; telechargerM(d).then(function(){ dessinerM(docs); ouvrir(d); }).catch(function(){ a.querySelector("em").textContent = "ÉCHEC · RÉESSAYEZ"; }); };
     });
   }
-  function synchroniser(docs){
-    Promise.all(docs.filter(function(d){ return etat(d) !== "ok"; }).map(function(d){ return telecharger(d).catch(function(){}); }))
-      .then(function(){ dessiner(docs); });
+  function telechargerM(d){
+    return appelService({action:"manuel_fichier", session:sessionGardee()}).then(function(r){
+      if(!r || !r.ok) throw 0;
+      var bin = atob(r.pdf), oct = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) oct[i] = bin.charCodeAt(i);
+      var rep = new Response(new Blob([oct], {type:"application/pdf"}));
+      return (self.caches ? caches.open(CACHE).then(function(c){ return c.put(cle(d), rep); }) : 0).then(function(){ d.version = r.version; noterVersion(d.id, r.version); });
+    });
   }
-  fetch("demo/_manifeste.json").then(function(r){ return r.json(); }).then(function(m){
-    try { localStorage.setItem("ldld-manifeste", JSON.stringify(m)); } catch(e){}
-    dessiner(m.documents); synchroniser(m.documents); })
-  .catch(function(){ var m; try { m = JSON.parse(localStorage.getItem("ldld-manifeste")); } catch(e){} if(m) dessiner(m.documents); });
+  appelService({action:"manuel_liste", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok) throw 0;
+    try { localStorage.setItem("ldld-manuel-liste", JSON.stringify(r.documents)); } catch(e){}
+    dessinerM(r.documents);
+    r.documents.filter(function(d){ return etat(d) === "maj"; }).forEach(function(d){ telechargerM(d).then(function(){ dessinerM(r.documents); }).catch(function(){}); });
+  }).catch(function(){ var l; try { l = JSON.parse(localStorage.getItem("ldld-manuel-liste")); } catch(e){} if(l) dessinerM(l); else liste.innerHTML = '<div class="bandeau">▪ MANUEL INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 // Étape 4 : salaire. Chiffres d'essai. Règle de sécurité : l'application ne calcule rien; elle affiche seulement les valeurs déjà calculées par les portails.
 var SALAIRE_ESSAI = {total:71250, position:84, detail:[["Salaire de base",58400],["Vacances, fériés et maladie",5800],["Boni",2000],["Assurances collectives",3900],["Cotisation OTPADQ",1150]]};
