@@ -1,5 +1,5 @@
 // Étape 1 : démarrage, connexion et menu. Aucune donnée réelle : la connexion et les sections sont des gabarits.
-var SECTIONS = ["Messages", "Manuel d'employé", "Évaluations", "Salaire et documents", "Tableau de bord", "Mon profil"];
+var SECTIONS = ["Messages", "Manuel d'employé", "Évaluations", "Salaire et documents", "Tableau de bord", "Plan d'incendie", "Mon profil"];
 var app = document.getElementById("app");
 
 function demarrage(){
@@ -57,7 +57,7 @@ function saisieCode(c){
   };
 }
 function menu(){
-  if(!menu.precharge){ menu.precharge = true; prechargerManuel(); }
+  if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div class="nom">'+esc((MOI && MOI.nom) || "")+'</div>' +
     SECTIONS.map(function(n, i){ return '<a href="#" data-i="'+i+'">▪ '+n+'</a>'; }).join("") +
     '<img class="symbole" src="assets/LDLD_symbole_blanc_transparent.png" alt="">' +
@@ -133,52 +133,54 @@ function telecharger(d){
     return self.caches ? caches.open(CACHE).then(function(c){ return c.put(d.fichier, r.clone()); }) : 0;
   }).then(function(){ noterVersion(d.id, d.version); });
 }
-// Préchargement : dès l'ouverture de l'application (menu), le manuel est téléchargé ou mis à jour en arrière-plan, avant que l'employé ouvre la section.
-function cleManuel(d){ return "manuel/"+d.id+".pdf"; }
-function telechargerManuel(d){
-  return appelService({action:"manuel_fichier", session:sessionGardee()}).then(function(r){
+// Préchargement : dès l'ouverture de l'application (menu) et à chaque retour, chaque document est téléchargé ou mis à jour en arrière-plan, avant que l'employé ouvre la section.
+var DOCS_SERVICE = ["manuel", "incendie"];   // chaque nom = actions « nom_liste » et « nom_fichier » du service
+function cleDoc(d){ return "doc/"+d.id+".pdf"; }
+function telechargerDoc(p, d){
+  return appelService({action:p+"_fichier", session:sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
     var bin = atob(r.pdf), oct = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) oct[i] = bin.charCodeAt(i);
     var rep = new Response(new Blob([oct], {type:"application/pdf"}));
-    return (self.caches ? caches.open(CACHE).then(function(c){ return c.put(cleManuel(d), rep); }) : 0).then(function(){ d.version = r.version; noterVersion(d.id, r.version); });
+    return (self.caches ? caches.open(CACHE).then(function(c){ return c.put(cleDoc(d), rep); }) : 0).then(function(){ d.version = r.version; noterVersion(d.id, r.version); });
   });
 }
-function prechargerManuel(){
-  return appelService({action:"manuel_liste", session:sessionGardee()}).then(function(r){
-    if(!r || !r.ok) return;
-    try { localStorage.setItem("ldld-manuel-liste", JSON.stringify(r.documents)); } catch(e){}
-    return Promise.all(r.documents.filter(function(d){ return etat(d) !== "ok"; }).map(function(d){ return telechargerManuel(d).catch(function(){}); }));
-  }).catch(function(){});
+function prechargerDocs(){
+  return Promise.all(DOCS_SERVICE.map(function(p){
+    return appelService({action:p+"_liste", session:sessionGardee()}).then(function(r){
+      if(!r || !r.ok) return;
+      try { localStorage.setItem("ldld-liste-"+p, JSON.stringify(r.documents)); } catch(e){}
+      return Promise.all(r.documents.filter(function(d){ return etat(d) !== "ok"; }).map(function(d){ return telechargerDoc(p, d).catch(function(){}); }));
+    }).catch(function(){});
+  }));
 }
-document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && sessionGardee() && MOI) prechargerManuel(); });
-function manuel(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Manuel d\'employé</h1>' +
-    '<div class="bandeau">▪ DISPONIBLE HORS LIGNE</div><div id="liste"></div>' +
-    '<p class="aide">Vos documents sont personnalisés à votre nom et à votre poste. Ils se téléchargent seuls et restent lisibles sans Internet.</p></div>';
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && sessionGardee() && MOI) prechargerDocs(); });
+function sectionDocs(p, titre, aide){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>'+titre+'</h1>' +
+    '<div class="bandeau">▪ DISPONIBLE HORS LIGNE</div><div id="liste"></div><p class="aide">'+aide+'</p></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   var liste = document.getElementById("liste");
-  // Le PDF personnel (féminin ou masculin, sans signature) vient du service; il est gardé sur l'appareil pour lecture hors ligne.
-  function cle(d){ return cleManuel(d); }
   function ouvrir(d){
-    (self.caches ? caches.open(CACHE).then(function(c){ return c.match(cle(d)); }) : Promise.resolve(null)).then(function(r){
+    (self.caches ? caches.open(CACHE).then(function(c){ return c.match(cleDoc(d)); }) : Promise.resolve(null)).then(function(r){
       if(!r) throw 0; return r.blob(); }).then(function(b){ window.open(URL.createObjectURL(b), "_blank"); }).catch(function(){});
   }
-  function dessinerM(docs){
+  function dessinerD(docs){
     liste.innerHTML = docs.map(function(d){ var e = etat(d);
       return '<a class="doc" href="#" data-id="'+d.id+'"><span>▪ '+esc(d.nom)+'</span><em class="'+e+'">'+(e === "ok" ? "✓" : e === "maj" ? "MISE À JOUR" : "À TÉLÉCHARGER")+'</em></a>'; }).join("");
     Array.prototype.forEach.call(liste.querySelectorAll("a.doc"), function(a){
       a.onclick = function(ev){ ev.preventDefault(); var d = docs.filter(function(x){ return x.id === a.getAttribute("data-id"); })[0];
         if(etat(d) === "ok") return ouvrir(d);
-        a.querySelector("em").textContent = "TÉLÉCHARGEMENT…"; telechargerManuel(d).then(function(){ dessinerM(docs); ouvrir(d); }).catch(function(){ a.querySelector("em").textContent = "ÉCHEC · RÉESSAYEZ"; }); };
+        a.querySelector("em").textContent = "TÉLÉCHARGEMENT…"; telechargerDoc(p, d).then(function(){ dessinerD(docs); ouvrir(d); }).catch(function(){ a.querySelector("em").textContent = "ÉCHEC · RÉESSAYEZ"; }); };
     });
   }
-  appelService({action:"manuel_liste", session:sessionGardee()}).then(function(r){
+  appelService({action:p+"_liste", session:sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
-    try { localStorage.setItem("ldld-manuel-liste", JSON.stringify(r.documents)); } catch(e){}
-    dessinerM(r.documents);
-    r.documents.filter(function(d){ return etat(d) === "maj"; }).forEach(function(d){ telechargerManuel(d).then(function(){ dessinerM(r.documents); }).catch(function(){}); });
-  }).catch(function(){ var l; try { l = JSON.parse(localStorage.getItem("ldld-manuel-liste")); } catch(e){} if(l) dessinerM(l); else liste.innerHTML = '<div class="bandeau">▪ MANUEL INDISPONIBLE · RÉESSAYEZ</div>'; });
+    try { localStorage.setItem("ldld-liste-"+p, JSON.stringify(r.documents)); } catch(e){}
+    dessinerD(r.documents);
+    r.documents.filter(function(d){ return etat(d) === "maj"; }).forEach(function(d){ telechargerDoc(p, d).then(function(){ dessinerD(r.documents); }).catch(function(){}); });
+  }).catch(function(){ var l; try { l = JSON.parse(localStorage.getItem("ldld-liste-"+p)); } catch(e){} if(l) dessinerD(l); else liste.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
+function manuel(){ sectionDocs("manuel", "Manuel d'employé", "Votre manuel est à votre nom (féminin ou masculin). Il se télécharge seul et reste lisible sans Internet."); }
+function incendie(){ sectionDocs("incendie", "Plan d'incendie", "Le plan à jour se télécharge seul et reste lisible sans Internet."); }
 // Étape 4 : salaire. Chiffres d'essai. Règle de sécurité : l'application ne calcule rien; elle affiche seulement les valeurs déjà calculées par les portails.
 var SALAIRE_ESSAI = {total:71250, position:84, detail:[["Salaire de base",58400],["Vacances, fériés et maladie",5800],["Boni",2000],["Assurances collectives",3900],["Cotisation OTPADQ",1150]]};
 function dollars(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0") + "\u00a0$"; }
@@ -361,7 +363,8 @@ function profil(){
 function section(i){
   if(i === 0) return messages();
   if(i === 4) return tableau();
-  if(i === 5) return profil();
+  if(i === 5) return incendie();
+  if(i === 6) return profil();
   if(i === 2) return evaluations();
   if(i === 3) return salaire();
   if(i === 1) return manuel();
