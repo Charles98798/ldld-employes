@@ -57,6 +57,7 @@ function saisieCode(c){
   };
 }
 function menu(){
+  if(!menu.precharge){ menu.precharge = true; prechargerManuel(); }
   app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div class="nom">'+esc((MOI && MOI.nom) || "")+'</div>' +
     SECTIONS.map(function(n, i){ return '<a href="#" data-i="'+i+'">▪ '+n+'</a>'; }).join("") +
     '<img class="symbole" src="assets/LDLD_symbole_blanc_transparent.png" alt="">' +
@@ -132,6 +133,23 @@ function telecharger(d){
     return self.caches ? caches.open(CACHE).then(function(c){ return c.put(d.fichier, r.clone()); }) : 0;
   }).then(function(){ noterVersion(d.id, d.version); });
 }
+// Préchargement : dès l'ouverture de l'application (menu), le manuel est téléchargé ou mis à jour en arrière-plan, avant que l'employé ouvre la section.
+function cleManuel(d){ return "manuel/"+d.id+".pdf"; }
+function telechargerManuel(d){
+  return appelService({action:"manuel_fichier", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok) throw 0;
+    var bin = atob(r.pdf), oct = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) oct[i] = bin.charCodeAt(i);
+    var rep = new Response(new Blob([oct], {type:"application/pdf"}));
+    return (self.caches ? caches.open(CACHE).then(function(c){ return c.put(cleManuel(d), rep); }) : 0).then(function(){ d.version = r.version; noterVersion(d.id, r.version); });
+  });
+}
+function prechargerManuel(){
+  return appelService({action:"manuel_liste", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok) return;
+    try { localStorage.setItem("ldld-manuel-liste", JSON.stringify(r.documents)); } catch(e){}
+    return Promise.all(r.documents.filter(function(d){ return etat(d) !== "ok"; }).map(function(d){ return telechargerManuel(d).catch(function(){}); }));
+  }).catch(function(){});
+}
 function manuel(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Manuel d\'employé</h1>' +
     '<div class="bandeau">▪ DISPONIBLE HORS LIGNE</div><div id="liste"></div>' +
@@ -139,7 +157,7 @@ function manuel(){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   var liste = document.getElementById("liste");
   // Le PDF personnel (féminin ou masculin, sans signature) vient du service; il est gardé sur l'appareil pour lecture hors ligne.
-  function cle(d){ return "manuel/"+d.id+".pdf"; }
+  function cle(d){ return cleManuel(d); }
   function ouvrir(d){
     (self.caches ? caches.open(CACHE).then(function(c){ return c.match(cle(d)); }) : Promise.resolve(null)).then(function(r){
       if(!r) throw 0; return r.blob(); }).then(function(b){ window.open(URL.createObjectURL(b), "_blank"); }).catch(function(){});
@@ -150,22 +168,14 @@ function manuel(){
     Array.prototype.forEach.call(liste.querySelectorAll("a.doc"), function(a){
       a.onclick = function(ev){ ev.preventDefault(); var d = docs.filter(function(x){ return x.id === a.getAttribute("data-id"); })[0];
         if(etat(d) === "ok") return ouvrir(d);
-        a.querySelector("em").textContent = "TÉLÉCHARGEMENT…"; telechargerM(d).then(function(){ dessinerM(docs); ouvrir(d); }).catch(function(){ a.querySelector("em").textContent = "ÉCHEC · RÉESSAYEZ"; }); };
-    });
-  }
-  function telechargerM(d){
-    return appelService({action:"manuel_fichier", session:sessionGardee()}).then(function(r){
-      if(!r || !r.ok) throw 0;
-      var bin = atob(r.pdf), oct = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) oct[i] = bin.charCodeAt(i);
-      var rep = new Response(new Blob([oct], {type:"application/pdf"}));
-      return (self.caches ? caches.open(CACHE).then(function(c){ return c.put(cle(d), rep); }) : 0).then(function(){ d.version = r.version; noterVersion(d.id, r.version); });
+        a.querySelector("em").textContent = "TÉLÉCHARGEMENT…"; telechargerManuel(d).then(function(){ dessinerM(docs); ouvrir(d); }).catch(function(){ a.querySelector("em").textContent = "ÉCHEC · RÉESSAYEZ"; }); };
     });
   }
   appelService({action:"manuel_liste", session:sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
     try { localStorage.setItem("ldld-manuel-liste", JSON.stringify(r.documents)); } catch(e){}
     dessinerM(r.documents);
-    r.documents.filter(function(d){ return etat(d) === "maj"; }).forEach(function(d){ telechargerM(d).then(function(){ dessinerM(r.documents); }).catch(function(){}); });
+    r.documents.filter(function(d){ return etat(d) === "maj"; }).forEach(function(d){ telechargerManuel(d).then(function(){ dessinerM(r.documents); }).catch(function(){}); });
   }).catch(function(){ var l; try { l = JSON.parse(localStorage.getItem("ldld-manuel-liste")); } catch(e){} if(l) dessinerM(l); else liste.innerHTML = '<div class="bandeau">▪ MANUEL INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 // Étape 4 : salaire. Chiffres d'essai. Règle de sécurité : l'application ne calcule rien; elle affiche seulement les valeurs déjà calculées par les portails.
