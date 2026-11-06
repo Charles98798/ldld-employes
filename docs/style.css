@@ -78,3 +78,11 @@ a{color:var(--tx)}
 #app{padding-top:0}
 .demarrage{min-height:100vh}
 .connexion,.menu,.page{padding-top:calc(max(env(safe-area-inset-top,0px),47px) + 22px)}
+
+/* Lettrage un peu plus épais (demande 2026-11-06) */
+html,body{font-weight:400}
+h1{font-weight:400}
+.menu a{font-weight:500;letter-spacing:.08em}
+.menu .nom{font-weight:500}
+.rang,.doc,.ligne,.champ,.bouton{font-weight:500}
+.rang small,.date,.etiq,.aide{font-weight:400}
