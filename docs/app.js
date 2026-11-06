@@ -29,12 +29,12 @@ function deconnecter(){
 }
 function connexion(message){
   app.innerHTML = '<div class="connexion"><img class="logo" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
-    '<div style="margin-top:110px"><input class="champ" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="Courriel prenom@lafonddesjardins.com">' +
+    '<div style="margin-top:110px"><input class="champ" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="Votre courriel">' +
     '<button class="bouton" id="envoi">Recevoir mon code →</button></div>' +
-    '<p class="aide" id="msg">'+(message||"Un code à 6 chiffres sera envoyé à votre courriel LDLD.")+'</p></div>';
+    '<p class="aide" id="msg">'+(message||"Un code à 6 chiffres sera envoyé à votre courriel.")+'</p></div>';
   document.getElementById("envoi").onclick = function(){
     var c = document.getElementById("courriel").value.trim().toLowerCase(), msg = document.getElementById("msg");
-    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c)){ msg.textContent = "Entrez votre courriel LDLD."; return; }
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c)){ msg.textContent = "Entrez votre courriel."; return; }
     msg.textContent = "Envoi du code…";
     appelService({action:"code", courriel:c}).then(function(){ saisieCode(c); })
       .catch(function(){ msg.textContent = "Envoi impossible. Vérifiez le réseau et réessayez."; });

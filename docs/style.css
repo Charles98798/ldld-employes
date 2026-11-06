@@ -73,3 +73,8 @@ a{color:var(--tx)}
 .menu .nom{border-bottom:0;padding-bottom:6px;margin-bottom:6px}
 .neuf{background:#8EFF60;color:#1D1D1B}
 .menu a.sortie{color:var(--tx)}
+
+/* iPhone plein écran : garder le contenu sous l'heure et l'encoche */
+#app{padding-top:0}
+.demarrage{min-height:100vh}
+.connexion,.menu,.page{padding-top:calc(max(env(safe-area-inset-top,0px),47px) + 22px)}
