@@ -66,44 +66,60 @@ function menu(){
   });
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
 }
-// Étape 2 : messages. Données de démonstration; plus tard les messages viendront du service Google Apps Script, filtrés par compte.
-var DIRECTION = true;   // démonstration : la page de rédaction n'apparaît que pour les comptes de la direction
-var MESSAGES = [
-  {id:1, titre:"Horaire des fêtes", date:"5 NOV. 2026", texte:"Bonjour à tous,\n\nLe laboratoire sera fermé du 24 décembre au 3 janvier. Les urgences seront assurées par l'équipe de garde.\n\nMerci pour votre excellent travail cette année."},
-  {id:2, titre:"Rappel évaluations 2027", date:"2 NOV. 2026", texte:"Pensez à remplir votre autoévaluation avant votre rencontre."},
-  {id:3, titre:"Bienvenue dans l'application", date:"1 NOV. 2026", texte:"Cette application regroupe vos documents et les messages de la direction."}
-];
+// Étape 2 : messages, lus et écrits par le service Google Apps Script (chaque employé ne reçoit que les siens).
+var MESSAGES = [];
 function lus(){ try { return JSON.parse(localStorage.getItem("ldld-lus") || "[]"); } catch(e){ return []; } }
 function noterLu(id){ var l = lus(); if(l.indexOf(id) < 0){ l.push(id); try { localStorage.setItem("ldld-lus", JSON.stringify(l)); } catch(e){} } }
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+var MOIS = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
+function dateCourte(t){ var d = new Date(t); return d.getDate()+" "+MOIS[d.getMonth()]+" "+d.getFullYear(); }
+function peutEcrire(){ return MOI && (MOI.role === "direction" || MOI.role === "responsable"); }
 function messages(){
-  var l = lus();
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Messages</h1>' +
-    MESSAGES.map(function(m){ return '<a class="rang" href="#" data-id="'+m.id+'"><span class="pl">+</span>'+esc(m.titre)+(l.indexOf(m.id) < 0 ? '<span class="neuf">NOUVEAU</span>' : '')+'<small>Direction · '+m.date+'</small></a>'; }).join("") +
-    (DIRECTION ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Messages</h1><div id="liste"><div class="bandeau">▪ CHARGEMENT…</div></div>' +
+    (peutEcrire() ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  Array.prototype.forEach.call(app.querySelectorAll("a[data-id]"), function(a){
-    a.onclick = function(e){ e.preventDefault(); detail(+a.getAttribute("data-id")); };
-  });
   var w = document.getElementById("ecrire"); if(w) w.onclick = function(e){ e.preventDefault(); rediger(); };
+  appelService({action:"messages", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok) throw 0;
+    MESSAGES = r.messages; var l = lus();
+    document.getElementById("liste").innerHTML = MESSAGES.length ? MESSAGES.map(function(m){
+      return '<a class="rang" href="#" data-id="'+esc(m.id)+'"><span class="pl">+</span>'+esc(m.titre)+(!m.envoye && l.indexOf(m.id) < 0 ? '<span class="neuf">NOUVEAU</span>' : '')+
+        '<small>'+(m.envoye ? 'Envoyé à '+m.nb+' personne'+(m.nb > 1 ? 's' : '') : esc(m.de))+' · '+dateCourte(m.date)+'</small></a>'; }).join("") : '<div class="bandeau">▪ AUCUN MESSAGE</div>';
+    Array.prototype.forEach.call(app.querySelectorAll("a[data-id]"), function(a){
+      a.onclick = function(e){ e.preventDefault(); detail(a.getAttribute("data-id")); };
+    });
+  }).catch(function(){ document.getElementById("liste").innerHTML = '<div class="bandeau">▪ MESSAGES INDISPONIBLES · RÉESSAYEZ</div>'; });
 }
 function detail(id){
   var m = MESSAGES.filter(function(x){ return x.id === id; })[0]; noterLu(id);
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Messages</a><h1>'+esc(m.titre)+'</h1><div class="date">Direction · '+m.date+'</div><div class="corps">'+esc(m.texte).replace(/\n/g,"<br>")+'</div><div class="bandeau">▪ LU · confirmé</div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Messages</a><h1>'+esc(m.titre)+'</h1><div class="date">'+esc(m.de)+' · '+dateCourte(m.date)+'</div><div class="corps">'+esc(m.texte).replace(/\n/g,"<br>")+'</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); messages(); };
 }
 function rediger(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Messages</a><h1>Nouveau message</h1>' +
-    '<input class="champ" id="titre" placeholder="Titre"><textarea class="champ zone" id="texte" placeholder="Texte du message…"></textarea>' +
-    '<div class="etiq">▪ DESTINATAIRES</div>' +
-    '<label class="coche"><input type="radio" name="d" checked> Tous les employés</label>' +
-    '<label class="coche"><input type="radio" name="d"> Par équipe ou poste</label>' +
-    '<label class="coche"><input type="radio" name="d"> Choisir des employés</label>' +
-    '<label class="coche"><input type="checkbox" id="notif" checked> Envoyer une notification</label>' +
+    '<input class="champ" id="titre" placeholder="Titre" maxlength="120"><textarea class="champ zone" id="texte" placeholder="Texte du message…"></textarea>' +
+    '<div class="etiq">▪ DESTINATAIRES</div><div id="dest"><div class="bandeau">▪ CHARGEMENT…</div></div>' +
     '<button class="bouton" id="envoyer">Envoyer →</button><div class="bandeau" id="etat" style="display:none"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); messages(); };
-  // Mode démonstration : rien n'est envoyé. Plus tard : envoi par le service Google Apps Script, qui vérifie le droit d'écrire.
-  document.getElementById("envoyer").onclick = function(){ var s = document.getElementById("etat"); s.style.display = "block"; s.textContent = "▪ MODE ESSAI · RIEN N'EST ENVOYÉ"; };
+  var gens = [], etat = document.getElementById("etat");
+  function dire(t){ etat.style.display = "block"; etat.textContent = t; }
+  appelService({action:"equipe", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok) throw 0; gens = r.personnes;
+    document.getElementById("dest").innerHTML = '<label class="coche"><input type="checkbox" id="tous" checked> Toute mon équipe ('+gens.length+')</label>' +
+      gens.map(function(p, i){ return '<label class="coche"><input type="checkbox" class="un" data-c="'+esc(p.c)+'"> '+esc(p.nom)+'</label>'; }).join("");
+  }).catch(function(){ dire("▪ LISTE INDISPONIBLE · RÉESSAYEZ"); });
+  document.getElementById("envoyer").onclick = function(){
+    var titre = document.getElementById("titre").value.trim(), texte = document.getElementById("texte").value.trim();
+    if(!titre || !texte){ dire("▪ TITRE ET TEXTE REQUIS"); return; }
+    var choisis = Array.prototype.filter.call(app.querySelectorAll(".un"), function(x){ return x.checked; }).map(function(x){ return x.getAttribute("data-c"); });
+    var tous = document.getElementById("tous"), dest = (tous && tous.checked) ? "tous" : choisis;
+    if(dest !== "tous" && !dest.length){ dire("▪ CHOISISSEZ AU MOINS UNE PERSONNE"); return; }
+    var bt = document.getElementById("envoyer"); bt.disabled = true; dire("▪ ENVOI…");
+    appelService({action:"envoyer", session:sessionGardee(), titre:titre, texte:texte, destinataires:dest}).then(function(r){
+      if(r && r.ok){ dire("▪ ENVOYÉ À "+r.nb+" PERSONNE"+(r.nb > 1 ? "S" : "")); setTimeout(messages, 1200); }
+      else { bt.disabled = false; dire("▪ NON ENVOYÉ · "+((r && r.erreur) || "RÉESSAYEZ")); }
+    }).catch(function(){ bt.disabled = false; dire("▪ NON ENVOYÉ · RÉSEAU"); });
+  };
 }
 // Étape 3 : manuel. Documents d'essai; plus tard : le PDF personnel de chaque employé, listé par le service Google Apps Script.
 var CACHE = "ldld-docs";
