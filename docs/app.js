@@ -192,14 +192,75 @@ function documentsSalaire(){
 }
 // Étape 5 : évaluations. L'autoévaluation reproduit la page du portail (mêmes 8 onglets, mêmes questions); en essai elle ne lit ni n'enregistre rien.
 function evaluations(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Évaluations</h1>' +
-    '<div class="etiq">▪ PROCHAINE RENCONTRE</div><div class="gros">12 JANV. 2027</div>' +
-    '<div class="bandeau">▪ AUTOÉVALUATION À REMPLIR AVANT LA RENCONTRE</div>' +
-    '<a class="rang" href="autoevaluation.html">▪ Remplir mon autoévaluation <span style="float:right">→</span></a>' +
-    '<div class="rang">▪ Mon résumé de rencontre <span class="etiq" style="float:right">APRÈS LA RENCONTRE</span></div>' +
-    '<div class="rang">▪ Mes rencontres passées <span style="float:right">→</span></div>' +
-    '<p class="aide">Les rencontres recommencent en 2027.</p></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Évaluations</h1><div id="ev"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  appelService({action:"ae_lire", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok) throw 0;
+    var el = document.getElementById("ev");
+    if(!r.rencontres.length){ el.innerHTML = '<div class="bandeau">▪ AUCUNE AUTOÉVALUATION POUR LE MOMENT</div>'; return; }
+    el.innerHTML = r.rencontres.map(function(m){
+      return '<a class="rang" href="#" data-r="'+m.rencontre+'">▪ Autoévaluation · rencontre '+m.rencontre+'<small>'+(m.terminee ? 'Terminée' : 'À remplir')+'</small></a>'; }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll("a[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); autoeval(+a.getAttribute("data-r")); }; });
+  }).catch(function(){ document.getElementById("ev").innerHTML = '<div class="bandeau">▪ AUTOÉVALUATION INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
+// Autoévaluation : même fiche et mêmes règles que la page envoyée par courriel (6 étapes). Les réponses vont dans la fiche de l'employé.
+var AE_ETAPES = ["Évaluation des compétences","Valeurs humaines","Connaissances et développement","Commentaires","Mon expérience au laboratoire","Pour préparer notre rencontre"];
+var AE_NIVEAUX_RH = ["Pas du tout d’accord","Peu d’accord","Moyennement d’accord","Plutôt d’accord","Tout à fait d’accord"];
+function aeSection(f){ var n = +f.cell.slice(1); if(f.cell === "A68" || f.cell === "A70") return 5; if(n >= 59) return 4; if(f.cell === "B44") return 3; return n >= 35 ? 2 : n >= 28 ? 1 : 0; }
+function autoeval(rencontre){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Évaluations</a><h1>Autoévaluation</h1><div id="ae"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); evaluations(); };
+  appelService({action:"ae_lire", session:sessionGardee(), rencontre:rencontre}).then(function(d){
+    if(!d || !d.ok) throw 0; aeAfficher(d);
+  }).catch(function(){ document.getElementById("ae").innerHTML = '<div class="bandeau">▪ FICHE INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
+function aeAfficher(d){
+  var vals = {}, page = 0, occupe = false;
+  d.champs.forEach(function(f){ vals[f.cell] = f.value; });
+  var zone = document.getElementById("ae");
+  function dire(t){ var e = document.getElementById("aeetat"); if(e){ e.style.display = t ? "block" : "none"; e.textContent = t; } }
+  function texteNote(f){ var v = vals[f.cell]; if(v === "" || v == null) return "Choisissez une note."; if(v === "Non applicable") return "Non applicable"; return f.scale === "experience" ? AE_NIVEAUX_RH[+v-1] : (d.bareme[+v-1] || ""); }
+  function dessiner(){
+    var fs = d.champs.filter(function(f){ return aeSection(f) === page; });
+    var h = '<div class="etiq">▪ '+(page+1)+' SUR 6 · '+esc(AE_ETAPES[page]).toUpperCase()+'</div>' + (d.terminee ? '<div class="bandeau">▪ TERMINÉE · CONSULTATION SEULEMENT</div>' : '');
+    fs.forEach(function(f){
+      if(f.kind === "score"){
+        h += '<div class="aeq"><div class="aet">'+esc(f.label)+'</div><div class="aen">';
+        for(var n = 1; n <= f.max; n++) h += '<button type="button" class="aeb'+(+vals[f.cell] === n ? ' on' : '')+'" data-c="'+f.cell+'" data-n="'+n+'"'+(d.terminee ? ' disabled' : '')+'>'+n+'</button>';
+        h += '</div>' + (f.scale === "experience" && !d.terminee ? '<button type="button" class="aeb na'+(vals[f.cell] === "Non applicable" ? ' on' : '')+'" data-c="'+f.cell+'" data-n="Non applicable">Non applicable</button>' : '') + '<div class="etiq" id="t'+f.cell+'">'+esc(texteNote(f))+'</div></div>';
+      } else {
+        h += '<div class="aeq"><div class="aet">'+esc(f.label)+'</div><textarea class="champ zone" data-t="'+f.cell+'" maxlength="5000"'+(d.terminee ? ' disabled' : '')+'>'+esc(vals[f.cell] || "")+'</textarea></div>';
+      }
+    });
+    h += '<div class="bandeau" id="aeetat" style="display:none"></div><div class="aeact">' +
+      (page > 0 ? '<button class="bouton" id="aeprec" type="button">← Retour</button>' : '') +
+      (d.terminee ? '' : '<button class="bouton" id="aebrouillon" type="button">Enregistrer le brouillon</button>') +
+      '<button class="bouton" id="aesuiv" type="button"'+(d.terminee && page === 5 ? ' disabled' : '')+'>'+(page === 5 ? (d.terminee ? 'Terminée' : 'Terminer →') : 'Continuer →')+'</button></div>';
+    zone.innerHTML = h;
+    Array.prototype.forEach.call(zone.querySelectorAll(".aeb"), function(b){
+      b.onclick = function(){ var c = b.getAttribute("data-c"), n = b.getAttribute("data-n"); vals[c] = n === "Non applicable" ? n : +n; dessiner(); };
+    });
+    Array.prototype.forEach.call(zone.querySelectorAll("textarea[data-t]"), function(t){ t.oninput = function(){ vals[t.getAttribute("data-t")] = t.value; }; });
+    var p = document.getElementById("aeprec"); if(p) p.onclick = function(){ page--; dessiner(); window.scrollTo(0, 0); };
+    var bd = document.getElementById("aebrouillon"); if(bd) bd.onclick = function(){ enregistrer(false); };
+    document.getElementById("aesuiv").onclick = function(){
+      if(d.terminee){ if(page < 5){ page++; dessiner(); window.scrollTo(0, 0); } return; }
+      if(page < 5){ if(!valider(page)) return; enregistrer(false, function(){ page++; dessiner(); window.scrollTo(0, 0); }); }
+      else { if(!toutValide()) return; enregistrer(true); }
+    };
+  }
+  function manque(f){ var v = vals[f.cell]; return !(v !== "" && v != null && isFinite(+v) && +v >= 1 && +v <= f.max); }
+  function valider(sec){ var m = d.champs.filter(function(f){ return f.required && aeSection(f) === sec && manque(f); })[0]; if(m){ dire("▪ CHOISISSEZ UNE NOTE POUR « "+m.label+" »"); return false; } return true; }
+  function toutValide(){ var m = d.champs.filter(function(f){ return f.required && manque(f); })[0]; if(m){ dire("▪ COMPLÉTEZ LES NOTES DE COMPÉTENCES ET DE VALEURS AVANT DE TERMINER"); return false; } return true; }
+  function enregistrer(terminer, suite){
+    if(occupe) return; occupe = true; dire("▪ ENREGISTREMENT…");
+    appelService({action:"ae_enregistrer", session:sessionGardee(), rencontre:d.rencontre, revision:d.revision, terminer:terminer, valeurs:vals}).then(function(r){
+      occupe = false;
+      if(r && r.ok){ d.revision = r.revision; if(r.terminee){ d.terminee = true; zone.innerHTML = '<div class="bandeau">▪ MERCI POUR VOTRE AUTOÉVALUATION</div><p class="aide">Vos réponses sont enregistrées pour cette rencontre. Elles prépareront notre discussion.</p>'; } else { dire("▪ RÉPONSES ENREGISTRÉES"); if(suite) suite(); } }
+      else dire("▪ NON ENREGISTRÉ · "+((r && r.erreur) || "RÉESSAYEZ"));
+    }).catch(function(){ occupe = false; dire("▪ NON ENREGISTRÉ · RÉSEAU. VOS RÉPONSES RESTENT À L'ÉCRAN"); });
+  }
+  dessiner();
 }
 // Étape 6 : tableau de bord (Charges de travail) et profil. Chiffres d'essai; les vrais viendront d'un fichier de Gestion fourni par Michel.
 var CHARGES_ESSAI = {mois:"SEPTEMBRE", annee:2026, cartes:[
