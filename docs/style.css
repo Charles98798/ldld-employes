@@ -86,3 +86,7 @@ h1{font-weight:400}
 .menu .nom{font-weight:500}
 .rang,.doc,.ligne,.champ,.bouton{font-weight:500}
 .rang small,.date,.etiq,.aide{font-weight:400}
+
+/* Logo : hauteur réservée dès le départ, même taille et même place sur la connexion et le menu (aucun saut à l'arrivée) */
+.connexion .logo,.menu .logo{width:120px;height:100px;aspect-ratio:679/564;object-fit:contain;object-position:left top;display:block;flex:none}
+.demarrage img{aspect-ratio:679/564;height:auto}

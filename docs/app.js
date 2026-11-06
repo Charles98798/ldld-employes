@@ -28,7 +28,7 @@ function deconnecter(){
   connexion();
 }
 function connexion(message){
-  app.innerHTML = '<div class="connexion"><img class="logo" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
+  app.innerHTML = '<div class="connexion"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
     '<div style="margin-top:110px"><input class="champ" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="Votre courriel">' +
     '<button class="bouton" id="envoi">Recevoir mon code →</button></div>' +
     '<p class="aide" id="msg">'+(message||"Un code à 6 chiffres sera envoyé à votre courriel.")+'</p></div>';
@@ -41,7 +41,7 @@ function connexion(message){
   };
 }
 function saisieCode(c){
-  app.innerHTML = '<div class="connexion"><img class="logo" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
+  app.innerHTML = '<div class="connexion"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
     '<div style="margin-top:110px"><input class="champ" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Code à 6 chiffres" style="letter-spacing:6px;font-size:24px">' +
     '<button class="bouton" id="valider">Se connecter →</button></div>' +
     '<p class="aide" id="msg">Code envoyé à '+esc(c)+'. Il est valide 10 minutes. Vérifiez aussi les indésirables.</p>' +
@@ -57,7 +57,7 @@ function saisieCode(c){
   };
 }
 function menu(){
-  app.innerHTML = '<div class="menu"><img class="logo" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div class="nom">'+esc((MOI && MOI.nom) || "")+'</div>' +
+  app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div class="nom">'+esc((MOI && MOI.nom) || "")+'</div>' +
     SECTIONS.map(function(n, i){ return '<a href="#" data-i="'+i+'">▪ '+n+'</a>'; }).join("") +
     '<img class="symbole" src="assets/LDLD_symbole_blanc_transparent.png" alt="">' +
     '<a class="sortie" href="#" id="sortie">Déconnexion →</a></div>';
