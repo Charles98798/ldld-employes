@@ -204,15 +204,29 @@ function evaluations(){
   }).catch(function(){ document.getElementById("ev").innerHTML = '<div class="bandeau">▪ AUTOÉVALUATION INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 // Autoévaluation : même fiche et mêmes règles que la page envoyée par courriel (6 étapes). Les réponses vont dans la fiche de l'employé.
-var AE_ETAPES = ["Évaluation des compétences","Valeurs humaines","Connaissances et développement","Commentaires","Mon expérience au laboratoire","Pour préparer notre rencontre"];
+var AE_ETAPES = ["Évaluation des compétences","Valeurs humaines","Connaissances et développement","Rythme et charge de travail","Priorités et engagements","Commentaires de l’employé","Mon expérience au laboratoire","Pour préparer notre rencontre"];
 var AE_NIVEAUX_RH = ["Pas du tout d’accord","Peu d’accord","Moyennement d’accord","Plutôt d’accord","Tout à fait d’accord"];
-function aeSection(f){ var n = +f.cell.slice(1); if(f.cell === "A68" || f.cell === "A70") return 5; if(n >= 59) return 4; if(f.cell === "B44") return 3; return n >= 35 ? 2 : n >= 28 ? 1 : 0; }
+function aeSection(f){ var n = +f.cell.slice(1); if(f.cell === "A68" || f.cell === "A70") return 7; if(n >= 59) return 6; if(f.cell === "B44") return 5; if(f.cell === "B42" || f.cell === "B43") return 4; return n >= 35 ? 2 : n >= 28 ? 1 : 0; }
 function autoeval(rencontre){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Évaluations</a><h1>Autoévaluation</h1><div id="ae"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); evaluations(); };
   appelService({action:"ae_lire", session:sessionGardee(), rencontre:rencontre}).then(function(d){
     if(!d || !d.ok) throw 0; aeAfficher(d);
   }).catch(function(){ document.getElementById("ae").innerHTML = '<div class="bandeau">▪ FICHE INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
+function aeNum(v){ var n = Number(String(v).replace(/[^0-9,.-]/g,"").replace(",",".")); return isNaN(n) ? null : n; }
+function aeRythmeHtml(d){
+  if(!d.rythme || !d.rythme.length) return '<p class="aide">Heures travaillées par semaine, charge effectuée, charge non terminée et objectifs atteints : ces points seront examinés dans cet ordre avec votre responsable pendant la rencontre.</p>';
+  var h = (d.rythmePeriode ? '<div class="etiq">▪ '+esc(d.rythmePeriode).toUpperCase()+'</div>' : '') + '<p class="aide">À titre indicatif, pour la discussion lors de la rencontre.</p>';
+  d.rythme.forEach(function(r){
+    var c = aeNum(r.seuil), n = aeNum(r.realise), barre = "", ok = null;
+    if(c !== null && n !== null){
+      var M = r.auto ? Math.max(c, n) : Math.max(100, c, n); ok = r.inverse ? n <= c : n >= c;
+      barre = '<div class="rb"><i style="width:'+Math.max(0,Math.min(100,n/M*100))+'%"></i><u style="left:'+Math.max(0,Math.min(99,c/M*100))+'%"></u></div><div class="rt'+(ok ? ' ok' : '')+'">'+(ok ? 'Dans la cible' : (r.inverse ? 'Au-dessus de la cible' : 'Sous la cible'))+'</div>';
+    }
+    h += '<div class="rl"><div class="rn">'+esc(r.label)+'</div><div class="rv"><span>Réalisé<b>'+esc(r.realise)+'</b></span><span>Cible<b>'+esc(r.cible)+'</b></span></div>'+barre+'</div>';
+  });
+  return h;
 }
 function aeAfficher(d){
   var vals = {}, page = 0, occupe = false;
@@ -222,7 +236,7 @@ function aeAfficher(d){
   function texteNote(f){ var v = vals[f.cell]; if(v === "" || v == null) return "Choisissez une note."; if(v === "Non applicable") return "Non applicable"; return f.scale === "experience" ? AE_NIVEAUX_RH[+v-1] : (d.bareme[+v-1] || ""); }
   function dessiner(){
     var fs = d.champs.filter(function(f){ return aeSection(f) === page; });
-    var h = '<div class="etiq">▪ '+(page+1)+' SUR 6 · '+esc(AE_ETAPES[page]).toUpperCase()+'</div>' + (d.terminee ? '<div class="bandeau">▪ TERMINÉE · CONSULTATION SEULEMENT</div>' : '');
+    var h = '<div class="etiq">▪ '+(page+1)+' SUR 8 · '+esc(AE_ETAPES[page]).toUpperCase()+'</div>' + (d.terminee ? '<div class="bandeau">▪ TERMINÉE · CONSULTATION SEULEMENT</div>' : '') + (page === 3 ? aeRythmeHtml(d) : '');
     fs.forEach(function(f){
       if(f.kind === "score"){
         h += '<div class="aeq"><div class="aet">'+esc(f.label)+'</div><div class="aen">';
@@ -235,7 +249,7 @@ function aeAfficher(d){
     h += '<div class="bandeau" id="aeetat" style="display:none"></div><div class="aeact">' +
       (page > 0 ? '<button class="bouton" id="aeprec" type="button">← Retour</button>' : '') +
       (d.terminee ? '' : '<button class="bouton" id="aebrouillon" type="button">Enregistrer le brouillon</button>') +
-      '<button class="bouton" id="aesuiv" type="button"'+(d.terminee && page === 5 ? ' disabled' : '')+'>'+(page === 5 ? (d.terminee ? 'Terminée' : 'Terminer →') : 'Continuer →')+'</button></div>';
+      '<button class="bouton" id="aesuiv" type="button"'+(d.terminee && page === 7 ? ' disabled' : '')+'>'+(page === 7 ? (d.terminee ? 'Terminée' : 'Terminer →') : 'Continuer →')+'</button></div>';
     zone.innerHTML = h;
     Array.prototype.forEach.call(zone.querySelectorAll(".aeb"), function(b){
       b.onclick = function(){ var c = b.getAttribute("data-c"), n = b.getAttribute("data-n"); vals[c] = n === "Non applicable" ? n : +n; dessiner(); };
@@ -244,8 +258,8 @@ function aeAfficher(d){
     var p = document.getElementById("aeprec"); if(p) p.onclick = function(){ page--; dessiner(); window.scrollTo(0, 0); };
     var bd = document.getElementById("aebrouillon"); if(bd) bd.onclick = function(){ enregistrer(false); };
     document.getElementById("aesuiv").onclick = function(){
-      if(d.terminee){ if(page < 5){ page++; dessiner(); window.scrollTo(0, 0); } return; }
-      if(page < 5){ if(!valider(page)) return; enregistrer(false, function(){ page++; dessiner(); window.scrollTo(0, 0); }); }
+      if(d.terminee){ if(page < 7){ page++; dessiner(); window.scrollTo(0, 0); } return; }
+      if(page < 7){ if(!valider(page)) return; enregistrer(false, function(){ page++; dessiner(); window.scrollTo(0, 0); }); }
       else { if(!toutValide()) return; enregistrer(true); }
     };
   }
