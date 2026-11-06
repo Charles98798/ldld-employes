@@ -49,3 +49,27 @@ h1.vert{color:#3ee96a}
 .graph{position:relative}.cibleligne{position:absolute;left:0;right:0;height:2px;background:#3ee96a;z-index:2;pointer-events:none}
 .jour .b{position:relative;background:#ece8e0;display:block}.jour .ef,.jour .nt{position:absolute;left:0;width:100%}.jour .ef{bottom:0;background:#b3ab9b}.jour .nt{background:#111}
 .jour .b{background:#efece6}.graph{align-items:flex-end;min-height:190px}
+
+/* Monolithe : fond noir, texte taupe, logo blanc (choix 2026-11-06) */
+:root{--noir:#1D1D1B;--tx:#B4AB9B;--tx2:#ECE8DF;--fil:#3d3b36}
+html,body{background:var(--noir)}
+.connexion,.menu,.page{background:var(--noir);color:var(--tx)}
+.champ{border-bottom-color:var(--tx);color:var(--tx2)}
+.bouton{background:var(--tx);color:var(--noir);text-transform:uppercase;letter-spacing:.12em;font-size:14px;padding:16px 0}
+.menu .nom{border-bottom-color:var(--fil);color:var(--tx)}
+.menu a{color:var(--tx);text-transform:uppercase;letter-spacing:.1em;font-size:15px;border-top:1px solid var(--fil);padding:15px 0}
+.menu .sortie{border-top-color:var(--fil);font-size:14px}
+.retour{color:var(--tx)}
+h1{color:var(--tx2)}
+.rang,.doc,.ligne{color:var(--tx);border-top-color:var(--fil)}
+.rang small,.date,.etiq,.aide,.cumul{color:#8D806A}
+.doc em.maj,.doc em.non{background:var(--tx);color:var(--noir)}
+.pl{border-color:var(--tx)}
+textarea.zone{background:transparent;border-color:var(--tx);color:var(--tx2)}
+.bandeau{background:var(--tx);color:var(--noir)}
+.carte{color:#1D1D1B}
+.menu .logo{width:120px;display:block;margin-bottom:22px}
+a{color:var(--tx)}
+.menu .nom{border-bottom:0;padding-bottom:6px;margin-bottom:6px}
+.neuf{background:#8EFF60;color:#1D1D1B}
+.menu a.sortie{color:var(--tx)}
