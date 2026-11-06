@@ -99,3 +99,7 @@ h1{font-weight:400}
 .rl{border-top:1px solid var(--fil);padding:14px 0}.rn{font-size:15px;font-weight:500;margin-bottom:8px}.rv{display:flex;gap:28px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#8D806A}.rv b{text-transform:none;display:block;font-size:20px;letter-spacing:0;color:var(--tx2);font-weight:500;margin-top:2px}
 .rb{height:8px;background:#3d3b36;position:relative;margin:12px 0 6px}.rb i{display:block;height:100%;background:var(--tx)}.rb u{position:absolute;top:-4px;bottom:-4px;width:2px;background:#8EFF60}
 .rt{display:inline-block;border:1px solid var(--tx);padding:1px 8px;font-size:12px}.rt.ok{background:#8EFF60;border-color:#8EFF60;color:#1D1D1B}
+/* Tableau de bord : 12 mois */
+.tbm{border-top:1px solid var(--fil);padding:14px 0}.tbm.gris{opacity:.55}.tbh{font-size:13px;letter-spacing:.14em;color:#8D806A;margin-bottom:8px;font-weight:500}
+.tbl{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:5px 0;font-size:15px}.tbl small{color:#8D806A;font-size:12px}.tbl b{font-size:20px;font-weight:500}
+.tok{color:#8EFF60}.tno{color:var(--tx2)}

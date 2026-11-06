@@ -277,25 +277,31 @@ function aeAfficher(d){
   dessiner();
 }
 // Étape 6 : tableau de bord (Charges de travail) et profil. Chiffres d'essai; les vrais viendront d'un fichier de Gestion fourni par Michel.
-var CHARGES_ESSAI = {mois:"SEPTEMBRE", annee:2026, cartes:[
-  {nom:"CHARGE EFFECTUÉE", val:70, cible:70, sens:"plus", cumul:32, libelle:"Cible 70 % et +"},
-  {nom:"CHARGE NON TERMINÉE", val:2, cible:5, sens:"moins", cumul:3, libelle:"Cible 5 % et −"},
-  {nom:"OBJECTIFS ATTEINTS", val:71, cible:80, sens:"plus", cumul:81, libelle:"Cible 80 % et +"}],
-  jours:[["MAR 01",66,64,4,108],["MER 02",54,54,0,79],["JEU 03",61,61,0,95],["VEN 04",39,39,0,39],["MAR 08",61,58,6,135],["MER 09",54,45,19,129],["JEU 10",59,50,12,101],["VEN 11",78,78,0,98],["LUN 14",80,80,0,104],["MAR 15",68,66,3,113]]};   // [jour, valeur affichée, effectuée, non terminée, hauteur totale (bande pâle = disponible)]
-function dansCible(c){ return c.sens === "plus" ? c.val >= c.cible : c.val <= c.cible; }
+// Tableau de bord : les 12 derniers mois, un par un (aucune moyenne). Données du service (mêmes fichiers de Gestion que le portail).
 function tableau(){
-  var d = CHARGES_ESSAI;
-  var cartes = d.cartes.map(function(c){ var ok = dansCible(c);
-    return '<div class="carte"><div class="tete"><span>'+c.nom+'</span><span class="etat '+(ok ? "oui" : "non")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span></div>' +
-      '<div class="gros">'+c.val+' <small>%</small></div><div class="jauge"><i style="width:'+Math.min(100,c.val)+'%"></i><u style="left:'+c.cible+'%"></u></div>' +
-      '<div class="cumul"><span>'+c.libelle+'</span><span>Cumul de l\'année <b>'+c.cumul+' %</b></span></div></div>'; }).join("");
-  var H = 150, ECH = 160;   // échelle 0 à 160 %, comme dans Gestion
-  var barres = d.jours.map(function(j){ var h = function(v){ return Math.round(v / ECH * H); };
-    return '<div class="jour"><span class="v">'+j[1]+'</span><div class="b" style="height:'+h(j[4])+'px"><div class="ef" style="height:'+h(j[2])+'px"></div><div class="nt" style="height:'+h(j[3])+'px;bottom:'+h(j[2])+'px"></div></div><span class="d">'+j[0].replace(" ","<br>")+'</span></div>'; }).join("");
-  var legende = '<div class="legende"><span><i style="background:#3ee96a"></i>Cible</span><span><i style="background:#b3ab9b"></i>Effectuée</span><span><i style="background:#111"></i>Non terminée</span><span><i style="background:#ece8e0;border:1px solid #bbb"></i>Disponible</span></div>';
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1 class="vert">Charges de travail</h1><div class="etiq">MARIE · ANNÉE '+d.annee+'</div>' +
-    '<div class="mois"><b>‹</b><b class="m">'+d.mois+'</b><b>›</b></div>'+cartes+legende+'<div class="graph"><div class="cibleligne" style="bottom:'+(Math.round(d.cartes[0].cible/ECH*H)+36)+'px"></div>'+barres+'</div><p class="aide">Glissez pour voir tous les jours. À titre indicatif.</p></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1 class="vert">Tableau de bord</h1><div id="tb"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  appelService({action:"tableau", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok) throw 0;
+    var el = document.getElementById("tb");
+    if(!r.mois){ el.innerHTML = '<div class="bandeau">▪ PAS DE TABLEAU DE BORD POUR VOTRE POSTE</div>'; return; }
+    function ligne(nom, val, cible, sens, unite){
+      var c = (cible === null || cible === undefined) ? null : aeNum(cible);
+      var lib = c === null ? '' : '<small> · cible '+String(cible).replace(".",",")+unite+(sens === "plus" ? " et +" : " et −")+'</small>';
+      if(val === null || val === undefined) return '<div class="tbl"><span>'+nom+lib+'</span><b>—</b></div>';
+      var ok = c === null ? null : (sens === "plus" ? val >= c : val <= c);
+      return '<div class="tbl"><span>'+nom+lib+'</span><b class="'+(ok ? "tok" : "tno")+'">'+String(val).replace(".",",")+unite+'</b></div>';
+    }
+    el.innerHTML = '<div class="etiq">▪ '+esc((MOI && MOI.nom) || "").toUpperCase()+' · 12 DERNIERS MOIS</div><p class="aide">Chaque mois est présenté séparément, sans moyenne.</p>' +
+      r.mois.map(function(m){
+        if(m.absent) return '<div class="tbm gris"><div class="tbh">'+esc(m.label)+'</div><div class="aide">Aucun travail ce mois-là</div></div>';
+        return '<div class="tbm"><div class="tbh">'+esc(m.label)+'</div>' +
+          ligne("Heures par semaine", m.heures, m.cibleHeures, "plus", "") +
+          ligne("Charge effectuée", m.ce, m.cibleCe, "plus", " %") +
+          ligne("Charge non terminée", m.cn, 5, "moins", " %") +
+          ligne("Objectifs atteints", m.obj, 80, "plus", " %") + '</div>';
+      }).join("");
+  }).catch(function(){ document.getElementById("tb").innerHTML = '<div class="bandeau">▪ TABLEAU DE BORD INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function profil(){
   var lignes = [["Nom","Marie Exemple"],["Poste","Technologue"],["Responsable","Élise Desjardins"],["Courriel","marie@lafonddesjardins.com"]];
