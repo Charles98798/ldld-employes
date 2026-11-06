@@ -116,3 +116,13 @@ h1{font-weight:400}
 .gjb{position:relative;display:flex;gap:4px;height:200px;min-width:max-content}.gjj{width:26px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
 .gjc{width:100%;display:flex;flex-direction:column;justify-content:flex-end;min-height:0}.gjc i{display:block;width:100%}.gjc .d{background:#2f2d29;order:0}.gjc .n{background:#fff;order:1}.gjc .e{background:#B4AB9B;order:2}
 .gjv{font-size:10px;color:var(--tx2)}.gjd{font-size:9px;color:#8D806A;height:16px;margin-top:2px}.gjb u{position:absolute;left:0;right:0;height:2px;background:#8EFF60}
+/* Une page = un écran: tout le mois visible sans défilement */
+#tb .tnav{margin:6px 0}#tb .tnav button{height:36px}#tb .tmois{font-size:13px}
+#tb .etiq{margin:4px 0}
+#tb .tcarte{margin:6px 0;padding:8px 12px;display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center}
+#tb .tct{grid-column:1/3}#tb .tgros{font-size:34px;margin:0;grid-row:2/4}#tb .tgros small{font-size:13px}
+#tb .tcib{font-size:12px;text-align:right}#tb .tbarre{margin:4px 0;grid-column:2}#tb .tcum{grid-column:1/3;font-size:12px;margin-top:2px}
+#tb .tcarte .tbarre{grid-row:3}
+#tb .gj{overflow:visible;margin:6px 0}#tb .gjb{min-width:0;height:150px;gap:2px}#tb .gjj{width:auto;flex:1;min-width:0}
+#tb .gjv{font-size:8px}#tb .gjd{font-size:8px;overflow:hidden;white-space:nowrap}
+#tb .aide{margin:4px 0;font-size:12px}
