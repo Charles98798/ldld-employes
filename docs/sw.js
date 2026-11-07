@@ -1,5 +1,5 @@
 // Garde le «squelette» de l'application pour qu'elle s'ouvre vite et hors réseau. Les données (messages, documents) ne sont jamais gardées ici.
-var V = "ldld-app-v34";
+var V = "ldld-app-v35";
 var FICHIERS = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest", "vendor/pdf.min.js", "vendor/pdf.worker.min.js",
   "fonts/Archivo-200.woff2", "fonts/Archivo-300.woff2", "fonts/Archivo-400.woff2", "fonts/Archivo-500.woff2",
   "assets/LDLD_logo_complet_blanc_transparent.png", "assets/LDLD_logo_complet_noir_transparent.png", "assets/LDLD_symbole_blanc_transparent.png"];
