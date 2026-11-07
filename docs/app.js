@@ -1,5 +1,5 @@
 // Étape 1 : démarrage, connexion et menu. Aucune donnée réelle : la connexion et les sections sont des gabarits.
-var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Mon profil"];
+var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Rencontre", "Mon profil"];
 var app = document.getElementById("app");
 
 function demarrage(){
@@ -613,11 +613,46 @@ function profil(){
     document.getElementById("notifCase").onchange = function(){ var c = this; (c.checked ? demanderNotifs() : couperNotifs()).then(function(ok){ if(c.checked && !ok) c.checked = false; }).catch(function(){}); };
   });
 }
+// Rencontre : l'employé choisit son responsable et un sujet; la demande arrive dans les Messages du responsable.
+function rencontre(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Rencontre</h1><div id="rc"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  appelService({action:"rencontre_liste", session:sessionGardee()}).then(function(r){
+    var el = document.getElementById("rc"); if(!el) return;
+    if(!r || !r.ok) throw 0;
+    if(!r.responsables.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN RESPONSABLE</div>'; return; }
+    var choix = {resp: r.responsables.length === 1 ? r.responsables[0].c : "", sujet: ""};
+    function pastilles(id, liste, cle, valeur){
+      return '<div class="chx" id="'+id+'">'+liste.map(function(x){ var v = valeur(x), t = typeof x === "string" ? x : x.nom; return '<button type="button" data-v="'+esc(v)+'" aria-pressed="'+(choix[cle] === v ? "true" : "false")+'">'+esc(t)+'</button>'; }).join("")+'</div>';
+    }
+    el.innerHTML = '<div class="etiq">▪ AVEC QUI</div>'+pastilles("pr", r.responsables, "resp", function(x){ return x.c; })+
+      '<div class="etiq">▪ SUJET</div>'+pastilles("ps", r.sujets, "sujet", function(x){ return x; })+
+      '<div class="etiq">▪ MESSAGE (FACULTATIF)</div><textarea class="champ zone" id="rt" maxlength="1000" placeholder="Quelques mots…"></textarea>'+
+      '<button class="bouton" id="renv">Envoyer →</button><div class="bandeau" id="retat" style="display:none"></div>';
+    function lier(id, cle){
+      var bs = el.querySelectorAll("#"+id+" button");
+      Array.prototype.forEach.call(bs, function(b){ b.onclick = function(){ choix[cle] = b.getAttribute("data-v"); Array.prototype.forEach.call(bs, function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); }); }; });
+    }
+    lier("pr", "resp"); lier("ps", "sujet");
+    var etat = document.getElementById("retat");
+    function dire(t){ etat.style.display = "block"; etat.textContent = t; }
+    document.getElementById("renv").onclick = function(){
+      if(!choix.resp){ dire("▪ CHOISISSEZ UNE PERSONNE"); return; }
+      if(!choix.sujet){ dire("▪ CHOISISSEZ UN SUJET"); return; }
+      var bt = this; bt.disabled = true; dire("▪ ENVOI…");
+      appelService({action:"rencontre_demande", session:sessionGardee(), responsable:choix.resp, sujet:choix.sujet, texte:document.getElementById("rt").value.trim()}).then(function(x){
+        if(x && x.ok){ dire("▪ DEMANDE ENVOYÉE"); setTimeout(menu, 1400); }
+        else { bt.disabled = false; dire("▪ NON ENVOYÉE · "+((x && x.erreur) || "RÉESSAYEZ")); }
+      }).catch(function(){ bt.disabled = false; dire("▪ NON ENVOYÉE · RÉSEAU"); });
+    };
+  }).catch(function(){ var el = document.getElementById("rc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
 function section(i){
   if(i === 0) return messages();
   if(i === 4) return tableau();
   if(i === 5) return incendie();
-  if(i === 6) return profil();
+  if(i === 6) return rencontre();
+  if(i === 7) return profil();
   if(i === 2) return evaluations();
   if(i === 3) return salaire();
   if(i === 1) return manuel();
