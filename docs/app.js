@@ -166,6 +166,20 @@ function detail(id){
   var m = MESSAGES.filter(function(x){ return x.id === id; })[0]; noterLu(id);
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+esc(m.titre)+'</h1><div class="date">'+esc(m.de)+' · '+dateCourte(m.date)+'</div><div class="corps">'+esc(m.texte).replace(/\n/g,"<br>")+'</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); messages(); };
+  if(!m.envoye && /^Demande de rencontre/.test(m.titre) && peutEcrire()){
+    app.querySelector(".page").insertAdjacentHTML("beforeend", '<div class="etiq">▪ DATE ET HEURE</div><div class="dh"><input class="champ" id="rdate" type="date"><input class="champ" id="rheure" type="time" step="900"></div>' +
+      '<button class="bouton" id="rplan">Planifier →</button><div class="bandeau" id="rep" style="display:none"></div>');
+    var rep = document.getElementById("rep"); function dire(t){ rep.style.display = "block"; rep.textContent = t; }
+    document.getElementById("rplan").onclick = function(){
+      var d = document.getElementById("rdate").value, h = document.getElementById("rheure").value;
+      if(!d || !h){ dire("▪ DATE ET HEURE REQUISES"); return; }
+      var bt = this; bt.disabled = true; dire("▪ ENVOI…");
+      appelService({action:"rencontre_planifier", session:sessionGardee(), id:id, date:d, heure:h}).then(function(r){
+        if(r && r.ok){ dire("▪ RENCONTRE PLANIFIÉE · L'EMPLOYÉ EST AVISÉ"); }
+        else { bt.disabled = false; dire("▪ NON PLANIFIÉE · "+((r && r.erreur) || "RÉESSAYEZ")); }
+      }).catch(function(){ bt.disabled = false; dire("▪ NON PLANIFIÉE · RÉSEAU"); });
+    };
+  }
 }
 function rediger(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Nouveau message</h1>' +

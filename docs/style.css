@@ -247,3 +247,4 @@ input,textarea{color-scheme:light}
 
 /* Rencontre : choix en pastilles carrées */
 .chx{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 6px}.chx button{font:inherit;font-size:15px;background:transparent;border:1.5px solid var(--tx);color:var(--tx);padding:11px 14px;cursor:pointer;border-radius:0}.chx button[aria-pressed=true]{background:var(--tx);color:var(--noir)}
+.dh{display:flex;gap:14px}.dh .champ{flex:1;min-width:0;color-scheme:light}
