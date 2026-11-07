@@ -175,3 +175,6 @@ input[type=checkbox]{-webkit-appearance:none;appearance:none;width:22px;height:2
 input[type=checkbox]:checked{background:#8EFF60;border-color:#8EFF60}
 input[type=checkbox]:checked::after{content:"";position:absolute;left:6px;top:2px;width:6px;height:11px;border:solid #1D1D1B;border-width:0 2px 2px 0;transform:rotate(45deg)}
 .nombre,.pastille{background:#8EFF60;color:#1D1D1B;font-size:8px;letter-spacing:.8px;font-weight:700;line-height:1;padding:3px 5px;display:inline-block}
+/* Texte non sélectionnable (pas de bulle Copier/Chercher), sauf dans les champs */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;user-select:text}

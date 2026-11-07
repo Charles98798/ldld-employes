@@ -546,4 +546,9 @@ function section(i){
 }
 if(location.hash === "#evaluations") evaluations(); else demarrage();
 
-if("serviceWorker" in navigator){ window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); }); }
+if("serviceWorker" in navigator){
+  // Nouvelle version : si une autre prend le relais, on recharge une seule fois (hors connexion et saisie en cours)
+  var avaitControleur = !!navigator.serviceWorker.controller, rechargee = false;
+  navigator.serviceWorker.addEventListener("controllerchange", function(){ if(!avaitControleur || rechargee) return; rechargee = true; var a = document.activeElement; if(a && /INPUT|TEXTAREA/.test(a.tagName)) return; location.reload(); });
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").then(function(r){ try { r.update(); } catch(e){} }).catch(function(){}); });
+}
