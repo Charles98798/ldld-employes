@@ -126,3 +126,19 @@ h1{font-weight:400}
 #tb .gj{overflow:visible;margin:6px 0}#tb .gjb{min-width:0;height:150px;gap:2px}#tb .gjj{width:auto;flex:1;min-width:0}
 #tb .gjv{font-size:8px}#tb .gjd{font-size:8px;overflow:hidden;white-space:nowrap}
 #tb .aide{margin:4px 0;font-size:12px}
+
+/* Salaire */
+.cases{display:flex;gap:8px;margin:16px 0}.cases input{flex:1;min-width:0;height:54px;text-align:center;font-size:24px;background:transparent;border:1px solid var(--tx);border-radius:0;color:var(--tx2);font-family:inherit;padding:0}.cases input:focus{outline:none;border-color:var(--tx2)}
+#sa .saeti{font-size:11px;letter-spacing:.18em;color:#8D806A;display:flex;justify-content:space-between;align-items:center;margin-top:-8px}
+.saan a{margin-left:10px;text-decoration:none;padding:2px 6px;border:1px solid var(--fil);letter-spacing:.06em}.saan a.on{background:var(--tx);color:var(--noir);border-color:var(--tx)}
+.said{display:flex;justify-content:space-between;align-items:center;background:#2A2926;padding:10px 14px;margin:8px 0}.said strong{display:block;font-size:15px;font-weight:600}.said small{font-size:12px;color:#8D806A}.saht{font-size:20px;color:var(--tx2)}
+.saech{display:flex;gap:3px;margin-bottom:8px}.saech span{flex:1;border:1px solid var(--fil);text-align:center;font-size:9px;padding:3px 0;line-height:1.35;color:var(--tx2)}.saech span.on{background:var(--tx);color:var(--noir);border-color:var(--tx)}
+.sh{display:flex;align-items:baseline;gap:8px;border-bottom:3px solid var(--tx);padding-bottom:4px;margin-top:10px}.sh b{font-size:19px;font-weight:400;color:#8D806A}.sh span{font-size:11px;letter-spacing:.16em}
+.sl{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:3px 0}.sl.fort{font-weight:700}
+.satot{display:flex;justify-content:space-between;align-items:center;background:#2A2926;padding:10px 14px;margin-top:10px}.satot span{font-size:10.5px;letter-spacing:.14em;max-width:50%}.satot b{font-size:26px;font-weight:400;color:var(--tx2)}
+.sabar{display:flex;height:7px;background:#3a3834;margin-top:6px}.sabar i{display:block;height:100%;background:var(--tx)}.sabar i.b{background:#fff}.sabar i.c{background:#5b574f}
+.sale{font-size:10px;color:#8D806A;margin:5px 0 0;line-height:1.5}
+.sarec{display:flex;justify-content:space-between;margin-top:6px}.sarec b{display:block;font-size:22px;font-weight:400;color:var(--tx2)}.sarec small{font-size:10px;color:#8D806A}.sarec div:last-child{text-align:right}
+.nb{border-top:1px solid var(--fil);padding:12px 0}.nb p{margin:4px 0 0;font-size:14px;line-height:1.5}
+#sa .saeti{margin-top:-6px}.page h1{margin:14px 0}
+h1.sa1{font-size:26px;margin:10px 0;white-space:nowrap}.satot span{max-width:55%}

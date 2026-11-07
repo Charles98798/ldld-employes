@@ -210,39 +210,77 @@ function sectionDocs(p, titre, aide){
 }
 function manuel(){ sectionDocs("manuel", "Manuel d'employé", "Votre manuel est à votre nom (féminin ou masculin). Il se télécharge seul et reste lisible sans Internet."); }
 function incendie(){ sectionDocs("incendie", "Plan d'incendie", "Le plan à jour se télécharge seul et reste lisible sans Internet."); }
-// Étape 4 : salaire. Chiffres d'essai. Règle de sécurité : l'application ne calcule rien; elle affiche seulement les valeurs déjà calculées par les portails.
-var SALAIRE_ESSAI = {total:71250, position:84, detail:[["Salaire de base",58400],["Vacances, fériés et maladie",5800],["Boni",2000],["Assurances collectives",3900],["Cotisation OTPADQ",1150]]};
-function dollars(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0") + "\u00a0$"; }
+// Salaire : protégé par un code envoyé au courriel (valable 10 minutes, session salaire de 15 minutes d'inactivité).
+// Règle de sécurité : l'application ne calcule rien et ne garde aucun montant sur le téléphone; elle affiche les valeurs du dossier salarial, lues à chaque ouverture.
+function dollars(n){ return n === null || n === undefined || n === "" ? "—" : String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " $"; }
+function taux(n){ var x = parseFloat(String(n).replace(",", ".")); return isNaN(x) ? "—" : x.toFixed(2).replace(".", ","); }
+function pctTxt(p){ var x = parseFloat(String(p).replace("%", "").replace(",", ".")); if(isNaN(x)) return String(p); if(x <= 1.5) x = x * 100; return Math.round(x) + " %"; }
 function salaire(){
-  var s = SALAIRE_ESSAI;
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Salaire et documents</h1>' +
-    '<div class="etiq">▪ RÉMUNÉRATION GLOBALE 2027</div><div class="gros">'+dollars(s.total)+'</div>' +
-    '<div class="etiq">▪ VOTRE POSITION</div><div class="jauge"><i style="width:'+Math.round(s.position)+'%"></i></div><div class="etiq">'+Math.round(s.position)+' % · sommet de l\'échelle = 100 %</div>' +
-    '<div style="margin-top:14px">'+s.detail.map(function(d){ return '<div class="ligne"><span>'+d[0]+'</span><span>'+dollars(d[1])+'</span></div>'; }).join("")+'</div>' +
-    '<a class="doc" href="#" id="docs" style="margin-top:14px"><span>▪ Vos documents de salaire</span><em>→</em></a>' +
-    '<p class="aide">Tous les chiffres viennent de votre dossier salarial. Ils ne se modifient pas dans l\'application.</p></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Salaire</h1><div id="sa"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  document.getElementById("docs").onclick = function(e){ e.preventDefault(); documentsSalaire(); };
+  appelService({action:"salaire_lire", session:sessionGardee()}).then(function(r){
+    if(r && r.ok) return salaireEcran(r, 0);
+    if(r && r.code) return salaireCode(true);
+    document.getElementById("sa").innerHTML = '<div class="bandeau">▪ '+esc((r && r.erreur) || "SALAIRE INDISPONIBLE")+'</div>';
+  }).catch(function(){ document.getElementById("sa").innerHTML = '<div class="bandeau">▪ SALAIRE INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
-function documentsSalaire(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Salaire et documents</a><h1>Vos documents</h1>' +
-    '<div class="bandeau">▪ DISPONIBLE HORS LIGNE</div><div id="liste"></div><p class="aide">Seuls vos propres documents apparaissent ici.</p></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); salaire(); };
-  var liste = document.getElementById("liste");
-  function dessiner(docs){
-    liste.innerHTML = docs.map(function(d){ var e = etat(d);
-      return '<a class="doc" href="#" data-id="'+d.id+'"><span>▪ '+esc(d.nom)+'</span><em class="'+e+'">'+(e === "ok" ? "✓" : e === "maj" ? "MISE À JOUR" : "À TÉLÉCHARGER")+'</em></a>'; }).join("");
-    Array.prototype.forEach.call(liste.querySelectorAll("a.doc"), function(a){
-      a.onclick = function(ev){ ev.preventDefault(); var d = docs.filter(function(x){ return x.id === a.getAttribute("data-id"); })[0];
-        (self.caches ? caches.open(CACHE).then(function(c){ return c.match(d.fichier); }) : Promise.resolve(null)).then(function(r){
-          return r ? r.blob().then(function(b){ return URL.createObjectURL(b); }) : d.fichier; }).then(function(u){ window.open(u, "_blank"); }); };
-    });
+function salaireCode(envoyer){
+  var zone = document.getElementById("sa");
+  zone.innerHTML = '<div class="etiq">▪ CODE DE SÉCURITÉ</div><p class="aide" id="samsg" style="font-size:15px">Pour protéger votre salaire, entrez le code de 6 chiffres envoyé à votre courriel. Il est valable 10 minutes.</p>' +
+    '<div class="cases" id="cases">'+[0,1,2,3,4,5].map(function(i){ return '<input inputmode="numeric" maxlength="1" autocomplete="'+(i ? 'off' : 'one-time-code')+'" aria-label="Chiffre '+(i+1)+'">'; }).join("")+'</div>' +
+    '<a class="doc" href="#" id="nouveau" style="margin-top:18px"><span>▪ Envoyer un nouveau code</span><em>→</em></a><p class="aide">Aucun montant n\'est gardé sur votre téléphone.</p>';
+  var msg = document.getElementById("samsg"), champs = Array.prototype.slice.call(document.querySelectorAll("#cases input"));
+  function envoi(){ msg.textContent = "Envoi du code…"; appelService({action:"salaire_code", session:sessionGardee()}).then(function(r){
+    msg.textContent = r && r.ok ? "Code envoyé à votre courriel. Il est valable 10 minutes. Vérifiez aussi les indésirables." : ((r && r.erreur) || "Envoi impossible."); }).catch(function(){ msg.textContent = "Envoi impossible. Réessayez."; }); }
+  function valider(){
+    var code = champs.map(function(c){ return c.value; }).join("");
+    if(code.length !== 6) return;
+    msg.textContent = "Vérification…";
+    appelService({action:"salaire_verifier", session:sessionGardee(), code:code}).then(function(r){
+      if(r && r.ok) return salaire();
+      champs.forEach(function(c){ c.value = ""; }); champs[0].focus(); msg.textContent = (r && r.erreur) || "Code invalide ou expiré.";
+    }).catch(function(){ msg.textContent = "Vérification impossible. Réessayez."; });
   }
-  fetch("demo/_salaire.json").then(function(r){ return r.json(); }).then(function(m){
-    try { localStorage.setItem("ldld-manifeste-salaire", JSON.stringify(m)); } catch(e){}
-    dessiner(m.documents);
-    Promise.all(m.documents.filter(function(d){ return etat(d) !== "ok"; }).map(function(d){ return telecharger(d).catch(function(){}); })).then(function(){ dessiner(m.documents); }); })
-  .catch(function(){ var m; try { m = JSON.parse(localStorage.getItem("ldld-manifeste-salaire")); } catch(e){} if(m) dessiner(m.documents); });
+  champs.forEach(function(c, i){
+    c.oninput = function(){
+      var v = c.value.replace(/\D/g, "");
+      if(v.length > 1){ v.split("").slice(0, 6 - i).forEach(function(ch, k){ champs[i + k].value = ch; }); (champs[Math.min(5, i + v.length)]).focus(); }
+      else { c.value = v; if(v && i < 5) champs[i + 1].focus(); }
+      valider();
+    };
+    c.onkeydown = function(e){ if(e.key === "Backspace" && !c.value && i > 0){ champs[i - 1].focus(); champs[i - 1].value = ""; } };
+  });
+  champs[0].focus();
+  document.getElementById("nouveau").onclick = function(e){ e.preventDefault(); envoi(); };
+  if(envoyer) envoi();
+}
+function salaireEcran(r, k){
+  var a = r.annees[k], zone = document.getElementById("sa"), t = (a.repartition || {});
+  var h = document.querySelector(".page h1"); h.textContent = "Rémunération globale"; h.className = "sa1";
+  var onglets = r.annees.length > 1 ? '<span class="saan">'+r.annees.map(function(x, i){ return '<a href="#" data-k="'+i+'" class="'+(i === k ? 'on' : '')+'">'+x.annee+'</a>'; }).join("")+'</span>' : "";
+  var pos = pctTxt(a.position);
+  var l = function(lib, v, fort){ return '<div class="sl'+(fort ? ' fort' : '')+'"><span>'+lib+'</span><span>'+v+'</span></div>'; };
+  var sec = function(n, titre){ return '<div class="sh"><b>'+n+'</b><span>'+titre+'</span></div>'; };
+  zone.innerHTML = '<div class="saeti">ANNÉE '+a.annee+(a.annee === 2026 ? ' · EN VIGUEUR' : ' · À VENIR')+onglets+'</div>' +
+    '<div class="said"><div><strong>'+esc(MOI && MOI.nom || "")+'</strong><small>'+esc(MOI && MOI.poste || "")+'</small></div><div class="saht">'+taux(a.horaire)+' $/h</div></div>' +
+    '<div class="saech">'+(a.echelle || []).map(function(e){ var on = pctTxt(e.p) === pos; return '<span class="'+(on ? 'on' : '')+'">'+pctTxt(e.p)+'<br>'+taux(e.t)+'</span>'; }).join("")+'</div>' +
+    sec("01", "SALAIRE ET TEMPS DE TRAVAIL") + l("Salaire horaire retenu", taux(a.horaire) + " $") + l("Heures de travail (par semaine)", esc(a.heures === null || a.heures === undefined ? "—" : a.heures)) + l("Salaire de base annuel ("+esc(a.semaines || 46)+" semaines)", dollars(a.base), true) +
+    sec("02", "CONGÉS RÉMUNÉRÉS") + l("Vacances rémunérées", dollars(a.vacances)) + l("Jours fériés rémunérés", dollars(a.feries)) + l("Maladie rémunérée", dollars(a.maladie)) + l("Total des congés rémunérés", dollars(a.conges), true) +
+    sec("03", "AUTRES AVANTAGES") + l("Boni annuel pouvant atteindre", dollars(a.boni)) + l("Cotisation OTPADQ", dollars(a.otpadq)) + l("Assurances 50 % de la prime (approx.)", dollars(a.assurances)) +
+    '<div class="satot"><span>TOTAL DE LA RÉMUNÉRATION GLOBALE</span><b>'+dollars(a.total)+'</b></div>' +
+    '<div class="sabar"><i style="width:'+(t.base || 0)+'%"></i><i class="b" style="width:'+(t.conges || 0)+'%"></i><i class="c" style="width:'+(t.autres || 0)+'%"></i></div>' +
+    '<p class="sale">Salaire de base '+dollars(a.base)+' · '+(t.base === null || t.base === undefined ? "—" : t.base)+' %&nbsp; Congés rémunérés '+dollars(a.conges)+' · '+(t.conges === null || t.conges === undefined ? "—" : t.conges)+' %&nbsp; Autres avantages '+dollars((a.boni || 0) + (a.otpadq || 0) + (a.assurances || 0))+' · '+(t.autres === null || t.autres === undefined ? "—" : t.autres)+' %&nbsp; Salaire annualisé sur 52 semaines : '+dollars(a.annualise)+'</p>' +
+    sec("04", "PROGRAMME DE RECONNAISSANCE") + '<div class="sarec">'+(a.paliers || []).map(function(p){ return '<div><b>'+dollars(p.montant)+'</b><small>'+esc(p.lib)+'</small></div>'; }).join("")+'</div>' +
+    '<a class="doc" href="#" id="notes" style="margin-top:10px"><span>▪ Notes et conditions</span><em>→</em></a>';
+  Array.prototype.forEach.call(zone.querySelectorAll(".saan a"), function(x){ x.onclick = function(e){ e.preventDefault(); salaireEcran(r, +x.getAttribute("data-k")); }; });
+  document.getElementById("notes").onclick = function(e){ e.preventDefault(); salaireNotes(r, k); };
+}
+function salaireNotes(r, k){
+  var n = r.annees[k].notes || {}, c = r.communes || {};
+  var bloc = function(t, x){ return x ? '<div class="nb"><div class="etiq">'+t+'</div><p>'+esc(x)+'</p></div>' : ""; };
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Rémunération globale</a><h1>Notes et conditions</h1>' +
+    bloc("VACANCES", n.vacances) + bloc("MALADIE", n.maladie) + bloc("BONI", [n.boni1, n.boni2].filter(Boolean).join(" ")) + bloc("HEURES DE TRAVAIL", c.heures) + bloc("AVIS", c.avis) + '</div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); salaire(); };
 }
 // Étape 5 : évaluations. L'autoévaluation reproduit la page du portail (mêmes 8 onglets, mêmes questions); en essai elle ne lit ni n'enregistre rien.
 function evaluations(){
@@ -384,9 +422,13 @@ function profil(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Mon profil</h1>' +
     lignes.map(function(l){ return '<div class="ligne"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
     '<div class="etiq" style="margin-top:20px">▪ NOTIFICATIONS</div><div id="notifs"></div>' +
-    '<a class="doc" href="#" id="sortir" style="margin-top:20px"><span>Déconnexion</span><em>→</em></a></div>';
+    '<a class="doc" href="#" id="sortir" style="margin-top:20px"><span>Déconnexion</span><em>→</em></a>' +
+    '<a class="doc" href="#" id="partout"><span>Se déconnecter partout</span><em>→</em></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   document.getElementById("sortir").onclick = function(e){ e.preventDefault(); deconnecter(); };
+  document.getElementById("partout").onclick = function(e){ e.preventDefault(); var el = this, sp = el.querySelector("span");
+    if(!el.getAttribute("data-ok")){ el.setAttribute("data-ok", "1"); sp.textContent = "Confirmer : fermer toutes mes sessions"; return; }
+    appelService({action:"deconnecter_partout", session:sessionGardee()}).catch(function(){}).then(function(){ garderSession(null); MOI = null; connexion(); }); };
   var zone = document.getElementById("notifs");
   if(!notifPossible()){ zone.innerHTML = '<p class="aide">Pour recevoir les notifications sur iPhone, ajoutez l\'application à l\'écran d\'accueil (Partager > Sur l\'écran d\'accueil).</p>'; return; }
   if(Notification.permission === "denied"){ zone.innerHTML = '<p class="aide">Les notifications sont bloquées dans les réglages de votre appareil. Autorisez-les dans les réglages pour les recevoir.</p>'; return; }
