@@ -67,7 +67,7 @@ function deconnecter(){
 }
 function connexion(message){
   app.innerHTML = '<div class="connexion"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
-    '<div style="margin-top:110px"><label class="etq" for="courriel">▪ COURRIEL</label><input class="champ ligne3" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="nom@exemple.com">' +
+    '<div class="formc"><label class="etq" for="courriel">▪ COURRIEL</label><input class="champ ligne3" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="nom@exemple.com">' +
     '<button class="bouton" id="envoi">Recevoir mon code →</button></div>' +
     '<p class="aide" id="msg">'+(message||"")+'</p><div class="pied-connexion"><span>PLATEFORME</span><span>EMPLOYÉS</span></div></div>';
   document.getElementById("envoi").onclick = function(){
@@ -80,7 +80,7 @@ function connexion(message){
 }
 function saisieCode(c){
   app.innerHTML = '<div class="connexion"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
-    '<div style="margin-top:110px"><label class="etq" for="code">▪ CODE À 6 CHIFFRES</label><input class="champ ligne3" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" style="letter-spacing:6px;font-size:24px">' +
+    '<div class="formc"><label class="etq" for="code">▪ CODE À 6 CHIFFRES</label><input class="champ ligne3" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" style="letter-spacing:6px;font-size:24px">' +
     '<button class="bouton" id="valider">Se connecter →</button></div>' +
     '<p class="aide" id="msg">Code envoyé à '+esc(c)+'. Il est valide 10 minutes. Vérifiez aussi les indésirables.</p>' +
     '<p class="aide"><a href="#" id="autre">← Changer de courriel</a></p></div>';
