@@ -240,3 +240,4 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .vue .retour{top:auto;bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);left:max(14px,env(safe-area-inset-left,0px));font-size:13px;padding:13px 18px}
 .vue h1{padding-top:0}
 .vue{padding-bottom:90px}
+input,textarea{color-scheme:light}
