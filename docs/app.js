@@ -242,9 +242,13 @@ function sectionDocs(p, titre, aide){
     '<div id="liste"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   var liste = document.getElementById("liste");
-  function ouvrir(d){
+  function ouvrir(d, reprise){
     (self.caches ? caches.open(CACHE).then(function(c){ return c.match(cleDoc(d)); }) : Promise.resolve(null)).then(function(r){
-      if(!r) throw 0; return r.blob(); }).then(function(b){ visionneuse(d.nom, b, function(){ sectionDocs(p, titre, aide); }); }).catch(function(){});
+      if(!r) throw 0; return r.blob(); }).then(function(b){ visionneuse(d.nom, b, function(){ sectionDocs(p, titre, aide); }); }).catch(function(){
+      // copie locale absente : on la télécharge de nouveau une fois, sinon message visible
+      if(!reprise) return telechargerDoc(p, d).then(function(){ ouvrir(d, true); }).catch(function(){ liste.insertAdjacentHTML("beforeend", '<div class="bandeau">▪ DOCUMENT INDISPONIBLE · RÉESSAYEZ</div>'); });
+      liste.insertAdjacentHTML("beforeend", '<div class="bandeau">▪ DOCUMENT INDISPONIBLE · RÉESSAYEZ</div>');
+    });
   }
   function dessinerD(docs){
     liste.innerHTML = docs.map(function(d){ var e = etat(d);
