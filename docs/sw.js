@@ -1,5 +1,5 @@
 // Garde le «squelette» de l'application pour qu'elle s'ouvre vite et hors réseau. Les données (messages, documents) ne sont jamais gardées ici.
-var V = "ldld-app-v1";
+var V = "ldld-app-v2";
 var FICHIERS = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest",
   "assets/LDLD_logo_complet_blanc_transparent.png", "assets/LDLD_logo_complet_noir_transparent.png", "assets/LDLD_symbole_blanc_transparent.png"];
 self.addEventListener("install", function(e){ e.waitUntil(caches.open(V).then(function(c){ return c.addAll(FICHIERS); }).then(function(){ return self.skipWaiting(); })); });
@@ -10,4 +10,13 @@ self.addEventListener("fetch", function(e){
   var r = e.request;
   if(r.method !== "GET" || new URL(r.url).origin !== location.origin) return;   // le service Google n'est jamais mis en cache
   e.respondWith(fetch(r).then(function(rep){ var cp = rep.clone(); caches.open(V).then(function(c){ c.put(r, cp); }); return rep; }).catch(function(){ return caches.match(r); }));
+});
+
+// Notifications : le service envoie un signal sans contenu; on affiche un texte général (aucun détail confidentiel).
+self.addEventListener("push", function(e){
+  e.waitUntil(self.registration.showNotification("Lafond Desjardins", {body:"Du nouveau dans l'application : un message ou un document.", icon:"icons/icon-192.png", badge:"icons/icon-192.png", tag:"ldld-nouveau"}));
+});
+self.addEventListener("notificationclick", function(e){
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({type:"window", includeUncontrolled:true}).then(function(l){ if(l.length) return l[0].focus(); return self.clients.openWindow("./"); }));
 });

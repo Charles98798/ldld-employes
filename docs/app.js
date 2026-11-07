@@ -56,7 +56,36 @@ function saisieCode(c){
     }).catch(function(){ msg.textContent = "Connexion impossible. Réessayez."; });
   };
 }
+// Notifications (Web Push). Actives par défaut : la demande s'affiche à la première connexion; l'employé peut les couper dans Mon profil.
+var VAPID_PUBLIC = "BGiQdAGk_BJzz2lA1osvltqAXV9h01dUGPH1ByDqgo9loCXi-VnLLxzmlCrd0XHdQNck0wHax2SWw0g0kcccIbg";
+function notifPossible(){ return ("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window); }
+function cleBinaire(b64){ var p = "=".repeat((4 - b64.length % 4) % 4), r = atob((b64 + p).replace(/-/g, "+").replace(/_/g, "/")), o = new Uint8Array(r.length); for(var i = 0; i < r.length; i++) o[i] = r.charCodeAt(i); return o; }
+function abonnerNotifs(){
+  return navigator.serviceWorker.ready.then(function(reg){
+    return reg.pushManager.getSubscription().then(function(s){ return s || reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: cleBinaire(VAPID_PUBLIC)}); });
+  }).then(function(s){ return appelService({action:"abonner", session:sessionGardee(), endpoint:s.endpoint}); });
+}
+function demanderNotifs(){
+  if(!notifPossible()) return Promise.resolve(false);
+  return Notification.requestPermission().then(function(p){ return p === "granted" ? abonnerNotifs().then(function(){ return true; }) : false; });
+}
+function couperNotifs(){
+  return navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(s){
+    if(!s) return; var ep = s.endpoint; return s.unsubscribe().then(function(){ return appelService({action:"desabonner", session:sessionGardee(), endpoint:ep}); });
+  });
+}
+function ecranNotifs(){
+  app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div class="nom">Notifications</div>' +
+    '<p class="aide" style="padding:0 24px">Soyez avisé dès qu\'un message arrive ou qu\'un document est mis à jour. Aucun détail confidentiel n\'est affiché. Vous pouvez les couper à tout moment dans Mon profil.</p>' +
+    '<a href="#" id="notifOui">▪ Activer les notifications</a><a href="#" id="notifPlus" style="opacity:.6">Plus tard</a></div>';
+  function fini(){ try { localStorage.setItem("ldld-notif-demande", "1"); } catch(e){} menu(); }
+  document.getElementById("notifOui").onclick = function(e){ e.preventDefault(); demanderNotifs().then(fini).catch(fini); };
+  document.getElementById("notifPlus").onclick = function(e){ e.preventDefault(); fini(); };
+}
 function menu(){
+  var dejaDemande = false; try { dejaDemande = localStorage.getItem("ldld-notif-demande") === "1"; } catch(e){}
+  if(notifPossible() && !dejaDemande && Notification.permission === "default") return ecranNotifs();
+  if(notifPossible() && Notification.permission === "granted" && !menu.abonne){ menu.abonne = true; abonnerNotifs().catch(function(){}); }
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div class="nom">'+esc((MOI && MOI.nom) || "")+'</div>' +
     SECTIONS.map(function(n, i){ return '<a href="#" data-i="'+i+'">▪ '+n+'</a>'; }).join("") +
@@ -350,15 +379,21 @@ function tableau(){
   }).catch(function(){ document.getElementById("tb").innerHTML = '<div class="bandeau">▪ TABLEAU DE BORD INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function profil(){
-  var lignes = [["Nom","Marie Exemple"],["Poste","Technologue"],["Responsable","Élise Desjardins"],["Courriel","marie@lafonddesjardins.com"]];
+  var m = MOI || {};
+  var lignes = [["Nom", m.nom || ""], ["Poste", m.poste || ""], ["Responsable", m.responsable || ""]];
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Mon profil</h1>' +
-    lignes.map(function(l){ return '<div class="ligne"><span>'+l[0]+'</span><span>'+l[1]+'</span></div>'; }).join("") +
-    '<div class="etiq" style="margin-top:20px">▪ NOTIFICATIONS</div>' +
-    '<label class="ligne"><span>Messages de la direction</span><input type="checkbox" checked></label>' +
-    '<label class="ligne"><span>Rappels d\'évaluation</span><input type="checkbox" checked></label>' +
+    lignes.map(function(l){ return '<div class="ligne"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
+    '<div class="etiq" style="margin-top:20px">▪ NOTIFICATIONS</div><div id="notifs"></div>' +
     '<a class="doc" href="#" id="sortir" style="margin-top:20px"><span>Déconnexion</span><em>→</em></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   document.getElementById("sortir").onclick = function(e){ e.preventDefault(); deconnecter(); };
+  var zone = document.getElementById("notifs");
+  if(!notifPossible()){ zone.innerHTML = '<p class="aide">Pour recevoir les notifications sur iPhone, ajoutez l\'application à l\'écran d\'accueil (Partager > Sur l\'écran d\'accueil).</p>'; return; }
+  if(Notification.permission === "denied"){ zone.innerHTML = '<p class="aide">Les notifications sont bloquées dans les réglages de votre appareil. Autorisez-les dans les réglages pour les recevoir.</p>'; return; }
+  navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(s){
+    zone.innerHTML = '<label class="ligne"><span>Messages et documents mis à jour</span><input type="checkbox" id="notifCase"'+(s && Notification.permission === "granted" ? " checked" : "")+'></label>';
+    document.getElementById("notifCase").onchange = function(){ var c = this; (c.checked ? demanderNotifs() : couperNotifs()).then(function(ok){ if(c.checked && !ok) c.checked = false; }).catch(function(){}); };
+  });
 }
 function section(i){
   if(i === 0) return messages();
