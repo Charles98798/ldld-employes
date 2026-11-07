@@ -300,7 +300,7 @@ function blocsHtml(blocs){
 function sansAccent(t){ return String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
 // Manuel en texte : recherche par mot (sans accents ni majuscules), table des matières; sans réponse du service, l'ancien affichage PDF reste en place.
 function manuel(){
-  var repli = function(){ sectionDocs("manuel", "Manuel d'employé", "Votre manuel d'employé. Pour consultation seulement."); };
+  var repli = function(){ var e = document.getElementById("mn"); if(e) e.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; };
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Manuel d\'employé</h1><div id="mn"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   obtenir("manuel_texte", {action:"manuel_texte"}, function(r){
@@ -358,9 +358,9 @@ function incendie(){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   obtenir("incendie_texte", {action:"incendie_texte"}, function(r){
     var el = document.getElementById("txt"); if(!el) return;
-    if(!r.blocs){ return sectionDocs("incendie", "Plan d'incendie", "Le plan à jour, pour consultation seulement."); }
+    if(!r.blocs){ el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; return; }
     el.innerHTML = blocsHtml(r.blocs);
-  }, function(){ sectionDocs("incendie", "Plan d'incendie", "Le plan à jour, pour consultation seulement."); }, true);
+  }, function(){ var e = document.getElementById("txt"); if(e) e.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
 }
 // Salaire : protégé par un code envoyé au courriel (valable 10 minutes, session salaire de 15 minutes d'inactivité).
 // Règle de sécurité : l'application ne calcule rien et ne garde aucun montant sur le téléphone; elle affiche les valeurs du dossier salarial, lues à chaque ouverture.
