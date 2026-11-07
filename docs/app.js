@@ -30,6 +30,12 @@ function obtenir(cle, corps, afficher, erreur, majSilencieuse){
     return; }
   chercher(cle, corps).then(function(r){ if(!r || !r.ok){ var e = new Error("service"); e.reponse = r; throw e; } afficher(r); }).catch(erreur);
 }
+function pastilleMessages(){
+  var a = app.querySelector('a[data-i="0"]'); if(!a) return;
+  var m = lireCache("messages"), l = lus(), n = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && l.indexOf(x.id) < 0; }).length : 0;
+  var p = a.querySelector(".nombre"); if(p) p.remove();
+  if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = n > 9 ? "9+" : String(n); a.appendChild(p); }
+}
 function pastilleAuto(){
   var a = app.querySelector('a[data-i="2"]'); if(!a) return;
   var ae = lireCache("ae"), reste = ae && ae.rencontres && ae.rencontres.some(function(m){ return !m.terminee; });
@@ -37,7 +43,7 @@ function pastilleAuto(){
   if(reste){ p = document.createElement("span"); p.className = "pastille"; p.textContent = "À REMPLIR"; a.appendChild(p); }
 }
 function precharger(){
-  chercher("messages", {action:"messages"}).catch(function(){});
+  chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
   chercher("tableau", {action:"tableau"}).catch(function(){});
   chercher("ae", {action:"ae_lire"}).then(function(r){
     pastilleAuto();
@@ -127,7 +133,7 @@ function menu(){
     a.onclick = function(e){ e.preventDefault(); section(+a.getAttribute("data-i")); };
   });
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
-  pastilleAuto();
+  pastilleAuto(); pastilleMessages();
 }
 // Étape 2 : messages, lus et écrits par le service Google Apps Script (chaque employé ne reçoit que les siens).
 var MESSAGES = [];

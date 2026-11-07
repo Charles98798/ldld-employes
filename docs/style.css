@@ -175,3 +175,4 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 input[type=checkbox]{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin:0;border:1px solid #B4AB9B;background:transparent;border-radius:0;position:relative;flex:0 0 auto;vertical-align:middle}
 input[type=checkbox]:checked{background:#8EFF60;border-color:#8EFF60}
 input[type=checkbox]:checked::after{content:"";position:absolute;left:6px;top:2px;width:6px;height:11px;border:solid #1D1D1B;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.nombre{background:#8EFF60;color:#1D1D1B;font-size:10px;font-weight:700;min-width:15px;height:15px;padding:0 3px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center}
