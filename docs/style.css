@@ -226,3 +226,10 @@ button,input,textarea,select{font-family:inherit}
 .txp{margin:8px 0;line-height:1.6}.txu{border:1.5px solid var(--tx);padding:14px 16px;margin:18px 0;line-height:1.6}.txu b{display:block;font-size:12px;letter-spacing:.14em;margin-bottom:4px;text-transform:uppercase}
 .txl{padding-left:20px;margin:6px 0;line-height:1.6}.txk dt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.7;margin-top:10px}.txk dd{margin:0}
 .txi{max-width:100%;display:block;margin:10px 0;background:#fff}
+
+.rech{width:100%;box-sizing:border-box;background:transparent;color:var(--tx);border:1.5px solid var(--tx);border-radius:0;padding:12px 14px;font:16px/1.4 inherit;margin:6px 0 14px;-webkit-appearance:none}
+.rech:focus{outline:2px solid #8EFF60;outline-offset:0}
+.toc{list-style:none;padding:0;margin:6px 0}.toc li{border-top:1px solid var(--fil)}.toc a{display:block;padding:12px 0;color:var(--tx);text-decoration:none}
+.rs{display:block;color:var(--tx);text-decoration:none;border-top:1px solid var(--fil);padding:12px 0;font-size:14px;line-height:1.5}.rs b{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.7;margin-bottom:2px;font-weight:600}
+mark{background:#8EFF60;color:#0D1319;padding:0 1px}
+.txtab{overflow-x:auto;margin:10px 0}.txtab table{border-collapse:collapse;font-size:13px;min-width:100%}.txtab th,.txtab td{border:1px solid var(--fil);padding:6px 8px;text-align:left;vertical-align:top}.txtab th{font-size:11px;letter-spacing:.1em;text-transform:uppercase}

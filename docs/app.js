@@ -47,6 +47,7 @@ function precharger(){
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
   chercher("tableau", {action:"tableau"}).catch(function(){});
   chercher("incendie_texte", {action:"incendie_texte"}).catch(function(){});
+  chercher("manuel_texte", {action:"manuel_texte"}).catch(function(){});
   chercher("ae", {action:"ae_lire"}).then(function(r){
     pastilleAuto();
     if(r && r.ok && r.rencontres) r.rencontres.forEach(function(m){ chercher("ae"+m.rencontre, {action:"ae_lire", rencontre:m.rencontre}).catch(function(){}); });
@@ -282,7 +283,75 @@ function sectionDocs(p, titre, aide){
     r.documents.filter(function(d){ return etat(d) !== "ok"; }).forEach(function(d){ telechargerDoc(p, d).then(function(){ dessinerD(r.documents); }).catch(function(){}); });
   }).catch(function(){ var l; try { l = JSON.parse(localStorage.getItem("ldld-liste-"+p)); } catch(e){} if(l) dessinerD(l); else liste.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
-function manuel(){ sectionDocs("manuel", "Manuel d'employé", "Votre manuel d'employé. Pour consultation seulement."); }
+function blocsHtml(blocs){
+  return blocs.map(function(b){
+    if(b.t === "h") return '<h2 class="txh">'+esc(b.v)+'</h2>';
+    if(b.t === "s") return '<div class="txs">'+esc(b.v)+'</div>';
+    if(b.t === "p") return '<p class="txp">'+esc(b.v)+'</p>';
+    if(b.t === "u") return '<div class="txu"><b>'+esc(b.titre||"")+'</b>'+esc(b.v)+'</div>';
+    if(b.t === "li") return '<ul class="txl">'+b.v.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ul>';
+    if(b.t === "ol") return '<ol class="txl">'+b.v.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ol>';
+    if(b.t === "kv") return '<dl class="txk">'+b.v.map(function(x){ return '<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>'; }).join("")+'</dl>';
+    if(b.t === "tab") return '<div class="txtab"><table>'+b.v.map(function(l,i){ return '<tr>'+l.map(function(c){ return (i?'<td>':'<th>')+esc(c)+(i?'</td>':'</th>'); }).join("")+'</tr>'; }).join("")+'</table></div>';
+    if(b.t === "img") return '<img class="txi" alt="" src="'+b.v+'">';
+    return "";
+  }).join("");
+}
+function sansAccent(t){ return String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+// Manuel en texte : recherche par mot (sans accents ni majuscules), table des matières; sans réponse du service, l'ancien affichage PDF reste en place.
+function manuel(){
+  var repli = function(){ sectionDocs("manuel", "Manuel d'employé", "Votre manuel d'employé. Pour consultation seulement."); };
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Manuel d\'employé</h1><div id="mn"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  obtenir("manuel_texte", {action:"manuel_texte"}, function(r){
+    var el = document.getElementById("mn"); if(!el) return;
+    if(!r.blocs){ return repli(); }
+    var secs = [], cur = {titre:"", blocs:[]};
+    r.blocs.forEach(function(b){ if(b.t === "h"){ if(cur.blocs.length || cur.titre) secs.push(cur); cur = {titre:b.v, blocs:[b]}; } else cur.blocs.push(b); });
+    secs.push(cur);
+    secs.forEach(function(x){ x.texte = sansAccent(JSON.stringify(x.blocs.map(function(b){ return b.v; }))); });
+    var q0 = "";
+    el.innerHTML = '<input class="rech" id="rech" type="search" placeholder="Rechercher un mot" autocomplete="off" aria-label="Rechercher un mot"><div id="res"></div><div id="corps"></div>';
+    var rech = document.getElementById("rech"), res = document.getElementById("res"), corps = document.getElementById("corps");
+    function toc(){
+      res.innerHTML = '<div class="txs">TABLE DES MATIÈRES</div><ol class="toc">'+secs.map(function(x,i){ return x.titre ? '<li><a href="#" data-s="'+i+'">'+esc(x.titre)+'</a></li>' : ""; }).join("")+'</ol>';
+    }
+    function ouvrir(i, mot){
+      res.innerHTML = ""; rech.value = mot || ""; corps.innerHTML = blocsHtml(secs[i].blocs);
+      if(mot) surligner(corps, mot);
+      var m = corps.querySelector("mark"); window.scrollTo(0, 0); if(m) m.scrollIntoView({block:"center"});
+      corps.insertAdjacentHTML("afterbegin", '<a class="retour" href="#" id="toc">← Table des matières</a>');
+      document.getElementById("toc").onclick = function(e){ e.preventDefault(); corps.innerHTML = ""; rech.value = ""; toc(); };
+    }
+    function surligner(racine, mot){
+      var n = sansAccent(mot), w = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT), noeuds = [], t;
+      while((t = w.nextNode())) noeuds.push(t);
+      noeuds.forEach(function(nd){
+        var txt = nd.nodeValue, bas = sansAccent(txt), k = bas.indexOf(n); if(k < 0 || bas.length !== txt.length) return;
+        var f = document.createDocumentFragment(), d = 0;
+        while(k >= 0){ f.appendChild(document.createTextNode(txt.slice(d, k))); var m = document.createElement("mark"); m.textContent = txt.slice(k, k+n.length); f.appendChild(m); d = k+n.length; k = bas.indexOf(n, d); }
+        f.appendChild(document.createTextNode(txt.slice(d))); nd.parentNode.replaceChild(f, nd);
+      });
+    }
+    function chercherMot(){
+      var mot = rech.value.trim(); corps.innerHTML = "";
+      if(mot.length < 2){ toc(); return; }
+      var n = sansAccent(mot), out = [];
+      secs.forEach(function(x,i){
+        var plats = x.blocs.reduce(function(a,b){ return a.concat(b.t === "li" || b.t === "ol" ? b.v : b.t === "kv" ? [].concat.apply([], b.v) : b.t === "tab" ? [].concat.apply([], b.v) : typeof b.v === "string" ? [b.v] : []); }, []);
+        plats.forEach(function(p){ var k = sansAccent(p).indexOf(n); if(k >= 0 && sansAccent(p).length === p.length) out.push({i:i, p:p, k:k}); });
+      });
+      res.innerHTML = '<div class="txs">'+out.length+' RÉSULTAT'+(out.length > 1 ? "S" : "")+'</div>' + out.slice(0, 60).map(function(o){
+        var a = Math.max(0, o.k-40), ext = o.p.slice(a, o.k+n.length+80);
+        var h = esc(ext).replace(new RegExp("("+esc(o.p.slice(o.k, o.k+n.length)).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")+")", "i"), "<mark>$1</mark>");
+        return '<a href="#" class="rs" data-s="'+o.i+'"><b>'+esc(secs[o.i].titre || "Introduction")+'</b>'+(a ? "… " : "")+h+'</a>';
+      }).join("");
+    }
+    res.onclick = function(e){ var a = e.target.closest("a[data-s]"); if(!a) return; e.preventDefault(); ouvrir(+a.getAttribute("data-s"), rech.value.trim().length >= 2 ? rech.value.trim() : ""); };
+    rech.oninput = chercherMot;
+    toc();
+  }, repli, true);
+}
 // Plan d'incendie en texte (blocs lus dans le document Google par le service); sans réponse du service, l'ancien affichage PDF reste en place.
 function incendie(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Plan d\'incendie</h1><div id="txt"></div></div>';
@@ -290,17 +359,7 @@ function incendie(){
   obtenir("incendie_texte", {action:"incendie_texte"}, function(r){
     var el = document.getElementById("txt"); if(!el) return;
     if(!r.blocs){ return sectionDocs("incendie", "Plan d'incendie", "Le plan à jour, pour consultation seulement."); }
-    el.innerHTML = r.blocs.map(function(b){
-      if(b.t === "h") return '<h2 class="txh">'+esc(b.v)+'</h2>';
-      if(b.t === "s") return '<div class="txs">'+esc(b.v)+'</div>';
-      if(b.t === "p") return '<p class="txp">'+esc(b.v)+'</p>';
-      if(b.t === "u") return '<div class="txu"><b>'+esc(b.titre||"")+'</b>'+esc(b.v)+'</div>';
-      if(b.t === "li") return '<ul class="txl">'+b.v.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ul>';
-      if(b.t === "ol") return '<ol class="txl">'+b.v.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ol>';
-      if(b.t === "kv") return '<dl class="txk">'+b.v.map(function(x){ return '<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>'; }).join("")+'</dl>';
-      if(b.t === "img") return '<img class="txi" alt="" src="'+b.v+'">';
-      return "";
-    }).join("");
+    el.innerHTML = blocsHtml(r.blocs);
   }, function(){ sectionDocs("incendie", "Plan d'incendie", "Le plan à jour, pour consultation seulement."); }, true);
 }
 // Salaire : protégé par un code envoyé au courriel (valable 10 minutes, session salaire de 15 minutes d'inactivité).
