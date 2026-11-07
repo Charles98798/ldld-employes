@@ -229,7 +229,7 @@ function sectionDocs(p, titre, aide){
     r.documents.filter(function(d){ return etat(d) !== "ok"; }).forEach(function(d){ telechargerDoc(p, d).then(function(){ dessinerD(r.documents); }).catch(function(){}); });
   }).catch(function(){ var l; try { l = JSON.parse(localStorage.getItem("ldld-liste-"+p)); } catch(e){} if(l) dessinerD(l); else liste.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
-function manuel(){ sectionDocs("manuel", "Manuel d'employé", "Votre manuel est à votre nom (féminin ou masculin). Pour consultation seulement."); }
+function manuel(){ sectionDocs("manuel", "Manuel d'employé", "Votre manuel d'employé. Pour consultation seulement."); }
 function incendie(){ sectionDocs("incendie", "Plan d'incendie", "Le plan à jour, pour consultation seulement."); }
 // Salaire : protégé par un code envoyé au courriel (valable 10 minutes, session salaire de 15 minutes d'inactivité).
 // Règle de sécurité : l'application ne calcule rien et ne garde aucun montant sur le téléphone; elle affiche les valeurs du dossier salarial, lues à chaque ouverture.
