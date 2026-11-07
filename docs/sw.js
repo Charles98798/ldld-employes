@@ -1,7 +1,7 @@
 // Garde le «squelette» de l'application pour qu'elle s'ouvre vite et hors réseau. Les données (messages, documents) ne sont jamais gardées ici.
-var V = "ldld-app-v41";
+var V = "ldld-app-v42";
 var FICHIERS = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest", "vendor/pdf.min.js", "vendor/pdf.worker.min.js",
-  "fonts/Archivo-200.woff2", "fonts/Archivo-300.woff2", "fonts/Archivo-400.woff2", "fonts/Archivo-500.woff2",
+  "plans/plan1.png", "plans/plan2.png", "plans/plan3.png", "fonts/Archivo-200.woff2", "fonts/Archivo-300.woff2", "fonts/Archivo-400.woff2", "fonts/Archivo-500.woff2",
   "assets/LDLD_logo_complet_blanc_transparent.png", "assets/LDLD_logo_complet_noir_transparent.png", "assets/LDLD_symbole_blanc_transparent.png"];
 self.addEventListener("install", function(e){ e.waitUntil(caches.open(V).then(function(c){ return c.addAll(FICHIERS); }).then(function(){ return self.skipWaiting(); })); });
 self.addEventListener("activate", function(e){

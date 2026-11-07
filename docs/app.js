@@ -46,7 +46,7 @@ function pastilleAuto(){
 function precharger(){
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
   chercher("tableau", {action:"tableau"}).catch(function(){});
-  chercher("incendie_texte", {action:"incendie_texte"}).then(function(r){ if(r && r.nbImages){ for(var i = 0; i < r.nbImages; i++){ (function(i){ var cle = "incimg"+(r.version || "")+"_"+i; if(!lireCache(cle)) chercher(cle, {action:"incendie_image", i:i}).catch(function(){}); })(i); } } }).catch(function(){});
+  chercher("incendie_texte", {action:"incendie_texte"}).catch(function(){});
   chercher("manuel_texte", {action:"manuel_texte"}).catch(function(){});
   chercher("calendrier", {action:"calendrier"}).catch(function(){});
   chercher("ae", {action:"ae_lire"}).then(function(r){
@@ -300,6 +300,7 @@ function sectionDocs(p, titre, aide){
 }
 function numTitre(t){ var m = /^(\d\d)\s+(.*)$/.exec(t); return m ? '<span class="nm">'+esc(m[1])+'</span><span class="tt">'+esc(m[2])+'</span>' : esc(t); }
 function blocsHtml(blocs){
+  var nImg = 0;   // les plans d'incendie sont des images de l'application (plans/plan1.png…), dans l'ordre du document
   return blocs.map(function(b){
     if(b.t === "h") return '<h2 class="txh">'+numTitre(b.v)+'</h2>';
     if(b.t === "s") return '<div class="txs">'+esc(b.v)+'</div>';
@@ -309,7 +310,7 @@ function blocsHtml(blocs){
     if(b.t === "ol") return '<ol class="txl">'+b.v.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ol>';
     if(b.t === "kv") return '<dl class="txk">'+b.v.map(function(x){ return '<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>'; }).join("")+'</dl>';
     if(b.t === "tab") return '<div class="txtab"><table>'+b.v.map(function(l,i){ return '<tr>'+l.map(function(c){ return (i?'<td>':'<th>')+esc(c)+(i?'</td>':'</th>'); }).join("")+'</tr>'; }).join("")+'</table></div>';
-    if(b.t === "img") return b.i !== undefined ? '<img class="txi vide" alt="" data-i="'+b.i+'">' : '<img class="txi" alt="" src="'+b.v+'">';
+    if(b.t === "img"){ nImg++; return '<img class="txi" alt="" src="plans/plan'+nImg+'.png">'; }
     return "";
   }).join("");
 }
@@ -376,13 +377,6 @@ function incendie(){
     var el = document.getElementById("txt"); if(!el) return;
     if(!r.blocs){ el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; return; }
     el.innerHTML = blocsHtml(r.blocs);
-    // images allégées : chargées à part, gardées dans l'application (clé liée à la version du plan)
-    Array.prototype.forEach.call(el.querySelectorAll("img[data-i]"), function(im){
-      var i = +im.getAttribute("data-i"), cle = "incimg"+(r.version || "")+"_"+i, loc = lireCache(cle);
-      function poser(x){ if(x && x.v){ im.src = x.v; im.classList.remove("vide"); } }
-      if(loc) return poser(loc);
-      chercher(cle, {action:"incendie_image", i:i}).then(poser).catch(function(){});
-    });
   }, function(){ var e = document.getElementById("txt"); if(e) e.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
 }
 // Salaire : protégé par un code envoyé au courriel (valable 10 minutes, session salaire de 15 minutes d'inactivité).
