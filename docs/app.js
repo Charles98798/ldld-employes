@@ -241,16 +241,20 @@ function sectionDocs(p, titre, aide){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>'+titre+'</h1>' +
     '<div id="liste"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  var liste = document.getElementById("liste");
+  var liste = document.getElementById("liste"), unique = false;
   function ouvrir(d, reprise){
     (self.caches ? caches.open(CACHE).then(function(c){ return c.match(cleDoc(d)); }) : Promise.resolve(null)).then(function(r){
-      if(!r) throw 0; return r.blob(); }).then(function(b){ visionneuse(d.nom, b, function(){ sectionDocs(p, titre, aide); }); }).catch(function(){
+      if(!r) throw 0; return r.blob(); }).then(function(b){ visionneuse(d.nom, b, function(){ if(unique) menu(); else sectionDocs(p, titre, aide); }); }).catch(function(){
       // copie locale absente : on la télécharge de nouveau une fois, sinon message visible
       if(!reprise) return telechargerDoc(p, d).then(function(){ ouvrir(d, true); }).catch(function(){ liste.insertAdjacentHTML("beforeend", '<div class="bandeau">▪ DOCUMENT INDISPONIBLE · RÉESSAYEZ</div>'); });
       liste.insertAdjacentHTML("beforeend", '<div class="bandeau">▪ DOCUMENT INDISPONIBLE · RÉESSAYEZ</div>');
     });
   }
   function dessinerD(docs){
+    if(docs.length === 1){ unique = true; var d1 = docs[0];   // un seul document : on l'ouvre directement
+      if(etat(d1) === "ok" || etat(d1) === "maj") return ouvrir(d1);
+      liste.innerHTML = '<div class="bandeau">▪ OUVERTURE…</div>';
+      return telechargerDoc(p, d1).then(function(){ ouvrir(d1); }).catch(function(){ liste.innerHTML = '<div class="bandeau">▪ DOCUMENT INDISPONIBLE · RÉESSAYEZ</div>'; }); }
     liste.innerHTML = docs.map(function(d){ var e = etat(d);
       return '<a class="doc" href="#" data-id="'+d.id+'"><span>▪ '+esc(d.nom)+'</span><em class="'+e+'">'+(e === "ok" || e === "maj" ? "→" : "…")+'</em></a>'; }).join("");
     Array.prototype.forEach.call(liste.querySelectorAll("a.doc"), function(a){
@@ -259,9 +263,13 @@ function sectionDocs(p, titre, aide){
         a.querySelector("em").textContent = "OUVERTURE…"; telechargerDoc(p, d).then(function(){ dessinerD(docs); ouvrir(d); }).catch(function(){ a.querySelector("em").textContent = "RÉESSAYEZ"; }); };
     });
   }
+  var avant = null; try { avant = JSON.parse(localStorage.getItem("ldld-liste-"+p)); } catch(e){}
+  if(avant && avant.length) dessinerD(avant);
   appelService({action:p+"_liste", session:sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
     try { localStorage.setItem("ldld-liste-"+p, JSON.stringify(r.documents)); } catch(e){}
+    if(avant && avant.length && JSON.stringify(avant) === JSON.stringify(r.documents)) return;
+    if(unique && r.documents.length === 1 && avant && avant.length === 1 && avant[0].id === r.documents[0].id && etat(r.documents[0]) === "ok") return;
     dessinerD(r.documents);
     r.documents.filter(function(d){ return etat(d) !== "ok"; }).forEach(function(d){ telechargerDoc(p, d).then(function(){ dessinerD(r.documents); }).catch(function(){}); });
   }).catch(function(){ var l; try { l = JSON.parse(localStorage.getItem("ldld-liste-"+p)); } catch(e){} if(l) dessinerD(l); else liste.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
@@ -371,6 +379,7 @@ function evaluations(){
   obtenir("ae", {action:"ae_lire"}, function(r){
     var el = document.getElementById("ev"); if(!el) return;
     if(!r.rencontres.length){ el.innerHTML = '<div class="bandeau">▪ AUCUNE AUTOÉVALUATION POUR LE MOMENT</div>'; return; }
+    if(r.rencontres.length === 1){ autoeval(r.rencontres[0].rencontre, true); return; }   // une seule : on l'ouvre directement
     el.innerHTML = r.rencontres.map(function(m){
       return '<a class="rang" href="#" data-r="'+m.rencontre+'">▪ Autoévaluation · rencontre '+m.rencontre+'<small>'+(m.terminee ? 'Terminée' : 'À remplir')+'</small></a>'; }).join("");
     Array.prototype.forEach.call(el.querySelectorAll("a[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); autoeval(+a.getAttribute("data-r")); }; });
@@ -380,9 +389,9 @@ function evaluations(){
 var AE_ETAPES = ["Évaluation des compétences","Valeurs humaines","Connaissances et développement","Rythme et charge de travail","Priorités et engagements","Commentaires de l’employé","Mon expérience au laboratoire","Pour préparer notre rencontre"];
 var AE_NIVEAUX_RH = ["Pas du tout d’accord","Peu d’accord","Moyennement d’accord","Plutôt d’accord","Tout à fait d’accord"];
 function aeSection(f){ var n = +f.cell.slice(1); if(f.cell === "A68" || f.cell === "A70") return 7; if(n >= 59) return 6; if(f.cell === "B44") return 5; if(f.cell === "B42" || f.cell === "B43") return 4; return n >= 35 ? 2 : n >= 28 ? 1 : 0; }
-function autoeval(rencontre){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Évaluations</a><h1>Autoévaluation</h1><div id="ae"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); evaluations(); };
+function autoeval(rencontre, direct){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">'+(direct ? "← Menu" : "← Autoévaluation")+'</a><h1>Autoévaluation</h1><div id="ae"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(direct) menu(); else evaluations(); };
   obtenir("ae"+rencontre, {action:"ae_lire", rencontre:rencontre}, aeAfficher,
     function(){ document.getElementById("ae").innerHTML = '<div class="bandeau">▪ FICHE INDISPONIBLE · RÉESSAYEZ</div>'; }, false);
 }
