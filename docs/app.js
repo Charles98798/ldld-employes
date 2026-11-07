@@ -28,7 +28,7 @@ function obtenir(cle, corps, afficher, erreur, majSilencieuse){
   if(local){ afficher(local);
     if(majSilencieuse) chercher(cle, corps).then(function(r){ if(r && r.ok && JSON.stringify(r) !== JSON.stringify(local)) afficher(r); }).catch(function(){});
     return; }
-  chercher(cle, corps).then(function(r){ if(!r || !r.ok) throw 0; afficher(r); }).catch(erreur);
+  chercher(cle, corps).then(function(r){ if(!r || !r.ok){ var e = new Error("service"); e.reponse = r; throw e; } afficher(r); }).catch(erreur);
 }
 function pastilleAuto(){
   var a = app.querySelector('a[data-i="2"]'); if(!a) return;
@@ -493,7 +493,8 @@ function tableau(){
       document.getElementById("ts").onclick = function(){ i--; dessiner(); };
     }
     dessiner();
-  }, function(){ document.getElementById("tb").innerHTML = '<div class="bandeau">▪ TABLEAU DE BORD INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
+  }, function(e){ var rep = e && e.reponse, el = document.getElementById("tb"); if(!el) return;
+    el.innerHTML = '<div class="bandeau">▪ '+(rep && rep.erreur ? esc(String(rep.erreur).toUpperCase()) : (MOI && MOI.role === "direction" ? "PAS DE TABLEAU DE BORD POUR CE COMPTE" : "TABLEAU DE BORD INDISPONIBLE · RÉESSAYEZ"))+'</div>'; }, true);
 }
 function profil(){
   var m = MOI || {};
