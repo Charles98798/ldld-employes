@@ -169,3 +169,5 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 /* Retour toujours visible sur les PDF */
 .vue .retour{position:fixed;z-index:20;left:max(14px,env(safe-area-inset-left,0px));top:calc(max(env(safe-area-inset-top,0px),47px) + 4px);background:#8EFF60;color:#1D1D1B;text-decoration:none;font-size:12px;letter-spacing:1px;font-weight:600;text-transform:uppercase;padding:9px 12px}
 .vue h1{padding-top:34px}
+.menu a[data-i]{display:flex;align-items:center;gap:10px}
+.pastille{background:#8EFF60;color:#1D1D1B;font-size:10px;letter-spacing:1px;font-weight:600;padding:3px 7px}

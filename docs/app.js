@@ -1,5 +1,5 @@
 // Étape 1 : démarrage, connexion et menu. Aucune donnée réelle : la connexion et les sections sont des gabarits.
-var SECTIONS = ["Messages", "Manuel d'employé", "Évaluations", "Salaire et documents", "Tableau de bord", "Plan d'incendie", "Mon profil"];
+var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Salaire et documents", "Tableau de bord", "Plan d'incendie", "Mon profil"];
 var app = document.getElementById("app");
 
 function demarrage(){
@@ -30,10 +30,17 @@ function obtenir(cle, corps, afficher, erreur, majSilencieuse){
     return; }
   chercher(cle, corps).then(function(r){ if(!r || !r.ok) throw 0; afficher(r); }).catch(erreur);
 }
+function pastilleAuto(){
+  var a = app.querySelector('a[data-i="2"]'); if(!a) return;
+  var ae = lireCache("ae"), reste = ae && ae.rencontres && ae.rencontres.some(function(m){ return !m.terminee; });
+  var p = a.querySelector(".pastille"); if(p) p.remove();
+  if(reste){ p = document.createElement("span"); p.className = "pastille"; p.textContent = "À REMPLIR"; a.appendChild(p); }
+}
 function precharger(){
   chercher("messages", {action:"messages"}).catch(function(){});
   chercher("tableau", {action:"tableau"}).catch(function(){});
   chercher("ae", {action:"ae_lire"}).then(function(r){
+    pastilleAuto();
     if(r && r.ok && r.rencontres) r.rencontres.forEach(function(m){ chercher("ae"+m.rencontre, {action:"ae_lire", rencontre:m.rencontre}).catch(function(){}); });
   }).catch(function(){});
 }
@@ -120,6 +127,7 @@ function menu(){
     a.onclick = function(e){ e.preventDefault(); section(+a.getAttribute("data-i")); };
   });
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
+  pastilleAuto();
 }
 // Étape 2 : messages, lus et écrits par le service Google Apps Script (chaque employé ne reçoit que les siens).
 var MESSAGES = [];
@@ -354,7 +362,7 @@ function salaireNotes(r, k){
 }
 // Étape 5 : évaluations. L'autoévaluation reproduit la page du portail (mêmes 8 onglets, mêmes questions); en essai elle ne lit ni n'enregistre rien.
 function evaluations(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Évaluations</h1><div id="ev"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Autoévaluation</h1><div id="ev"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   obtenir("ae", {action:"ae_lire"}, function(r){
     var el = document.getElementById("ev"); if(!el) return;
