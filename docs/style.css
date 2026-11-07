@@ -233,3 +233,6 @@ button,input,textarea,select{font-family:inherit}
 .rs{display:block;color:var(--tx);text-decoration:none;border-top:1px solid var(--fil);padding:12px 0;font-size:14px;line-height:1.5}.rs b{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.7;margin-bottom:2px;font-weight:600}
 mark{background:#8EFF60;color:#0D1319;padding:0 1px}
 .txtab{overflow-x:auto;margin:10px 0}.txtab table{border-collapse:collapse;font-size:13px;min-width:100%}.txtab th,.txtab td{border:1px solid var(--fil);padding:6px 8px;text-align:left;vertical-align:top}.txtab th{font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+
+/* Le champ courriel ne devient jamais noir (remplissage automatique, survol, focus) */
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,input:-webkit-autofill:active,textarea:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #CECCC5 inset!important;box-shadow:0 0 0 1000px #CECCC5 inset!important;-webkit-text-fill-color:#0D1319!important;caret-color:#0D1319;transition:background-color 99999s ease-out 0s}
