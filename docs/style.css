@@ -142,3 +142,17 @@ h1{font-weight:400}
 .nb{border-top:1px solid var(--fil);padding:12px 0}.nb p{margin:4px 0 0;font-size:14px;line-height:1.5}
 #sa .saeti{margin-top:-6px}.page h1{margin:14px 0}
 h1.sa1{font-size:26px;margin:10px 0;white-space:nowrap}.satot span{max-width:55%}
+/* Salaire épuré (S1) */
+.sanom{font-size:14px;color:#8D806A;margin-top:6px}.sabig{font-size:56px;font-weight:300;color:var(--tx2);line-height:1.1;margin:10px 0 4px}.sub{font-size:13px;color:#8D806A}
+.sx{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:1px solid var(--fil);padding:13px 0;font-size:17px}.sx small{display:block;font-size:12px;color:#8D806A;margin-top:3px}.sx b{font-weight:400;color:var(--tx2);font-size:19px;white-space:nowrap}
+.sabar{margin-top:20px}
+.sabar{margin-bottom:8px}
+.doc em,.doc em.ok,.doc em.maj,.doc em.non{background:none!important;color:inherit!important;padding:0!important}
+
+/* Style épuré (publication 14) : plus d'air, moins de lignes */
+.menu a{border-top:0;font-size:21px;font-weight:300;letter-spacing:.05em;padding:15px 0}.menu .nom{font-size:15px}
+.menu a.sortie{border-top:0;font-size:14px;margin-top:30px}
+h1{font-size:25px;font-weight:300;margin:16px 0}.rang,.doc,.ligne,.sx{border-top:0;border-bottom:1px solid #2a2926}
+.bandeau{background:transparent;color:#8D806A;padding-left:0}.tcarte,.carte{border:0;background:#242321}.tbm{border-top:0}
+.sh{border-bottom:1px solid #3d3b36}.said,.satot{background:#242321}
+h1.sa1{font-size:26px;margin:10px 0}

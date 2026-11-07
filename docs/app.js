@@ -185,7 +185,7 @@ function prechargerDocs(){
 document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && sessionGardee() && MOI) prechargerDocs(); });
 function sectionDocs(p, titre, aide){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>'+titre+'</h1>' +
-    '<div class="bandeau">▪ DISPONIBLE HORS LIGNE</div><div id="liste"></div><p class="aide">'+aide+'</p></div>';
+    '<div id="liste"></div><p class="aide">'+aide+'</p></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   var liste = document.getElementById("liste");
   function ouvrir(d){
@@ -194,22 +194,22 @@ function sectionDocs(p, titre, aide){
   }
   function dessinerD(docs){
     liste.innerHTML = docs.map(function(d){ var e = etat(d);
-      return '<a class="doc" href="#" data-id="'+d.id+'"><span>▪ '+esc(d.nom)+'</span><em class="'+e+'">'+(e === "ok" ? "✓" : e === "maj" ? "MISE À JOUR" : "À TÉLÉCHARGER")+'</em></a>'; }).join("");
+      return '<a class="doc" href="#" data-id="'+d.id+'"><span>▪ '+esc(d.nom)+'</span><em class="'+e+'">'+(e === "ok" || e === "maj" ? "→" : "…")+'</em></a>'; }).join("");
     Array.prototype.forEach.call(liste.querySelectorAll("a.doc"), function(a){
       a.onclick = function(ev){ ev.preventDefault(); var d = docs.filter(function(x){ return x.id === a.getAttribute("data-id"); })[0];
-        if(etat(d) === "ok") return ouvrir(d);
-        a.querySelector("em").textContent = "TÉLÉCHARGEMENT…"; telechargerDoc(p, d).then(function(){ dessinerD(docs); ouvrir(d); }).catch(function(){ a.querySelector("em").textContent = "ÉCHEC · RÉESSAYEZ"; }); };
+        if(etat(d) === "ok" || etat(d) === "maj") return ouvrir(d);
+        a.querySelector("em").textContent = "OUVERTURE…"; telechargerDoc(p, d).then(function(){ dessinerD(docs); ouvrir(d); }).catch(function(){ a.querySelector("em").textContent = "RÉESSAYEZ"; }); };
     });
   }
   appelService({action:p+"_liste", session:sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
     try { localStorage.setItem("ldld-liste-"+p, JSON.stringify(r.documents)); } catch(e){}
     dessinerD(r.documents);
-    r.documents.filter(function(d){ return etat(d) === "maj"; }).forEach(function(d){ telechargerDoc(p, d).then(function(){ dessinerD(r.documents); }).catch(function(){}); });
+    r.documents.filter(function(d){ return etat(d) !== "ok"; }).forEach(function(d){ telechargerDoc(p, d).then(function(){ dessinerD(r.documents); }).catch(function(){}); });
   }).catch(function(){ var l; try { l = JSON.parse(localStorage.getItem("ldld-liste-"+p)); } catch(e){} if(l) dessinerD(l); else liste.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
-function manuel(){ sectionDocs("manuel", "Manuel d'employé", "Votre manuel est à votre nom (féminin ou masculin). Il se télécharge seul et reste lisible sans Internet."); }
-function incendie(){ sectionDocs("incendie", "Plan d'incendie", "Le plan à jour se télécharge seul et reste lisible sans Internet."); }
+function manuel(){ sectionDocs("manuel", "Manuel d'employé", "Votre manuel est à votre nom (féminin ou masculin). Pour consultation seulement."); }
+function incendie(){ sectionDocs("incendie", "Plan d'incendie", "Le plan à jour, pour consultation seulement."); }
 // Salaire : protégé par un code envoyé au courriel (valable 10 minutes, session salaire de 15 minutes d'inactivité).
 // Règle de sécurité : l'application ne calcule rien et ne garde aucun montant sur le téléphone; elle affiche les valeurs du dossier salarial, lues à chaque ouverture.
 function dollars(n){ return n === null || n === undefined || n === "" ? "—" : String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " $"; }
@@ -254,7 +254,7 @@ function salaireCode(envoyer){
   document.getElementById("nouveau").onclick = function(e){ e.preventDefault(); envoi(); };
   if(envoyer) envoi();
 }
-function salaireEcran(r, k){
+function salaireDetail(r, k){
   var a = r.annees[k], zone = document.getElementById("sa"), t = (a.repartition || {});
   var h = document.querySelector(".page h1"); h.textContent = "Rémunération globale"; h.className = "sa1";
   var onglets = r.annees.length > 1 ? '<span class="saan">'+r.annees.map(function(x, i){ return '<a href="#" data-k="'+i+'" class="'+(i === k ? 'on' : '')+'">'+x.annee+'</a>'; }).join("")+'</span>' : "";
@@ -272,8 +272,32 @@ function salaireEcran(r, k){
     '<p class="sale">Salaire de base '+dollars(a.base)+' · '+(t.base === null || t.base === undefined ? "—" : t.base)+' %&nbsp; Congés rémunérés '+dollars(a.conges)+' · '+(t.conges === null || t.conges === undefined ? "—" : t.conges)+' %&nbsp; Autres avantages '+dollars((a.boni || 0) + (a.otpadq || 0) + (a.assurances || 0))+' · '+(t.autres === null || t.autres === undefined ? "—" : t.autres)+' %&nbsp; Salaire annualisé sur 52 semaines : '+dollars(a.annualise)+'</p>' +
     sec("04", "PROGRAMME DE RECONNAISSANCE") + '<div class="sarec">'+(a.paliers || []).map(function(p){ return '<div><b>'+dollars(p.montant)+'</b><small>'+esc(p.lib)+'</small></div>'; }).join("")+'</div>' +
     '<a class="doc" href="#" id="notes" style="margin-top:10px"><span>▪ Notes et conditions</span><em>→</em></a>';
-  Array.prototype.forEach.call(zone.querySelectorAll(".saan a"), function(x){ x.onclick = function(e){ e.preventDefault(); salaireEcran(r, +x.getAttribute("data-k")); }; });
+  Array.prototype.forEach.call(zone.querySelectorAll(".saan a"), function(x){ x.onclick = function(e){ e.preventDefault(); salaireDetail(r, +x.getAttribute("data-k")); }; });
   document.getElementById("notes").onclick = function(e){ e.preventDefault(); salaireNotes(r, k); };
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); salaireEcran(r, k); };
+}
+// Écran principal épuré (choix S1 de l'utilisateur) : le total, quatre lignes, le détail sur demande.
+function salaireEcran(r, k){
+  var a = r.annees[k], zone = document.getElementById("sa"), t = (a.repartition || {});
+  var h = document.querySelector(".page h1"); h.textContent = "Rémunération globale"; h.className = "sa1";
+  document.getElementById("retour").textContent = "← Menu"; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  var onglets = r.annees.length > 1 ? '<span class="saan">'+r.annees.map(function(x, i){ return '<a href="#" data-k="'+i+'" class="'+(i === k ? 'on' : '')+'">'+x.annee+'</a>'; }).join("")+'</span>' : "";
+  var autres = (a.boni || 0) + (a.otpadq || 0) + (a.assurances || 0), pc = function(x){ return x === null || x === undefined ? "" : " · " + x + " %"; };
+  var montants = (a.paliers || []).map(function(p){ return p.montant; }).filter(function(x){ return x !== null && x !== undefined; });
+  var reco = montants.length ? (Math.min.apply(null, montants) === Math.max.apply(null, montants) ? dollars(montants[0]) : dollars(Math.min.apply(null, montants)) + " à " + dollars(Math.max.apply(null, montants))) : "—";
+  var l = function(lib, sous, v){ return '<div class="sx"><span>'+lib+'<small>'+sous+'</small></span><b>'+v+'</b></div>'; };
+  zone.innerHTML = '<div class="saeti">▪ ANNÉE '+a.annee+(a.annee === 2026 ? ' · EN VIGUEUR' : ' · À VENIR')+onglets+'</div>' +
+    '<div class="sanom">'+esc(MOI && MOI.nom || "")+' · '+esc(MOI && MOI.poste || "")+(a.position ? ' · '+pctTxt(a.position) : '')+'</div>' +
+    '<div class="sabig">'+dollars(a.total)+'</div><div class="sub">Salaire horaire '+taux(a.horaire)+'\u00a0$ · '+esc(a.heures === null || a.heures === undefined ? "—" : a.heures)+' h par semaine</div>' +
+    '<div class="sabar"><i style="width:'+(t.base || 0)+'%"></i><i class="b" style="width:'+(t.conges || 0)+'%"></i><i class="c" style="width:'+(t.autres || 0)+'%"></i></div>' +
+    '<div class="sub" style="margin-bottom:10px">Salaire annualisé sur 52 semaines : '+dollars(a.annualise)+'</div>' +
+    l("Salaire de base", esc(a.semaines || 46)+' semaines'+pc(t.base), dollars(a.base)) +
+    l("Congés rémunérés", 'Vacances, fériés, maladie'+pc(t.conges), dollars(a.conges)) +
+    l("Autres avantages", 'Boni, OTPADQ, assurances'+pc(t.autres), dollars(autres)) +
+    l("Programme de reconnaissance", 'Par mois, selon vos objectifs atteints', reco) +
+    '<a class="doc" href="#" id="detail" style="margin-top:6px"><span>▪ Voir le détail et les notes</span><em>→</em></a>';
+  Array.prototype.forEach.call(zone.querySelectorAll(".saan a"), function(x){ x.onclick = function(e){ e.preventDefault(); salaireEcran(r, +x.getAttribute("data-k")); }; });
+  document.getElementById("detail").onclick = function(e){ e.preventDefault(); salaireDetail(r, k); };
 }
 function salaireNotes(r, k){
   var n = r.annees[k].notes || {}, c = r.communes || {};
