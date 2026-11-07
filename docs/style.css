@@ -169,7 +169,7 @@ h1.sa1{font-size:26px;margin:10px 0}
 /* Remplissage automatique du navigateur : jamais de fond jaune, le champ garde le fond noir et le texte clair */
 input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,input:-webkit-autofill:active,textarea:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #050505 inset!important;box-shadow:0 0 0 1000px #050505 inset!important;-webkit-text-fill-color:#ECE8DF!important;caret-color:#ECE8DF;transition:background-color 9999s ease-out 0s}
 /* Plus d'air entre l'heure du téléphone et le logo (écrans de connexion et de menu) */
-.connexion,.menu,.page{padding-top:calc(max(env(safe-area-inset-top,0px),47px) + 34px)}
+.connexion,.menu,.page{padding-top:calc(max(env(safe-area-inset-top,0px),47px) + 14px)}
 /* Retour toujours visible sur les PDF */
 .vue .retour{position:fixed;z-index:20;left:max(14px,env(safe-area-inset-left,0px));top:calc(max(env(safe-area-inset-top,0px),47px) + 4px);background:#8EFF60;color:#1D1D1B;text-decoration:none;font-size:12px;letter-spacing:1px;font-weight:600;text-transform:uppercase;padding:9px 12px}
 .vue h1{padding-top:34px}
@@ -259,3 +259,12 @@ input,textarea{color-scheme:light}
 .leg{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-top:12px}.leg span{display:inline-flex;align-items:center;gap:7px}.leg .sq{width:9px;height:9px;display:inline-block}
 .cli{display:flex;gap:14px;align-items:baseline;padding:11px 0;border-top:1px solid var(--fil)}.cdt{flex:0 0 74px;font-weight:500;letter-spacing:.06em}.chh{margin-left:auto;font-weight:500}
 .txi.vide{min-height:120px;background:transparent;border:1px dashed var(--fil)}
+
+/* Toutes les pages : bouton Retour en bas de l'écran, jamais par-dessus le titre */
+.page .retour{top:auto;bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);left:max(14px,env(safe-area-inset-left,0px));font-size:13px;padding:13px 18px}
+.page #toc{bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 66px)}
+.page h1{padding-top:0}
+.page{padding-bottom:90px}
+/* Même distance sous l'heure du téléphone pour le logo (menu, connexion) et pour le titre de toutes les pages */
+.page h1:first-of-type{margin-top:0}
+

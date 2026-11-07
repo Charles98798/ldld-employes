@@ -138,7 +138,7 @@ function menu(){
   if(notifPossible() && Notification.permission === "granted" && !menu.abonne){ menu.abonne = true; abonnerNotifs().catch(function(){}); }
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger();
-  app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div class="nom">'+esc((MOI && MOI.nom) || "")+'</div>' +
+  app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
     SECTIONS.map(function(n, i){ return '<a href="#" data-i="'+i+'">▪ '+n+'</a>'; }).join("") +
     '<img class="symbole" src="assets/LDLD_symbole_blanc_transparent.png" alt="">' +
     '<a class="sortie" href="#" id="sortie">Déconnexion →</a></div>';
@@ -623,13 +623,8 @@ function profil(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Mon profil</h1>' +
     lignes.map(function(l){ return '<div class="ligne"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
     '<div class="etiq" style="margin-top:20px">▪ NOTIFICATIONS</div><div id="notifs"></div>' +
-    '<a class="doc" href="#" id="sortir" style="margin-top:20px"><span>Déconnexion</span><em>→</em></a>' +
-    '<a class="doc" href="#" id="partout"><span>Se déconnecter partout</span><em>→</em></a></div>';
+    '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  document.getElementById("sortir").onclick = function(e){ e.preventDefault(); deconnecter(); };
-  document.getElementById("partout").onclick = function(e){ e.preventDefault(); var el = this, sp = el.querySelector("span");
-    if(!el.getAttribute("data-ok")){ el.setAttribute("data-ok", "1"); sp.textContent = "Confirmer : fermer toutes mes sessions"; return; }
-    appelService({action:"deconnecter_partout", session:sessionGardee()}).catch(function(){}).then(function(){ garderSession(null); MOI = null; connexion(); }); };
   var zone = document.getElementById("notifs");
   if(!notifPossible()){ zone.innerHTML = '<p class="aide">Pour recevoir les notifications sur iPhone, ajoutez l\'application à l\'écran d\'accueil (Partager > Sur l\'écran d\'accueil).</p>'; return; }
   if(Notification.permission === "denied"){ zone.innerHTML = '<p class="aide">Les notifications sont bloquées dans les réglages de votre appareil. Autorisez-les dans les réglages pour les recevoir.</p>'; return; }
