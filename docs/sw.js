@@ -15,7 +15,7 @@ self.addEventListener("fetch", function(e){
 
 // Notifications : le service envoie un signal sans contenu; on affiche un texte général (aucun détail confidentiel).
 self.addEventListener("push", function(e){
-  e.waitUntil(self.registration.showNotification("Lafond Desjardins", {body:"Un message, un document ou un rappel vous attend dans l'application.", icon:"icons/icon-192.png", badge:"icons/icon-192.png", tag:"ldld-nouveau"}));
+  e.waitUntil(self.registration.showNotification("Lafond Desjardins", {body:"Un message, un document ou un rappel vous attend dans l'application.", icon:"icons/icon-192-v2.png", badge:"icons/icon-192-v2.png", tag:"ldld-nouveau"}));
 });
 self.addEventListener("notificationclick", function(e){
   e.notification.close();
