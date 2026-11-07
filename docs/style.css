@@ -181,3 +181,5 @@ input,textarea{-webkit-user-select:text;user-select:text}
 /* Bouton RETOUR vert, fixe en haut à gauche sur toutes les pages */
 .page .retour{position:fixed;z-index:20;left:max(14px,env(safe-area-inset-left,0px));top:calc(max(env(safe-area-inset-top,0px),47px) + 4px);background:#8EFF60;color:#1D1D1B;text-decoration:none;font-size:12px;letter-spacing:1px;font-weight:600;text-transform:uppercase;padding:9px 12px}
 .page h1{padding-top:14px}
+.connexion{position:relative}
+.pied-connexion{position:absolute;left:26px;right:26px;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);font-size:11px;letter-spacing:1.5px;color:#8D806A}

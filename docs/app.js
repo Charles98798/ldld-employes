@@ -69,7 +69,7 @@ function connexion(message){
   app.innerHTML = '<div class="connexion"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
     '<div style="margin-top:110px"><label class="etq" for="courriel">▪ COURRIEL</label><input class="champ ligne3" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="nom@exemple.com">' +
     '<button class="bouton" id="envoi">Recevoir mon code →</button></div>' +
-    '<p class="aide" id="msg">'+(message||"")+'</p></div>';
+    '<p class="aide" id="msg">'+(message||"")+'</p><div class="pied-connexion">▪ PLATEFORME EMPLOYÉS</div></div>';
   document.getElementById("envoi").onclick = function(){
     var c = document.getElementById("courriel").value.trim().toLowerCase(), msg = document.getElementById("msg");
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c)){ msg.textContent = "Entrez votre courriel."; return; }
