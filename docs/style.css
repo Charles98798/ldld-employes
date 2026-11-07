@@ -276,3 +276,8 @@ input,textarea{color-scheme:light}
 .hcols{display:flex;gap:22px}.hcols>div{flex:1}.hc{display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid #b4b1a9;font-size:14px}.hc b{font-weight:500}
 .htot{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding-top:6px}.htot b{font-weight:500}
 .hnote{font-size:11px;color:#55524c;margin:14px 0 0}
+
+/* Plan du stationnement (Mon profil) */
+.plan{margin-top:16px}.plan .vp{position:relative;display:inline-block;transform:translateX(-50%);font-size:10px;letter-spacing:.14em;font-weight:600;margin-bottom:10px;white-space:nowrap}
+.plan .vp i{position:absolute;left:50%;top:15px;width:2px;height:34px;background:#111}
+.plan .pi{position:relative}.plan img{display:block;width:100%;mix-blend-mode:multiply}.plan .pi b{position:absolute;border:2.5px solid #BE1E2D;box-sizing:border-box}

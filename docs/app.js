@@ -619,14 +619,42 @@ function tableau(){
   }, function(e){ var rep = e && e.reponse, el = document.getElementById("tb"); if(!el) return;
     el.innerHTML = '<div class="bandeau">▪ '+(rep && rep.erreur ? esc(String(rep.erreur).toUpperCase()) : (MOI && MOI.role === "direction" ? "PAS DE TABLEAU DE BORD POUR CE COMPTE" : "TABLEAU DE BORD INDISPONIBLE · RÉESSAYEZ"))+'</div>'; }, true);
 }
+// Plan du stationnement : cadre de chaque place, en pixels du plan d'origine (2000 x 1416).
+var PLACES = {};
+(function(){
+  for(var i = 0; i < 8; i++) PLACES[15 + i] = [395 + 66 * i, 140, 461 + 66 * i, 302];
+  var h2 = [970, 1037, 1105, 1173, 1241, 1309, 1377, 1445];
+  for(var j = 0; j < 7; j++) PLACES[23 + j] = [h2[j], 140, h2[j + 1], 302];
+  PLACES[30] = [1480, 140, 1561, 302]; PLACES[31] = [1561, 140, 1641, 302];
+  var h3 = [456, 519, 583, 647, 710];
+  for(var k = 0; k < 4; k++) PLACES[14 - k] = [h3[k], 428, h3[k + 1], 566];
+  for(var m = 0; m < 3; m++) PLACES[10 - m] = [565, 597 + 54 * m, 738, 651 + 54 * m];
+  for(var n = 0; n < 7; n++) PLACES[7 - n] = [808, 434 + 65 * n, 993, 499 + 65 * n];
+})();
+function planPlace(num){
+  var p = PLACES[num]; if(!p) return "";
+  var W = 2000, H = 1416, g = 100 * (p[0] + p[2]) / 2 / W;
+  return '<div class="plan"><div class="vp" style="left:'+g.toFixed(2)+'%">VOTRE PLACE<i></i></div><div class="pi"><img src="plans/plan_stationnement.png" alt="Plan du stationnement">' +
+    '<b style="left:'+(100 * p[0] / W).toFixed(2)+'%;top:'+(100 * p[1] / H).toFixed(2)+'%;width:'+(100 * (p[2] - p[0]) / W).toFixed(2)+'%;height:'+(100 * (p[3] - p[1]) / H).toFixed(2)+'%"></b></div></div>';
+}
 function profil(){
   var m = MOI || {};
   var lignes = [["Nom", m.nom || ""], ["Poste", m.poste || ""], ["Responsable", m.responsable || ""]];
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Mon profil</h1>' +
     lignes.map(function(l){ return '<div class="ligne"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
-    '<div class="etiq" style="margin-top:20px">▪ NOTIFICATIONS</div><div id="notifs"></div>' +
-    '</div>';
+    '<div id="stat"></div>' +
+    '<div class="etiq" style="margin-top:20px">▪ NOTIFICATIONS</div><div id="notifs"></div><div id="planz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  // Stationnement et casier de l'employé (jamais ceux des autres), lus dans le classeur du conseil par le service.
+  obtenir("stationnement", {action:"stationnement"}, function(r){
+    var st = document.getElementById("stat"), pz = document.getElementById("planz"); if(!st || !r || !r.ok) return;
+    var place = String(r.place || "").trim(), cas = (r.casiers || []).join(" et "), h = "";
+    if(place) h += '<div class="ligne"><span>Stationnement</span><span>'+esc(place)+'</span></div>';
+    if(cas) h += '<div class="ligne"><span>'+((r.casiers || []).length > 1 ? "Casiers" : "Casier")+'</span><span>'+esc(cas)+'</span></div>';
+    st.innerHTML = h;
+    if(/^\d+$/.test(place) && PLACES[+place]) pz.innerHTML = planPlace(+place);
+    else if(/^rue$/i.test(place)) pz.innerHTML = '<p class="aide" style="margin-top:14px">Le stationnement est plein pour l\'instant. Vous pouvez vous stationner sur le boulevard Saint-Martin, au nord de la rue Salaberry. Nous vous aviserons dès qu\'une place se libérera.</p>';
+  }, function(){}, true);
   var zone = document.getElementById("notifs");
   if(!notifPossible()){ zone.innerHTML = '<p class="aide">Pour recevoir les notifications sur iPhone, ajoutez l\'application à l\'écran d\'accueil (Partager > Sur l\'écran d\'accueil).</p>'; return; }
   if(Notification.permission === "denied"){ zone.innerHTML = '<p class="aide">Les notifications sont bloquées dans les réglages de votre appareil. Autorisez-les dans les réglages pour les recevoir.</p>'; return; }
