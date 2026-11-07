@@ -1,5 +1,5 @@
 // Étape 1 : démarrage, connexion et menu. Aucune donnée réelle : la connexion et les sections sont des gabarits.
-var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Salaire et documents", "Tableau de bord", "Plan d'incendie", "Mon profil"];
+var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Mon profil"];
 var app = document.getElementById("app");
 
 function demarrage(){
@@ -369,7 +369,7 @@ function dollars(n){ return n === null || n === undefined || n === "" ? "—" : 
 function taux(n){ var x = parseFloat(String(n).replace(",", ".")); return isNaN(x) ? "—" : x.toFixed(2).replace(".", ","); }
 function pctTxt(p){ var x = parseFloat(String(p).replace("%", "").replace(",", ".")); if(isNaN(x)) return String(p); if(x <= 1.5) x = x * 100; return Math.round(x) + " %"; }
 function salaire(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Salaire</h1><div id="sa"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Rémunération</h1><div id="sa"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   appelService({action:"salaire_lire", session:sessionGardee()}).then(function(r){
     if(r && r.ok) return salaireEcran(r, 0);
