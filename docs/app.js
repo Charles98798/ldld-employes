@@ -13,8 +13,32 @@ function appelService(corps){
   return fetch(URL_SERVICE, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(corps)})
     .then(function(r){ return r.json(); });
 }
+
+// Tout est préchargé avant l'arrivée sur la page : copie locale affichée tout de suite, vérification silencieuse ensuite.
+var CACHE = {};
+function lireCache(cle){ if(CACHE[cle]) return CACHE[cle]; try { var v = JSON.parse(localStorage.getItem("ldld-c-"+cle)); if(v) CACHE[cle] = v; return v; } catch(e){ return null; } }
+function chercher(cle, corps){
+  corps.session = sessionGardee();
+  return appelService(corps).then(function(r){ if(r && r.ok){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
+}
+function viderCache(){ CACHE = {}; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
+/** Affiche la copie locale (sans écran de chargement) puis remplace en silence si la version a changé. */
+function obtenir(cle, corps, afficher, erreur, majSilencieuse){
+  var local = lireCache(cle);
+  if(local){ afficher(local);
+    if(majSilencieuse) chercher(cle, corps).then(function(r){ if(r && r.ok && JSON.stringify(r) !== JSON.stringify(local)) afficher(r); }).catch(function(){});
+    return; }
+  chercher(cle, corps).then(function(r){ if(!r || !r.ok) throw 0; afficher(r); }).catch(erreur);
+}
+function precharger(){
+  chercher("messages", {action:"messages"}).catch(function(){});
+  chercher("tableau", {action:"tableau"}).catch(function(){});
+  chercher("ae", {action:"ae_lire"}).then(function(r){
+    if(r && r.ok && r.rencontres) r.rencontres.forEach(function(m){ chercher("ae"+m.rencontre, {action:"ae_lire", rencontre:m.rencontre}).catch(function(){}); });
+  }).catch(function(){});
+}
 function sessionGardee(){ try { return localStorage.getItem("ldld-session"); } catch(e){ return null; } }
-function garderSession(s){ try { if(s) localStorage.setItem("ldld-session", s); else localStorage.removeItem("ldld-session"); } catch(e){} }
+function garderSession(s){ if(!s) viderCache(); try { if(s) localStorage.setItem("ldld-session", s); else localStorage.removeItem("ldld-session"); } catch(e){} }
 function ouvrirSession(){
   var s = sessionGardee();
   if(!s) return connexion();
@@ -87,6 +111,7 @@ function menu(){
   if(notifPossible() && !dejaDemande && Notification.permission === "default") return ecranNotifs();
   if(notifPossible() && Notification.permission === "granted" && !menu.abonne){ menu.abonne = true; abonnerNotifs().catch(function(){}); }
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
+  precharger();
   app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div class="nom">'+esc((MOI && MOI.nom) || "")+'</div>' +
     SECTIONS.map(function(n, i){ return '<a href="#" data-i="'+i+'">▪ '+n+'</a>'; }).join("") +
     '<img class="symbole" src="assets/LDLD_symbole_blanc_transparent.png" alt="">' +
@@ -109,8 +134,8 @@ function messages(){
     (peutEcrire() ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   var w = document.getElementById("ecrire"); if(w) w.onclick = function(e){ e.preventDefault(); rediger(); };
-  appelService({action:"messages", session:sessionGardee()}).then(function(r){
-    if(!r || !r.ok) throw 0;
+  obtenir("messages", {action:"messages"}, function(r){
+    if(!document.getElementById("liste")) return;
     MESSAGES = r.messages; var l = lus();
     document.getElementById("liste").innerHTML = MESSAGES.length ? MESSAGES.map(function(m){
       return '<a class="rang" href="#" data-id="'+esc(m.id)+'"><span class="pl">+</span>'+esc(m.titre)+(!m.envoye && l.indexOf(m.id) < 0 ? '<span class="neuf">NOUVEAU</span>' : '')+
@@ -118,7 +143,7 @@ function messages(){
     Array.prototype.forEach.call(app.querySelectorAll("a[data-id]"), function(a){
       a.onclick = function(e){ e.preventDefault(); detail(a.getAttribute("data-id")); };
     });
-  }).catch(function(){ document.getElementById("liste").innerHTML = '<div class="bandeau">▪ MESSAGES INDISPONIBLES · RÉESSAYEZ</div>'; });
+  }, function(){ document.getElementById("liste").innerHTML = '<div class="bandeau">▪ MESSAGES INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
 function detail(id){
   var m = MESSAGES.filter(function(x){ return x.id === id; })[0]; noterLu(id);
@@ -182,7 +207,7 @@ function prechargerDocs(){
     }).catch(function(){});
   }));
 }
-document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && sessionGardee() && MOI) prechargerDocs(); });
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && sessionGardee() && MOI){ prechargerDocs(); precharger(); } });
 // Visionneuse intégrée (consultation seulement) : le PDF est dessiné page par page dans l'application, sans barre ni bouton d'enregistrement.
 function chargerScript(src){ return new Promise(function(ok, ko){ var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }); }
 function visionneuse(titre, blob, retour){
@@ -331,14 +356,13 @@ function salaireNotes(r, k){
 function evaluations(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>Évaluations</h1><div id="ev"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  appelService({action:"ae_lire", session:sessionGardee()}).then(function(r){
-    if(!r || !r.ok) throw 0;
-    var el = document.getElementById("ev");
+  obtenir("ae", {action:"ae_lire"}, function(r){
+    var el = document.getElementById("ev"); if(!el) return;
     if(!r.rencontres.length){ el.innerHTML = '<div class="bandeau">▪ AUCUNE AUTOÉVALUATION POUR LE MOMENT</div>'; return; }
     el.innerHTML = r.rencontres.map(function(m){
       return '<a class="rang" href="#" data-r="'+m.rencontre+'">▪ Autoévaluation · rencontre '+m.rencontre+'<small>'+(m.terminee ? 'Terminée' : 'À remplir')+'</small></a>'; }).join("");
     Array.prototype.forEach.call(el.querySelectorAll("a[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); autoeval(+a.getAttribute("data-r")); }; });
-  }).catch(function(){ document.getElementById("ev").innerHTML = '<div class="bandeau">▪ AUTOÉVALUATION INDISPONIBLE · RÉESSAYEZ</div>'; });
+  }, function(){ document.getElementById("ev").innerHTML = '<div class="bandeau">▪ AUTOÉVALUATION INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
 }
 // Autoévaluation : même fiche et mêmes règles que la page envoyée par courriel (6 étapes). Les réponses vont dans la fiche de l'employé.
 var AE_ETAPES = ["Évaluation des compétences","Valeurs humaines","Connaissances et développement","Rythme et charge de travail","Priorités et engagements","Commentaires de l’employé","Mon expérience au laboratoire","Pour préparer notre rencontre"];
@@ -347,9 +371,8 @@ function aeSection(f){ var n = +f.cell.slice(1); if(f.cell === "A68" || f.cell =
 function autoeval(rencontre){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Évaluations</a><h1>Autoévaluation</h1><div id="ae"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); evaluations(); };
-  appelService({action:"ae_lire", session:sessionGardee(), rencontre:rencontre}).then(function(d){
-    if(!d || !d.ok) throw 0; aeAfficher(d);
-  }).catch(function(){ document.getElementById("ae").innerHTML = '<div class="bandeau">▪ FICHE INDISPONIBLE · RÉESSAYEZ</div>'; });
+  obtenir("ae"+rencontre, {action:"ae_lire", rencontre:rencontre}, aeAfficher,
+    function(){ document.getElementById("ae").innerHTML = '<div class="bandeau">▪ FICHE INDISPONIBLE · RÉESSAYEZ</div>'; }, false);
 }
 function aeNum(v){ var n = Number(String(v).replace(/[^0-9,.-]/g,"").replace(",",".")); return isNaN(n) ? null : n; }
 function aeRythmeHtml(d){
@@ -407,7 +430,7 @@ function aeAfficher(d){
     if(occupe) return; occupe = true; dire("▪ ENREGISTREMENT…");
     appelService({action:"ae_enregistrer", session:sessionGardee(), rencontre:d.rencontre, revision:d.revision, terminer:terminer, valeurs:vals}).then(function(r){
       occupe = false;
-      if(r && r.ok){ d.revision = r.revision; if(r.terminee){ d.terminee = true; zone.innerHTML = '<div class="bandeau">▪ MERCI POUR VOTRE AUTOÉVALUATION</div><p class="aide">Vos réponses sont enregistrées pour cette rencontre. Elles prépareront notre discussion.</p>'; } else { dire("▪ RÉPONSES ENREGISTRÉES"); if(suite) suite(); } }
+      if(r && r.ok){ d.revision = r.revision; precharger(); if(r.terminee){ d.terminee = true; zone.innerHTML = '<div class="bandeau">▪ MERCI POUR VOTRE AUTOÉVALUATION</div><p class="aide">Vos réponses sont enregistrées pour cette rencontre. Elles prépareront notre discussion.</p>'; } else { dire("▪ RÉPONSES ENREGISTRÉES"); if(suite) suite(); } }
       else dire("▪ NON ENREGISTRÉ · "+((r && r.erreur) || "RÉESSAYEZ"));
     }).catch(function(){ occupe = false; dire("▪ NON ENREGISTRÉ · RÉSEAU. VOS RÉPONSES RESTENT À L'ÉCRAN"); });
   }
@@ -428,9 +451,8 @@ function graphJours(m){
 function tableau(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1 class="vert">Charges de travail</h1><div id="tb"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  appelService({action:"tableau", session:sessionGardee()}).then(function(r){
-    if(!r || !r.ok) throw 0;
-    var el = document.getElementById("tb");
+  obtenir("tableau", {action:"tableau"}, function(r){
+    var el = document.getElementById("tb"); if(!el) return;
     if(!r.mois){ el.innerHTML = '<div class="bandeau">▪ PAS DE TABLEAU DE BORD POUR VOTRE POSTE</div>'; return; }
     var ms = r.mois, i = 0;
     function annee(m){ return String(m.label).split(" ").pop(); }
@@ -459,7 +481,7 @@ function tableau(){
       document.getElementById("ts").onclick = function(){ i--; dessiner(); };
     }
     dessiner();
-  }).catch(function(){ document.getElementById("tb").innerHTML = '<div class="bandeau">▪ TABLEAU DE BORD INDISPONIBLE · RÉESSAYEZ</div>'; });
+  }, function(){ document.getElementById("tb").innerHTML = '<div class="bandeau">▪ TABLEAU DE BORD INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
 }
 function profil(){
   var m = MOI || {};
