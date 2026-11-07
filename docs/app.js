@@ -46,6 +46,7 @@ function pastilleAuto(){
 function precharger(){
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
   chercher("tableau", {action:"tableau"}).catch(function(){});
+  chercher("incendie_texte", {action:"incendie_texte"}).catch(function(){});
   chercher("ae", {action:"ae_lire"}).then(function(r){
     pastilleAuto();
     if(r && r.ok && r.rencontres) r.rencontres.forEach(function(m){ chercher("ae"+m.rencontre, {action:"ae_lire", rencontre:m.rencontre}).catch(function(){}); });
@@ -282,7 +283,26 @@ function sectionDocs(p, titre, aide){
   }).catch(function(){ var l; try { l = JSON.parse(localStorage.getItem("ldld-liste-"+p)); } catch(e){} if(l) dessinerD(l); else liste.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function manuel(){ sectionDocs("manuel", "Manuel d'employé", "Votre manuel d'employé. Pour consultation seulement."); }
-function incendie(){ sectionDocs("incendie", "Plan d'incendie", "Le plan à jour, pour consultation seulement."); }
+// Plan d'incendie en texte (blocs lus dans le document Google par le service); sans réponse du service, l'ancien affichage PDF reste en place.
+function incendie(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Plan d\'incendie</h1><div id="txt"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  obtenir("incendie_texte", {action:"incendie_texte"}, function(r){
+    var el = document.getElementById("txt"); if(!el) return;
+    if(!r.blocs){ return sectionDocs("incendie", "Plan d'incendie", "Le plan à jour, pour consultation seulement."); }
+    el.innerHTML = r.blocs.map(function(b){
+      if(b.t === "h") return '<h2 class="txh">'+esc(b.v)+'</h2>';
+      if(b.t === "s") return '<div class="txs">'+esc(b.v)+'</div>';
+      if(b.t === "p") return '<p class="txp">'+esc(b.v)+'</p>';
+      if(b.t === "u") return '<div class="txu"><b>'+esc(b.titre||"")+'</b>'+esc(b.v)+'</div>';
+      if(b.t === "li") return '<ul class="txl">'+b.v.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ul>';
+      if(b.t === "ol") return '<ol class="txl">'+b.v.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ol>';
+      if(b.t === "kv") return '<dl class="txk">'+b.v.map(function(x){ return '<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>'; }).join("")+'</dl>';
+      if(b.t === "img") return '<img class="txi" alt="" src="'+b.v+'">';
+      return "";
+    }).join("");
+  }, function(){ sectionDocs("incendie", "Plan d'incendie", "Le plan à jour, pour consultation seulement."); }, true);
+}
 // Salaire : protégé par un code envoyé au courriel (valable 10 minutes, session salaire de 15 minutes d'inactivité).
 // Règle de sécurité : l'application ne calcule rien et ne garde aucun montant sur le téléphone; elle affiche les valeurs du dossier salarial, lues à chaque ouverture.
 function dollars(n){ return n === null || n === undefined || n === "" ? "—" : String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " $"; }

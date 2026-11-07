@@ -220,3 +220,9 @@ input:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #CECCC5 inset!important;-
 .champ::placeholder{color:#6b6a66}
 
 button,input,textarea,select{font-family:inherit}
+/* Plan d'incendie en texte */
+.txh{font-weight:300;font-size:18px;letter-spacing:.08em;text-transform:uppercase;margin:34px 0 8px;border-top:1px solid var(--fil);padding-top:14px}
+.txs{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin:22px 0 6px}
+.txp{margin:8px 0;line-height:1.6}.txu{border:1.5px solid var(--tx);padding:14px 16px;margin:18px 0;line-height:1.6}.txu b{display:block;font-size:12px;letter-spacing:.14em;margin-bottom:4px;text-transform:uppercase}
+.txl{padding-left:20px;margin:6px 0;line-height:1.6}.txk dt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.7;margin-top:10px}.txk dd{margin:0}
+.txi{max-width:100%;display:block;margin:10px 0;background:#fff}
