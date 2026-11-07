@@ -196,3 +196,16 @@ input,textarea{-webkit-user-select:text;user-select:text}
   .connexion .pied-connexion span+span{margin-left:.9em;margin-top:.06em}
   .menu,.page{max-width:760px;margin:0 auto}
 }
+/* Concept 2026-11-07 : lettrage L D L D / EMPLOYÉS sur toute la largeur, pastille à droite, point d'autoévaluation */
+.pied-connexion{left:26px;right:26px;color:var(--tx2)}
+.pied-connexion span,.pied-connexion span+span{display:flex;justify-content:space-between;margin:0}
+.pied-connexion b{font-weight:200}
+.pied-connexion .ldld{font-size:min(23vw,92px);line-height:1}
+.pied-connexion .emp{font-size:15px;color:var(--tx);margin-top:8px}
+.menu a[data-i]{justify-content:space-between;gap:10px}
+.menu a[data-i] .pastille{width:8px;height:8px;padding:0;background:var(--tx2);font-size:0}
+@media (min-width:900px){
+  .connexion .pied-connexion{position:static;left:auto;right:auto}
+  .pied-connexion .ldld{font-size:clamp(70px,10vw,170px)}
+  .pied-connexion .emp{font-size:clamp(16px,1.6vw,26px)}
+}

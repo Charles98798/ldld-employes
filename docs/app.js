@@ -41,7 +41,7 @@ function pastilleAuto(){
   var a = app.querySelector('a[data-i="2"]'); if(!a) return;
   var ae = lireCache("ae"), reste = ae && ae.rencontres && ae.rencontres.some(function(m){ return !m.terminee; });
   var p = a.querySelector(".pastille"); if(p) p.remove();
-  if(reste){ p = document.createElement("span"); p.className = "pastille"; p.textContent = "À REMPLIR"; a.appendChild(p); }
+  if(reste){ p = document.createElement("span"); p.className = "pastille"; p.setAttribute("aria-label","À remplir"); a.appendChild(p); }
 }
 function precharger(){
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
@@ -69,7 +69,7 @@ function connexion(message){
   app.innerHTML = '<div class="connexion"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
     '<div class="formc"><label class="etq" for="courriel">▪ COURRIEL</label><input class="champ ligne3" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="nom@exemple.com">' +
     '<button class="bouton" id="envoi">Recevoir mon code →</button></div>' +
-    '<p class="aide" id="msg">'+(message||"")+'</p><div class="pied-connexion"><span>PLATEFORME</span><span>EMPLOYÉS</span></div></div>';
+    '<p class="aide" id="msg">'+(message||"")+'</p><div class="pied-connexion"><span class="ldld"><b>L</b><b>D</b><b>L</b><b>D</b></span><span class="emp"><b>E</b><b>M</b><b>P</b><b>L</b><b>O</b><b>Y</b><b>É</b><b>S</b></span></div></div>';
   document.getElementById("envoi").onclick = function(){
     var c = document.getElementById("courriel").value.trim().toLowerCase(), msg = document.getElementById("msg");
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c)){ msg.textContent = "Entrez votre courriel."; return; }
