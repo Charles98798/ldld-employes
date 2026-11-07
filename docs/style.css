@@ -171,3 +171,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .vue h1{padding-top:34px}
 .menu a[data-i]{display:flex;align-items:center;gap:10px}
 .pastille{background:#8EFF60;color:#1D1D1B;font-size:10px;letter-spacing:1px;font-weight:600;padding:3px 7px}
+/* Cases à cocher aux couleurs LDLD : carrés, vert au lieu du bleu du système */
+input[type=checkbox]{-webkit-appearance:none;appearance:none;width:22px;height:22px;margin:0;border:1px solid #B4AB9B;background:transparent;border-radius:0;position:relative;flex:0 0 auto;vertical-align:middle}
+input[type=checkbox]:checked{background:#8EFF60;border-color:#8EFF60}
+input[type=checkbox]:checked::after{content:"";position:absolute;left:6px;top:2px;width:6px;height:11px;border:solid #1D1D1B;border-width:0 2px 2px 0;transform:rotate(45deg)}
