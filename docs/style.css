@@ -241,3 +241,6 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .vue h1{padding-top:0}
 .vue{padding-bottom:90px}
 input,textarea{color-scheme:light}
+
+/* Numéro de section à part : le texte long reste aligné à droite du numéro, jamais en dessous */
+.toc a,.txh{display:flex;gap:14px;align-items:baseline}.nm{flex:0 0 28px}.tt{flex:1;min-width:0}
