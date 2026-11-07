@@ -1,5 +1,5 @@
 // Garde le «squelette» de l'application pour qu'elle s'ouvre vite et hors réseau. Les données (messages, documents) ne sont jamais gardées ici.
-var V = "ldld-app-v2";
+var V = "ldld-app-v3";
 var FICHIERS = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest",
   "assets/LDLD_logo_complet_blanc_transparent.png", "assets/LDLD_logo_complet_noir_transparent.png", "assets/LDLD_symbole_blanc_transparent.png"];
 self.addEventListener("install", function(e){ e.waitUntil(caches.open(V).then(function(c){ return c.addAll(FICHIERS); }).then(function(){ return self.skipWaiting(); })); });
@@ -14,7 +14,7 @@ self.addEventListener("fetch", function(e){
 
 // Notifications : le service envoie un signal sans contenu; on affiche un texte général (aucun détail confidentiel).
 self.addEventListener("push", function(e){
-  e.waitUntil(self.registration.showNotification("Lafond Desjardins", {body:"Du nouveau dans l'application : un message ou un document.", icon:"icons/icon-192.png", badge:"icons/icon-192.png", tag:"ldld-nouveau"}));
+  e.waitUntil(self.registration.showNotification("Lafond Desjardins", {body:"Un message, un document ou un rappel vous attend dans l'application.", icon:"icons/icon-192.png", badge:"icons/icon-192.png", tag:"ldld-nouveau"}));
 });
 self.addEventListener("notificationclick", function(e){
   e.notification.close();
