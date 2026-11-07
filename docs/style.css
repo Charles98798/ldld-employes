@@ -209,3 +209,8 @@ input,textarea{-webkit-user-select:text;user-select:text}
   .pied-connexion .ldld{font-size:clamp(70px,10vw,170px)}
   .pied-connexion .emp{font-size:clamp(16px,1.6vw,26px)}
 }
+/* Couleurs du site Trak (2026-11-07) : fond grège clair, texte presque noir */
+:root{--noir:#CECCC5;--tx:#0D1319;--tx2:#0D1319;--fil:#b4b1a9}
+.connexion .logo,.menu .logo,.menu .symbole{filter:invert(1)}
+input:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #CECCC5 inset!important;-webkit-text-fill-color:#0D1319!important}
+.champ::placeholder{color:#6b6a66}
