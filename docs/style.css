@@ -236,3 +236,7 @@ mark{background:#8EFF60;color:#0D1319;padding:0 1px}
 
 /* Le champ courriel ne devient jamais noir (remplissage automatique, survol, focus) */
 input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,input:-webkit-autofill:active,textarea:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #CECCC5 inset!important;box-shadow:0 0 0 1000px #CECCC5 inset!important;-webkit-text-fill-color:#0D1319!important;caret-color:#0D1319;transition:background-color 99999s ease-out 0s}
+/* Visionneuse : bouton Retour en bas de l'écran, toujours visible au-dessus du PDF */
+.vue .retour{top:auto;bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);left:max(14px,env(safe-area-inset-left,0px));font-size:13px;padding:13px 18px}
+.vue h1{padding-top:0}
+.vue{padding-bottom:90px}
