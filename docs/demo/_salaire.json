@@ -1,0 +1,28 @@
+{
+ "documents": [
+  {
+   "id": "lettre",
+   "nom": "Lettre salariale 2027",
+   "fichier": "demo/lettre-salariale-2027.pdf",
+   "version": "1"
+  },
+  {
+   "id": "rg",
+   "nom": "Rémunération globale 2027",
+   "fichier": "demo/remuneration-globale-2027.pdf",
+   "version": "1"
+  },
+  {
+   "id": "assurances",
+   "nom": "Assurances collectives",
+   "fichier": "demo/assurances.pdf",
+   "version": "1"
+  },
+  {
+   "id": "contrat",
+   "nom": "Contrat de travail",
+   "fichier": "demo/contrat.pdf",
+   "version": "1"
+  }
+ ]
+}

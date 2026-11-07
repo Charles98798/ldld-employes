@@ -1,0 +1,17 @@
+{
+  "name": "LDLD — Employés",
+  "short_name": "LDLD",
+  "description": "Application des employés de Lafond Desjardins laboratoire dentaire",
+  "lang": "fr-CA",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#CECCC5",
+  "theme_color": "#CECCC5",
+  "icons": [
+    {"src": "icons/icon-192-v6.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512-v6.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/icon-maskable-512-v6.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

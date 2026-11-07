@@ -1,0 +1,22 @@
+{
+ "documents": [
+  {
+   "id": "manuel",
+   "nom": "Manuel de l'employé 2027",
+   "fichier": "demo/manuel-2027.pdf",
+   "version": "1"
+  },
+  {
+   "id": "resume",
+   "nom": "Résumé des conditions de travail 2027",
+   "fichier": "demo/resume-2027.pdf",
+   "version": "1"
+  },
+  {
+   "id": "reconnaissance",
+   "nom": "Programme de reconnaissance 2027",
+   "fichier": "demo/reconnaissance-2027.pdf",
+   "version": "2"
+  }
+ ]
+}
