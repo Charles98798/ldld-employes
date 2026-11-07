@@ -268,3 +268,11 @@ input,textarea{color-scheme:light}
 /* Même distance sous l'heure du téléphone pour le logo (menu, connexion) et pour le titre de toutes les pages */
 .page h1:first-of-type{margin-top:0}
 
+
+/* Heures : un seul écran, sans défilement */
+.hetat{font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-top:16px}.hgros{font-size:64px;font-weight:200;letter-spacing:.04em;line-height:1;margin:4px 0}.hsous{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#55524c}
+.h2{font-weight:300;font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:16px 0 2px;border-top:1px solid #b4b1a9;padding-top:10px}
+.hl{display:flex;gap:14px;padding:6px 0;border-top:1px solid #b4b1a9}.hl .t{flex:0 0 70px;font-weight:500}
+.hcols{display:flex;gap:22px}.hcols>div{flex:1}.hc{display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid #b4b1a9;font-size:14px}.hc b{font-weight:500}
+.htot{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding-top:6px}.htot b{font-weight:500}
+.hnote{font-size:11px;color:#55524c;margin:14px 0 0}
