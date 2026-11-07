@@ -34,7 +34,7 @@ function pastilleMessages(){
   var a = app.querySelector('a[data-i="0"]'); if(!a) return;
   var m = lireCache("messages"), l = lus(), n = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && l.indexOf(x.id) < 0; }).length : 0;
   var p = a.querySelector(".nombre"); if(p) p.remove();
-  if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = "NOUVEAU"; a.appendChild(p); }
+  if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = n + " NOUVEAU" + (n > 1 ? "X" : ""); a.appendChild(p); }
 }
 function pastilleAuto(){
   var a = app.querySelector('a[data-i="2"]'); if(!a) return;
