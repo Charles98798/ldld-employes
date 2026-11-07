@@ -1,5 +1,5 @@
 // Étape 1 : démarrage, connexion et menu. Aucune donnée réelle : la connexion et les sections sont des gabarits.
-var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Rencontre", "Mon profil"];
+var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Calendrier", "Rencontre", "Mon profil"];
 var app = document.getElementById("app");
 
 function demarrage(){
@@ -48,6 +48,7 @@ function precharger(){
   chercher("tableau", {action:"tableau"}).catch(function(){});
   chercher("incendie_texte", {action:"incendie_texte"}).catch(function(){});
   chercher("manuel_texte", {action:"manuel_texte"}).catch(function(){});
+  chercher("calendrier", {action:"calendrier"}).catch(function(){});
   chercher("ae", {action:"ae_lire"}).then(function(r){
     pastilleAuto();
     if(r && r.ok && r.rencontres) r.rencontres.forEach(function(m){ chercher("ae"+m.rencontre, {action:"ae_lire", rencontre:m.rencontre}).catch(function(){}); });
@@ -627,6 +628,41 @@ function profil(){
     document.getElementById("notifCase").onchange = function(){ var c = this; (c.checked ? demanderNotifs() : couperNotifs()).then(function(ok){ if(c.checked && !ok) c.checked = false; }).catch(function(){}); };
   });
 }
+// Calendrier : congés de l'entreprise (fériés en noir, fermetures en vert) et réunions de l'employé (jour encadré); un mois à la fois.
+var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function calendrier(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Calendrier</h1><div id="cal"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  obtenir("calendrier", {action:"calendrier"}, function(r){
+    var el = document.getElementById("cal"); if(!el) return;
+    if(!r || !r.jours) throw 0;
+    var jours = r.jours, m = new Date(); m.setDate(1);
+    el.innerHTML = '<div class="moisbar"><button type="button" id="cp" aria-label="Mois précédent">←</button><b id="ct"></b><button type="button" id="cn" aria-label="Mois suivant">→</button></div><div class="cg" id="cg"></div>' +
+      '<div class="leg"><span><i class="sq" style="background:var(--tx)"></i>Férié</span><span><i class="sq" style="background:#8EFF60"></i>Fermeture</span><span><i class="sq" style="border:1.5px solid var(--tx)"></i>Réunion</span></div>' +
+      '<div class="etiq" style="margin-top:24px">▪ À VENIR</div><div id="cl"></div>';
+    function iso(y, mo, d){ return y+"-"+("0"+(mo+1)).slice(-2)+"-"+("0"+d).slice(-2); }
+    function dessiner(){
+      var y = m.getFullYear(), mo = m.getMonth(), nb = new Date(y, mo+1, 0).getDate(), prem = (new Date(y, mo, 1).getDay()+6)%7;
+      document.getElementById("ct").textContent = MOIS_LONGS[mo].toUpperCase()+" "+y;
+      var g = ["L","M","M","J","V","S","D"].map(function(x){ return '<div class="cj">'+x+'</div>'; }).join("");
+      for(var i = 0; i < prem; i++) g += '<div class="cd"></div>';
+      for(var d = 1; d <= nb; d++){
+        var j = iso(y, mo, d), ev = jours.filter(function(x){ return x.d === j; }), cl = "cd";
+        if(ev.some(function(x){ return x.t === "f"; })) cl += " cf"; else if(ev.some(function(x){ return x.t === "c"; })) cl += " cc";
+        if(ev.some(function(x){ return x.t === "r"; })) cl += " cr";
+        g += '<div class="'+cl+'">'+d+'</div>';
+      }
+      document.getElementById("cg").innerHTML = g;
+      var auj = new Date(); auj.setHours(0,0,0,0); var deb = iso(auj.getFullYear(), auj.getMonth(), auj.getDate());
+      var li = jours.filter(function(x){ return x.d >= deb; }).slice(0, 8);
+      document.getElementById("cl").innerHTML = li.length ? li.map(function(x){ var a = x.d.split("-");
+        return '<div class="cli"><span class="cdt">'+(+a[2])+" "+MOIS_LONGS[+a[1]-1].slice(0,4).toUpperCase()+".</span><span>"+esc(x.n)+'</span>'+(x.h ? '<span class="chh">'+esc(x.h)+'</span>' : '')+'</div>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR</div>';
+    }
+    document.getElementById("cp").onclick = function(){ m.setMonth(m.getMonth()-1); dessiner(); };
+    document.getElementById("cn").onclick = function(){ m.setMonth(m.getMonth()+1); dessiner(); };
+    dessiner();
+  }, function(){ var el = document.getElementById("cal"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
+}
 // Rencontre : l'employé choisit son responsable et un sujet; la demande arrive dans les Messages du responsable.
 function rencontre(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Rencontre</h1><div id="rc"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
@@ -665,8 +701,9 @@ function section(i){
   if(i === 0) return messages();
   if(i === 4) return tableau();
   if(i === 5) return incendie();
-  if(i === 6) return rencontre();
-  if(i === 7) return profil();
+  if(i === 6) return calendrier();
+  if(i === 7) return rencontre();
+  if(i === 8) return profil();
   if(i === 2) return evaluations();
   if(i === 3) return salaire();
   if(i === 1) return manuel();
