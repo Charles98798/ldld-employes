@@ -156,3 +156,9 @@ h1{font-size:25px;font-weight:300;margin:16px 0}.rang,.doc,.ligne,.sx{border-top
 .bandeau{background:transparent;color:#8D806A;padding-left:0}.tcarte,.carte{border:0;background:#242321}.tbm{border-top:0}
 .sh{border-bottom:1px solid #3d3b36}.said,.satot{background:#242321}
 h1.sa1{font-size:26px;margin:10px 0}
+
+/* Visionneuse : consultation seulement */
+.vue #pages canvas{display:block;margin:0 0 10px;background:#fff;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.vue h1{font-size:20px}
+
+.etq{display:block;font-size:11px;letter-spacing:1.5px;color:var(--tx2);opacity:.8;margin-bottom:2px}.champ.ligne3{background:transparent!important;color:var(--tx2);padding:10px 0 12px}.champ.ligne3::placeholder{color:var(--tx);opacity:.5}

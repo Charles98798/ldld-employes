@@ -29,7 +29,7 @@ function deconnecter(){
 }
 function connexion(message){
   app.innerHTML = '<div class="connexion"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
-    '<div style="margin-top:110px"><input class="champ" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="Votre courriel">' +
+    '<div style="margin-top:110px"><label class="etq" for="courriel">▪ COURRIEL</label><input class="champ ligne3" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="nom@exemple.com">' +
     '<button class="bouton" id="envoi">Recevoir mon code →</button></div>' +
     '<p class="aide" id="msg">'+(message||"Un code à 6 chiffres sera envoyé à votre courriel.")+'</p></div>';
   document.getElementById("envoi").onclick = function(){
@@ -42,7 +42,7 @@ function connexion(message){
 }
 function saisieCode(c){
   app.innerHTML = '<div class="connexion"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
-    '<div style="margin-top:110px"><input class="champ" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Code à 6 chiffres" style="letter-spacing:6px;font-size:24px">' +
+    '<div style="margin-top:110px"><label class="etq" for="code">▪ CODE À 6 CHIFFRES</label><input class="champ ligne3" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" style="letter-spacing:6px;font-size:24px">' +
     '<button class="bouton" id="valider">Se connecter →</button></div>' +
     '<p class="aide" id="msg">Code envoyé à '+esc(c)+'. Il est valide 10 minutes. Vérifiez aussi les indésirables.</p>' +
     '<p class="aide"><a href="#" id="autre">← Changer de courriel</a></p></div>';
@@ -183,6 +183,27 @@ function prechargerDocs(){
   }));
 }
 document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && sessionGardee() && MOI) prechargerDocs(); });
+// Visionneuse intégrée (consultation seulement) : le PDF est dessiné page par page dans l'application, sans barre ni bouton d'enregistrement.
+function chargerScript(src){ return new Promise(function(ok, ko){ var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }); }
+function visionneuse(titre, blob, retour){
+  app.innerHTML = '<div class="page vue"><a class="retour" href="#" id="retour">← Retour</a><h1>'+esc(titre)+'</h1><div id="pages"><div class="bandeau">▪ OUVERTURE…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); retour(); };
+  var zone = document.getElementById("pages");
+  zone.oncontextmenu = function(e){ e.preventDefault(); };
+  (window.pdfjsLib ? Promise.resolve() : chargerScript("vendor/pdf.min.js")).then(function(){
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.min.js";
+    return blob.arrayBuffer();
+  }).then(function(buf){ return pdfjsLib.getDocument({data: buf}).promise; }).then(function(pdf){
+    zone.innerHTML = "";
+    var largeur = zone.clientWidth || 340, ratio = Math.min(window.devicePixelRatio || 1, 2);
+    var suite = Promise.resolve();
+    for(var n = 1; n <= pdf.numPages; n++){ (function(n){ suite = suite.then(function(){ return pdf.getPage(n).then(function(page){
+      var v1 = page.getViewport({scale: 1}), sc = largeur / v1.width, v = page.getViewport({scale: sc * ratio});
+      var c = document.createElement("canvas"); c.width = v.width; c.height = v.height; c.style.width = largeur + "px"; c.style.height = (v.height / ratio) + "px";
+      zone.appendChild(c); return page.render({canvasContext: c.getContext("2d"), viewport: v}).promise; }); }); })(n); }
+    return suite;
+  }).catch(function(){ zone.innerHTML = '<div class="bandeau">▪ DOCUMENT INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
 function sectionDocs(p, titre, aide){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Menu</a><h1>'+titre+'</h1>' +
     '<div id="liste"></div><p class="aide">'+aide+'</p></div>';
@@ -190,7 +211,7 @@ function sectionDocs(p, titre, aide){
   var liste = document.getElementById("liste");
   function ouvrir(d){
     (self.caches ? caches.open(CACHE).then(function(c){ return c.match(cleDoc(d)); }) : Promise.resolve(null)).then(function(r){
-      if(!r) throw 0; return r.blob(); }).then(function(b){ window.open(URL.createObjectURL(b), "_blank"); }).catch(function(){});
+      if(!r) throw 0; return r.blob(); }).then(function(b){ visionneuse(d.nom, b, function(){ sectionDocs(p, titre, aide); }); }).catch(function(){});
   }
   function dessinerD(docs){
     liste.innerHTML = docs.map(function(d){ var e = etat(d);
