@@ -842,8 +842,8 @@ function boutonBas(texte, actif, action){
 }
 function retirerBoutonBas(){ var b = document.getElementById("btnbas"); if(b) b.remove(); }
 // Participants: liste « Groupes » et liste « Employés » (choix multiples). Les membres d'un groupe choisi sont en gris pâle dans la liste Employés.
-function participants(personnes, groupes, surChangement){
-  var S = {grp: [], emp: [], ouvert: "", err: false, zone: null};
+function participants(personnes, groupes, surChangement, init){
+  var S = {grp: (init && init.grp) || [], emp: (init && init.emp) || [], ouvert: "", err: false, zone: null};
   var pers = personnes.map(function(p){ return {c: p.c, nom: nomTitre(p.nom)}; });
   function membresChoisis(){ var m = {}; groupes.forEach(function(g){ if(S.grp.indexOf(g.nom) >= 0) g.membres.forEach(function(c){ m[c] = (m[c] || []).concat(g.nom); }); }); return m; }
   function tous(){ var m = membresChoisis(), r = Object.keys(m); S.emp.forEach(function(c){ if(r.indexOf(c) < 0) r.push(c); }); return r; }
@@ -889,13 +889,30 @@ function participants(personnes, groupes, surChangement){
 function dateHeure(opts, surChangement){
   opts = opts || {};
   var auj = new Date(); auj.setHours(0, 0, 0, 0);
-  var S = {lundi: lundiDe(auj), jour: "", heure: "", agenda: "primary", evs: [], err: false, zone: null, confirme: false};
+  var S = {lundi: lundiDe(auj), jour: "", heure: "", agenda: "primary", evs: [], err: false, zone: null, confirme: false, ed: null};
+  if(opts.init && opts.init.jour){ var pi = opts.init.jour.split("-"); S.jour = opts.init.jour; S.heure = opts.init.heure || ""; S.lundi = lundiDe(new Date(+pi[0], +pi[1]-1, +pi[2])); }
   function isoDe(d){ return isoJour(d); }
   function depuis(iso){ var p = iso.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
   function charger(){
     appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(S.lundi), agenda:S.agenda}).then(function(r){ S.evs = (r && r.ok) ? r.evenements : []; rendre(); }).catch(function(){ S.evs = []; rendre(); });
   }
   function conge(iso){ return DH_CACHE.conges && DH_CACHE.conges[iso]; }
+  function optJours(sel){ var r = "", dd2 = new Date(auj), tr = false;
+    for(var i2 = 0; i2 < 56; i2++){ var iso2 = isoJour(dd2); if(iso2 === sel) tr = true; r += '<option value="'+iso2+'"'+(iso2 === sel ? " selected" : "")+'>'+(i2 === 0 ? "Aujourd'hui \u00b7 " : i2 === 1 ? "Demain \u00b7 " : "")+jourTxt(dd2)+'</option>'; dd2.setDate(dd2.getDate()+1); }
+    if(sel && !tr) r += '<option value="'+sel+'" selected>'+jourTxt(depuis(sel))+'</option>'; return r; }
+  // Heures libres d'un jour pour une durée (minutes), sans compter l'événement ignoré; retourne {html, masquees}.
+  function optHeures(jour, sel, minutes, ignorer){ var r = "", masq = 0, jd2 = jour ? depuis(jour) : null;
+    for(var h2 = 7; h2 <= 18; h2++) [0,15,30,45].forEach(function(m){
+      var conf = false; if(jd2){ var a1 = new Date(jd2.getFullYear(), jd2.getMonth(), jd2.getDate(), h2, m), a2 = new Date(a1.getTime()+minutes*60000);
+        conf = S.evs.some(function(e){ return e.id !== ignorer && new Date(e.debut) < a2 && new Date(e.fin) > a1; }); }
+      if(conf){ masq++; return; } var v = h2+":"+m; r += '<option value="'+v+'"'+(v === sel ? " selected" : "")+'>'+heureTxt(h2, m)+'</option>'; });
+    return {html: r, masquees: masq}; }
+  function panneau(e){
+    var ed = S.ed, dur = Math.max(15, Math.round((new Date(e.fin) - new Date(e.debut))/60000)), hs = optHeures(ed.jour, ed.heure, dur, e.id);
+    var ps = ed.confirm ? '<div style="margin:8px 0"><div style="font-size:13px;margin-bottom:6px">Supprimer cet \u00e9v\u00e9nement ?</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="edn" style="margin:0">Non</button><button type="button" class="bouton" id="edo" style="margin:0;background:#a32d2d;color:#fff">Oui</button></div></div>'
+      : '<div class="aeact" style="margin:8px 0 0"><button type="button" class="bouton" id="eds" style="margin:0">Enregistrer</button><button type="button" class="bouton" id="edx" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)">Supprimer</button><button type="button" class="bouton" id="edf" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)">Fermer</button></div>';
+    return '<div style="border:1.5px solid var(--tx);padding:10px;margin:4px 0 10px"><div style="display:flex;gap:8px"><div style="flex:1"><span class="lbl">Date</span><select class="bx" id="edd">'+optJours(ed.jour)+'</select></div><div style="flex:1"><span class="lbl">Heure</span><select class="bx" id="edh">'+hs.html+'</select></div></div>'+ps+(ed.msg ? '<div class="bandeau">'+esc(ed.msg)+'</div>' : '')+'</div>';
+  }
   function rendre(){
     var z = S.zone; if(!z) return;
     var fin = new Date(S.lundi); fin.setDate(fin.getDate()+6), aujIso = isoJour(auj), h = "";
@@ -917,27 +934,42 @@ function dateHeure(opts, surChangement){
     }
     h += g + '</div>';
     if(S.jour){
-      var d0j = depuis(S.jour), duJour = S.evs.filter(function(e){ return isoJour(new Date(e.debut)) === S.jour; });
-      h += '<span class="lbl">'+jourTxt(d0j)+(conge(S.jour) ? " · labo fermé" : "")+'</span>' + (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut); return '<div class="ligne"><span>'+heureTxt(d0.getHours(), d0.getMinutes())+'</span><span style="flex:1;margin-left:12px">'+esc(e.titre)+'</span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE JOUR</div>');
+      var d0j = depuis(S.jour), duJour = S.evs.filter(function(e){ return isoJour(new Date(e.debut)) === S.jour && e.id !== opts.exclure; });
+      h += '<span class="lbl">'+jourTxt(d0j)+(conge(S.jour) ? " \u00b7 labo ferm\u00e9" : "")+'</span>' + (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut), mod = e.ldld && opts.modifier !== false;
+        return '<div class="ligne"><span>'+heureTxt(d0.getHours(), d0.getMinutes())+'</span><span style="flex:1;margin-left:12px">'+esc(e.titre)+'</span>'+(mod ? '<span class="crayon" data-ed="'+esc(e.id)+'" style="cursor:pointer;padding:0 6px" aria-label="Modifier">\u270e</span>' : '')+'</div>'+(S.ed && S.ed.id === e.id ? panneau(e) : ''); }).join("") : '<div class="bandeau">\u25aa AUCUN \u00c9V\u00c9NEMENT CE JOUR</div>');
     }
-    var jours = "", dd = new Date(auj), trouve = false;
-    for(var i = 0; i < 56; i++){ var iso = isoJour(dd); if(iso === S.jour) trouve = true;
-      jours += '<option value="'+iso+'"'+(iso === S.jour ? " selected" : "")+'>'+(i === 0 ? "Aujourd'hui · " : i === 1 ? "Demain · " : "")+jourTxt(dd)+'</option>'; dd.setDate(dd.getDate()+1); }
-    if(S.jour && !trouve) jours += '<option value="'+S.jour+'" selected>'+jourTxt(depuis(S.jour))+'</option>';
-    var heures = "", jd = S.jour ? depuis(S.jour) : null;
-    function enConflit(h2, m2){ if(!jd) return false; var d1 = new Date(jd.getFullYear(), jd.getMonth(), jd.getDate(), h2, m2), d2 = new Date(d1.getTime()+30*60000);
-      return S.evs.some(function(e){ return new Date(e.debut) < d2 && new Date(e.fin) > d1; }); }
-    if(S.heure){ var ph = S.heure.split(":"); if(enConflit(+ph[0], +ph[1])) S.heure = ""; }
-    for(hh = 7; hh <= 18; hh++) [0,15,30,45].forEach(function(m){ if(enConflit(hh, m)) return; var v = hh+":"+m; heures += '<option value="'+v+'"'+(v === S.heure ? " selected" : "")+'>'+heureTxt(hh, m)+'</option>'; });
+    var jours = optJours(S.jour), jd = S.jour ? depuis(S.jour) : null;
+    var hl = optHeures(S.jour, S.heure, 30, opts.exclure);
+    if(S.heure && hl.html.indexOf('value="'+S.heure+'"') < 0) S.heure = "";
+    var heures = hl.html;
     var cD = "bx"+(S.jour ? "" : " rose")+(S.err && !S.jour ? " err" : ""), cH = "bx"+(S.heure ? "" : " rose")+(S.err && !S.heure ? " err" : "");
     h += '<div style="display:flex;gap:8px"><div style="flex:1"><span class="lbl">Date · obligatoire</span><select class="'+cD+'" id="dhd"><option value="">Choisir une date</option>'+jours+'</select></div>' +
-      '<div style="flex:1"><span class="lbl">Heure · obligatoire</span><select class="'+cH+'" id="dhh"><option value="">Choisir</option>'+heures+'</select></div></div>';
+      '<div style="flex:1"><span class="lbl">Heure · obligatoire</span><select class="'+cH+'" id="dhh"><option value="">Choisir</option>'+heures+'</select>'+(hl.masquees ? '<div style="font-size:11px;margin-top:4px;color:var(--tx2)">'+hl.masquees+" heure"+(hl.masquees > 1 ? "s" : "")+" masqu\u00e9e"+(hl.masquees > 1 ? "s" : "")+'</div>' : "")+'</div></div>';
     z.innerHTML = h;
     var ag2 = document.getElementById("dhag"); if(ag2) ag2.onchange = function(){ S.agenda = this.value; charger(); };
     document.getElementById("dhp").onclick = function(){ S.lundi.setDate(S.lundi.getDate()-7); charger(); };
     document.getElementById("dhn").onclick = function(){ S.lundi.setDate(S.lundi.getDate()+7); charger(); };
     document.getElementById("dhd").onchange = function(){ S.jour = this.value; S.confirme = false; S.err = false; if(S.jour){ var l = lundiDe(depuis(S.jour)); if(isoJour(l) !== isoJour(S.lundi)){ S.lundi = l; changer(); charger(); return; } } changer(); };
     document.getElementById("dhh").onchange = function(){ S.heure = this.value; S.err = false; changer(); };
+    Array.prototype.forEach.call(z.querySelectorAll("[data-ed]"), function(c){ c.onclick = function(){ var id = c.getAttribute("data-ed"), e = S.evs.filter(function(x){ return x.id === id; })[0]; if(!e) return;
+      if(S.ed && S.ed.id === id){ S.ed = null; } else { var d0 = new Date(e.debut); S.ed = {id: id, jour: isoJour(d0), heure: d0.getHours()+":"+d0.getMinutes(), confirm: false, msg: ""}; } rendre(); }; });
+    if(S.ed){
+      var e0 = S.evs.filter(function(x){ return x.id === S.ed.id; })[0], g1 = function(i){ return document.getElementById(i); };
+      if(!e0){ S.ed = null; }
+      else {
+        if(g1("edd")) g1("edd").onchange = function(){ S.ed.jour = this.value; S.ed.msg = ""; rendre(); };
+        if(g1("edh")) g1("edh").onchange = function(){ S.ed.heure = this.value; S.ed.msg = ""; };
+        if(g1("edf")) g1("edf").onclick = function(){ S.ed = null; rendre(); };
+        if(g1("edx")) g1("edx").onclick = function(){ S.ed.confirm = true; rendre(); };
+        if(g1("edn")) g1("edn").onclick = function(){ S.ed.confirm = false; rendre(); };
+        if(g1("edo")) g1("edo").onclick = function(){ S.ed.msg = "\u25aa SUPPRESSION\u2026"; rendre(); appelService({action:"agenda_supprimer", session:sessionGardee(), agenda:S.agenda, id:e0.id, serie:false}).then(function(r){
+          if(r && r.ok){ S.ed = null; charger(); if(surChangement) surChangement(); } else { S.ed.confirm = false; S.ed.msg = "\u25aa "+String((r && r.erreur) || "\u00c9CHEC").toUpperCase(); rendre(); } }).catch(function(){ S.ed.confirm = false; S.ed.msg = "\u25aa \u00c9CHEC \u00b7 R\u00c9SEAU"; rendre(); }); };
+        if(g1("eds")) g1("eds").onclick = function(){ var hv = g1("edh").value; if(!hv){ S.ed.msg = "\u25aa CHOISISSEZ UNE HEURE"; rendre(); return; } var ph2 = hv.split(":"), dur = Math.max(15, Math.round((new Date(e0.fin) - new Date(e0.debut))/60000));
+          S.ed.msg = "\u25aa ENREGISTREMENT\u2026"; rendre();
+          appelService({action:"agenda_modifier", session:sessionGardee(), agenda:S.agenda, id:e0.id, serie:false, titre:e0.titre, texte:e0.texte || "", a:e0.a || "", debut:S.ed.jour+"T"+pad2(ph2[0])+":"+pad2(ph2[1]), minutes:dur}).then(function(r){
+            if(r && r.ok){ S.jour = S.ed.jour; S.lundi = lundiDe(depuis(S.jour)); S.ed = null; charger(); if(surChangement) surChangement(); } else { S.ed.msg = "\u25aa "+String((r && r.erreur) || "\u00c9CHEC").toUpperCase(); rendre(); } }).catch(function(){ S.ed.msg = "\u25aa \u00c9CHEC \u00b7 R\u00c9SEAU"; rendre(); }); };
+      }
+    }
     Array.prototype.forEach.call(z.querySelectorAll(".gs [data-j]"), function(c){ c.onclick = function(){
       S.jour = c.getAttribute("data-j"); S.confirme = false; S.err = false; var hv = c.getAttribute("data-h"); if(hv) S.heure = hv+":0"; changer(); }; });
   }
@@ -1009,22 +1041,59 @@ function nouveau(onglet){
     part.monter(document.getElementById("npart")); dessinerReste();
   }).catch(function(){ document.getElementById("npart").innerHTML = '<div class="bandeau">▪ LISTE INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
+// Modifier une réunion créée dans l'application: même formulaire que « Nouveau message · Réunion », déjà rempli.
+function modifierReunion(e, serie){
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">← Retour</a><h1>Modifier la réunion</h1><div id="npart"><div class="bandeau">▪ CHARGEMENT…</div></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
+  var retour = function(){ retirerBoutonBas(); mesEvenements(); };
+  document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); retour(); };
+  var dire = function(t){ var x = document.getElementById("ne"); if(x){ x.style.display = "block"; x.textContent = t; } };
+  var d0 = new Date(e.debut), dur = Math.max(15, Math.round((new Date(e.fin) - d0)/60000)), part = null, sujet = e.titre;
+  var dh = dateHeure({agenda: false, modifier: false, exclure: e.id, init: {jour: isoJour(d0), heure: d0.getHours()+":"+d0.getMinutes()}}, function(){ maj(); });
+  function lire(){ var s2 = document.getElementById("nsuj"); if(s2) sujet = s2.value; }
+  function maj(){ lire(); boutonBas("Enregistrer →", !!(part && part.courriels().length && sujet.trim() && dh.lire()), enregistrer);
+    var s2 = document.getElementById("nsuj"); if(s2) s2.className = "bx"+(sujet.trim() ? "" : " rose"); }
+  function enregistrer(){
+    lire(); var q = dh.lire(); if(!q || !sujet.trim() || !part.courriels().length) return;
+    var bt = document.getElementById("btnbas"); bt.disabled = true; dire("▪ ENREGISTREMENT…");
+    appelService({action:"agenda_modifier", session:sessionGardee(), id:e.id, serie:!!serie, titre:sujet.trim(), texte:e.texte || "", a:part.noms().join(", ").slice(0, 190), debut:q.date+"T"+q.heure, minutes:dur}).then(function(r){
+      if(r && r.ok){ dire("▪ RÉUNION MODIFIÉE"); setTimeout(retour, 1000); } else { bt.disabled = false; dire("▪ NON MODIFIÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
+    }).catch(function(){ bt.disabled = false; dire("▪ NON MODIFIÉE · RÉSEAU"); });
+  }
+  function supprimer(){ confirmerOuiNon("Supprimer cette réunion"+(serie ? " et toute la série" : "")+" ?", function(){
+    dire("▪ SUPPRESSION…"); appelService({action:"agenda_supprimer", session:sessionGardee(), id:e.id, serie:!!serie}).then(function(r){
+      if(r && r.ok) retour(); else dire("▪ NON SUPPRIMÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }).catch(function(){ dire("▪ NON SUPPRIMÉE · RÉSEAU"); }); }, true); }
+  appelService({action:"equipe_groupes", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok) throw 0;
+    var noms = String(e.a || "").split(", "), init = {grp: [], emp: []};
+    (r.groupes || []).forEach(function(g){ if(noms.indexOf(g.nom) >= 0) init.grp.push(g.nom); });
+    r.personnes.forEach(function(p){ if(noms.indexOf(nomTitre(p.nom)) >= 0) init.emp.push(p.c); });
+    part = participants(r.personnes, r.groupes || [], maj, init);
+    part.monter(document.getElementById("npart"));
+    document.getElementById("nreste").innerHTML = '<div id="ndh"></div><span class="lbl">Sujet · obligatoire</span><input class="bx" id="nsuj" maxlength="120" value="'+esc(sujet)+'">' +
+      '<a class="doc" href="#" id="nsup" style="margin-top:14px"><span>▪ Supprimer cette réunion</span><em>→</em></a>';
+    document.getElementById("nsuj").oninput = maj; document.getElementById("nsup").onclick = function(ev){ ev.preventDefault(); supprimer(); };
+    dh.monter(document.getElementById("ndh")); maj();
+  }).catch(function(){ document.getElementById("npart").innerHTML = '<div class="bandeau">▪ LISTE INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
 function mesEvenements(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Mes événements</h1><div id="me"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
-  var liste = [], choisi = null, msg = "";
+  var liste = [], choisi = null, msg = "", mode = "";
   function dessiner(){
     var el = document.getElementById("me"); if(!el) return;
     var h = liste.length ? liste.map(function(e, i){ var d0 = new Date(e.debut);
       return '<a href="#" class="ligne" data-i="'+i+'" style="color:inherit;text-decoration:none'+(choisi === i ? ';background:var(--tx);color:var(--noir)' : '')+'"><span>'+esc(e.titre)+'</span><span>'+d0.getDate()+" "+MOIS_LONGS[d0.getMonth()].slice(0,4)+". · "+heureTxt(d0.getHours(), d0.getMinutes())+(e.serie ? " · série" : "")+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR</div>';
-    if(choisi !== null) h += '<div class="aeact"><button type="button" class="bouton" id="m1">Cet événement</button>'+(liste[choisi].serie ? '<button type="button" class="bouton" id="m2">Toute la série</button>' : '')+'</div>';
+    if(choisi !== null && !mode) h += '<div class="aeact"><button type="button" class="bouton" id="mm">Modifier</button><button type="button" class="bouton" id="ms">Supprimer</button></div>';
+    if(choisi !== null && mode){ h += '<div class="etq" style="margin-top:12px">'+(mode === "mod" ? "MODIFIER" : "SUPPRIMER")+'</div><div class="aeact"><button type="button" class="bouton" id="m1">Cet événement</button>'+(liste[choisi].serie ? '<button type="button" class="bouton" id="m2">Toute la série</button>' : '')+'</div>'; }
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
     el.innerHTML = h;
-    Array.prototype.forEach.call(el.querySelectorAll("[data-i]"), function(a){ a.onclick = function(e){ e.preventDefault(); choisi = +a.getAttribute("data-i"); dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-i]"), function(a){ a.onclick = function(e){ e.preventDefault(); choisi = +a.getAttribute("data-i"); mode = ""; msg = ""; dessiner(); }; });
+    var bm = document.getElementById("mm"); if(bm) bm.onclick = function(){ if(liste[choisi].serie){ mode = "mod"; dessiner(); } else modifierReunion(liste[choisi], false); };
+    var bs = document.getElementById("ms"); if(bs) bs.onclick = function(){ mode = "sup"; dessiner(); };
     function sup(serie){ var e = liste[choisi]; msg = "▪ SUPPRESSION…"; dessiner();
-      appelService({action:"agenda_supprimer", session:sessionGardee(), id:e.id, serie:serie}).then(function(r){ if(r && r.ok){ choisi = null; msg = ""; charger(); } else { msg = "▪ "+String((r && r.erreur) || "ÉCHEC").toUpperCase(); dessiner(); } }).catch(function(){ msg = "▪ ÉCHEC · RÉSEAU"; dessiner(); }); }
-    var b1 = document.getElementById("m1"); if(b1) b1.onclick = function(){ sup(false); };
-    var b2 = document.getElementById("m2"); if(b2) b2.onclick = function(){ sup(true); };
+      appelService({action:"agenda_supprimer", session:sessionGardee(), id:e.id, serie:serie}).then(function(r){ if(r && r.ok){ choisi = null; mode = ""; msg = ""; charger(); } else { msg = "▪ "+String((r && r.erreur) || "ÉCHEC").toUpperCase(); dessiner(); } }).catch(function(){ msg = "▪ ÉCHEC · RÉSEAU"; dessiner(); }); }
+    var b1 = document.getElementById("m1"); if(b1) b1.onclick = function(){ if(mode === "mod") modifierReunion(liste[choisi], false); else sup(false); };
+    var b2 = document.getElementById("m2"); if(b2) b2.onclick = function(){ if(mode === "mod") modifierReunion(liste[choisi], true); else sup(true); };
   }
   function charger(){ appelService({action:"agenda_mes", session:sessionGardee()}).then(function(r){ liste = (r && r.ok) ? r.evenements : []; dessiner(); }).catch(function(){ var el = document.getElementById("me"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }); }
   charger();
