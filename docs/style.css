@@ -298,3 +298,24 @@ input,textarea{color-scheme:light}
 .gs .n{background:#8EFF60}
 .gs .d.f{background:var(--tx);color:var(--noir);opacity:.85}.gs .d.c{background:#8EFF60;color:#1D1D1B}
 .gs .clf{background:repeating-linear-gradient(45deg,#B4AB9B,#B4AB9B 3px,transparent 3px,transparent 6px)}.gs .clc{background:repeating-linear-gradient(45deg,#8EFF60,#8EFF60 3px,transparent 3px,transparent 6px)}
+
+/* Composants communs: participants, agenda · date · heure */
+.lbl{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin:14px 0 4px}
+.bx{display:block;width:100%;box-sizing:border-box;border:1.5px solid var(--tx);background:transparent;color:var(--tx);padding:11px 8px;font:inherit;font-size:15px;border-radius:0;margin:0 0 4px}
+.bx.rose{background:#f4b3c4;color:#111}
+.bx.err,.ms.err{outline:2px solid #a32d2d}
+textarea.bx{min-height:90px;resize:vertical}
+.chip{display:inline-block;border:1.5px solid var(--tx);padding:4px 8px;font-size:12px;margin:0 6px 6px 0}
+.ms{border:1.5px solid var(--tx);padding:8px 6px 2px;display:flex;justify-content:space-between;align-items:flex-start;min-height:30px;cursor:pointer}
+.ms.rose{background:#f4b3c4;color:#111}
+.ms .vide{opacity:.7;font-size:14px;padding:3px 4px;display:inline-block}
+.msl{border:1px solid var(--tx);border-top:0}
+.msl div{display:flex;align-items:center;padding:8px 10px;font-size:14px;cursor:pointer}
+.msl div.via{background:#e3e3e1;color:#111;cursor:default}
+.msl small{margin-left:auto;font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+.cb{width:16px;height:16px;border:1.5px solid var(--tx);display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:10px;flex:none}
+.cb.on{background:var(--tx);color:var(--noir)}.msl .via .cb{background:transparent;color:#111;border-color:#111}
+.resume{font-size:12px;margin:8px 0 0;opacity:.8}
+.gs .d.past{opacity:.4;cursor:default}.gs .d.auj{box-shadow:inset 0 0 0 2px var(--tx)}
+.btnbas{position:fixed;z-index:20;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);width:auto;margin:0;font-size:13px;padding:13px 18px}
+.btnbas:disabled{opacity:.45}
