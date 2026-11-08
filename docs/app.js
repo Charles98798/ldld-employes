@@ -146,13 +146,28 @@ function ecranNotifs(){
   document.getElementById("notifOui").onclick = function(e){ e.preventDefault(); demanderNotifs().then(fini).catch(fini); };
   document.getElementById("notifPlus").onclick = function(e){ e.preventDefault(); fini(); };
 }
+// Accueil « Aujourd'hui »: rencontres du jour (agenda principal), carré vert devant chaque ligne; rien d'affiché s'il n'y en a pas.
+var AUJ = null;
+function heureFr(d){ var h = d.getHours(), m = d.getMinutes(); return h+" h"+(m ? " "+("0"+m).slice(-2) : ""); }
+function dessinerAujourdhui(){
+  var z = document.getElementById("auj"); if(!z) return; var t = new Date(), iso = isoJour(t);
+  var l = (AUJ || []).filter(function(e){ return isoJour(new Date(e.debut)) === iso; });
+  if(!l.length){ z.innerHTML = ""; return; }
+  z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+l.map(function(e){ var d = new Date(e.debut), fait = new Date(e.fin || e.debut) < t;
+    return '<div'+(fait ? ' class="fait"' : "")+'>'+heureFr(d)+' · '+esc(e.titre || "")+'</div>'; }).join("")+'</div>';
+}
+function chargerAujourdhui(){
+  var t = new Date(); t.setHours(0, 0, 0, 0); dessinerAujourdhui();
+  appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(lundiDe(t)), agenda:"primary"}).then(function(r){
+    if(r && r.ok){ AUJ = r.evenements; dessinerAujourdhui(); } }).catch(function(){});
+}
 function menu(){
   var dejaDemande = false; try { dejaDemande = localStorage.getItem("ldld-notif-demande") === "1"; } catch(e){}
   if(notifPossible() && !dejaDemande && Notification.permission === "default") return ecranNotifs();
   if(notifPossible() && Notification.permission === "granted" && !menu.abonne){ menu.abonne = true; abonnerNotifs().catch(function(){}); }
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger();
-  app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
+  app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' +
     (peutEcrire() ? '<a href="#" id="resp">▪ '+(MOI.role === "direction" ? "Direction" : "Responsable")+'</a>' : '') +
     ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'">▪ '+SECTIONS[i]+'</a>'; }).join("") +
     (peutEcrire() ? '' : '<a href="#" id="entr">▪ Mes entretiens</a>') +
@@ -164,7 +179,7 @@ function menu(){
   var en = document.getElementById("entr"); if(en) en.onclick = function(e){ e.preventDefault(); entretien(); };
   var rp = document.getElementById("resp"); if(rp) rp.onclick = function(e){ e.preventDefault(); responsable(); };
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
-  pastilleAuto(); pastilleMessages();
+  pastilleAuto(); pastilleMessages(); chargerAujourdhui();
 }
 // Étape 2 : messages, lus et écrits par le service Google Apps Script (chaque employé ne reçoit que les siens).
 var MESSAGES = [];

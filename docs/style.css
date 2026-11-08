@@ -330,3 +330,6 @@ textarea.bx{min-height:90px;resize:vertical}
 .pe .nv{position:absolute;top:4px;width:2px;height:18px;background:var(--tx2);margin-left:-1px}.pe .mx{position:absolute;top:8px;width:10px;height:10px;border:2px solid var(--tx);background:var(--noir);margin-left:-5px;box-sizing:border-box}
 .pe .qa{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:var(--tx)}.pe .qa .p{font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}.pe .qa .t{font-size:20px;color:var(--tx2)}.pe .qa .ici .t{font-weight:500}
 .pe .tb{width:100%;border-collapse:collapse;font-size:13px;color:var(--tx2)}.pe .tb td{border-top:1px solid var(--fil);padding:8px 4px;vertical-align:top}.pe .tb td+td{text-align:right;white-space:nowrap}.pe .tb tr.t td{font-weight:600}
+/* Accueil: rencontres du jour */
+.aujb{display:flex;gap:4px;margin:0 0 10px}.aujb b{width:22px;height:3px;background:#8EFF60}
+.aujl{margin:0 0 12px;font-size:13px;line-height:1.7;letter-spacing:.04em}.aujl div:before{content:"";display:inline-block;width:8px;height:8px;background:#8EFF60;margin-right:8px}.aujl .fait{opacity:.5}
