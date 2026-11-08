@@ -987,14 +987,16 @@ function suiviCharge(){
       '<div class="etq" style="margin-top:4px">RÉALISÉ VS CIBLE</div>'+tuile(p.effectuee, "Effectuée · cible 80 %", 0.8, false)+tuile(p.nonTerminee, "Non terminée · max 5 %", 0.05, true)+tuile(p.objectifs, "Objectifs · cible 80 %", 0.8, false) +
       '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente'+(d ? " · "+dateCourte(d.date) : "")+'</b>'+(d && d.note ? esc(d.note) : '<span style="opacity:.7">Aucune note.</span>')+'</div>' +
       '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, true, "se"+k); }).join("")+'</div>' +
-      '<div class="etq" style="margin-top:14px">OPTIONNEL</div><div style="display:flex;gap:6px;margin-top:4px">'+bouton("Inscrire une note", noteOn, false, "sn")+bouton("Planifier une rencontre", planOn, false, "sp")+'</div>' +
-      (noteOn ? '<textarea class="champ" id="snt" rows="3" maxlength="2000" placeholder="Note du suivi…" style="margin-top:8px">'+esc(sauvNote)+'</textarea>' : "") +
+      '<div class="etq" style="margin-top:14px">OPTIONNEL</div>' +
+      (noteOn ? '<div style="display:flex;gap:6px;margin-top:4px;align-items:flex-start"><textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="flex:1;margin:0">'+esc(sauvNote)+'</textarea><button type="button" id="snx" class="bouton" aria-label="Fermer la note" style="margin:0;width:40px;flex:none;padding:10px 0;font-size:16px">✕</button></div>'
+        : '<div style="display:flex;gap:6px;margin-top:4px">'+bouton("Inscrire une note", false, false, "sn")+bouton("Planifier une rencontre", planOn, false, "sp")+'</div>') +
       (planOn ? '<div id="scp"></div>' : "") +
       (msg ? '<div class="bandeau" style="margin-top:10px">'+esc(msg)+'</div>' : "");
     el.innerHTML = h;
     ETATS.forEach(function(x, k){ document.getElementById("se"+k).onclick = function(){ lireNote(); etat = x; msg = ""; dessiner(); }; });
-    document.getElementById("sn").onclick = function(){ lireNote(); noteOn = !noteOn; dessiner(); };
-    document.getElementById("sp").onclick = function(){ lireNote(); planOn = !planOn; if(planOn) initPlan(); dessiner(); if(planOn) chargerSemaine(); };
+    var bn = document.getElementById("sn"); if(bn) bn.onclick = function(){ noteOn = true; dessiner(); document.getElementById("snt").focus(); };
+    var bx = document.getElementById("snx"); if(bx) bx.onclick = function(){ lireNote(); noteOn = false; dessiner(); };
+    var bp = document.getElementById("sp"); if(bp) bp.onclick = function(){ planOn = !planOn; if(planOn) initPlan(); dessiner(); if(planOn) chargerSemaine(); };
     if(planOn) dessinerPlan();
     barre();
   }
