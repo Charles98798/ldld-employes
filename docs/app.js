@@ -37,7 +37,19 @@ function pastilleMessages(){
   var a = app.querySelector('a[data-i="0"]'); if(!a) return;
   var m = lireCache("messages"), l = lus(), n = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && l.indexOf(x.id) < 0; }).length : 0;
   var p = a.querySelector(".nombre"); if(p) p.remove();
-  if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = n + (n > 1 ? " nouveaux" : " nouveau"); a.appendChild(p); }
+  if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = pastilleTexte(n); a.appendChild(p); }
+  pastilleDirection();
+}
+function nbDemandesNeuves(){
+  var m = lireCache("messages"), l = lus();
+  return m && m.messages ? m.messages.filter(function(x){ return !x.envoye && /^Demande de rencontre/.test(x.titre) && l.indexOf(x.id) < 0; }).length : 0;
+}
+function pastilleTexte(n){ return n + (n > 1 ? " nouveaux" : " nouveau"); }
+function pastilleDirection(){
+  var a = document.getElementById("resp"); if(!a) return;
+  var p = a.querySelector(".nombre"); if(p) p.remove();
+  var n = nbDemandesNeuves();
+  if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = pastilleTexte(n); a.appendChild(p); }
 }
 function pastilleAuto(){
   var a = app.querySelector('a[data-i="2"]'); if(!a) return;
@@ -162,15 +174,19 @@ function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&
 var MOIS = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
 function dateCourte(t){ var d = new Date(t); return d.getDate()+" "+MOIS[d.getMonth()]+" "+d.getFullYear(); }
 function peutEcrire(){ return MOI && (MOI.role === "direction" || MOI.role === "responsable"); }
-function messages(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Messages</h1><div id="liste"><div class="bandeau">▪ CHARGEMENT…</div></div>' +
-    (peutEcrire() ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+var FILTRE_MSG = "";
+function messages(filtre){
+  if(typeof filtre === "string") FILTRE_MSG = filtre;
+  var titreMsg = FILTRE_MSG === "envoyes" ? "Messages envoyés" : FILTRE_MSG === "rencontres" ? "Rencontres demandées" : "Messages";
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+titreMsg+'</h1><div id="liste"><div class="bandeau">▪ CHARGEMENT…</div></div>' +
+    (peutEcrire() && !FILTRE_MSG ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
   var w = document.getElementById("ecrire"); if(w) w.onclick = function(e){ e.preventDefault(); rediger(); };
   obtenir("messages", {action:"messages"}, function(r){
     if(!document.getElementById("liste")) return;
     MESSAGES = r.messages; var l = lus();
-    document.getElementById("liste").innerHTML = MESSAGES.length ? MESSAGES.map(function(m){
+    var vus = MESSAGES.filter(function(m){ return FILTRE_MSG === "envoyes" ? m.envoye : FILTRE_MSG === "rencontres" ? (!m.envoye && /^Demande de rencontre/.test(m.titre)) : true; });
+    document.getElementById("liste").innerHTML = vus.length ? vus.map(function(m){
       return '<a class="rang" href="#" data-id="'+esc(m.id)+'"><span class="pl">+</span>'+esc(m.titre)+(!m.envoye && l.indexOf(m.id) < 0 ? '<span class="neuf">NOUVEAU</span>' : '')+
         '<small>'+(m.envoye ? 'Envoyé à '+m.nb+' personne'+(m.nb > 1 ? 's' : '') : esc(m.de))+' · '+dateCourte(m.date)+'</small></a>'; }).join("") : '<div class="bandeau">▪ AUCUN MESSAGE</div>';
     Array.prototype.forEach.call(app.querySelectorAll("a[data-id]"), function(a){
@@ -686,13 +702,16 @@ function prefsNotifs(){
 }
 // Page Responsable (responsables et direction seulement; le service refuse les autres) : Contacts cliquables (appel, texto, courriel).
 function responsable(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span><em>→</em></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
   document.getElementById("rc").onclick = function(e){ e.preventDefault(); contactsResp(); };
   document.getElementById("rs").onclick = function(e){ e.preventDefault(); attributionPage("place"); };
   document.getElementById("rk").onclick = function(e){ e.preventDefault(); attributionPage("casier"); };
   document.getElementById("re").onclick = function(e){ e.preventDefault(); entretien(); };
+  document.getElementById("rme").onclick = function(e){ e.preventDefault(); messages("envoyes"); };
+  document.getElementById("rrd").onclick = function(e){ e.preventDefault(); messages("rencontres"); };
+  var nd = nbDemandesNeuves(); if(nd){ var sp = document.createElement("span"); sp.className = "nombre"; sp.style.marginLeft = "10px"; sp.textContent = pastilleTexte(nd); document.getElementById("rrd").firstChild.appendChild(sp); }
 }
 // Stationnement et Casier : choisir un employé, voir son numéro, le libérer (✕, avec confirmation) ou lui en attribuer un libre.
 function attributionPage(genre){
@@ -1015,7 +1034,7 @@ function heures(){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
 }
 function section(i){
-  if(i === 0) return messages();
+  if(i === 0) return messages("");
   if(i === 4) return tableau();
   if(i === 5) return incendie();
   if(i === 6) return calendrier();
