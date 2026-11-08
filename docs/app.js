@@ -1030,7 +1030,7 @@ function suiviCharge(){
       '<div class="etiq" style="margin-top:14px">▪ '+jour.getDate()+" "+MOIS_LONGS[jour.getMonth()].toUpperCase()+(conges[isoJour(jour)] ? " · LABO FERMÉ" : "")+'</div>' +
       (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut); return '<div class="ligne"><span>'+heureTxt(d0.getHours(), d0.getMinutes())+'</span><span style="flex:1;margin-left:12px">'+esc(e.titre)+'</span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE JOUR</div>') +
       '<div class="etq" style="margin-top:8px">DATE ET HEURE</div><div class="dh"><div class="champ" style="padding:12px 0;flex:1">'+["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"][(jour.getDay()+6)%7]+" "+jour.getDate()+" "+MOIS_LONGS[jour.getMonth()]+'</div><select class="champ" id="sph" style="flex:none;width:auto">'+hs+'</select></div>' +
-      '<div class="etq" style="margin-top:8px">À</div><div class="champ" style="padding:12px 0">'+esc(liste[i].nom)+'</div><div class="etq">SUJET</div><div class="champ" style="padding:12px 0">Suivi de charge · '+esc(liste[i].nom)+'</div>';
+      '<div class="etq" style="margin-top:8px">SUJET</div><div class="champ" style="padding:12px 0">Suivi de charge · '+esc(liste[i].nom)+'</div>';
     document.getElementById("sph").value = hr+":"+mn;
     document.getElementById("sph").onchange = function(){ var q = this.value.split(":"); hr = +q[0]; mn = +q[1]; dessinerPlan(); };
     document.getElementById("spag").onchange = function(){ agenda = this.value; chargerSemaine(); };
