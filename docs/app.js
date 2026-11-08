@@ -643,7 +643,7 @@ function profil(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Mon profil</h1>' +
     lignes.map(function(l){ return '<div class="ligne"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
     '<div id="stat"></div>' +
-    '<div class="etiq" style="margin-top:20px">▪ NOTIFICATIONS</div><div id="notifs"></div><div id="planz"></div></div>';
+    '<a class="doc" href="#" id="vnotif"><span>Notifications</span><em>→</em></a><div id="planz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   // Stationnement et casier de l'employé (jamais ceux des autres), lus dans le classeur du conseil par le service.
   obtenir("stationnement", {action:"stationnement"}, function(r){
@@ -655,13 +655,30 @@ function profil(){
     if(/^\d+$/.test(place) && PLACES[+place]) pz.innerHTML = planPlace(+place);
     else if(/^rue$/i.test(place)) pz.innerHTML = '<p class="aide" style="margin-top:14px">Le stationnement est plein pour l\'instant. Vous pouvez vous stationner sur le boulevard Saint-Martin, au nord de la rue Salaberry. Nous vous aviserons dès qu\'une place se libérera.</p>';
   }, function(){}, true);
+  document.getElementById("vnotif").onclick = function(e){ e.preventDefault(); prefsNotifs(); };
+}
+// Centre de contrôle des notifications : chaque employé choisit ses propres alertes (enregistrées par le service, par courriel).
+var PREFS_NOTIFS = [["courriel", "Courriel"], ["reunion_veille", "Réunions : la veille à 16 h"], ["reunion_1h", "Réunions : 1 heure avant"], ["rencontres", "Rencontres planifiées"], ["autoeval", "Autoévaluation à remplir"]];
+function prefsNotifs(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Notifications</h1><div id="notifs"></div><div id="prefs"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); profil(); };
   var zone = document.getElementById("notifs");
-  if(!notifPossible()){ zone.innerHTML = '<p class="aide">Pour recevoir les notifications sur iPhone, ajoutez l\'application à l\'écran d\'accueil (Partager > Sur l\'écran d\'accueil).</p>'; return; }
-  if(Notification.permission === "denied"){ zone.innerHTML = '<p class="aide">Les notifications sont bloquées dans les réglages de votre appareil. Autorisez-les dans les réglages pour les recevoir.</p>'; return; }
-  navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(s){
-    zone.innerHTML = '<label class="ligne"><span>Messages et documents mis à jour</span><input type="checkbox" id="notifCase"'+(s && Notification.permission === "granted" ? " checked" : "")+'></label>';
+  if(!notifPossible()){ zone.innerHTML = '<p class="aide">Pour recevoir les notifications sur iPhone, ajoutez l\'application à l\'écran d\'accueil (Partager > Sur l\'écran d\'accueil).</p>'; }
+  else if(Notification.permission === "denied"){ zone.innerHTML = '<p class="aide">Les notifications sont bloquées dans les réglages de votre appareil. Autorisez-les dans les réglages pour les recevoir.</p>'; }
+  else navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(sub){
+    zone.innerHTML = '<label class="ligne"><span>Alerte dans l\'app</span><input type="checkbox" id="notifCase"'+(sub && Notification.permission === "granted" ? " checked" : "")+'></label>';
     document.getElementById("notifCase").onchange = function(){ var c = this; (c.checked ? demanderNotifs() : couperNotifs()).then(function(ok){ if(c.checked && !ok) c.checked = false; }).catch(function(){}); };
   });
+  var etat = {courriel: false};
+  function dessiner(){
+    document.getElementById("prefs").innerHTML = PREFS_NOTIFS.map(function(p){ return '<label class="ligne"><span>'+p[1]+'</span><input type="checkbox" data-k="'+p[0]+'"'+(etat[p[0]] !== false ? " checked" : "")+'></label>'; }).join("");
+    Array.prototype.forEach.call(document.querySelectorAll("#prefs input"), function(c){
+      c.onchange = function(){ var k = c.getAttribute("data-k"), v = c.checked; etat[k] = v;
+        appelService({action:"prefs_ecrire", session:sessionGardee(), cle:k, valeur:v}).catch(function(){}); };
+    });
+  }
+  dessiner();
+  appelService({action:"prefs_lire", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.prefs && document.getElementById("prefs")){ etat = r.prefs; dessiner(); } }).catch(function(){});
 }
 // Calendrier : congés de l'entreprise (fériés en noir, fermetures en vert) et réunions de l'employé (jour encadré); un mois à la fois.
 var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
