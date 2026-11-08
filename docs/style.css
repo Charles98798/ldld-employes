@@ -503,3 +503,8 @@ textarea.bx{min-height:90px;resize:vertical}
 .ppx .grille td,.ppx .grille th{min-width:50px;padding:9px 4px}
 .ppx .grille td{font-size:13px}.ppx .grille th{font-size:9px;letter-spacing:.04em}
 .ppx .grille td.lib,.ppx .grille th:first-child{box-shadow:none;border-right:1px solid var(--pl)}
+/* Positionnement employé: pastille et ligne d'état comme la page web */
+.ppx .pied{padding-left:0;padding-right:0}.ppx .pied .etat{margin:0;padding:0;font-weight:300;font-size:11px;letter-spacing:.14em;line-height:1.6}
+.ppx .pastille,.ppx .pied .pastille{font-weight:300;font-size:11px;letter-spacing:.14em;padding:3px 10px;margin:0 0 0 6px;display:inline-block;color:var(--pn)}
+.ppx .pied .etat b{font-weight:300}
+.ppx .pied .pastille{margin:6px 0 0 0}
