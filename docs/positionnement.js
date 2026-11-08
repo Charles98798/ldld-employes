@@ -134,9 +134,9 @@ function majChoix(){var e=D.employes[i],sel=$('choix'),o=options(e),x=null;
  cols.sort(function(a,b){return a.p-b.p});
  function cl(c){return (c.actu?'actu ':'')+(c.ret?'prop':'')}
  $('hExp').innerHTML='<th></th>'+cols.map(function(c){return '<th>'+esc(c.x)+'</th>'}).join('');
- $('rPos').innerHTML='<td class="lib">Positionnement</td>'+cols.map(function(c){return '<td class="'+cl(c)+'">'+(c.ret&&sup?'<svg viewBox="0 0 16 20" width="15" height="19" style="vertical-align:-3px;margin-right:8px" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="9" width="12" height="9"/><path d="M4.5 9V6a3.5 3.5 0 0 1 7 0v3"/></svg>':'')+((c.actu||c.ret)?posAuto(c.r):arr(c.r*100,0)+' %')+'</td>'}).join('');
- $('r26').innerHTML='<td class="lib">Échelle '+D.anneeActuelle+'</td>'+cols.map(function(c){return '<td class="'+cl(c)+'">'+money(c.s26)+'</td>'}).join('');
- $('r27').innerHTML='<td class="lib">Échelle '+D.annee+'</td>'+cols.map(function(c){return '<td class="'+cl(c)+'">'+money(c.s27)+'</td>'}).join('');
+ $('rPos').innerHTML='<td class="lib">Positionn.</td>'+cols.map(function(c){return '<td class="'+cl(c)+'">'+(c.ret&&sup?'<svg viewBox="0 0 16 20" width="15" height="19" style="vertical-align:-3px;margin-right:8px" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="9" width="12" height="9"/><path d="M4.5 9V6a3.5 3.5 0 0 1 7 0v3"/></svg>':'')+((c.actu||c.ret)?posAuto(c.r):arr(c.r*100,0)+' %')+'</td>'}).join('');
+ $('r26').innerHTML='<td class="lib">Éch. '+D.anneeActuelle+' ($)</td>'+cols.map(function(c){return '<td class="'+cl(c)+'">'+money(c.s26).replace(' $','')+'</td>'}).join('');
+ $('r27').innerHTML='<td class="lib">Éch. '+D.annee+' ($)</td>'+cols.map(function(c){return '<td class="'+cl(c)+'">'+money(c.s27).replace(' $','')+'</td>'}).join('');
  var al=[];
  if(!D.cats[e.cat])al.push('Catégorie « '+e.cat+' » absente de l’échelle '+D.annee+'.');
  if(sup&&h27)al.push('Sans augmentation '+D.annee+' : embauché sur l’échelle '+D.annee+', la position fixée à l’embauche est maintenue. Aucun autre choix n’est possible.');
@@ -153,7 +153,7 @@ function majChoix(){var e=D.employes[i],sel=$('choix'),o=options(e),x=null;
  }
  $('etat').innerHTML='Écrit dans '+esc(D.onglet)+' : position colonne '+esc(D.colonne)+(D.colonneConf?', case « Confirmé » colonne '+esc(D.colonneConf):'')+(D.confErreur?' <b style="color:#b00">Envoi salarial : '+esc(D.confErreur)+'</b>':'')+' <span class="pastille'+(enAttente(e)?'" style="background:#e8e4da">écriture en cours':(confirme?' ok">confirmé en réunion':'">à confirmer'))+'</span>';
  sel.disabled=enAttente(e)||sup;majFrais();
- try{var gb=document.querySelector('.ppx .grillebox'),tg=gb&&gb.querySelector('td.prop,td.actu');if(gb&&tg)gb.scrollLeft=Math.max(0,tg.offsetLeft-110)}catch(x){}
+ try{var gb=document.querySelector('.ppx .grillebox'),tg=gb&&gb.querySelector('td.prop,td.actu');if(gb&&tg)gb.scrollLeft=Math.max(0,tg.offsetLeft-64)}catch(x){}
 }
 // File d'écriture en arrière-plan : on passe tout de suite au suivant; une écriture à la fois, dans l'ordre.
 // Un employé n'est « confirmé » (vert) qu'après la réponse vérifiée du serveur.
