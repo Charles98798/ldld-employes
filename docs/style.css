@@ -478,3 +478,7 @@ textarea.bx{min-height:90px;resize:vertical}
 .ppx .ppb{position:fixed;z-index:20;left:26px;right:26px;bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 64px);display:flex;gap:6px;flex-wrap:nowrap}
 .ppx .ppb .btn{flex:1;height:40px;box-sizing:border-box;padding:0 2px;font-size:10px;letter-spacing:.06em;white-space:nowrap;background:var(--pb)}
 .ppx{padding-bottom:190px}.ppx::after{height:calc(max(env(safe-area-inset-bottom,0px),12px) + 118px)}
+/* Positionnement employé: boutons à la fin de la page (pas fixes), identiques à la page web */
+.ppx::after{display:none}.ppx{padding-bottom:100px}
+.ppx .ppb{position:static;display:flex;gap:8px;margin:14px 0 8px}.ppx .ppb .btn{height:44px;font-size:11px;letter-spacing:.1em}
+.ppx .ppenr{position:static;display:flex;width:100%;height:44px;margin:0 0 6px;font-size:12px;letter-spacing:.14em;left:auto!important;right:auto!important;bottom:auto!important}

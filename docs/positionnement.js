@@ -36,7 +36,7 @@ function etatClasseur(e){if(e.propFormule)return 'C';if(e.prop==null)return '';v
 function salairePour(e,x){var mx=maxCat(e);if(!x||mx==null)return null;return x.v==='C'?arr(Math.max(e.sal,Math.min(e.sal*(1+D.taux),mx)),2):arr(x.p*mx,2)}
 function squelette(){
  $('app').innerHTML='<div class="pph"><h1 id="pp_nom"></h1><div class="sous" id="pp_sous"></div></div>'+
- '<div class="ppnav"><span class="compteur" id="pp_cpt"></span><select class="emp" id="pp_liste"></select><div class="ppb"><button class="btn" id="pp_prec">Précédent</button><button class="btn" id="pp_suiv">Suivant</button></div></div>'+
+ '<div class="ppnav"><span class="compteur" id="pp_cpt"></span><select class="emp" id="pp_liste"></select></div>'+
  '<div class="sect"><span class="num">01</span><span class="lab">Portrait '+D.anneeActuelle+'</span></div>'+
  '<div class="bas"><div><div class="sect"><span class="lab" id="pp_ptsLab">Contribution</span><span class="moy" id="pp_ptsTag"></span></div><div class="fx pts" id="pp_pts"></div></div>'+
  '<div><div class="sect"><span class="lab">Objectifs et charges</span></div><div id="pp_charge"></div><div class="binfo" id="pp_chargeInfo"></div></div></div>'+
@@ -48,7 +48,7 @@ function squelette(){
   '<div><label>Augmentation</label><div class="res" id="pp_aug"></div><div class="note" id="pp_augn"></div></div>'+
  '<div><label>Écart avec « Conserver »</label><div class="res" id="pp_ecart"></div><div class="note">Ce que coûte le changement, par heure</div></div></div>'+
  '<div class="alerte" id="pp_alerte"></div>'+
- '<div class="pied"><span class="etat" id="pp_etat"></span><span id="pp_file"></span></div><button class="btn noir ppenr" id="pp_enr">Confirmé et suivant</button>'+
+ '<div class="pied"><span class="etat" id="pp_etat"></span><span id="pp_file"></span></div><div class="ppb"><button class="btn" id="pp_prec">Précédent</button><button class="btn" id="pp_suiv">Suivant</button></div><button class="btn noir ppenr" id="pp_enr">Confirmé et suivant</button>'+
  '<div class="voile" id="pp_voile"></div>';
  $('liste').innerHTML='<option value="">Choisir un employé…</option>'+D.employes.map(function(e,k){return '<option value="'+k+'">'+esc(e.nom)+'</option>'}).join('');
  $('liste').onchange=function(){if($('liste').value===''){attente=true;afficher();return}attente=false;i=+$('liste').value;afficher()};
@@ -99,7 +99,7 @@ function detail(e){
  $('chargeInfo').innerHTML=inf;
  if(/^administratif/i.test(e.cat||'')){$('charge').innerHTML='<div class="binfo">Pas de tableau de bord pour ce poste.</div>';$('chargeInfo').innerHTML=''}else if(/^gestionnaire/i.test(e.cat||'')){$('chargeInfo').innerHTML+='<br>▪ À titre visuel seulement pour ce poste : ces chiffres ne comptent dans aucune note ni dans le pointage.'}
 }
-function aller(d){if(occupe)return;if(attente){attente=false;i=d>0?0:D.employes.length-1}else i=(i+d+D.employes.length)%D.employes.length;afficher()}
+function aller(d){try{window.scrollTo(0,0)}catch(x){}if(occupe)return;if(attente){attente=false;i=d>0?0:D.employes.length-1}else i=(i+d+D.employes.length)%D.employes.length;afficher()}
 function afficher(){var e=D.employes[i];setTimeout(majFrais,0);
  if(attente){$('app').className='sansemp';$('liste').value='';$('nom').textContent='';$('sous').textContent='Choisissez un employé dans la liste';return}
  $('app').className='';
