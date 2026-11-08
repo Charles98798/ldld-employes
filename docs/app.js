@@ -37,7 +37,7 @@ function pastilleMessages(){
   var a = app.querySelector('a[data-i="0"]'); if(!a) return;
   var m = lireCache("messages"), l = lus(), n = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && l.indexOf(x.id) < 0; }).length : 0;
   var p = a.querySelector(".nombre"); if(p) p.remove();
-  if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = n + " NOUVEAU" + (n > 1 ? "X" : ""); a.appendChild(p); }
+  if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = n + (n > 1 ? " nouveaux" : " nouveau"); a.appendChild(p); }
 }
 function pastilleAuto(){
   var a = app.querySelector('a[data-i="2"]'); if(!a) return;
@@ -141,12 +141,16 @@ function menu(){
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger();
   app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
-    ORDRE_MENU.map(function(i){ return '<a href="#" data-i="'+i+'">▪ '+SECTIONS[i]+'</a>'; }).join("") +
+    (peutEcrire() ? '<a href="#" id="resp">▪ '+(MOI.role === "direction" ? "Direction" : "Responsable")+'</a>' : '') +
+    ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'">▪ '+SECTIONS[i]+'</a>'; }).join("") +
+    (peutEcrire() ? '' : '<a href="#" id="entr">▪ Mes entretiens</a>') +
     '<img class="symbole" src="assets/LDLD_symbole_blanc_transparent.png" alt="">' +
     '<a class="sortie" href="#" id="sortie">Déconnexion →</a></div>';
   Array.prototype.forEach.call(app.querySelectorAll("a[data-i]"), function(a){
     a.onclick = function(e){ e.preventDefault(); section(+a.getAttribute("data-i")); };
   });
+  var en = document.getElementById("entr"); if(en) en.onclick = function(e){ e.preventDefault(); entretien(); };
+  var rp = document.getElementById("resp"); if(rp) rp.onclick = function(e){ e.preventDefault(); responsable(); };
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
   pastilleAuto(); pastilleMessages();
 }
@@ -679,6 +683,164 @@ function prefsNotifs(){
   }
   dessiner();
   appelService({action:"prefs_lire", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.prefs && document.getElementById("prefs")){ etat = r.prefs; dessiner(); } }).catch(function(){});
+}
+// Page Responsable (responsables et direction seulement; le service refuse les autres) : Contacts cliquables (appel, texto, courriel).
+function responsable(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  document.getElementById("rc").onclick = function(e){ e.preventDefault(); contactsResp(); };
+  document.getElementById("rs").onclick = function(e){ e.preventDefault(); attributionPage("place"); };
+  document.getElementById("rk").onclick = function(e){ e.preventDefault(); attributionPage("casier"); };
+  document.getElementById("re").onclick = function(e){ e.preventDefault(); entretien(); };
+}
+// Stationnement et Casier : choisir un employé, voir son numéro, le libérer (✕, avec confirmation) ou lui en attribuer un libre.
+function attributionPage(genre){
+  var estPlace = genre === "place", titre = estPlace ? "Stationnement" : "Casier";
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+titre+'</h1><div id="ap"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  var d = null, choisi = "", msg = "", confirmer = null;
+  function champsDe(e){ return estPlace ? [["place","Place"]] : [["casier1","Casier"]].concat(e.casier2 ? [["casier2","Casier 2"]] : []); }
+  function dessiner(){
+    var el = document.getElementById("ap"); if(!el) return;
+    var h = '<select class="champ" id="aps"><option value="">Choisir un employé</option>' + d.employes.map(function(e){ return '<option value="'+e.ligne+'"'+(String(e.ligne) === choisi ? " selected" : "")+'>'+esc(e.nom)+'</option>'; }).join("") + '</select>';
+    var e = d.employes.filter(function(x){ return String(x.ligne) === choisi; })[0];
+    if(e){
+      champsDe(e).forEach(function(c){ var v = e[c[0]];
+        if(v){
+          h += '<div class="ligne" data-t="'+c[0]+'"><span>'+(estPlace ? "Place " : c[1]+" ")+esc(v)+'</span>'+(confirmer === c[0] ? '<span><button type="button" class="ib" data-oui="'+c[0]+'">OUI</button> <button type="button" class="ib" data-non="1">NON</button></span>' : '<button type="button" class="ib" data-x="'+c[0]+'" aria-label="Libérer">✕</button>')+'</div>';
+          if(confirmer === c[0]) h += '<div class="bandeau">▪ LIBÉRER ?</div>';
+        } else {
+          var libres = estPlace ? d.placesLibres : d.casiersLibres;
+          h += '<div class="ligne"><span>'+(estPlace ? "Aucune place" : "Aucun "+c[1].toLowerCase())+'</span></div><select class="champ" id="apn-'+c[0]+'"><option value="">'+(libres.length ? "Numéros libres" : "Aucun numéro libre")+'</option>' + libres.map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join("") + '</select><button type="button" class="bouton" data-att="'+c[0]+'">Attribuer</button>';
+        }
+      });
+      if(!estPlace && !e.casier2 && e.casier1 === "") h += "";
+    }
+    if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
+    el.innerHTML = h;
+    document.getElementById("aps").onchange = function(){ choisi = this.value; confirmer = null; msg = ""; dessiner(); };
+    Array.prototype.forEach.call(el.querySelectorAll("[data-x]"), function(b){ b.onclick = function(){ confirmer = b.getAttribute("data-x"); dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-non]"), function(b){ b.onclick = function(){ confirmer = null; dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-oui]"), function(b){ b.onclick = function(){ ecrire(b.getAttribute("data-oui"), ""); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-att]"), function(b){ b.onclick = function(){ var t = b.getAttribute("data-att"), v = document.getElementById("apn-"+t).value; if(!v){ msg = "▪ CHOISISSEZ UN NUMÉRO"; dessiner(); return; } ecrire(t, v); }; });
+  }
+  function ecrire(type, valeur){
+    msg = "▪ ENREGISTREMENT…"; confirmer = null; dessiner();
+    appelService({action:"parking_ecrire", session:sessionGardee(), type:type, ligne:Number(choisi), valeur:valeur}).then(function(r){
+      if(r && r.ok){ d = r; msg = "▪ ENREGISTRÉ"; } else msg = "▪ " + String((r && r.erreur) || "ÉCHEC").toUpperCase();
+      dessiner();
+    }).catch(function(){ msg = "▪ ÉCHEC · RÉESSAYEZ"; dessiner(); });
+  }
+  appelService({action:"parking_lire", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok) throw 0; d = r; dessiner();
+  }).catch(function(){ var el = document.getElementById("ap"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
+// Entretien machinerie : responsables et direction consultent et modifient; l'employé voit seulement ses machines (« Mes entretiens »).
+function entretien(){
+  var tous = peutEcrire(), d = null, vue = "secteur", sel = "non", msg = "", mode = "liste", fiche = null, pick = false, supprime = false;
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(tous ? "Entretien machinerie" : "Mes entretiens")+'</h1><div id="en"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(tous && mode !== "liste"){ mode = "liste"; pick = false; dessiner(); } else if(tous) responsable(); else menu(); };
+  function nomsLignes(t){ return String(t).split("\n").map(function(x){ return x.replace(/^\s*[▪•]\s*/, ""); }); }
+  function nomHtml(t){ return nomsLignes(t).map(function(x, i, a){ return (a.length > 1 ? "▪ " : "") + esc(x); }).join("<br>"); }
+  function secteurs(){ var s = []; d.machines.forEach(function(m){ if(s.indexOf(m.zone) < 0) s.push(m.zone); }); return s; }
+  function machinesVue(){
+    if(sel === "non") return d.machines.filter(function(m){ return !m.resp; });
+    if(vue === "secteur") return d.machines.filter(function(m){ return m.zone === sel; });
+    var e = d.employes.filter(function(x){ return String(x.id) === sel; })[0];
+    return e ? d.machines.filter(function(m){ return m.resp === e.nom; }) : [];
+  }
+  function ecrire(corps){
+    msg = "▪ ENREGISTREMENT…"; dessiner();
+    corps.action = "entretien_ecrire"; corps.session = sessionGardee();
+    return appelService(corps).then(function(r){ if(r && r.ok){ d = r; msg = ""; return true; } msg = "▪ " + String((r && r.erreur) || "ÉCHEC").toUpperCase(); return false; })
+      .catch(function(){ msg = "▪ ÉCHEC · RÉESSAYEZ"; return false; }).then(function(ok){ dessiner(); return ok; });
+  }
+  function dessiner(){
+    var el = document.getElementById("en"); if(!el) return;
+    if(mode === "fiche" || mode === "edition") return dessinerFiche(el);
+    var h = "";
+    if(tous){
+      h += '<div class="tg"><button type="button" class="ib" style="width:auto;padding:0 12px" data-v="secteur"'+(vue === "secteur" ? ' aria-pressed="true"' : "")+'>'+(vue === "secteur" ? "▪ " : "")+'PAR SECTEUR</button> <button type="button" class="ib" style="width:auto;padding:0 12px" data-v="employe">'+(vue === "employe" ? "▪ " : "")+'PAR EMPLOYÉ</button></div>';
+      h += '<select class="champ" id="ens"><option value="non"'+(sel === "non" ? " selected" : "")+'>Machines non attribuées</option>' +
+        (vue === "secteur" ? secteurs().map(function(z){ return '<option value="'+esc(z)+'"'+(sel === z ? " selected" : "")+'>'+esc(z)+'</option>'; }) : d.employes.map(function(e){ return '<option value="'+e.id+'"'+(sel === String(e.id) ? " selected" : "")+'>'+esc(e.nom)+'</option>'; })).join("") + '</select>';
+    }
+    var ms = tous ? machinesVue() : d.machines;
+    if(!ms.length) h += '<div class="bandeau">▪ AUCUNE MACHINE</div>';
+    var zone = "";
+    ms.forEach(function(m){
+      if(!tous && m.zone !== zone || tous && vue === "employe" && sel !== "non" && m.zone !== zone){ zone = m.zone; h += '<div class="etiq" style="margin-top:14px">▪ '+esc(zone.toUpperCase())+'</div>'; }
+      var fin = "";
+      if(tous){
+        if(supprime) fin = '<button type="button" class="ib" data-del="'+m.ligne+'" aria-label="Supprimer">✕</button>';
+        else if(sel === "non") fin = '<button type="button" class="ib" data-att="'+m.ligne+'">+</button>';
+        else if(vue === "secteur") fin = m.resp ? '<button type="button" class="ib" data-moins="'+m.ligne+'" aria-label="Enlever">−</button>' : '<button type="button" class="ib" data-att="'+m.ligne+'">+</button>';
+        else fin = '<button type="button" class="ib" data-moins="'+m.ligne+'" aria-label="Enlever">−</button>';
+      }
+      var col2 = tous ? (sel === "non" ? esc(m.zone) : (vue === "secteur" ? esc(m.resp) : "")) : "";
+      h += '<div class="ligne"><a href="#" data-f="'+m.ligne+'" style="flex:1;color:inherit;text-decoration:none">'+nomHtml(m.machine)+'</a>'+(col2 ? '<span style="flex:1">'+col2+'</span>' : "")+fin+'</div>';
+    });
+    if(tous && pick){
+      h += '<div class="etiq" style="margin-top:18px">▪ ATTRIBUER À</div>' + d.employes.map(function(e){
+        return '<a href="#" class="ligne" data-emp="'+e.id+'" style="color:inherit;text-decoration:none"><span style="flex:2">'+esc(e.nom)+'</span><span style="flex:1">'+e.nb+'</span><span style="flex:1">'+esc(e.niveau)+'</span></a>'; }).join("");
+    }
+    if(tous && sel !== "non" && vue === "employe") h += '';
+    if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
+    if(tous && vue === "secteur" && sel !== "non") h += '<div class="aeact"><button type="button" class="bouton" id="ena">Ajouter</button><button type="button" class="bouton" id="ens2">'+(supprime ? "Terminer" : "Supprimer")+'</button></div>';
+    el.innerHTML = h;
+    Array.prototype.forEach.call(el.querySelectorAll("[data-v]"), function(b){ b.onclick = function(){ vue = b.getAttribute("data-v"); sel = "non"; pick = false; supprime = false; dessiner(); }; });
+    var s = document.getElementById("ens"); if(s) s.onchange = function(){ sel = this.value; pick = false; supprime = false; dessiner(); };
+    Array.prototype.forEach.call(el.querySelectorAll("[data-f]"), function(a){ a.onclick = function(e){ e.preventDefault(); fiche = d.machines.filter(function(m){ return String(m.ligne) === a.getAttribute("data-f"); })[0]; mode = "fiche"; dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-moins]"), function(b){ b.onclick = function(){ ecrire({op:"attribuer", ligne:Number(b.getAttribute("data-moins")), employe:""}); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-att]"), function(b){ b.onclick = function(){ pick = Number(b.getAttribute("data-att")); dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-emp]"), function(a){ a.onclick = function(e){ e.preventDefault(); var l = pick; pick = false; ecrire({op:"attribuer", ligne:l, employe:Number(a.getAttribute("data-emp"))}); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-del]"), function(b){ b.onclick = function(){ if(b.getAttribute("data-ok")){ ecrire({op:"supprimer", ligne:Number(b.getAttribute("data-del"))}); } else { b.setAttribute("data-ok","1"); b.textContent = "OUI ?"; b.style.width = "auto"; b.style.padding = "0 8px"; } }; });
+    var a1 = document.getElementById("ena"); if(a1) a1.onclick = function(){ fiche = {ligne:0, zone:sel, machine:"", resp:"", taches:[]}; mode = "edition"; dessiner(); };
+    var a2 = document.getElementById("ens2"); if(a2) a2.onclick = function(){ supprime = !supprime; dessiner(); };
+  }
+  function dessinerFiche(el){
+    var m = fiche, h;
+    if(mode === "fiche"){
+      h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><div class="ligne" style="display:block">'+nomHtml(m.machine)+'</div>' +
+        (m.resp ? '<div class="etiq" style="margin-top:14px">▪ RESPONSABLE</div><div class="ligne">'+esc(m.resp)+'</div>' : "") +
+        '<div class="etiq" style="margin-top:14px">▪ ENTRETIEN À FAIRE</div>' + m.taches.map(function(t){ return '<div class="ligne">▪ '+esc(t)+'</div>'; }).join("") +
+        (tous ? '<div class="aeact"><button type="button" class="bouton" id="enm">Modifier</button></div>' : "");
+    } else {
+      h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><textarea class="champ" id="enn" rows="2" placeholder="Nom de la machine (une machine par ligne)">'+esc(nomsLignes(m.machine).join("\n"))+'</textarea>' +
+        '<div class="etiq">▪ ENTRETIEN À FAIRE · UNE TÂCHE PAR LIGNE</div><textarea class="champ" id="ent" rows="7">'+esc(m.taches.join("\n"))+'</textarea>' +
+        (msg ? '<div class="bandeau">'+esc(msg)+'</div>' : "") +
+        '<div class="aeact"><button type="button" class="bouton" id="enok">Enregistrer</button><button type="button" class="bouton" id="enx">Annuler</button></div>';
+    }
+    el.innerHTML = h;
+    var b = document.getElementById("enm"); if(b) b.onclick = function(){ mode = "edition"; dessiner(); };
+    var x = document.getElementById("enx"); if(x) x.onclick = function(){ mode = m.ligne ? "fiche" : "liste"; msg = ""; dessiner(); };
+    var ok = document.getElementById("enok"); if(ok) ok.onclick = function(){
+      var corps = m.ligne ? {op:"modifier", ligne:m.ligne} : {op:"ajouter", zone:m.zone};
+      corps.machine = document.getElementById("enn").value; corps.taches = document.getElementById("ent").value;
+      ecrire(corps).then(function(bon){ if(bon){ mode = "liste"; dessiner(); } });
+    };
+  }
+  appelService({action:"entretien_lire", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok) throw 0; d = r;
+    if(tous){ var s = secteurs(); if(!d.machines.some(function(m){ return !m.resp; })) sel = s[0] || "non"; }
+    dessiner();
+  }).catch(function(){ var el = document.getElementById("en"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
+function chiffresTel(t){ var d = String(t || "").replace(/\D/g, ""); return d.length === 10 ? "+1"+d : (d.length === 11 && d[0] === "1" ? "+"+d : d); }
+function contactsResp(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Contacts</h1><input class="champ" id="cq" placeholder="Rechercher" autocomplete="off"><div class="ctl" id="ctl"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  var liste = [];
+  function dessiner(){
+    var q = (document.getElementById("cq").value || "").toLowerCase(), el = document.getElementById("ctl"); if(!el) return;
+    var v = liste.filter(function(c){ return !q || (c.nom+" "+c.groupes).toLowerCase().indexOf(q) >= 0; });
+    el.innerHTML = v.map(function(c){ var t = chiffresTel(c.tel);
+      return '<div class="cr"><div class="cn">'+esc(c.nom)+'<small>'+esc(c.groupes)+(c.groupes && c.tel ? ' · ' : '')+esc(c.tel)+'</small></div>' +
+        (t ? '<a class="ib" href="tel:'+t+'">TÉL</a><a class="ib" href="sms:'+t+'">SMS</a>' : '<span class="ib vide"></span><span class="ib vide"></span>') +
+        '<a class="ib" href="mailto:'+esc(c.courriel)+'">@</a></div>'; }).join("") || '<div class="bandeau">▪ AUCUN RÉSULTAT</div>';
+  }
+  document.getElementById("cq").oninput = dessiner;
+  obtenir("contacts", {action:"contacts"}, function(r){ liste = r.contacts || []; dessiner(); },
+    function(){ var el = document.getElementById("ctl"); if(el) el.innerHTML = '<div class="bandeau">▪ CONTACTS INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
 // Calendrier : congés de l'entreprise (fériés en noir, fermetures en vert) et réunions de l'employé (jour encadré); un mois à la fois.
 var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
