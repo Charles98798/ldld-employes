@@ -686,8 +686,9 @@ function prefsNotifs(){
 }
 // Page Responsable (responsables et direction seulement; le service refuse les autres) : Contacts cliquables (appel, texto, courriel).
 function responsable(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
   document.getElementById("rc").onclick = function(e){ e.preventDefault(); contactsResp(); };
   document.getElementById("rs").onclick = function(e){ e.preventDefault(); attributionPage("place"); };
   document.getElementById("rk").onclick = function(e){ e.preventDefault(); attributionPage("casier"); };
@@ -824,6 +825,95 @@ function entretien(){
     if(tous){ var s = secteurs(); if(!d.machines.some(function(m){ return !m.resp; })) sel = s[0] || "non"; }
     dessiner();
   }).catch(function(){ var el = document.getElementById("en"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
+// Nouveau message / Nouvelle réunion (agendas Google de la personne connectée) et Mes événements.
+var JOURS_C = ["L","M","M","J","V","S","D"];
+function lundiDe(d){ var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay()+6)%7)); return x; }
+function isoJour(d){ return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
+function heureTxt(h, m){ return h+" h"+(m ? " "+("0"+m).slice(-2) : ""); }
+function nouveau(onglet){
+  if(onglet === "message") return rediger();
+  var lundi = lundiDe(new Date()), jour = new Date(), agendas = [], evs = [], agenda = "primary", hr = 9, mn = 0, conges = {};
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Nouvelle réunion</h1>' +
+    '<div class="aeact" style="margin:0 0 10px"><button type="button" class="bouton" id="ongM" style="margin:0;opacity:.6">Message</button><button type="button" class="bouton" id="ongR" style="margin:0">Réunion</button></div>' +
+    '<div class="etiq">▪ AGENDA</div><select class="champ" id="nag"><option value="primary">Mon agenda</option></select>' +
+    '<div class="moisbar"><button type="button" id="sp" aria-label="Semaine précédente">←</button><b id="st"></b><button type="button" id="sn" aria-label="Semaine suivante">→</button></div><div id="grille"></div>' +
+    '<div class="etiq" id="jt" style="margin-top:14px"></div><div id="jl"></div>' +
+    '<div class="dh"><select class="champ" id="nh"></select><select class="champ" id="nr"><option value="aucune">Une seule fois</option><option value="jour">Chaque jour ouvrable</option><option value="semaine" selected>Chaque semaine</option><option value="deux">Aux deux semaines</option><option value="mois">Chaque mois</option></select></div>' +
+    '<select class="champ" id="na"><option>Toute l\'équipe</option></select><input class="champ" id="ns" placeholder="Sujet" maxlength="120"><textarea class="champ" id="nt" rows="2" placeholder="Message"></textarea>' +
+    '<div class="bandeau" id="ne" style="display:none"></div><button class="bouton" id="nok">Envoyer</button>' +
+    '<a class="doc" href="#" id="nmes" style="margin-top:14px"><span>▪ Mes événements</span><em>→</em></a></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  document.getElementById("ongM").onclick = function(){ rediger(); };
+  document.getElementById("nmes").onclick = function(e){ e.preventDefault(); mesEvenements(); };
+  var hs = ""; for(var h = 7; h <= 18; h++){ hs += '<option value="'+h+':0">'+heureTxt(h,0)+'</option><option value="'+h+':30">'+heureTxt(h,30)+'</option>'; }
+  var nh = document.getElementById("nh"); nh.innerHTML = hs; nh.value = "9:0";
+  nh.onchange = function(){ var p = this.value.split(":"); hr = +p[0]; mn = +p[1]; dessiner(); };
+  function dire(t){ var e = document.getElementById("ne"); e.style.display = "block"; e.textContent = t; }
+  function dessiner(){
+    var fin = new Date(lundi); fin.setDate(fin.getDate()+6);
+    document.getElementById("st").textContent = lundi.getDate()+" "+MOIS_LONGS[lundi.getMonth()].toUpperCase()+" — "+fin.getDate()+" "+MOIS_LONGS[fin.getMonth()].toUpperCase();
+    var g = '<div class="gs"><div class="d"></div>';
+    for(var i = 0; i < 7; i++){ var dj = new Date(lundi); dj.setDate(dj.getDate()+i); g += '<div class="d'+(isoJour(dj) === isoJour(jour) ? " on" : "")+(conges[isoJour(dj)] ? " "+conges[isoJour(dj)] : "")+'" data-j="'+isoJour(dj)+'">'+JOURS_C[i]+" "+dj.getDate()+'</div>'; }
+    for(var h = 7; h <= 18; h++){
+      g += '<div class="h">'+h+' h</div>';
+      for(i = 0; i < 7; i++){ dj = new Date(lundi); dj.setDate(dj.getDate()+i); var ij = isoJour(dj);
+        var occ = evs.some(function(e){ var d0 = new Date(e.debut); return isoJour(d0) === ij && d0.getHours() <= h && new Date(e.fin) > new Date(dj.getFullYear(), dj.getMonth(), dj.getDate(), h, 0); });
+        var nv = ij === isoJour(jour) && h === hr;
+        g += '<div class="'+(nv ? "n" : occ ? "e" : conges[ij] ? "cl"+conges[ij] : "")+'" data-j="'+ij+'" data-h="'+h+'"></div>'; }
+    }
+    document.getElementById("grille").innerHTML = g + '</div>';
+    Array.prototype.forEach.call(document.querySelectorAll("#grille [data-j]"), function(c){ c.onclick = function(){
+      var p = c.getAttribute("data-j").split("-"); jour = new Date(+p[0], +p[1]-1, +p[2]); var h = c.getAttribute("data-h"); if(h){ hr = +h; mn = 0; nh.value = hr+":0"; } dessiner(); }; });
+    var ij2 = isoJour(jour), duJour = evs.filter(function(e){ return isoJour(new Date(e.debut)) === ij2; });
+    document.getElementById("jt").textContent = "▪ "+jour.getDate()+" "+MOIS_LONGS[jour.getMonth()].toUpperCase()+(conges[ij2] ? " · LABO FERMÉ" : "");
+    document.getElementById("jl").innerHTML = duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut); return '<div class="ligne"><span>'+heureTxt(d0.getHours(), d0.getMinutes())+'</span><span style="flex:1;margin-left:12px">'+esc(e.titre)+'</span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE JOUR</div>';
+  }
+  function chargerSemaine(){
+    appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(lundi), agenda:agenda}).then(function(r){ evs = (r && r.ok) ? r.evenements : []; if(r && !r.ok) dire("▪ AGENDA INDISPONIBLE · "+String(r.erreur || "").toUpperCase()); dessiner(); }).catch(function(){ evs = []; dessiner(); });
+  }
+  document.getElementById("sp").onclick = function(){ lundi.setDate(lundi.getDate()-7); chargerSemaine(); };
+  document.getElementById("sn").onclick = function(){ lundi.setDate(lundi.getDate()+7); chargerSemaine(); };
+  document.getElementById("nag").onchange = function(){ agenda = this.value; chargerSemaine(); };
+  appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){
+    if(r && r.ok && r.agendas){ agendas = r.agendas.filter(function(a){ return a.ecriture; });
+      document.getElementById("nag").innerHTML = agendas.map(function(a){ return '<option value="'+(a.principal ? "primary" : esc(a.id))+'">'+esc(a.principal ? "Mon agenda" : a.nom)+'</option>'; }).join("") || '<option value="primary">Mon agenda</option>'; }
+  }).catch(function(){});
+  appelService({action:"equipe", session:sessionGardee()}).then(function(r){
+    if(r && r.ok) document.getElementById("na").innerHTML = '<option>Toute l\'équipe</option>' + r.personnes.map(function(p){ return '<option>'+esc(p.nom)+'</option>'; }).join("");
+  }).catch(function(){});
+  document.getElementById("nok").onclick = function(){
+    var sujet = document.getElementById("ns").value.trim(); if(!sujet){ dire("▪ SUJET REQUIS"); return; }
+    if(conges[isoJour(jour)] && !nouveau.confirme){ nouveau.confirme = true; dire("▪ LE LABO EST FERMÉ CE JOUR · TOUCHEZ ENVOYER POUR CONFIRMER"); return; } nouveau.confirme = false;
+    var bt = this; bt.disabled = true; dire("▪ ENVOI…");
+    appelService({action:"agenda_creer", session:sessionGardee(), agenda:agenda, titre:sujet, texte:document.getElementById("nt").value, a:document.getElementById("na").value,
+      debut:isoJour(jour)+"T"+("0"+hr).slice(-2)+":"+("0"+mn).slice(-2), minutes:30, repeter:document.getElementById("nr").value}).then(function(r){
+      if(r && r.ok){ dire("▪ RÉUNION PLANIFIÉE"); chargerSemaine(); setTimeout(function(){ bt.disabled = false; }, 800); }
+      else { bt.disabled = false; dire("▪ NON PLANIFIÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
+    }).catch(function(){ bt.disabled = false; dire("▪ NON PLANIFIÉE · RÉSEAU"); });
+  };
+  obtenir("calendrier", {action:"calendrier"}, function(r){ (r.jours || []).forEach(function(x){ if(x.t === "f") conges[x.d] = "f"; else if(x.t === "c" && !conges[x.d]) conges[x.d] = "c"; }); dessiner(); }, function(){}, true);
+  dessiner(); chargerSemaine();
+}
+function mesEvenements(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Mes événements</h1><div id="me"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
+  var liste = [], choisi = null, msg = "";
+  function dessiner(){
+    var el = document.getElementById("me"); if(!el) return;
+    var h = liste.length ? liste.map(function(e, i){ var d0 = new Date(e.debut);
+      return '<a href="#" class="ligne" data-i="'+i+'" style="color:inherit;text-decoration:none'+(choisi === i ? ';background:var(--tx);color:var(--noir)' : '')+'"><span>'+esc(e.titre)+'</span><span>'+d0.getDate()+" "+MOIS_LONGS[d0.getMonth()].slice(0,4)+". · "+heureTxt(d0.getHours(), d0.getMinutes())+(e.serie ? " · série" : "")+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR</div>';
+    if(choisi !== null) h += '<div class="aeact"><button type="button" class="bouton" id="m1">Cet événement</button>'+(liste[choisi].serie ? '<button type="button" class="bouton" id="m2">Toute la série</button>' : '')+'</div>';
+    if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
+    el.innerHTML = h;
+    Array.prototype.forEach.call(el.querySelectorAll("[data-i]"), function(a){ a.onclick = function(e){ e.preventDefault(); choisi = +a.getAttribute("data-i"); dessiner(); }; });
+    function sup(serie){ var e = liste[choisi]; msg = "▪ SUPPRESSION…"; dessiner();
+      appelService({action:"agenda_supprimer", session:sessionGardee(), id:e.id, serie:serie}).then(function(r){ if(r && r.ok){ choisi = null; msg = ""; charger(); } else { msg = "▪ "+String((r && r.erreur) || "ÉCHEC").toUpperCase(); dessiner(); } }).catch(function(){ msg = "▪ ÉCHEC · RÉSEAU"; dessiner(); }); }
+    var b1 = document.getElementById("m1"); if(b1) b1.onclick = function(){ sup(false); };
+    var b2 = document.getElementById("m2"); if(b2) b2.onclick = function(){ sup(true); };
+  }
+  function charger(){ appelService({action:"agenda_mes", session:sessionGardee()}).then(function(r){ liste = (r && r.ok) ? r.evenements : []; dessiner(); }).catch(function(){ var el = document.getElementById("me"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }); }
+  charger();
 }
 function chiffresTel(t){ var d = String(t || "").replace(/\D/g, ""); return d.length === 10 ? "+1"+d : (d.length === 11 && d[0] === "1" ? "+"+d : d); }
 function contactsResp(){
