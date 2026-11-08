@@ -473,3 +473,8 @@ textarea.bx{min-height:90px;resize:vertical}
 .ppx .sect{border-bottom:1px solid var(--pn);padding-bottom:4px;align-items:baseline}.ppx .sect .lab{border-bottom:0;padding-bottom:0}
 .ppx .ppb .btn{flex:1;padding-left:4px;padding-right:4px;text-align:center}
 .ppx .voile h2{font-size:18px;letter-spacing:.1em}.ppx .voile .sous{font-size:10px;letter-spacing:.06em}
+/* Positionnement employé: Précédent / Suivant / Récapitulatif dans la barre du bas (rangée du dessus) */
+.ppx .ppnav{display:block}.ppx .ppnav .compteur{display:block;margin:0 0 6px}
+.ppx .ppb{position:fixed;z-index:20;left:26px;right:26px;bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 64px);display:flex;gap:6px;flex-wrap:nowrap}
+.ppx .ppb .btn{flex:1;height:40px;box-sizing:border-box;padding:0 2px;font-size:10px;letter-spacing:.06em;white-space:nowrap;background:var(--pb)}
+.ppx{padding-bottom:190px}.ppx::after{height:calc(max(env(safe-area-inset-bottom,0px),12px) + 118px)}

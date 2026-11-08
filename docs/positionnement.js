@@ -36,7 +36,7 @@ function etatClasseur(e){if(e.propFormule)return 'C';if(e.prop==null)return '';v
 function salairePour(e,x){var mx=maxCat(e);if(!x||mx==null)return null;return x.v==='C'?arr(Math.max(e.sal,Math.min(e.sal*(1+D.taux),mx)),2):arr(x.p*mx,2)}
 function squelette(){
  $('app').innerHTML='<div class="pph"><h1 id="pp_nom"></h1><div class="sous" id="pp_sous"></div></div>'+
- '<div class="ppnav"><span class="compteur" id="pp_cpt"></span><select class="emp" id="pp_liste"></select><div class="ppb"><button class="btn" id="pp_prec">Précédent</button><button class="btn" id="pp_suiv">Suivant</button><button class="btn" id="pp_recap">Récapitulatif</button></div></div>'+
+ '<div class="ppnav"><span class="compteur" id="pp_cpt"></span><select class="emp" id="pp_liste"></select><div class="ppb"><button class="btn" id="pp_prec">Précédent</button><button class="btn" id="pp_suiv">Suivant</button></div></div>'+
  '<div class="sect"><span class="num">01</span><span class="lab">Portrait '+D.anneeActuelle+'</span></div>'+
  '<div class="bas"><div><div class="sect"><span class="lab" id="pp_ptsLab">Contribution</span><span class="moy" id="pp_ptsTag"></span></div><div class="fx pts" id="pp_pts"></div></div>'+
  '<div><div class="sect"><span class="lab">Objectifs et charges</span></div><div id="pp_charge"></div><div class="binfo" id="pp_chargeInfo"></div></div></div>'+
@@ -53,7 +53,7 @@ function squelette(){
  $('liste').innerHTML='<option value="">Choisir un employé…</option>'+D.employes.map(function(e,k){return '<option value="'+k+'">'+esc(e.nom)+'</option>'}).join('');
  $('liste').onchange=function(){if($('liste').value===''){attente=true;afficher();return}attente=false;i=+$('liste').value;afficher()};
  $('prec').onclick=function(){aller(-1)};$('suiv').onclick=function(){aller(1)};
- $('choix').onchange=majChoix;$('enr').onclick=enregistrer;$('recap').onclick=recap;
+ $('choix').onchange=majChoix;$('enr').onclick=enregistrer;
 }
 
 /* Pointage de la contribution : UNE seule règle (formule C31 du classeur « Contribution individuelle »). Chaque ligne = pointage sur sa pondération; total = somme des valeurs exactes. */
