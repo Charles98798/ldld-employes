@@ -869,7 +869,7 @@ function nouveau(onglet){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   document.getElementById("ongM").onclick = function(){ rediger(); };
   document.getElementById("nmes").onclick = function(e){ e.preventDefault(); mesEvenements(); };
-  var hs = ""; for(var h = 7; h <= 18; h++){ hs += '<option value="'+h+':0">'+heureTxt(h,0)+'</option><option value="'+h+':30">'+heureTxt(h,30)+'</option>'; }
+  var hs = ""; for(var h = 7; h <= 18; h++){ [0,15,30,45].forEach(function(m){ hs += '<option value="'+h+':'+m+'">'+heureTxt(h,m)+'</option>'; }); }
   var nh = document.getElementById("nh"); nh.innerHTML = hs; nh.value = "9:0";
   nh.onchange = function(){ var p = this.value.split(":"); hr = +p[0]; mn = +p[1]; dessiner(); };
   function dire(t){ var e = document.getElementById("ne"); e.style.display = "block"; e.textContent = t; }
@@ -1014,7 +1014,7 @@ function suiviCharge(){
   function dessinerPlan(){
     var z = document.getElementById("scp"); if(!z) return;
     var fin = new Date(lundi); fin.setDate(fin.getDate()+6);
-    var hs = ""; for(var h = 7; h <= 18; h++){ hs += '<option value="'+h+':0">'+heureTxt(h,0)+'</option><option value="'+h+':30">'+heureTxt(h,30)+'</option>'; }
+    var hs = ""; for(var h = 7; h <= 18; h++){ [0,15,30,45].forEach(function(m){ hs += '<option value="'+h+':'+m+'">'+heureTxt(h,m)+'</option>'; }); }
     var ag = (SC_AGENDAS || []).map(function(a){ return '<option value="'+(a.principal ? "primary" : esc(a.id))+'"'+((a.principal ? "primary" : a.id) === agenda ? " selected" : "")+'>'+esc(a.principal ? "Mon agenda" : a.nom)+'</option>'; }).join("") || '<option value="primary">Mon agenda</option>';
     var g = '<div class="gs"><div class="d"></div>';
     for(var k = 0; k < 7; k++){ var dj = new Date(lundi); dj.setDate(dj.getDate()+k); g += '<div class="d'+(isoJour(dj) === isoJour(jour) ? " on" : "")+(conges[isoJour(dj)] ? " "+conges[isoJour(dj)] : "")+'" data-j="'+isoJour(dj)+'">'+JOURS_C[k]+" "+dj.getDate()+'</div>'; }
