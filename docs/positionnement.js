@@ -48,7 +48,7 @@ function squelette(){
   '<div><label>Augmentation</label><div class="res" id="pp_aug"></div><div class="note" id="pp_augn"></div></div>'+
  '<div><label>Écart avec « Conserver »</label><div class="res" id="pp_ecart"></div><div class="note">Ce que coûte le changement, par heure</div></div></div>'+
  '<div class="alerte" id="pp_alerte"></div>'+
- '<div class="pied"><span class="etat" id="pp_etat"></span><span id="pp_file"></span></div><div class="ppb"><button class="btn" id="pp_prec">Précédent</button><button class="btn" id="pp_suiv">Suivant</button></div><button class="btn noir ppenr" id="pp_enr">Confirmé et suivant</button>'+
+ '<div class="pied"><span class="etat" id="pp_etat"></span><span id="pp_file"></span></div><div class="ppb"><button class="btn" id="pp_prec" hidden>Précédent</button><button class="btn" id="pp_suiv">Suivant</button><button class="btn noir ppenr" id="pp_enr">Confirmé et suivant</button></div>'+
  '<div class="voile" id="pp_voile"></div>';
  $('liste').innerHTML='<option value="">Choisir un employé…</option>'+D.employes.map(function(e,k){return '<option value="'+k+'">'+esc(e.nom)+'</option>'}).join('');
  $('liste').onchange=function(){if($('liste').value===''){attente=true;afficher();return}attente=false;i=+$('liste').value;afficher()};
