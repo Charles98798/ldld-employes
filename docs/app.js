@@ -702,9 +702,10 @@ function prefsNotifs(){
 }
 // Page Responsable (responsables et direction seulement; le service refuse les autres) : Contacts cliquables (appel, texto, courriel).
 function responsable(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span><em>→</em></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span><em>→</em></a><a class="doc" href="#" id="rem"><span>▪ Employés</span><em>→</em></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span><em>→</em></a>' : "")+'</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span><em>→</em></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span><em>→</em></a><a class="doc" href="#" id="rem"><span>▪ Employés</span><em>→</em></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span><em>→</em></a>' : "")+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
+  document.getElementById("rsc").onclick = function(e){ e.preventDefault(); suiviCharge(); };
   document.getElementById("rc").onclick = function(e){ e.preventDefault(); contactsResp(); };
   document.getElementById("rs").onclick = function(e){ e.preventDefault(); attributionPage("place"); };
   document.getElementById("rk").onclick = function(e){ e.preventDefault(); attributionPage("casier"); };
@@ -961,6 +962,113 @@ function utilisationApp(){
       '<div class="etiq" style="margin-top:14px">▪ EMPLOYÉS</div>' +
       r.employes.map(function(x){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span>'+pc(x.taux)+'</span></div>'+barre(x.taux); }).join("");
   }).catch(function(){ var el = document.getElementById("ut"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
+// Suivi de charge (responsables et direction): un employé à la fois, du premier au dernier, avec le bouton du bas.
+var SC_AGENDAS = null;
+function suiviCharge(){
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">← Retour</a><h1>Suivi de charge</h1><div id="sc"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  var liste = [], i = 0, etat = "", noteOn = false, planOn = false, msg = "", occupe = false;
+  var lundi, jour, hr, mn, evs, agenda, conges = {};
+  var ETATS = ["Tout va bien", "À surveiller", "Intervention requise"];
+  function pc(x){ return x == null ? "—" : Math.round(x*100)+" %"; }
+  function tuile(v, lib, hors){ return '<div style="flex:1;border:'+(hors ? "3px" : "1px")+' solid var(--tx);padding:8px 4px;text-align:center"><b style="display:block;font-weight:400;font-size:20px">'+pc(v)+'</b><small style="display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;margin-top:2px">'+lib+'</small></div>'; }
+  function dateCourte(d){ var p = String(d).split("-"); return +p[2]+" "+MOIS_LONGS[+p[1]-1].slice(0,4)+"."; }
+  function initPlan(){ lundi = lundiDe(new Date()); jour = new Date(); hr = 9; mn = 0; evs = []; agenda = "primary"; }
+  function bouton(txt, on, rose, id){ return '<button type="button" id="'+id+'" class="bouton" style="margin:0;flex:1;font-size:11px;padding:12px 2px;'+(on ? "" : "background:"+(rose ? "#f4b3c4" : "transparent")+";color:#111;")+'border:1.5px solid var(--tx)">'+txt+'</button>'; }
+  function dessiner(){
+    var el = document.getElementById("sc"); if(!el) return;
+    var p = liste[i], d = p.dernier;
+    var h = '<div class="etq">'+(i+1)+' SUR '+liste.length+'</div><div style="font-size:22px;margin:2px 0 10px">'+esc(p.nom)+'</div>' +
+      '<div style="display:flex;gap:6px">'+tuile(p.effectuee, "Effectuée · cible 80 %", p.effectuee != null && p.effectuee < 0.8)+tuile(p.nonTerminee, "Non terminée · max 5 %", p.nonTerminee != null && p.nonTerminee > 0.05)+tuile(p.objectifs, "Objectifs · cible 80 %", p.objectifs != null && p.objectifs < 0.8)+'</div>' +
+      '<div class="etq" style="margin-top:4px">CADRE ÉPAIS = HORS CIBLE</div>' +
+      '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente'+(d ? " · "+dateCourte(d.date) : "")+'</b>'+(d && d.note ? esc(d.note) : '<span style="opacity:.7">Aucune note.</span>')+'</div>' +
+      '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, true, "se"+k); }).join("")+'</div>' +
+      '<div class="etq" style="margin-top:14px">OPTIONNEL</div><div style="display:flex;gap:6px;margin-top:4px">'+bouton("Inscrire une note", noteOn, false, "sn")+bouton("Planifier une rencontre", planOn, false, "sp")+'</div>' +
+      (noteOn ? '<textarea class="champ" id="snt" rows="3" maxlength="2000" placeholder="Note du suivi…" style="margin-top:8px">'+esc(sauvNote)+'</textarea>' : "") +
+      (planOn ? '<div id="scp"></div>' : "") +
+      (msg ? '<div class="bandeau" style="margin-top:10px">'+esc(msg)+'</div>' : "");
+    el.innerHTML = h;
+    ETATS.forEach(function(x, k){ document.getElementById("se"+k).onclick = function(){ lireNote(); etat = x; msg = ""; dessiner(); }; });
+    document.getElementById("sn").onclick = function(){ lireNote(); noteOn = !noteOn; dessiner(); };
+    document.getElementById("sp").onclick = function(){ lireNote(); planOn = !planOn; if(planOn) initPlan(); dessiner(); if(planOn) chargerSemaine(); };
+    if(planOn) dessinerPlan();
+    barre();
+  }
+  var sauvNote = "";
+  function lireNote(){ var t = document.getElementById("snt"); if(t) sauvNote = t.value; }
+  function barre(){
+    var b = document.getElementById("scb");
+    if(!b){ b = document.createElement("button"); b.type = "button"; b.id = "scb"; b.className = "bouton"; document.body.appendChild(b); }
+    b.style.cssText = "position:fixed;z-index:20;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);width:auto;margin:0;font-size:13px;padding:13px 18px;" + (etat ? "" : "opacity:.5");
+    b.textContent = i === liste.length-1 ? "Enregistrer et terminer →" : "Enregistrer et suivant →";
+    b.onclick = enregistrer;
+  }
+  function nettoyer(){ var b = document.getElementById("scb"); if(b) b.remove(); }
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); nettoyer(); responsable(); };
+  function dessinerPlan(){
+    var z = document.getElementById("scp"); if(!z) return;
+    var fin = new Date(lundi); fin.setDate(fin.getDate()+6);
+    var hs = ""; for(var h = 7; h <= 18; h++){ hs += '<option value="'+h+':0">'+heureTxt(h,0)+'</option><option value="'+h+':30">'+heureTxt(h,30)+'</option>'; }
+    var ag = (SC_AGENDAS || []).map(function(a){ return '<option value="'+(a.principal ? "primary" : esc(a.id))+'"'+((a.principal ? "primary" : a.id) === agenda ? " selected" : "")+'>'+esc(a.principal ? "Mon agenda" : a.nom)+'</option>'; }).join("") || '<option value="primary">Mon agenda</option>';
+    var g = '<div class="gs"><div class="d"></div>';
+    for(var k = 0; k < 7; k++){ var dj = new Date(lundi); dj.setDate(dj.getDate()+k); g += '<div class="d'+(isoJour(dj) === isoJour(jour) ? " on" : "")+(conges[isoJour(dj)] ? " "+conges[isoJour(dj)] : "")+'" data-j="'+isoJour(dj)+'">'+JOURS_C[k]+" "+dj.getDate()+'</div>'; }
+    for(h = 7; h <= 18; h++){
+      g += '<div class="h">'+h+' h</div>';
+      for(k = 0; k < 7; k++){ dj = new Date(lundi); dj.setDate(dj.getDate()+k); var ij = isoJour(dj);
+        var occ = evs.some(function(e){ var d0 = new Date(e.debut); return isoJour(d0) === ij && d0.getHours() <= h && new Date(e.fin) > new Date(dj.getFullYear(), dj.getMonth(), dj.getDate(), h, 0); });
+        g += '<div class="'+(ij === isoJour(jour) && h === hr ? "n" : occ ? "e" : conges[ij] ? "cl"+conges[ij] : "")+'" data-j="'+ij+'" data-h="'+h+'"></div>'; }
+    }
+    var duJour = evs.filter(function(e){ return isoJour(new Date(e.debut)) === isoJour(jour); });
+    z.innerHTML = '<div class="etiq" style="margin-top:12px">▪ AGENDA</div><select class="champ" id="spag">'+ag+'</select>' +
+      '<div class="moisbar"><button type="button" id="spp" aria-label="Semaine précédente">←</button><b>'+lundi.getDate()+" "+MOIS_LONGS[lundi.getMonth()].toUpperCase()+" — "+fin.getDate()+" "+MOIS_LONGS[fin.getMonth()].toUpperCase()+'</b><button type="button" id="spn" aria-label="Semaine suivante">→</button></div>' + g + '</div>' +
+      '<div class="etiq" style="margin-top:14px">▪ '+jour.getDate()+" "+MOIS_LONGS[jour.getMonth()].toUpperCase()+(conges[isoJour(jour)] ? " · LABO FERMÉ" : "")+'</div>' +
+      (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut); return '<div class="ligne"><span>'+heureTxt(d0.getHours(), d0.getMinutes())+'</span><span style="flex:1;margin-left:12px">'+esc(e.titre)+'</span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE JOUR</div>') +
+      '<div class="dh"><select class="champ" id="sph">'+hs+'</select><select class="champ" id="spr"><option value="aucune">Une seule fois</option><option value="jour">Chaque jour ouvrable</option><option value="semaine" selected>Chaque semaine</option><option value="deux">Aux deux semaines</option><option value="mois">Chaque mois</option></select></div>' +
+      '<div class="etq" style="margin-top:8px">À</div><div class="champ" style="padding:12px 0">'+esc(liste[i].nom)+'</div><div class="etq">SUJET</div><div class="champ" style="padding:12px 0">Suivi de charge · '+esc(liste[i].nom)+'</div>';
+    document.getElementById("sph").value = hr+":"+mn;
+    document.getElementById("sph").onchange = function(){ var q = this.value.split(":"); hr = +q[0]; mn = +q[1]; dessinerPlan(); };
+    document.getElementById("spag").onchange = function(){ agenda = this.value; chargerSemaine(); };
+    document.getElementById("spp").onclick = function(){ lundi.setDate(lundi.getDate()-7); chargerSemaine(); };
+    document.getElementById("spn").onclick = function(){ lundi.setDate(lundi.getDate()+7); chargerSemaine(); };
+    Array.prototype.forEach.call(z.querySelectorAll(".gs [data-j]"), function(c){ c.onclick = function(){
+      var q = c.getAttribute("data-j").split("-"); jour = new Date(+q[0], +q[1]-1, +q[2]); var hh = c.getAttribute("data-h"); if(hh){ hr = +hh; mn = 0; } dessinerPlan(); }; });
+  }
+  function chargerSemaine(){
+    appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(lundi), agenda:agenda}).then(function(r){ evs = (r && r.ok) ? r.evenements : []; dessinerPlan(); }).catch(function(){ evs = []; dessinerPlan(); });
+  }
+  function suivant(){
+    nettoyer();
+    if(i >= liste.length-1){ responsable(); return; }
+    i++; etat = ""; noteOn = false; planOn = false; sauvNote = ""; msg = ""; occupe = false; window.scrollTo(0, 0); dessiner();
+  }
+  function enregistrer(){
+    if(occupe) return;
+    lireNote();
+    if(!etat){ msg = "▪ CHOISISSEZ UN ÉTAT AVANT DE CONTINUER"; dessiner(); return; }
+    var p = liste[i];
+    function sauver(){
+      appelService({action:"charge_suivi", session:sessionGardee(), nom:p.brut, etat:etat, note:noteOn ? sauvNote : ""}).then(function(r){
+        if(r && r.ok){ p.dernier = {date: isoJour(new Date()), etat: etat, note: noteOn ? sauvNote.trim() : ""}; suivant(); }
+        else { occupe = false; msg = "▪ NON ENREGISTRÉ · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); dessiner(); }
+      }).catch(function(){ occupe = false; msg = "▪ NON ENREGISTRÉ · RÉSEAU"; dessiner(); });
+    }
+    occupe = true; msg = "▪ ENREGISTREMENT…"; dessiner();
+    if(planOn){
+      appelService({action:"agenda_creer", session:sessionGardee(), agenda:agenda, titre:"Suivi de charge · "+p.nom, texte:"", a:p.brut,
+        debut:isoJour(jour)+"T"+("0"+hr).slice(-2)+":"+("0"+mn).slice(-2), minutes:30, repeter:document.getElementById("spr") ? document.getElementById("spr").value : "semaine"}).then(function(r){
+        if(r && r.ok) sauver(); else { occupe = false; msg = "▪ RENCONTRE NON PLANIFIÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); dessiner(); }
+      }).catch(function(){ occupe = false; msg = "▪ RENCONTRE NON PLANIFIÉE · RÉSEAU"; dessiner(); });
+    } else sauver();
+  }
+  obtenir("calendrier", {action:"calendrier"}, function(r){ (r.jours || []).forEach(function(x){ if(x.t === "f") conges[x.d] = "f"; else if(x.t === "c" && !conges[x.d]) conges[x.d] = "c"; }); }, function(){}, true);
+  appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.agendas) SC_AGENDAS = r.agendas.filter(function(a){ return a.ecriture; }); }).catch(function(){});
+  appelService({action:"charge_equipe", session:sessionGardee()}).then(function(r){
+    var el = document.getElementById("sc"); if(!el) return;
+    if(!r || !r.ok) throw 0;
+    liste = r.employes; if(!liste.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN EMPLOYÉ À SUIVRE</div>'; return; }
+    initPlan(); dessiner();
+  }).catch(function(){ var el = document.getElementById("sc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function gestionEmployes(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Employés</h1><div id="ge"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
