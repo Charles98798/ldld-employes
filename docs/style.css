@@ -465,3 +465,8 @@ textarea.bx{min-height:90px;resize:vertical}
 .ppx .etat{font-size:10px;letter-spacing:.04em;line-height:1.8;display:block}.ppx .pied{padding-bottom:20px}
 .ppx .ind .ir.ih{display:none}.ppx .ind .ir .r span{border:0;box-shadow:none}.ppx .fx.pts .tot{background:var(--pb)}
 .ppx .grille td.lib{box-shadow:14px 0 0 var(--pb)}.ppx .grille th:first-child{background:var(--pt);box-shadow:14px 0 0 var(--pt)}
+/* Positionnement employé: barre du bas réservée, alignée sur la largeur du contenu */
+.ppx{padding-bottom:130px}
+.ppx::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(max(env(safe-area-inset-bottom,0px),12px) + 74px);background:inherit;z-index:19;pointer-events:none}
+.ppx .retour{left:26px!important;width:112px;height:44px;box-sizing:border-box;padding:0!important;display:flex;align-items:center;justify-content:center;bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 12px)!important}
+.ppx .ppenr{left:150px!important;right:26px!important;width:auto;height:44px;box-sizing:border-box;padding:0!important;display:flex;align-items:center;justify-content:center;bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 12px)!important}
