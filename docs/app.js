@@ -702,7 +702,7 @@ function prefsNotifs(){
 }
 // Page Responsable (responsables et direction seulement; le service refuse les autres) : Contacts cliquables (appel, texto, courriel).
 function responsable(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span><em>→</em></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span><em>→</em></a>' : "")+'</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span><em>→</em></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span><em>→</em></a><a class="doc" href="#" id="rem"><span>▪ Employés</span><em>→</em></a>' : "")+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
   document.getElementById("rc").onclick = function(e){ e.preventDefault(); contactsResp(); };
@@ -710,6 +710,7 @@ function responsable(){
   document.getElementById("rk").onclick = function(e){ e.preventDefault(); attributionPage("casier"); };
   document.getElementById("re").onclick = function(e){ e.preventDefault(); entretien(); };
   var rpo = document.getElementById("rpo"); if(rpo) rpo.onclick = function(e){ e.preventDefault(); portrait(); };
+  var rem = document.getElementById("rem"); if(rem) rem.onclick = function(e){ e.preventDefault(); gestionEmployes(); };
   document.getElementById("rme").onclick = function(e){ e.preventDefault(); messages("envoyes"); };
   document.getElementById("rrd").onclick = function(e){ e.preventDefault(); messages("rencontres"); };
   var nd = nbDemandesNeuves(); if(nd){ var sp = document.createElement("span"); sp.className = "nombre"; sp.style.marginLeft = "10px"; sp.textContent = pastilleTexte(nd); document.getElementById("rrd").firstChild.appendChild(sp); }
@@ -936,6 +937,37 @@ function mesEvenements(){
   charger();
 }
 // Portrait d'un employé (direction seulement): chiffres de la section 01 et échelle salariale, lus en direct par le service.
+// Fenêtre de confirmation Non / Oui (aucune page de plus).
+function confirmerOuiNon(question, oui, rouge){
+  var f = document.createElement("div");
+  f.style.cssText = "position:fixed;inset:0;background:rgba(15,20,32,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50";
+  f.innerHTML = '<div style="background:#e3dfd3;color:#111;border:1.5px solid #111;padding:20px;width:100%;max-width:340px"><div style="font-size:15px;line-height:1.5;margin-bottom:16px">'+esc(question)+'</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="cno" style="margin:0">Non</button><button type="button" class="bouton" id="coui" style="margin:0'+(rouge ? ";background:#a32d2d;color:#fff" : "")+'">Oui</button></div></div>';
+  document.body.appendChild(f);
+  document.getElementById("cno").onclick = function(){ f.remove(); };
+  document.getElementById("coui").onclick = function(){ f.remove(); oui(); };
+}
+function gestionEmployes(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Employés</h1><div id="ge"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  function agir(id, nom, actif){
+    confirmerOuiNon((actif ? "Réactiver " : "Désactiver ")+nom+"?", function(){
+      var el = document.getElementById("ge"); if(el) el.innerHTML = '<div class="bandeau">▪ EN COURS…</div>';
+      appelService({action:"employe_actif", session:sessionGardee(), id:id, actif:actif}).then(function(r){
+        if(!r || !r.ok) throw 0; gestionEmployes();
+      }).catch(function(){ var e2 = document.getElementById("ge"); if(e2) e2.innerHTML = '<div class="bandeau">▪ ÉCHEC · RÉESSAYEZ</div>'; setTimeout(gestionEmployes, 1800); });
+    });
+  }
+  appelService({action:"employes_etat", session:sessionGardee()}).then(function(r){
+    var el = document.getElementById("ge"); if(!el) return;
+    if(!r || !r.ok) throw 0;
+    el.innerHTML = '<div class="etq">CHOISIR UN EMPLOYÉ</div><select class="champ" id="gs">'+r.actifs.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
+      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gdes" style="margin:0">Désactiver</button></div>' +
+      '<div class="etiq">▪ INACTIFS</div>' +
+      (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:6px 14px">Réactiver</button></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
+    document.getElementById("gdes").onclick = function(){ var s = document.getElementById("gs"); if(s.value) agir(s.value, s.options[s.selectedIndex].text, false); };
+    Array.prototype.forEach.call(el.querySelectorAll("button[data-k]"), function(b){ b.onclick = function(){ var x = r.inactifs[+b.getAttribute("data-k")]; agir(x.id, x.nom, true); }; });
+  }).catch(function(){ var el = document.getElementById("ge"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
 function sectionsPortrait(p){
   function pct(x){ return x === null || x === undefined ? "—" : Math.round(x*100)+" %"; }
   var c = p.contribution, ch = p.charge, pa = p.paroles, ci = p.cibles || {}, h = "";
