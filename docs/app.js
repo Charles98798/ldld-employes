@@ -702,7 +702,7 @@ function prefsNotifs(){
 }
 // Page Responsable (responsables et direction seulement; le service refuse les autres) : Contacts cliquables (appel, texto, courriel).
 function responsable(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span><em>→</em></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span><em>→</em></a><a class="doc" href="#" id="rem"><span>▪ Employés</span><em>→</em></a>' : "")+'</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span><em>→</em></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span><em>→</em></a><a class="doc" href="#" id="rem"><span>▪ Employés</span><em>→</em></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span><em>→</em></a>' : "")+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
   document.getElementById("rc").onclick = function(e){ e.preventDefault(); contactsResp(); };
@@ -711,6 +711,7 @@ function responsable(){
   document.getElementById("re").onclick = function(e){ e.preventDefault(); entretien(); };
   var rpo = document.getElementById("rpo"); if(rpo) rpo.onclick = function(e){ e.preventDefault(); portrait(); };
   var rem = document.getElementById("rem"); if(rem) rem.onclick = function(e){ e.preventDefault(); gestionEmployes(); };
+  var rut = document.getElementById("rut"); if(rut) rut.onclick = function(e){ e.preventDefault(); utilisationApp(); };
   document.getElementById("rme").onclick = function(e){ e.preventDefault(); messages("envoyes"); };
   document.getElementById("rrd").onclick = function(e){ e.preventDefault(); messages("rencontres"); };
   var nd = nbDemandesNeuves(); if(nd){ var sp = document.createElement("span"); sp.className = "nombre"; sp.style.marginLeft = "10px"; sp.textContent = pastilleTexte(nd); document.getElementById("rrd").firstChild.appendChild(sp); }
@@ -945,6 +946,21 @@ function confirmerOuiNon(question, oui, rouge){
   document.body.appendChild(f);
   document.getElementById("cno").onclick = function(){ f.remove(); };
   document.getElementById("coui").onclick = function(){ f.remove(); oui(); };
+}
+function utilisationApp(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Utilisation</h1><div id="ut"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  function pc(x){ return Math.round(x*100)+" %"; }
+  function barre(x){ return '<div style="height:10px;border:1px solid var(--tx2);margin:4px 0 10px"><i style="display:block;height:100%;width:'+Math.round(x*100)+'%;background:var(--tx)"></i></div>'; }
+  appelService({action:"utilisation", session:sessionGardee()}).then(function(r){
+    var el = document.getElementById("ut"); if(!el) return;
+    if(!r || !r.ok) throw 0;
+    if(!r.employes.length){ el.innerHTML = '<div class="bandeau">▪ LE SUIVI COMMENCE AUJOURD\'HUI · REVENEZ DEMAIN</div>'; return; }
+    el.innerHTML = '<div class="etq">JOURS OUVRABLES OÙ L\'EMPLOYÉ A OUVERT L\'APPLICATION · 6 DERNIERS MOIS · DEPUIS LE '+esc(r.depuis)+'</div>' +
+      '<div class="etq" style="margin-top:14px">MOYENNE DE L\'ÉQUIPE · '+pc(r.moyenne || 0)+'</div>'+barre(r.moyenne || 0) +
+      '<div class="etiq" style="margin-top:14px">▪ EMPLOYÉS</div>' +
+      r.employes.map(function(x){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span>'+pc(x.taux)+'</span></div>'+barre(x.taux); }).join("");
+  }).catch(function(){ var el = document.getElementById("ut"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function gestionEmployes(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Employés</h1><div id="ge"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
