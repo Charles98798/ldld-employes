@@ -862,7 +862,7 @@ function nouveau(onglet){
     '<div class="etiq">▪ AGENDA</div><select class="champ" id="nag"><option value="primary">Mon agenda</option></select>' +
     '<div class="moisbar"><button type="button" id="sp" aria-label="Semaine précédente">←</button><b id="st"></b><button type="button" id="sn" aria-label="Semaine suivante">→</button></div><div id="grille"></div>' +
     '<div class="etiq" id="jt" style="margin-top:14px"></div><div id="jl"></div>' +
-    '<div class="dh"><select class="champ" id="nh"></select><select class="champ" id="nr"><option value="aucune">Une seule fois</option><option value="jour">Chaque jour ouvrable</option><option value="semaine" selected>Chaque semaine</option><option value="deux">Aux deux semaines</option><option value="mois">Chaque mois</option></select></div>' +
+    '<div class="dh"><select class="champ" id="nh"></select><select class="champ" id="nr"><option value="aucune">Une seule fois</option><option value="jour">Chaque jour ouvrable</option><option value="semaine">Chaque semaine</option><option value="deux">Aux deux semaines</option><option value="mois">Chaque mois</option></select></div>' +
     '<select class="champ" id="na"><option>Toute l\'équipe</option></select><input class="champ" id="ns" placeholder="Sujet" maxlength="120"><textarea class="champ" id="nt" rows="2" placeholder="Message"></textarea>' +
     '<div class="bandeau" id="ne" style="display:none"></div><button class="bouton" id="nok">Envoyer</button>' +
     '<a class="doc" href="#" id="nmes" style="margin-top:14px"><span>▪ Mes événements</span><em>→</em></a></div>';
@@ -1029,7 +1029,7 @@ function suiviCharge(){
       '<div class="moisbar"><button type="button" id="spp" aria-label="Semaine précédente">←</button><b>'+lundi.getDate()+" "+MOIS_LONGS[lundi.getMonth()].toUpperCase()+" — "+fin.getDate()+" "+MOIS_LONGS[fin.getMonth()].toUpperCase()+'</b><button type="button" id="spn" aria-label="Semaine suivante">→</button></div>' + g + '</div>' +
       '<div class="etiq" style="margin-top:14px">▪ '+jour.getDate()+" "+MOIS_LONGS[jour.getMonth()].toUpperCase()+(conges[isoJour(jour)] ? " · LABO FERMÉ" : "")+'</div>' +
       (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut); return '<div class="ligne"><span>'+heureTxt(d0.getHours(), d0.getMinutes())+'</span><span style="flex:1;margin-left:12px">'+esc(e.titre)+'</span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE JOUR</div>') +
-      '<div class="dh"><select class="champ" id="sph">'+hs+'</select><select class="champ" id="spr"><option value="aucune">Une seule fois</option><option value="jour">Chaque jour ouvrable</option><option value="semaine" selected>Chaque semaine</option><option value="deux">Aux deux semaines</option><option value="mois">Chaque mois</option></select></div>' +
+      '<div class="dh"><select class="champ" id="sph">'+hs+'</select><select class="champ" id="spr"><option value="aucune">Une seule fois</option><option value="jour">Chaque jour ouvrable</option><option value="semaine">Chaque semaine</option><option value="deux">Aux deux semaines</option><option value="mois">Chaque mois</option></select></div>' +
       '<div class="etq" style="margin-top:8px">À</div><div class="champ" style="padding:12px 0">'+esc(liste[i].nom)+'</div><div class="etq">SUJET</div><div class="champ" style="padding:12px 0">Suivi de charge · '+esc(liste[i].nom)+'</div>';
     document.getElementById("sph").value = hr+":"+mn;
     document.getElementById("sph").onchange = function(){ var q = this.value.split(":"); hr = +q[0]; mn = +q[1]; dessinerPlan(); };
@@ -1061,7 +1061,7 @@ function suiviCharge(){
     occupe = true; msg = "▪ ENREGISTREMENT…"; dessiner();
     if(planOn){
       appelService({action:"agenda_creer", session:sessionGardee(), agenda:agenda, titre:"Suivi de charge · "+p.nom, texte:"", a:p.brut,
-        debut:isoJour(jour)+"T"+("0"+hr).slice(-2)+":"+("0"+mn).slice(-2), minutes:30, repeter:document.getElementById("spr") ? document.getElementById("spr").value : "semaine"}).then(function(r){
+        debut:isoJour(jour)+"T"+("0"+hr).slice(-2)+":"+("0"+mn).slice(-2), minutes:30, repeter:document.getElementById("spr") ? document.getElementById("spr").value : "aucune"}).then(function(r){
         if(r && r.ok) sauver(); else { occupe = false; msg = "▪ RENCONTRE NON PLANIFIÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); dessiner(); }
       }).catch(function(){ occupe = false; msg = "▪ RENCONTRE NON PLANIFIÉE · RÉSEAU"; dessiner(); });
     } else sauver();
