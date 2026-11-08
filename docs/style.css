@@ -512,3 +512,4 @@ textarea.bx{min-height:90px;resize:vertical}
 
 /* Positionnement employé: police Inter comme la page web */
 .ppx,.ppx *{font-family:Inter,'Helvetica Neue',Arial,sans-serif}
+.ppx .pied{border-top:0;padding-top:0}

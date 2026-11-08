@@ -151,7 +151,7 @@ function majChoix(){var e=D.employes[i],sel=$('choix'),o=options(e),x=null;
   $('aug').textContent=pct(sR/e.sal-1,1);$('augn').textContent=money(e.sal)+' → '+money(sR)+' (+ '+money(sR-e.sal)+' / h)';
   var sc=salairePour(e,o[0]);$('ecart').textContent=x.v==='C'?'0,00 $':'+ '+money(sR-sc);
  }
- $('etat').innerHTML='Écrit dans '+esc(D.onglet)+' : position colonne '+esc(D.colonne)+(D.colonneConf?', case « Confirmé » colonne '+esc(D.colonneConf):'')+(D.confErreur?' <b style="color:#b00">Envoi salarial : '+esc(D.confErreur)+'</b>':'')+' <span class="pastille'+(enAttente(e)?'" style="background:#e8e4da">écriture en cours':(confirme?' ok">confirmé en réunion':'">à confirmer'))+'</span>';
+ $('etat').innerHTML=(D.confErreur?' <b style="color:#b00">Envoi salarial : '+esc(D.confErreur)+'</b>':'')+' <span class="pastille'+(enAttente(e)?'" style="background:#e8e4da">écriture en cours':(confirme?' ok">confirmé en réunion':'">à confirmer'))+'</span>';
  sel.disabled=enAttente(e)||sup;majFrais();
  try{var gb=document.querySelector('.ppx .grillebox'),tg=gb&&gb.querySelector('td.prop,td.actu');if(gb&&tg)gb.scrollLeft=Math.max(0,tg.offsetLeft-64)}catch(x){}
 }
