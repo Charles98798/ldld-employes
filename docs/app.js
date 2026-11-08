@@ -972,7 +972,11 @@ function suiviCharge(){
   var lundi, jour, hr, mn, evs, agenda, conges = {};
   var ETATS = ["Tout va bien", "À surveiller", "Intervention requise"];
   function pc(x){ return x == null ? "—" : Math.round(x*100)+" %"; }
-  function tuile(v, lib, hors){ return '<div style="flex:1;border:'+(hors ? "3px" : "1px")+' solid var(--tx);padding:8px 4px;text-align:center"><b style="display:block;font-weight:400;font-size:20px">'+pc(v)+'</b><small style="display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;margin-top:2px">'+lib+'</small></div>'; }
+  function tuile(v, lib, cible, max){
+    var ok = v != null && (max ? v <= cible : v >= cible), w = v == null ? 0 : Math.min(100, Math.round(v*100));
+    return '<div style="margin:10px 0 0"><div class="ligne" style="border:0;padding:0"><span>'+lib+'</span><span>'+pc(v)+'</span></div>' +
+      '<div style="position:relative;height:10px;background:#E9E4DA;margin-top:4px"><i style="display:block;height:100%;width:'+w+'%;background:#111"></i><u style="position:absolute;top:-3px;bottom:-3px;left:'+Math.round(cible*100)+'%;width:2px;background:#2fd04a"></u></div>' +
+      (v == null ? "" : '<span style="display:inline-block;margin-top:6px;padding:4px 8px;font-size:12px;font-weight:600;'+(ok ? "background:#8EFF60;color:#1D1D1B" : "border:1.5px solid #111")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>')+'</div>'; }
   function dateCourte(d){ var p = String(d).split("-"); return +p[2]+" "+MOIS_LONGS[+p[1]-1].slice(0,4)+"."; }
   function initPlan(){ lundi = lundiDe(new Date()); jour = new Date(); hr = 9; mn = 0; evs = []; agenda = "primary"; }
   function bouton(txt, on, rose, id){ return '<button type="button" id="'+id+'" class="bouton" style="margin:0;flex:1;font-size:11px;padding:12px 2px;'+(on ? "" : "background:"+(rose ? "#f4b3c4" : "transparent")+";color:#111;")+'border:1.5px solid var(--tx)">'+txt+'</button>'; }
@@ -980,8 +984,7 @@ function suiviCharge(){
     var el = document.getElementById("sc"); if(!el) return;
     var p = liste[i], d = p.dernier;
     var h = '<div class="etq">'+(i+1)+' SUR '+liste.length+'</div><div style="font-size:22px;margin:2px 0 10px">'+esc(p.nom)+'</div>' +
-      '<div style="display:flex;gap:6px">'+tuile(p.effectuee, "Effectuée · cible 80 %", p.effectuee != null && p.effectuee < 0.8)+tuile(p.nonTerminee, "Non terminée · max 5 %", p.nonTerminee != null && p.nonTerminee > 0.05)+tuile(p.objectifs, "Objectifs · cible 80 %", p.objectifs != null && p.objectifs < 0.8)+'</div>' +
-      '<div class="etq" style="margin-top:4px">CADRE ÉPAIS = HORS CIBLE</div>' +
+      '<div class="etq" style="margin-top:4px">RÉALISÉ VS CIBLE</div>'+tuile(p.effectuee, "Effectuée · cible 80 %", 0.8, false)+tuile(p.nonTerminee, "Non terminée · max 5 %", 0.05, true)+tuile(p.objectifs, "Objectifs · cible 80 %", 0.8, false) +
       '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente'+(d ? " · "+dateCourte(d.date) : "")+'</b>'+(d && d.note ? esc(d.note) : '<span style="opacity:.7">Aucune note.</span>')+'</div>' +
       '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, true, "se"+k); }).join("")+'</div>' +
       '<div class="etq" style="margin-top:14px">OPTIONNEL</div><div style="display:flex;gap:6px;margin-top:4px">'+bouton("Inscrire une note", noteOn, false, "sn")+bouton("Planifier une rencontre", planOn, false, "sp")+'</div>' +
