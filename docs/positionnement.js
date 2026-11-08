@@ -3,7 +3,7 @@
 var POS_CACHE = {d: null};
 var POS_FERMER = null;
 function posEmpOuvrir(){
-  app.innerHTML = '<div class="page ppx"><a class="retour" href="#" id="retour">← Retour</a><div id="pp_app" class="sansemp"></div></div>';
+  app.innerHTML = '<div class="page ppx"><a class="retour" href="#" id="retour">← Retour</a><div id="pp_app" class="sansemp"></div><div class="voile" id="pp_voile"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(POS_FERMER) POS_FERMER(); responsable(); };
   (function(){
 
@@ -153,6 +153,7 @@ function majChoix(){var e=D.employes[i],sel=$('choix'),o=options(e),x=null;
  }
  $('etat').innerHTML='Écrit dans '+esc(D.onglet)+' : position colonne '+esc(D.colonne)+(D.colonneConf?', case « Confirmé » colonne '+esc(D.colonneConf):'')+(D.confErreur?' <b style="color:#b00">Envoi salarial : '+esc(D.confErreur)+'</b>':'')+' <span class="pastille'+(enAttente(e)?'" style="background:#e8e4da">écriture en cours':(confirme?' ok">confirmé en réunion':'">à confirmer'))+'</span>';
  sel.disabled=enAttente(e)||sup;majFrais();
+ try{var gb=document.querySelector('.ppx .grillebox'),tg=gb&&gb.querySelector('td.prop,td.actu');if(gb&&tg)gb.scrollLeft=Math.max(0,tg.offsetLeft-110)}catch(x){}
 }
 // File d'écriture en arrière-plan : on passe tout de suite au suivant; une écriture à la fois, dans l'ordre.
 // Un employé n'est « confirmé » (vert) qu'après la réponse vérifiée du serveur.

@@ -450,3 +450,18 @@ textarea.bx{min-height:90px;resize:vertical}
 .ppx .voile{position:fixed;inset:0;background:var(--pb);overflow:auto;padding:30px 20px 90px;z-index:30}.ppx .recap{font-size:12px}.ppx .boite{max-height:none}
 .ppx .msg{position:static;padding:40px 0}
 .ppx #pp_app.sansemp .sect,.ppx #pp_app.sansemp .grillebox,.ppx #pp_app.sansemp .legende,.ppx #pp_app.sansemp .bas,.ppx #pp_app.sansemp .decision,.ppx #pp_app.sansemp .alerte,.ppx #pp_app.sansemp .pied,.ppx #pp_app.sansemp .ppenr,.ppx #pp_app.sansemp .ppb,.ppx #pp_app.sansemp .compteur{display:none!important}
+/* Positionnement employé: corrections de mise en page (téléphone) */
+.ppx .sect .moy:empty{display:none}.ppx .sect{gap:10px}.ppx .sect .lab{flex:1;min-width:0}
+.ppx .ind .ir{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:10px 0;align-items:baseline}
+.ppx .ind .ir>div:nth-child(1){grid-column:1/3;font-size:15px}
+.ppx .ind .ir>div:nth-child(2){grid-column:1;text-align:left}.ppx .ind .ir>div:nth-child(2):before{content:"Réalisé  ";font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--pg)}
+.ppx .ind .ir>div:nth-child(3){grid-column:2;text-align:right;font-size:13px}.ppx .ind .ir>div:nth-child(3):before{content:"Cible  ";font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--pg)}
+.ppx .ind .ir>div:nth-child(4),.ppx .ind .ir>div:nth-child(5){grid-column:1/3}
+.ppx .ind .ir .r span{display:inline-block;background:transparent;padding:0;font-size:20px;width:auto}
+.ppx .grille td.lib{position:sticky;left:0;background:var(--pb);width:86px;min-width:86px;font-size:9px;letter-spacing:.08em;padding:9px 4px 9px 0;z-index:1}
+.ppx .grille th:first-child{position:sticky;left:0;z-index:1}.ppx .grille{min-width:640px}.ppx .grille td{white-space:nowrap;font-size:13px;padding:9px 6px}.ppx .grille th{font-size:10px;white-space:nowrap;padding:9px 6px}
+.ppx .legende{font-size:10px;letter-spacing:.08em;gap:6px 16px;margin:8px 0}
+.ppx .decision>div{padding:12px 0}.ppx .decision select{width:100%}
+.ppx .etat{font-size:10px;letter-spacing:.04em;line-height:1.8;display:block}.ppx .pied{padding-bottom:20px}
+.ppx .ind .ir.ih{display:none}.ppx .ind .ir .r span{border:0;box-shadow:none}.ppx .fx.pts .tot{background:var(--pb)}
+.ppx .grille td.lib{box-shadow:14px 0 0 var(--pb)}.ppx .grille th:first-child{background:var(--pt);box-shadow:14px 0 0 var(--pt)}
