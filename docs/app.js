@@ -957,14 +957,24 @@ function gestionEmployes(){
       }).catch(function(){ var e2 = document.getElementById("ge"); if(e2) e2.innerHTML = '<div class="bandeau">▪ ÉCHEC · RÉESSAYEZ</div>'; setTimeout(gestionEmployes, 1800); });
     });
   }
+  function supprimer(id, nom){
+    confirmerOuiNon("Supprimer "+nom+"? Ses archives sont gardées 4 ans.", function(){
+      var el = document.getElementById("ge"); if(el) el.innerHTML = '<div class="bandeau">▪ SUPPRESSION EN COURS…</div>';
+      appelService({action:"employe_supprimer", session:sessionGardee(), id:id}).then(function(r){
+        if(!r || !r.ok) throw 0; gestionEmployes();
+      }).catch(function(){ var e2 = document.getElementById("ge"); if(e2) e2.innerHTML = '<div class="bandeau">▪ ÉCHEC · VÉRIFIEZ LE CLASSEUR</div>'; setTimeout(gestionEmployes, 2500); });
+    }, true);
+  }
   appelService({action:"employes_etat", session:sessionGardee()}).then(function(r){
     var el = document.getElementById("ge"); if(!el) return;
     if(!r || !r.ok) throw 0;
     el.innerHTML = '<div class="etq">CHOISIR UN EMPLOYÉ</div><select class="champ" id="gs">'+r.actifs.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
-      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gdes" style="margin:0">Désactiver</button></div>' +
+      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0">Désactiver</button></div>' +
       '<div class="etiq">▪ INACTIFS</div>' +
-      (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:6px 14px">Réactiver</button></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
+      (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:6px 14px">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:6px 14px">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
     document.getElementById("gdes").onclick = function(){ var s = document.getElementById("gs"); if(s.value) agir(s.value, s.options[s.selectedIndex].text, false); };
+    document.getElementById("gsup").onclick = function(){ var s = document.getElementById("gs"); if(s.value) supprimer(s.value, s.options[s.selectedIndex].text); };
+    Array.prototype.forEach.call(el.querySelectorAll("button[data-s]"), function(b){ b.onclick = function(){ var x = r.inactifs[+b.getAttribute("data-s")]; supprimer(x.id, x.nom); }; });
     Array.prototype.forEach.call(el.querySelectorAll("button[data-k]"), function(b){ b.onclick = function(){ var x = r.inactifs[+b.getAttribute("data-k")]; agir(x.id, x.nom, true); }; });
   }).catch(function(){ var el = document.getElementById("ge"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
