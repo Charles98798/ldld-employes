@@ -446,7 +446,7 @@ textarea.bx{min-height:90px;resize:vertical}
 .ppx .decision{display:block}.ppx .decision select{background:var(--pr);color:#111}.ppx .decision select.ok,.ppx .decision select.lock{background:var(--pb)}
 .ppx .ir{grid-template-columns:1fr 1fr;gap:4px 10px}.ppx .ir.ih{display:none}.ppx .res{font-size:28px}
 .ppx .pied{position:static;background:transparent;border-top:1px solid var(--pl);padding:12px 0;display:block}.ppx .pied .pastille{margin:4px 6px 0 0}
-.ppx .ppenr{position:fixed;left:140px;right:0;bottom:0;margin:0;padding:16px 0;height:40px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:0;border-radius:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;background:var(--pn);color:#fff;z-index:20}.ppx .ppenr:disabled{opacity:.5}
+.ppx .ppenr{position:fixed;z-index:20;left:auto;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);width:auto;margin:0;padding:13px 18px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;background:var(--pn);color:#fff;border:0}.ppx .ppenr:disabled{opacity:.5}
 .ppx .voile{position:fixed;inset:0;background:var(--pb);overflow:auto;padding:30px 20px 90px;z-index:30}.ppx .recap{font-size:12px}.ppx .boite{max-height:none}
 .ppx .msg{position:static;padding:40px 0}
 .ppx #pp_app.sansemp .sect,.ppx #pp_app.sansemp .grillebox,.ppx #pp_app.sansemp .legende,.ppx #pp_app.sansemp .bas,.ppx #pp_app.sansemp .decision,.ppx #pp_app.sansemp .alerte,.ppx #pp_app.sansemp .pied,.ppx #pp_app.sansemp .ppenr,.ppx #pp_app.sansemp .ppb,.ppx #pp_app.sansemp .compteur{display:none!important}
