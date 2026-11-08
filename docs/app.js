@@ -909,7 +909,7 @@ function dateHeure(opts, surChangement){
     return {html: r, masquees: masq}; }
   function panneau(e){
     var ed = S.ed, dur = Math.max(15, Math.round((new Date(e.fin) - new Date(e.debut))/60000)), hs = optHeures(ed.jour, ed.heure, dur, e.id);
-    var ps = ed.confirm ? '<div style="margin:8px 0"><div style="font-size:13px;margin-bottom:6px">Supprimer cet \u00e9v\u00e9nement ?</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="edn" style="margin:0">Non</button><button type="button" class="bouton" id="edo" style="margin:0;background:#a32d2d;color:#fff">Oui</button></div></div>'
+    var ps = ed.choix ? '<div class="etq" style="margin-top:10px">ENREGISTRER POUR</div><div class="aeact" style="margin:6px 0 0"><button type="button" class="bouton" id="ep1" style="margin:0">Cette date seulement</button><button type="button" class="bouton" id="ep2" style="margin:0">Cette date et toutes les suivantes</button></div>' : ed.confirm ? '<div style="margin:8px 0"><div style="font-size:13px;margin-bottom:6px">Supprimer cet \u00e9v\u00e9nement ?</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="edn" style="margin:0">Non</button><button type="button" class="bouton" id="edo" style="margin:0;background:#a32d2d;color:#fff">Oui</button></div></div>'
       : '<div class="aeact" style="margin:8px 0 0"><button type="button" class="bouton" id="eds" style="margin:0">Enregistrer</button><button type="button" class="bouton" id="edx" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)">Supprimer</button><button type="button" class="bouton" id="edf" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)">Fermer</button></div>';
     return '<div style="border:1.5px solid var(--tx);padding:10px;margin:4px 0 10px"><div style="display:flex;gap:8px"><div style="flex:1"><span class="lbl">Date</span><select class="bx" id="edd">'+optJours(ed.jour)+'</select></div><div style="flex:1"><span class="lbl">Heure</span><select class="bx" id="edh">'+hs.html+'</select></div></div>'+ps+(ed.msg ? '<div class="bandeau">'+esc(ed.msg)+'</div>' : '')+'</div>';
   }
@@ -964,9 +964,12 @@ function dateHeure(opts, surChangement){
         if(g1("edn")) g1("edn").onclick = function(){ S.ed.confirm = false; rendre(); };
         if(g1("edo")) g1("edo").onclick = function(){ S.ed.msg = "\u25aa SUPPRESSION\u2026"; rendre(); appelService({action:"agenda_supprimer", session:sessionGardee(), agenda:S.agenda, id:e0.id, serie:false}).then(function(r){
           if(r && r.ok){ S.ed = null; charger(); if(surChangement) surChangement(); } else { S.ed.confirm = false; S.ed.msg = "\u25aa "+String((r && r.erreur) || "\u00c9CHEC").toUpperCase(); rendre(); } }).catch(function(){ S.ed.confirm = false; S.ed.msg = "\u25aa \u00c9CHEC \u00b7 R\u00c9SEAU"; rendre(); }); };
-        if(g1("eds")) g1("eds").onclick = function(){ var hv = g1("edh").value; if(!hv){ S.ed.msg = "\u25aa CHOISISSEZ UNE HEURE"; rendre(); return; } var ph2 = hv.split(":"), dur = Math.max(15, Math.round((new Date(e0.fin) - new Date(e0.debut))/60000));
+        if(g1("ep1")) g1("ep1").onclick = function(){ S.ed.choix = false; sauver("un"); };
+        if(g1("ep2")) g1("ep2").onclick = function(){ S.ed.choix = false; sauver("suivants"); };
+        if(g1("eds")) g1("eds").onclick = function(){ var hv = g1("edh").value; if(!hv){ S.ed.msg = "\u25aa CHOISISSEZ UNE HEURE"; rendre(); return; } if(e0.serie){ S.ed.choix = true; rendre(); return; } sauver("un"); };
+        function sauver(portee){ var hv = g1("edh").value, ph2 = hv.split(":"), dur = Math.max(15, Math.round((new Date(e0.fin) - new Date(e0.debut))/60000));
           S.ed.msg = "\u25aa ENREGISTREMENT\u2026"; rendre();
-          appelService({action:"agenda_modifier", session:sessionGardee(), agenda:S.agenda, id:e0.id, serie:false, titre:e0.titre, texte:e0.texte || "", a:e0.a || "", debut:S.ed.jour+"T"+pad2(ph2[0])+":"+pad2(ph2[1]), minutes:dur}).then(function(r){
+          appelService({action:"agenda_modifier", session:sessionGardee(), agenda:S.agenda, id:e0.id, portee:portee, titre:e0.titre, texte:e0.texte || "", a:e0.a || "", debut:S.ed.jour+"T"+pad2(ph2[0])+":"+pad2(ph2[1]), minutes:dur}).then(function(r){
             if(r && r.ok){ S.jour = S.ed.jour; S.lundi = lundiDe(depuis(S.jour)); S.ed = null; charger(); if(surChangement) surChangement(); } else { S.ed.msg = "\u25aa "+String((r && r.erreur) || "\u00c9CHEC").toUpperCase(); rendre(); } }).catch(function(){ S.ed.msg = "\u25aa \u00c9CHEC \u00b7 R\u00c9SEAU"; rendre(); }); };
       }
     }
@@ -1042,7 +1045,7 @@ function nouveau(onglet){
   }).catch(function(){ document.getElementById("npart").innerHTML = '<div class="bandeau">▪ LISTE INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 // Modifier une réunion créée dans l'application: même formulaire que « Nouveau message · Réunion », déjà rempli.
-function modifierReunion(e, serie){
+function modifierReunion(e){
   app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">← Retour</a><h1>Modifier la réunion</h1><div id="npart"><div class="bandeau">▪ CHARGEMENT…</div></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   var retour = function(){ retirerBoutonBas(); mesEvenements(); };
   document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); retour(); };
@@ -1054,13 +1057,19 @@ function modifierReunion(e, serie){
     var s2 = document.getElementById("nsuj"); if(s2) s2.className = "bx"+(sujet.trim() ? "" : " rose"); }
   function enregistrer(){
     lire(); var q = dh.lire(); if(!q || !sujet.trim() || !part.courriels().length) return;
-    var bt = document.getElementById("btnbas"); bt.disabled = true; dire("▪ ENREGISTREMENT…");
-    appelService({action:"agenda_modifier", session:sessionGardee(), id:e.id, serie:!!serie, titre:sujet.trim(), texte:e.texte || "", a:part.noms().join(", ").slice(0, 190), debut:q.date+"T"+q.heure, minutes:dur}).then(function(r){
+    if(e.serie){ var z2 = document.getElementById("nport"); if(!z2){ z2 = document.createElement("div"); z2.id = "nport"; document.getElementById("nreste").appendChild(z2); }
+      z2.innerHTML = '<div class="etq" style="margin-top:14px">ENREGISTRER POUR</div><div class="aeact"><button type="button" class="bouton" id="p1">Cette date seulement</button><button type="button" class="bouton" id="p2">Cette date et toutes les suivantes</button></div>';
+      document.getElementById("p1").onclick = function(){ z2.remove(); envoyerMod("un"); }; document.getElementById("p2").onclick = function(){ z2.remove(); envoyerMod("suivants"); }; return; }
+    envoyerMod("un");
+  }
+  function envoyerMod(portee){
+    var q = dh.lire(); var bt = document.getElementById("btnbas"); bt.disabled = true; dire("▪ ENREGISTREMENT…");
+    appelService({action:"agenda_modifier", session:sessionGardee(), id:e.id, portee:portee, titre:sujet.trim(), texte:e.texte || "", a:part.noms().join(", ").slice(0, 190), debut:q.date+"T"+q.heure, minutes:dur}).then(function(r){
       if(r && r.ok){ dire("▪ RÉUNION MODIFIÉE"); setTimeout(retour, 1000); } else { bt.disabled = false; dire("▪ NON MODIFIÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
     }).catch(function(){ bt.disabled = false; dire("▪ NON MODIFIÉE · RÉSEAU"); });
   }
-  function supprimer(){ confirmerOuiNon("Supprimer cette réunion"+(serie ? " et toute la série" : "")+" ?", function(){
-    dire("▪ SUPPRESSION…"); appelService({action:"agenda_supprimer", session:sessionGardee(), id:e.id, serie:!!serie}).then(function(r){
+  function supprimer(){ confirmerOuiNon("Supprimer cette réunion ?", function(){
+    dire("▪ SUPPRESSION…"); appelService({action:"agenda_supprimer", session:sessionGardee(), id:e.id, serie:false}).then(function(r){
       if(r && r.ok) retour(); else dire("▪ NON SUPPRIMÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }).catch(function(){ dire("▪ NON SUPPRIMÉE · RÉSEAU"); }); }, true); }
   appelService({action:"equipe_groupes", session:sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
@@ -1084,16 +1093,16 @@ function mesEvenements(){
     var h = liste.length ? liste.map(function(e, i){ var d0 = new Date(e.debut);
       return '<a href="#" class="ligne" data-i="'+i+'" style="color:inherit;text-decoration:none'+(choisi === i ? ';background:var(--tx);color:var(--noir)' : '')+'"><span>'+esc(e.titre)+'</span><span>'+d0.getDate()+" "+MOIS_LONGS[d0.getMonth()].slice(0,4)+". · "+heureTxt(d0.getHours(), d0.getMinutes())+(e.serie ? " · série" : "")+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR</div>';
     if(choisi !== null && !mode) h += '<div class="aeact"><button type="button" class="bouton" id="mm">Modifier</button><button type="button" class="bouton" id="ms">Supprimer</button></div>';
-    if(choisi !== null && mode){ h += '<div class="etq" style="margin-top:12px">'+(mode === "mod" ? "MODIFIER" : "SUPPRIMER")+'</div><div class="aeact"><button type="button" class="bouton" id="m1">Cet événement</button>'+(liste[choisi].serie ? '<button type="button" class="bouton" id="m2">Toute la série</button>' : '')+'</div>'; }
+    if(choisi !== null && mode){ h += '<div class="etq" style="margin-top:12px">SUPPRIMER</div><div class="aeact"><button type="button" class="bouton" id="m1">Cet événement</button>'+(liste[choisi].serie ? '<button type="button" class="bouton" id="m2">Toute la série</button>' : '')+'</div>'; }
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
     el.innerHTML = h;
     Array.prototype.forEach.call(el.querySelectorAll("[data-i]"), function(a){ a.onclick = function(e){ e.preventDefault(); choisi = +a.getAttribute("data-i"); mode = ""; msg = ""; dessiner(); }; });
-    var bm = document.getElementById("mm"); if(bm) bm.onclick = function(){ if(liste[choisi].serie){ mode = "mod"; dessiner(); } else modifierReunion(liste[choisi], false); };
+    var bm = document.getElementById("mm"); if(bm) bm.onclick = function(){ modifierReunion(liste[choisi]); };
     var bs = document.getElementById("ms"); if(bs) bs.onclick = function(){ mode = "sup"; dessiner(); };
     function sup(serie){ var e = liste[choisi]; msg = "▪ SUPPRESSION…"; dessiner();
       appelService({action:"agenda_supprimer", session:sessionGardee(), id:e.id, serie:serie}).then(function(r){ if(r && r.ok){ choisi = null; mode = ""; msg = ""; charger(); } else { msg = "▪ "+String((r && r.erreur) || "ÉCHEC").toUpperCase(); dessiner(); } }).catch(function(){ msg = "▪ ÉCHEC · RÉSEAU"; dessiner(); }); }
-    var b1 = document.getElementById("m1"); if(b1) b1.onclick = function(){ if(mode === "mod") modifierReunion(liste[choisi], false); else sup(false); };
-    var b2 = document.getElementById("m2"); if(b2) b2.onclick = function(){ if(mode === "mod") modifierReunion(liste[choisi], true); else sup(true); };
+    var b1 = document.getElementById("m1"); if(b1) b1.onclick = function(){ sup(false); };
+    var b2 = document.getElementById("m2"); if(b2) b2.onclick = function(){ sup(true); };
   }
   function charger(){ appelService({action:"agenda_mes", session:sessionGardee()}).then(function(r){ liste = (r && r.ok) ? r.evenements : []; dessiner(); }).catch(function(){ var el = document.getElementById("me"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }); }
   charger();
