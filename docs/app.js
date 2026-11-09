@@ -39,7 +39,15 @@ function decorerTitres(){
     if(retour) page.appendChild(retour);
   });
 }
-new MutationObserver(decorerTitres).observe(app, {childList: true, subtree: true});
+function majRetour(){
+  Array.prototype.forEach.call(app.querySelectorAll(".page.bl-ok > a.retour"), function(r){
+    r.style.display = "none";
+    var tient = document.documentElement.scrollHeight <= window.innerHeight + 2;
+    r.style.display = tient ? "none" : "";
+  });
+}
+new MutationObserver(function(){ decorerTitres(); majRetour(); setTimeout(majRetour, 400); }).observe(app, {childList: true, subtree: true});
+window.addEventListener("resize", majRetour);
 
 // Ordre d'affichage de l'accueil (choisi par la direction) : numéros de SECTIONS. Messages 0, Manuel 1, Autoévaluation 2, Rémunération 3, Tableau de bord 4, Plan d'incendie 5, Calendrier 6, Rencontre 7, Mon profil 8.
 var PICTO_DE = ["Messages", "Manuel", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Calendrier", "Rencontre", "Mon profil", "Mes heures"];
