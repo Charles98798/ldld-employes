@@ -11,11 +11,11 @@ function eaTrier(l){
     return d !== 0 ? d : String(a.nom).localeCompare(String(b.nom), "fr", {sensitivity: "base"});
   });
 }
-function eaOuvrir(){
+function eaOuvrir(nomDebut){
   app.innerHTML = '<div class="page ppx ea"><a class="retour" href="#" id="retour">Retour</a><div id="ea_app"><p class="finnote">Chargement…</p></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   appelService({action: "emp_donnees", session: sessionGardee()}).then(function(r){
-    if(r && r.ok){ EA.d = {employes: eaTrier(r.r.employes || [])}; EA.i = 0; eaRendu(); }
+    if(r && r.ok){ EA.d = {employes: eaTrier(r.r.employes || [])}; EA.i = 0; if(nomDebut){ EA.d.employes.forEach(function(e, k){ if(String(e.nom).toLowerCase().indexOf(nomDebut) === 0 && EA.i === 0) EA.i = k; }); } eaRendu(); }
     else document.getElementById("ea_app").innerHTML = '<p class="finnote">' + eaEsc((r && r.erreur) || "Échec.") + '</p>';
   }).catch(function(){ document.getElementById("ea_app").innerHTML = '<p class="finnote">Réseau indisponible.</p>'; });
 }
