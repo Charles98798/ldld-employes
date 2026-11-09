@@ -236,6 +236,7 @@ function menu(){
     ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'"><span>'+picto(PICTO_DE[i])+SECTIONS[i]+'</span></a>'; }).join("") +
     (peutEcrire() ? '' : '<a href="#" id="entr">'+picto("Entretien machinerie")+'Entretien machinerie</a>') +
     '<a class="sortie" href="#" id="sortie">Déconnexion</a></div>';
+  window.scrollTo(0, 0);   // l'accueil s'ouvre toujours en haut (le clavier du code de connexion peut avoir fait défiler la page)
   if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ a.style.animationDelay = (0.7 + k * 0.09) + "s"; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = (0.7 + k * 0.09) + "s"; });
   Array.prototype.forEach.call(app.querySelectorAll("a[data-i]"), function(a){
     a.onclick = function(e){ e.preventDefault(); section(+a.getAttribute("data-i")); };
