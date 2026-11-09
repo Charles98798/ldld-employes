@@ -577,3 +577,6 @@ textarea.bx{min-height:90px;resize:vertical}
 @keyframes icBat{to{clip-path:inset(0 0 0 0)}}}
 .page h1 .ic{width:30px;height:30px;fill:currentColor;flex:none;margin-right:14px;position:relative;top:-1px}
 .vue h1 .ic{width:24px;height:24px;margin-right:10px;top:-2px}
+/* Accueil : symbole seul, sous la barre d'état du téléphone */
+.menu.accueil{padding-top:calc(max(env(safe-area-inset-top,0px),47px) + 8px)}
+.menu .logo.sym{width:110px;height:auto;aspect-ratio:auto;margin-bottom:22px}

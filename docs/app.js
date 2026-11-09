@@ -203,7 +203,7 @@ function menu(){
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger();
   var animer = !menu.anime; menu.anime = true;
-  app.innerHTML = '<div class="menu'+(animer ? ' anim' : '')+'"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' +
+  app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' +
     (peutEcrire() ? '<a href="#" id="resp">'+picto(MOI.role === "direction" ? "Direction" : "Gestionnaire")+(MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</a>' : '') +
     ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'"><span>'+picto(PICTO_DE[i])+SECTIONS[i]+'</span></a>'; }).join("") +
     (peutEcrire() ? '' : '<a href="#" id="entr">'+picto("Mes entretiens")+'Mes entretiens</a>') +
