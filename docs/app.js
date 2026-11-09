@@ -1545,11 +1545,10 @@ if("serviceWorker" in navigator){
   navigator.serviceWorker.addEventListener("controllerchange", function(){ if(!avaitControleur || rechargee) return; rechargee = true; var a = document.activeElement; if(a && /INPUT|TEXTAREA/.test(a.tagName)) return; location.reload(); });
   window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").then(function(r){
     try { r.update(); } catch(e){}
-    // Retour dans l'application (écran d'accueil rouvert): nouvelle vérification de version, au plus une fois par minute
-    var derniere = Date.now();
-    document.addEventListener("visibilitychange", function(){
-      if(document.visibilityState !== "visible" || Date.now() - derniere < 60000) return;
-      derniere = Date.now(); try { r.update(); } catch(e){}
-    });
+    // Mise à jour automatique: vérification à chaque retour dans l'application et toutes les 30 secondes tant qu'elle est ouverte
+    function verif(){ try { r.update(); } catch(e){} }
+    document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible") verif(); });
+    window.addEventListener("focus", verif); window.addEventListener("pageshow", verif);
+    setInterval(function(){ if(document.visibilityState === "visible") verif(); }, 30000);
   }).catch(function(){}); });
 }
