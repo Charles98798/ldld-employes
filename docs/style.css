@@ -685,6 +685,5 @@ textarea.bx{min-height:90px;resize:vertical}
 #tb .gc{color:#2e9d46}#tb .ge{color:#8D806A}#tb .gn{color:#1D1D1B}#tb .gd{color:#c2bcad}
 #tb .gjc .d{background:#E3DFD3}#tb .gjc .e{background:#8D806A}#tb .gjc .n{background:#fff;box-shadow:inset 0 0 0 1px #8D806A}
 #tb .gjd{color:#4a443a}
-/* Cartes Charges de travail: barres aux couleurs du graphique, pourcentage du cumul à gauche */
+/* Cartes Charges de travail: barres aux couleurs du graphique */
 #tb .tbarre{background:#CBC6B8}#tb .tbarre i{background:#8D806A}
-#tb .tcum{flex-direction:row-reverse;justify-content:flex-end;gap:12px}
