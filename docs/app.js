@@ -1412,6 +1412,7 @@ function contactsResp(){
     function(){ var el = document.getElementById("ctl"); if(el) el.innerHTML = '<div class="bandeau">▪ CONTACTS INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
 // Calendrier : congés de l'entreprise (fériés en noir, fermetures en vert) et réunions de l'employé (jour encadré); un mois à la fois.
+var MOIS_COURTS = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
 var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 function calendrier(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
@@ -1437,9 +1438,9 @@ function calendrier(){
       }
       document.getElementById("cg").innerHTML = g;
       var auj = new Date(); auj.setHours(0,0,0,0); var deb = iso(auj.getFullYear(), auj.getMonth(), auj.getDate());
-      var li = jours.filter(function(x){ return x.d >= deb; }).slice(0, 8);
+      var li = jours.filter(function(x){ return x.d >= deb; });
       document.getElementById("cl").innerHTML = li.length ? li.map(function(x){ var a = x.d.split("-");
-        return '<div class="cli"><span class="cdt">'+(+a[2])+" "+MOIS_LONGS[+a[1]-1].slice(0,4).toUpperCase()+".</span><span>"+esc(x.n)+'</span>'+(x.h ? '<span class="chh">'+esc(x.h)+'</span>' : '')+'</div>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR</div>';
+        return '<div class="cli"><span class="cdt">'+(+a[2])+" "+MOIS_COURTS[+a[1]-1]+"</span><span>"+esc(x.n)+'</span>'+(x.h ? '<span class="chh">'+esc(x.h)+'</span>' : '')+'</div>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR</div>';
     }
     document.getElementById("cp").onclick = function(){ m.setMonth(m.getMonth()-1); dessiner(); };
     document.getElementById("cn").onclick = function(){ m.setMonth(m.getMonth()+1); dessiner(); };
