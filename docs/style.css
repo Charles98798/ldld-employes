@@ -755,3 +755,7 @@ textarea.bx{min-height:90px;resize:vertical}
 #pr .tbarre{background:#CBC6B8;margin:8px 0 2px;height:8px;position:relative;box-shadow:none}#pr .tbarre i{display:block;height:100%;background:#1D1D1B}
 #pr .pas{padding:3px 8px;font-size:12px;letter-spacing:0;text-transform:none}#pr .pas.dans{background:#8EFF60;color:#1D1D1B}#pr .pas.sous{border:1px solid #1D1D1B;color:#1D1D1B}
 .fin .fincols.m,.fin .finl.m{grid-template-columns:1fr 56px 90px}
+/* Publication 113: blocs du titre aux proportions du logo (carré ← 78 x 56, titre 43 de haut décalé de la moitié, 3 px d'écart) */
+.bl{min-height:71px;margin:4px 0 20px}
+.bl .rt{width:78px;height:56px;min-height:56px}
+.bl h1.ti{margin:28px 0 0 81px;min-height:43px;max-width:calc(100% - 81px)}
