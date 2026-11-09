@@ -636,3 +636,8 @@ textarea.bx{min-height:90px;resize:vertical}
 /* Bande fixe en haut: rien (logo, titre, texte qui défile) ne passe sous l'heure du téléphone; petit espace de 6 px sous la zone sûre */
 .page::before,.menu::before{content:"";position:fixed;top:0;left:0;right:0;height:calc(max(env(safe-area-inset-top,0px),47px) + 6px);background:var(--noir);z-index:15;pointer-events:none}
 .ef .eft{padding:14px 0 6px;font-size:16px;font-weight:400;color:var(--pn)}
+.ef .efres{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin:4px 0 14px}
+.ef .efres small{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--pg)}
+.ef .efres b{display:block;font-size:20px;font-weight:300;margin-top:4px}
+.ef .efsh{cursor:pointer;margin:12px 0 4px}.ef .efsh .lab{flex:1}.ef .efst{margin-left:auto;font-size:15px;color:var(--pn)}
+.ef .efsc{display:none}.ef .efs.o>.efsc{display:block}
