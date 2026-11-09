@@ -1521,17 +1521,24 @@ function rencontre(){
   }).catch(function(){ var el = document.getElementById("rc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function heures(){
-  // Données fictives en attendant les vraies heures du logiciel de gestion : aucun appel au service. Tout tient sur un écran.
-  var cette = [["Lun 2","8 h 00"],["Mar 3","7 h 53"],["Mer 4","8 h 11"],["Jeu 5","8 h 04"],["Ven 6","7 h 57"],["Sam 7","6 h 39"],["Dim 8","—"]];
-  var passee = [["Lun 26","8 h 06"],["Mar 27","7 h 48"],["Mer 28","8 h 18"],["Jeu 29","7 h 54"],["Ven 30","8 h 06"],["Sam 31","—"],["Dim 1","—"]];
-  function col(t, r, tot){ return '<div><h2 class="h2">'+t+'</h2>'+r.map(function(x){ return '<div class="hc"><span>'+x[0]+'</span><b>'+x[1]+'</b></div>'; }).join("")+'<div class="htot"><span>Total</span><b>'+tot+'</b></div></div>'; }
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes heures</h1>' +
-    '<div class="hgros" style="margin-top:18px">6 h 39</div><div class="hsous">Faites depuis le début de la journée</div>' +
-    '<h2 class="h2" style="margin-top:22px">Aujourd\'hui</h2>' +
-    '<div class="hl"><span class="t">7 h 58</span><span>Arrivée</span></div><div class="hl"><span class="t">12 h 02</span><span>Pause</span></div><div class="hl"><span class="t">13 h 06</span><span>Retour</span></div>' +
-    '<div class="hcols">'+col("Cette semaine", cette, "38 h 47")+col("Semaine passée", passee, "40 h 12")+'</div>' +
-    '<p class="hnote">Heures d\'exemple.</p></div>';
+  // Vraies heures du logiciel de gestion (pointages de la borne, mises à jour aux 15 minutes). Tout tient sur un écran.
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes heures</h1><div id="hz"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  function hm(m){ if(m === null || m === undefined) return "—"; var h = Math.floor(m / 60), n = m % 60; return h + " h " + (n < 10 ? "0" : "") + n; }
+  var JOURS = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+  function ligne(x){ var d = new Date(x.date + "T12:00:00"); return [JOURS[d.getDay()] + " " + d.getDate(), hm(x.min)]; }
+  function col(t, r){ var tot = 0, vu = false; r.forEach(function(x){ if(x.min !== null){ tot += x.min; vu = true; } }); return '<div><h2 class="h2">'+t+'</h2>'+r.map(function(x){ var l = ligne(x); return '<div class="hc"><span>'+l[0]+'</span><b>'+l[1]+'</b></div>'; }).join("")+'<div class="htot"><span>Total</span><b>'+(vu ? hm(tot) : "—")+'</b></div></div>'; }
+  appelService({action:"heures", session:sessionGardee()}).then(function(r){
+    var z = document.getElementById("hz"); if(!z) return;
+    if(!r || !r.ok){ z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; return; }
+    var pts = (r.pointagesAuj || []).map(function(x, i, a){
+      var lib = x.s === "entree" ? (i === 0 ? "Arrivée" : "Retour") : (i === a.length - 1 && r.etat === "parti" ? "Départ" : "Pause");
+      return '<div class="hl"><span class="t">'+hm(Number(x.t.slice(0,2)) * 60 + Number(x.t.slice(3,5)))+'</span><span>'+lib+'</span></div>';
+    }).join("");
+    z.innerHTML = '<div class="hgros" style="margin-top:18px">'+(r.minutesAuj === null || r.minutesAuj === undefined ? "—" : hm(r.minutesAuj))+'</div><div class="hsous">Faites depuis le début de la journée</div>' +
+      (pts ? '<h2 class="h2" style="margin-top:22px">Aujourd\'hui</h2>'+pts : '') +
+      '<div class="hcols">'+col("Cette semaine", r.cette || [])+col("Semaine passée", r.passee || [])+'</div>';
+  }).catch(function(){ var z = document.getElementById("hz"); if(z) z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; });
 }
 function section(i){
   if(i === 0) return messages("");
