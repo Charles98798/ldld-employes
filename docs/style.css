@@ -643,3 +643,8 @@ textarea.bx{min-height:90px;resize:vertical}
 .ef .efsc{display:none}.ef .efs.o>.efsc{display:block}
 .ef .efk{padding:9px 0}.ef .efsc{margin-top:6px}
 .ef .eftb{color:var(--pn);padding-top:12px;padding-bottom:12px}
+.ef .efr{cursor:pointer}.ef .efg{display:none}.ef .efr.o+.efg{display:block}
+.ef .efd{font-size:13px;padding-left:14px;color:var(--pt)}
+.colonnes .txk{display:grid;grid-template-columns:40% 1fr;column-gap:14px;row-gap:12px;margin:10px 0}
+.colonnes .txk dt{margin:0;align-self:start;padding-top:3px}
+.colonnes .txk dd{margin:0}
