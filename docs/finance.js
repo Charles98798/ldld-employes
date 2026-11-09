@@ -52,7 +52,7 @@ function financeOuvrir(){
     '<a class="retour" href="#" id="retour">Retour</a></div>';
   FIN_PERIODE = "A"; finRendu();
   document.getElementById("fin_sel").onchange = function(){ FIN_PERIODE = this.value; finRendu(); };
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); financeMenu(); };
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); finRetour(); };
 }
 
 // ===== Graphiques d'analyse (Direction seulement) — données FICTIVES, même sélecteur Mois | Trimestre | Année =====
@@ -136,14 +136,42 @@ function financeGraphique(type){
       el.onchange = function(){ var k = el.getAttribute("data-k"), v = +el.value; FG.act = k;
         if(k === "M"){ FG.m = v; FG.t = Math.floor(v/3); } else if(k === "T"){ FG.t = v; FG.m = Math.min(v*3+2, 9); } else { FG.a = v; }
         dessiner(); }; });
-    document.getElementById("retour").onclick = function(e){ e.preventDefault(); financeMenu(); };
+    document.getElementById("retour").onclick = function(e){ e.preventDefault(); finRetour(); };
   }
   dessiner();
 }
+var FIN_ORIGINE = "conseil";
+function finRetour(){ if(FIN_ORIGINE === "finances") financesMenu(); else financeMenu(); }
+// Conseil d'administration: Production, Indicateurs et ratios par catégorie (sans montants)
 function financeMenu(){
+  FIN_ORIGINE = "conseil";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Conseil d\'administration</h1>' +
-    '<a class="doc" href="#" id="fm0"><span>▪ Indicateurs</span></a><a class="doc" href="#" id="fm1"><span>▪ Ratios vs objectifs</span></a><a class="doc" href="#" id="fm2"><span>▪ Ventes vs an passé</span></a><a class="doc" href="#" id="fm3"><span>▪ Trésorerie</span></a><a class="doc" href="#" id="fm4"><span>▪ Comptes clients</span></a></div>';
+    '<a class="doc" href="#" id="fm5"><span>'+picto("Production")+'Production</span></a><a class="doc" href="#" id="fm0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fm1"><span>'+picto("Ratios par catégorie")+'Ratios par catégorie</span></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  document.getElementById("fm5").onclick = function(e){ e.preventDefault(); productionOuvrir(); };
   document.getElementById("fm0").onclick = function(e){ e.preventDefault(); financeOuvrir(); };
-  [["fm1","ratios"],["fm2","ventes"],["fm3","tres"],["fm4","cli"]].forEach(function(a){ document.getElementById(a[0]).onclick = function(e){ e.preventDefault(); financeGraphique(a[1]); }; });
+  document.getElementById("fm1").onclick = function(e){ e.preventDefault(); financeGraphique("ratios"); };
+}
+// Finances (Direction): tout le financier, y compris la copie des ratios par catégorie avec montants
+function financesMenu(){
+  FIN_ORIGINE = "finances";
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Finances</h1>' +
+    '<a class="doc" href="#" id="fi0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fi1"><span>'+picto("Ratios par catégorie")+'Ratios par catégorie</span></a><a class="doc" href="#" id="fi2"><span>'+picto("Ventes vs an passé")+'Ventes vs an passé</span></a><a class="doc" href="#" id="fi3"><span>'+picto("Trésorerie")+'Trésorerie</span></a><a class="doc" href="#" id="fi4"><span>'+picto("Comptes clients")+'Comptes clients</span></a><a class="doc" href="#" id="fi5"><span>'+picto("États financiers")+'États financiers</span></a></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  document.getElementById("fi0").onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeOuvrir(); };
+  document.getElementById("fi1").onclick = function(e){ e.preventDefault(); financesRatios(); };
+  [["fi2","ventes"],["fi3","tres"],["fi4","cli"]].forEach(function(a){ document.getElementById(a[0]).onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeGraphique(a[1]); }; });
+  document.getElementById("fi5").onclick = function(e){ e.preventDefault(); efOuvrir(); };
+}
+// Copie des ratios par catégorie avec les montants (les montants viennent de QuickBooks: « — » en attendant)
+function financesRatios(){
+  FIN_ORIGINE = "finances";
+  var h = '<div class="page ppx fin"><a class="retour" href="#" id="retour">Retour</a><h1>Ratios</h1><div class="finnote">Pourcentage des ventes et montant, ' + FIN_MOIS_LONG[FIN_DERNIER] + '</div>';
+  FIN_SECTIONS.slice(1).forEach(function(sec, i){
+    h += '<div class="sect"><span class="num">0'+(i+1)+'</span><span class="lab">'+sec.t+'</span></div><div class="fincols m"><span></span><span>%</span><span>MONTANT</span></div>';
+    sec.l.forEach(function(l){ h += '<div class="finl m"><span class="n">▪ '+l[0]+'</span><span>'+finPct(l[2])+'</span><span>—</span></div>'; });
+  });
+  h += '<div class="finnote">Les montants s\'affichent avec QuickBooks</div><a class="retour" href="#" id="retour2">Retour</a></div>';
+  app.innerHTML = h;
+  document.getElementById("retour").onclick = document.getElementById("retour2").onclick = function(e){ e.preventDefault(); financesMenu(); };
 }

@@ -729,3 +729,29 @@ textarea.bx{min-height:90px;resize:vertical}
 #tb .tk .tbarre{margin:8px 0 2px;height:8px;background:transparent;box-shadow:none}
 #tb .tk .tbarre i{background:#1D1D1B}
 #tb .tk .tbarre u{top:-4px;bottom:-4px;width:2px;background:#2fa84f;box-shadow:none}
+/* Page Production du Conseil */
+#pr .prsel{display:flex;gap:16px;margin:4px 0 8px}#pr .prsel label{flex:1;min-width:0}
+#pr .prsel select{width:100%;background:transparent;border:0;border-bottom:1px solid #8D806A;border-radius:0;color:var(--tx);font:inherit;font-size:15px;padding:8px 0;-webkit-appearance:none;appearance:none}
+#pr .prs{display:flex;align-items:baseline;gap:12px;margin:26px 0 6px}#pr .prs .num{font-size:26px;font-weight:300}#pr .prs .lab{font-size:13px;letter-spacing:.2em;text-transform:uppercase}
+#pr .prsub{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8D806A;margin:0 0 6px}
+#pr .tcarte{background:#E3DFD3;color:#1D1D1B}
+#pr .prc .tgros{font-size:44px}
+#pr .prb{display:flex;justify-content:space-between;font-size:12px;margin-top:8px;color:#4a443a}#pr .prb b{color:#1D1D1B}
+#pr .prc.prv .tbarre{opacity:.4}
+#pr .prl{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0}#pr .prl span{font-size:15px}#pr .prl b{font-size:30px;font-weight:300}
+
+/* Cartes du haut comme Trak: carré + titre, indicateur en haut à droite, valeur et moyenne sur une ligne, barre pleine largeur */
+#pr .tcarte.tk{display:block;padding:12px 14px}
+#pr .tk .tct{display:flex;justify-content:space-between;align-items:center;grid-column:auto}
+#pr .tk .tq{display:inline-block;width:9px;height:9px;margin-right:8px}
+#pr .tk .tind{grid-column:auto;grid-row:auto}
+#pr .tk .tl{display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px}
+#pr .tk .tgros{min-width:0;grid-row:auto}
+#pr .tk .tcib{grid-column:auto;grid-row:auto;margin:0;text-align:right;font-size:12px}
+#pr .tk .tbarre{margin:8px 0 2px;height:8px;background:transparent;box-shadow:none}
+#pr .tk .tbarre i{background:#1D1D1B}
+#pr .tk .tbarre u{top:-4px;bottom:-4px;width:2px;background:#2fa84f;box-shadow:none}
+#pr .tct{color:#6f6556;font-size:11px;letter-spacing:.14em;text-transform:uppercase}#pr .tgros,#pr .tgros small,#pr .tcib{color:#1D1D1B}#pr .tgros small{font-size:13px;margin-left:4px}
+#pr .tbarre{background:#CBC6B8;margin:8px 0 2px;height:8px;position:relative;box-shadow:none}#pr .tbarre i{display:block;height:100%;background:#1D1D1B}
+#pr .pas{padding:3px 8px;font-size:12px;letter-spacing:0;text-transform:none}#pr .pas.dans{background:#8EFF60;color:#1D1D1B}#pr .pas.sous{border:1px solid #1D1D1B;color:#1D1D1B}
+.fin .fincols.m,.fin .finl.m{grid-template-columns:1fr 56px 90px}
