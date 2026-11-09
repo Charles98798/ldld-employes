@@ -168,7 +168,7 @@ function menu(){
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger();
   app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' +
-    (peutEcrire() ? '<a href="#" id="resp">▪ '+(MOI.role === "direction" ? "Direction" : "Responsable")+'</a>' : '') +
+    (peutEcrire() ? '<a href="#" id="resp">▪ '+(MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</a>' : '') +
     ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'">▪ '+SECTIONS[i]+'</a>'; }).join("") +
     (peutEcrire() ? '' : '<a href="#" id="entr">▪ Mes entretiens</a>') +
     '<img class="symbole" src="assets/LDLD_symbole_blanc_transparent.png" alt="">' +
@@ -692,7 +692,7 @@ function prefsNotifs(){
 }
 // Page Responsable (responsables et direction seulement; le service refuse les autres) : Contacts cliquables (appel, texto, courriel).
 function responsable(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Responsable")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span><em>→</em></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span><em>→</em></a><a class="doc" href="#" id="rpe"><span>▪ Positionnement embauche</span><em>→</em></a><a class="doc" href="#" id="rpm"><span>▪ Positionnement employé</span><em>→</em></a><a class="doc" href="#" id="rem"><span>▪ Employés</span><em>→</em></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span><em>→</em></a>' : "")+'</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span><em>→</em></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span><em>→</em></a><a class="doc" href="#" id="rpe"><span>▪ Positionnement embauche</span><em>→</em></a><a class="doc" href="#" id="rpm"><span>▪ Positionnement employé</span><em>→</em></a><a class="doc" href="#" id="rcf"><span>▪ Conseil d\'administration</span><em>→</em></a><a class="doc" href="#" id="rem"><span>▪ Employés</span><em>→</em></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span><em>→</em></a>' : "")+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("message"); };
   document.getElementById("rsc").onclick = function(e){ e.preventDefault(); suiviCharge(); };
@@ -701,6 +701,7 @@ function responsable(){
   document.getElementById("rk").onclick = function(e){ e.preventDefault(); attributionPage("casier"); };
   document.getElementById("re").onclick = function(e){ e.preventDefault(); entretien(); };
   var rpo = document.getElementById("rpo"); if(rpo) rpo.onclick = function(e){ e.preventDefault(); portrait(); };
+  var rcf = document.getElementById("rcf"); if(rcf) rcf.onclick = function(e){ e.preventDefault(); financeMenu(); };
   var rpm = document.getElementById("rpm"); if(rpm){ rpm.onclick = function(e){ e.preventDefault(); posEmpOuvrir(); }; posEmpPrecharger(); }
   var rpe = document.getElementById("rpe"); if(rpe){ rpe.onclick = function(e){ e.preventDefault(); embauchePos(); }; embPrecharger(); }
   var rem = document.getElementById("rem"); if(rem) rem.onclick = function(e){ e.preventDefault(); gestionEmployes(); };

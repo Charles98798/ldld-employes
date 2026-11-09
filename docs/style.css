@@ -529,3 +529,26 @@ textarea.bx{min-height:90px;resize:vertical}
 .ppx .decision>div:nth-child(3)>.note{margin-bottom:12px}
 .ppx .decision>div:nth-child(2)>.note,.ppx .decision>div:nth-child(3)>.note{display:none}.ppx .decision>div:nth-child(3)>.res{margin-bottom:12px}
 .ppx .legende .leg{color:var(--pn)}
+.fin .pph{border-bottom:0}
+.fin .finsous{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--pg);margin:8px 0 18px;display:flex;align-items:center;gap:12px}
+.fin .b2n{background:var(--pn);color:#fff;font-size:11px;letter-spacing:.14em;padding:2px 8px}
+.fin .finsel{font:inherit;font-size:18px;font-weight:300;border:0;border-bottom:1.5px solid var(--pn);background:transparent;color:var(--pn);padding:8px 0;border-radius:0;width:150px;margin-bottom:14px}
+.fin .fincols,.fin .finl{display:grid;grid-template-columns:1fr 46px 46px 44px 38px;align-items:baseline;gap:4px}
+.fin .fincols{font-size:9px;letter-spacing:.12em;color:var(--pg);text-align:right;margin-top:4px}
+.fin .fincols span:first-child{text-align:left}
+.fin .finl{padding:10px 0;border-bottom:1px solid var(--pl);font-size:15px;font-weight:300;text-align:right;white-space:nowrap}
+.fin .finl .n{text-align:left;font-size:15px;overflow:hidden}.fin .finl .obj{color:var(--pt)}
+.fin .finnote{font-size:12px;letter-spacing:.06em;color:var(--pg);margin-top:12px}
+.fin .retour{width:150px;margin-top:26px}
+.fin *{font-weight:300}.fin .retour{font-weight:600}
+
+.fin .fgdesc{font-size:13px;color:var(--pg);margin:10px 0 14px}
+.fin .fgsel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.fin .fgb{display:block;border-bottom:1.5px solid var(--pn);padding:4px 6px 2px}
+.fin .fgb span{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--pg)}
+.fin .fgb select{font:inherit;font-size:13px;font-weight:300;border:0;background:transparent;color:var(--pn);width:100%;padding:2px 0 4px;appearance:none;-webkit-appearance:none;border-radius:0}
+.fin .fgb.on{background:var(--pn)}.fin .fgb.on span{color:#cfcbc2}.fin .fgb.on select{color:#fff}.fin .fgb.on select option{color:#000}
+.fin .finsvg .fgl{fill:var(--pn);font-size:11px}
+.fin .fgcl{margin:14px 0}.fin .fgcn{display:flex;justify-content:space-between;font-size:15px}
+.fin .fgbar{background:#bdb9ae;height:14px;margin-top:6px}.fin .fgbar i{display:block;height:100%;background:var(--pn)}
+.fin .finsvg{display:block;width:100%;height:auto;margin:10px 0 6px}.fin .finsvg text{font-size:10px;fill:var(--pg);letter-spacing:.05em;font-family:Inter,sans-serif}.fin .finsvg .fgl{font-size:11px;fill:var(--pn)}
