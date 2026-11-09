@@ -12,12 +12,29 @@ var PICTOS = {
  "Mon profil": "M8 2h8v8h-8zM4 12h16v10h-16z",
  "Mes entretiens": "M4 2 L15 2 L20 7 L20 22 L4 22zM8 10h8v2h-8zM8 14h8v2h-8zM8 18h5v2h-5z",
  "Direction": "M2 3h11v9h-11zM14 9h8v9h-8z",
- "Gestionnaire": "M2 3h11v9h-11zM14 9h8v9h-8z"
+ "Gestionnaire": "M2 3h11v9h-11zM14 9h8v9h-8z",
+ "Suivi de charge": "M2 3h16v4h-16zM2 10h10v4h-10zM2 17h20v4h-20z",
+ "Stationnement": "M2 2h20v20h-20zM5 5h14v14h-14z",
+ "Casier": "M2 2h20v20h-20zM4 4h7v7h-7zM13 4h7v7h-7zM4 13h7v7h-7zM13 13h7v7h-7z",
+ "Finance": "M2 2h2v20h-2zM2 20h20v2h-20zM6 16 L10 11 L14 14 L21 5 L21 9 L14 18 L10 15 L6 19z",
+ "Portrait d’un employé": "M2 2h20v20h-20zM5 5h14v14h-14zM9 7h6v5h-6zM7 14h10v3h-10z",
+ "Positionnement": "M2 17h5v5h-5zM7 12h5v10h-5zM12 7h5v15h-5zM17 2h5v20h-5z"
 };
 function picto(n){ return PICTOS[n] ? '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="'+PICTOS[n]+'"/></svg>' : '▪ '; }
 // Étape 1 : démarrage, connexion et menu. Aucune donnée réelle : la connexion et les sections sont des gabarits.
 var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Calendrier", "Rencontre", "Mon profil", "Mes heures"];
 var app = document.getElementById("app");
+// Pictogramme à gauche du titre de chaque page de section (même jeu que le menu de l'accueil).
+var PICTO_TITRES = {"mes heures":"Mes heures","messages":"Messages","tableau de bord":"Tableau de bord","calendrier":"Calendrier","rencontre":"Rencontre","autoévaluation":"Autoévaluation","rémunération":"Rémunération","manuel d'employé":"Manuel","plan d'incendie":"Plan d'incendie","mon profil":"Mon profil","mes entretiens":"Mes entretiens","direction":"Direction","gestionnaire":"Gestionnaire","suivi de charge":"Suivi de charge","stationnement":"Stationnement","casier":"Casier","finance":"Finance","portrait d'un employé":"Portrait d’un employé","positionnement embauche":"Positionnement"};
+function decorerTitres(){
+  Array.prototype.forEach.call(app.querySelectorAll(".page h1:not([data-pt])"), function(h){
+    h.setAttribute("data-pt", "1");
+    var n = PICTO_TITRES[h.textContent.trim().toLowerCase().replace(/’/g, "'")];
+    if(n && PICTOS[n]) h.insertAdjacentHTML("afterbegin", picto(n));
+  });
+}
+new MutationObserver(decorerTitres).observe(app, {childList: true, subtree: true});
+
 // Ordre d'affichage de l'accueil (choisi par la direction) : numéros de SECTIONS. Messages 0, Manuel 1, Autoévaluation 2, Rémunération 3, Tableau de bord 4, Plan d'incendie 5, Calendrier 6, Rencontre 7, Mon profil 8.
 var PICTO_DE = ["Messages", "Manuel", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Calendrier", "Rencontre", "Mon profil", "Mes heures"];
 var ORDRE_MENU = [9, 0, 4, 6, 7, 2, 3, 1, 5, 8];
