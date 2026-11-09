@@ -67,7 +67,7 @@ function embauchePos(){
 function embSortir(){ EMB.page = false; EMB.surD = null; retirerBoutonBas(); responsable(); }
 function embDessiner(){
   var z = document.getElementById("pe"); if(!z) return; var S = EMB.S;
-  if(!EMB.D){ retirerBoutonBas(); z.innerHTML = '<h1>Positionnement embauche</h1><div class="bandeau">'+(EMB.erreur ? "▪ "+esc(EMB.erreur.toUpperCase())+" · TOUCHEZ POUR RÉESSAYER" : "▪ CHARGEMENT…")+'</div>';
+  if(!EMB.D){ retirerBoutonBas(); z.innerHTML = '<h1>Positionnement embauche</h1><div class="bandeau">'+(EMB.erreur ? "▪ "+esc(EMB.erreur.toUpperCase())+" · TOUCHEZ POUR RÉESSAYER" : "")+'</div>';
     if(EMB.erreur) z.querySelector(".bandeau").onclick = function(){ EMB.erreur = ""; EMB.D = null; embPrecharger(); embDessiner(); }; return; }
   if(S.page === 1) embPage1(z); else if(S.page === 2) embPage2(z); else embPage3(z);
 }
