@@ -764,6 +764,12 @@ function responsable(){
   var nd = nbDemandesNeuves(); if(nd){ var sp = document.createElement("span"); sp.className = "nombre"; sp.style.marginLeft = "10px"; sp.textContent = pastilleTexte(nd); document.getElementById("rrd").firstChild.appendChild(sp); }
 }
 // Stationnement et Casier : choisir un employé, voir son numéro, le libérer (✕, avec confirmation) ou lui en attribuer un libre.
+function grilleCasiers(libres){
+  var l = {}; (libres || []).forEach(function(n){ l[String(n)] = 1; });
+  var h = '<div class="gcas">';
+  for(var n = 1; n <= 60; n++) h += '<b class="'+(l[String(n)] ? "lib" : "occ")+'">'+n+'</b>';
+  return h + '</div>';
+}
 function attributionPage(genre){
   var estPlace = genre === "place", titre = estPlace ? "Stationnement" : "Casier";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+titre+'</h1><div id="ap"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
@@ -772,7 +778,8 @@ function attributionPage(genre){
   function champsDe(e){ return estPlace ? [["place","Place"]] : [["casier1","Casier"]].concat(e.casier2 ? [["casier2","Casier 2"]] : []); }
   function dessiner(){
     var el = document.getElementById("ap"); if(!el) return;
-    var h = '<select class="champ" id="aps"><option value="">Choisir un employé</option>' + d.employes.map(function(e){ return '<option value="'+e.ligne+'"'+(String(e.ligne) === choisi ? " selected" : "")+'>'+esc(e.nom)+'</option>'; }).join("") + '</select>';
+    var h = estPlace ? "" : grilleCasiers(d.casiersLibres);
+    h += '<select class="champ" id="aps"><option value="">Choisir un employé</option>' + d.employes.map(function(e){ return '<option value="'+e.ligne+'"'+(String(e.ligne) === choisi ? " selected" : "")+'>'+esc(e.nom)+'</option>'; }).join("") + '</select>';
     var e = d.employes.filter(function(x){ return String(x.ligne) === choisi; })[0];
     if(e){
       champsDe(e).forEach(function(c){ var v = e[c[0]];
