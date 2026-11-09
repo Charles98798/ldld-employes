@@ -36,9 +36,12 @@ var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Rémunérat
 var app = document.getElementById("app");
 // Pictogramme à gauche du titre de chaque page de section (même jeu que le menu de l'accueil).
 var PICTO_TITRES = {"mes heures":"Mes heures","messages":"Messages","tableau de bord":"Tableau de bord","calendrier":"Calendrier","rencontre":"Rencontre","autoévaluation":"Autoévaluation","rémunération":"Rémunération","manuel d'employé":"Manuel","plan d'incendie":"Plan d'incendie","mon profil":"Mon profil","mes entretiens":"Entretien machinerie","direction":"Direction","gestionnaire":"Gestionnaire","suivi de charge":"Suivi de charge","stationnement":"Stationnement","casier":"Casier","finance":"Finance","états financiers":"États financiers","portrait d'un employé":"Portrait d’un employé","positionnement embauche":"Positionnement"};
+var dernierTitre = "";
 function decorerTitres(){
   Array.prototype.forEach.call(app.querySelectorAll(".page:not(.vue) > h1:not([data-pt])"), function(h){
     h.setAttribute("data-pt", "1");
+    // Nouvelle page (titre différent): on repart en haut, sinon le titre reste caché sous l'heure du téléphone
+    if(h.textContent !== dernierTitre){ dernierTitre = h.textContent; window.scrollTo(0, 0); }
     var page = h.parentNode, retour = page.querySelector("a.retour");
     var bl = document.createElement("div"); bl.className = "bl";
     var fl = document.createElement("a"); fl.className = "rt"; fl.href = "#"; fl.textContent = "←"; fl.setAttribute("aria-label", "Retour");
