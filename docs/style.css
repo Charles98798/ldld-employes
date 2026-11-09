@@ -566,7 +566,7 @@ textarea.bx{min-height:90px;resize:vertical}
 .ea .ro{padding:8px 2px;font-size:16px;color:var(--pg);border-bottom:1px solid var(--pl);display:flex;justify-content:space-between}
 
 /* Pictogrammes de l'accueil */
-.menu a .ic{width:22px;height:22px;fill:currentColor;flex:none;vertical-align:middle;margin-right:4px;position:relative;top:-2px}
+.menu a .ic{width:22px;height:22px;fill:currentColor;flex:none;vertical-align:middle;margin-right:14px;position:relative;top:-2px}
 /* Arrivée sur l'accueil : le logo se dévoile, puis chaque ligne et son pictogramme apparaissent (une fois par ouverture) */
 @media (prefers-reduced-motion:no-preference){
 .menu.anim .logo{clip-path:inset(0 100% 0 0);transform:translateX(-14px);animation:lgDev .6s cubic-bezier(.2,.7,.2,1) .2s forwards}
