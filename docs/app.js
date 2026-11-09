@@ -53,7 +53,6 @@ function decorerTitres(){
   });
 }
 function majRetour(){
-  var pg = app.querySelector(".page"); if(pg) pg.classList.toggle("defile", (window.pageYOffset || 0) > 2);
   Array.prototype.forEach.call(app.querySelectorAll(".page.bl-ok > a.retour"), function(r){
     var bl = r.parentNode.querySelector(".bl");
     var vu = !bl || bl.getBoundingClientRect().bottom > 0;
