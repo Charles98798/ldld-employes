@@ -167,7 +167,21 @@ function ouvrirSession(){
     if(r && r.ok){ MOI = r; menu(); } else { garderSession(null); connexion(); }
   }).catch(function(){ connexion("Pas de réseau. Réessayez."); });
 }
+// Vue « comme un employé » (Direction seulement, lecture seule, 2 h): le service donne une session lecture seule; la session de la direction reste de côté.
+function vueComme(){ try { return !!localStorage.getItem("ldld-session-direction"); } catch(e){ return false; } }
+function voirComme(nom){
+  appelService({action:"voir_comme", nom:nom, session:sessionGardee()}).then(function(r){
+    if(r && r.ok){ try { localStorage.setItem("ldld-session-direction", sessionGardee()); localStorage.setItem("ldld-session", r.session); } catch(e){} viderCache(); location.reload(); }
+    else alert((r && r.erreur) || "Indisponible.");
+  }).catch(function(){ alert("Réseau indisponible."); });
+}
+function revenirDeComme(){
+  var d = null, c = sessionGardee(); try { d = localStorage.getItem("ldld-session-direction"); localStorage.removeItem("ldld-session-direction"); if(d) localStorage.setItem("ldld-session", d); } catch(e){}
+  if(c) appelService({action:"sortie", session:c}).catch(function(){});
+  viderCache(); location.reload();
+}
 function deconnecter(){
+  try { localStorage.removeItem("ldld-session-direction"); } catch(e){}
   var s = sessionGardee(); garderSession(null); MOI = null;
   if(s) appelService({action:"sortie", session:s}).catch(function(){});
   connexion();
@@ -262,6 +276,8 @@ function menu(){
     (peutEcrire() ? '<a href="#" id="resp">'+picto(MOI.role === "direction" ? "Direction" : "Gestionnaire")+(MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</a>' : '') +
     ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'"><span>'+picto(PICTO_DE[i])+SECTIONS[i]+'</span></a>'; }).join("") +
     (peutEcrire() ? '' : '<a href="#" id="entr">'+picto("Entretien machinerie")+'Entretien machinerie</a>') +
+    (MOI.role === "direction" ? '<a href="#" id="rcomme">Antonio</a>' : '') +   // TEMPORAIRE (Charles 11-09): voir l'application comme Antonio; à retirer
+    (vueComme() ? '<a href="#" id="rcommefin">Revenir à mon compte</a>' : '') +
     '<a class="sortie" href="#" id="sortie">Déconnexion</a></div>';
   window.scrollTo(0, 0);   // l'accueil s'ouvre toujours en haut (le clavier du code de connexion peut avoir fait défiler la page)
   if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ a.style.animationDelay = (0.7 + k * 0.09) + "s"; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = (0.7 + k * 0.09) + "s"; });
@@ -270,6 +286,8 @@ function menu(){
   });
   var en = document.getElementById("entr"); if(en) en.onclick = function(e){ e.preventDefault(); entretien(); };
   var rp = document.getElementById("resp"); if(rp) rp.onclick = function(e){ e.preventDefault(); responsable(); };
+  var rco = document.getElementById("rcomme"); if(rco) rco.onclick = function(e){ e.preventDefault(); voirComme("Antonio"); };
+  var rcf = document.getElementById("rcommefin"); if(rcf) rcf.onclick = function(e){ e.preventDefault(); revenirDeComme(); };
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
   pastilleAuto(); pastilleMessages(); chargerAujourdhui();
 }
@@ -795,7 +813,7 @@ function iconesResp(){
   });
 }
 function responsable(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span></a><a class="doc" href="#" id="rk"><span>▪ Casier</span></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span></a><a class="doc" href="#" id="rpe"><span>▪ Positionnement embauche</span></a><a class="doc" href="#" id="rpm"><span>▪ Positionnement employé</span></a><a class="doc" href="#" id="rec"><span>▪ Échelle salariale</span></a><a class="doc" href="#" id="rcf"><span>▪ Conseil d\'administration</span></a><a class="doc" href="#" id="ref"><span>▪ États financiers</span></a><a class="doc" href="#" id="rem"><span>▪ Employés</span></a><a class="doc" href="#" id="rea"><span>▪ Employé actuel</span></a><a class="doc" href="#" id="rant"><span>▪ Antonio</span></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span></a>' : "")+'</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span></a><a class="doc" href="#" id="rk"><span>▪ Casier</span></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span></a><a class="doc" href="#" id="rpe"><span>▪ Positionnement embauche</span></a><a class="doc" href="#" id="rpm"><span>▪ Positionnement employé</span></a><a class="doc" href="#" id="rec"><span>▪ Échelle salariale</span></a><a class="doc" href="#" id="rcf"><span>▪ Conseil d\'administration</span></a><a class="doc" href="#" id="ref"><span>▪ États financiers</span></a><a class="doc" href="#" id="rem"><span>▪ Employés</span></a><a class="doc" href="#" id="rea"><span>▪ Employé actuel</span></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span></a>' : "")+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   iconesResp();
   document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("message"); };
@@ -812,7 +830,6 @@ function responsable(){
   var rpe = document.getElementById("rpe"); if(rpe){ rpe.onclick = function(e){ e.preventDefault(); embauchePos(); }; embPrecharger(); }
   var rem = document.getElementById("rem"); if(rem) rem.onclick = function(e){ e.preventDefault(); gestionEmployes(); };
   var rea = document.getElementById("rea"); if(rea) rea.onclick = function(e){ e.preventDefault(); eaOuvrir(); };
-  var rant = document.getElementById("rant"); if(rant) rant.onclick = function(e){ e.preventDefault(); eaOuvrir("antonio"); }; // TEMPORAIRE (demande de Charles 11-09): à retirer
   var rut = document.getElementById("rut"); if(rut) rut.onclick = function(e){ e.preventDefault(); utilisationApp(); };
   document.getElementById("rme").onclick = function(e){ e.preventDefault(); messages("envoyes"); };
   document.getElementById("rrd").onclick = function(e){ e.preventDefault(); messages("rencontres"); };
