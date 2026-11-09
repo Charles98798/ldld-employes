@@ -699,3 +699,33 @@ textarea.bx{min-height:90px;resize:vertical}
 #tb .tcarte .tcib{grid-column:1/3;grid-row:4;text-align:left;margin-top:6px}
 #tb .tcarte.sans{display:block}#tb .tcarte.sans .tcib{margin-top:6px}
 #tb .tcarte .tgros{min-width:84px}
+
+/* Graphique par jour identique à Trak */
+#tb .gjt{font-size:11px;color:#1D1D1B;min-height:16px;margin-bottom:4px;letter-spacing:.04em}
+#tb .gjw{display:flex;gap:6px}
+#tb .gja{position:relative;width:34px;height:150px;flex:none}
+#tb .gja span{position:absolute;right:0;transform:translateY(50%);font-size:8px;color:#4a443a;white-space:nowrap}
+#tb .gjr{flex:1;min-width:0}
+#tb .gjp{position:relative;display:flex;align-items:flex-end;gap:2px;height:150px;border-bottom:1px solid #8D806A}
+#tb .gjp s{position:absolute;left:0;right:0;height:1px;background:#CBC6B8}
+#tb .gjp u{position:absolute;left:0;right:0;height:2px;background:#8EFF60;box-shadow:0 0 0 1px rgba(29,29,27,.25);z-index:2}
+#tb .gjj{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative;z-index:1;cursor:pointer}
+#tb .gjj.sel{background:rgba(29,29,27,.08)}
+#tb .gjc{width:100%;max-width:10px;display:flex;flex-direction:column;justify-content:flex-end}
+#tb .gjc .d{background:#E3DFD3;box-shadow:inset 0 0 0 1px #CBC6B8;order:0}#tb .gjc .n{background:#1D1D1B;order:1;box-shadow:none}#tb .gjc .e{background:#8D806A;order:2}
+#tb .gjx{display:flex;gap:2px;margin-top:3px}#tb .gjx span{flex:1;min-width:0;text-align:center;font-size:8px;color:#4a443a;overflow:hidden}
+#tb .gjd,#tb .gjv{display:none}
+/* Cartes du haut: mêmes couleurs que le graphique */
+#tb .tbarre{background:#fff;box-shadow:inset 0 0 0 1px #CBC6B8}#tb .tbarre i{background:#8D806A}#tb .tbarre u{background:#8EFF60;box-shadow:0 0 0 1px rgba(29,29,27,.25);width:3px}
+
+/* Cartes du haut comme Trak: carré + titre, indicateur en haut à droite, valeur et moyenne sur une ligne, barre pleine largeur */
+#tb .tcarte.tk{display:block;padding:12px 14px}
+#tb .tk .tct{display:flex;justify-content:space-between;align-items:center;grid-column:auto}
+#tb .tk .tq{display:inline-block;width:9px;height:9px;margin-right:8px}
+#tb .tk .tind{grid-column:auto;grid-row:auto}
+#tb .tk .tl{display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px}
+#tb .tk .tgros{min-width:0;grid-row:auto}
+#tb .tk .tcib{grid-column:auto;grid-row:auto;margin:0;text-align:right;font-size:12px}
+#tb .tk .tbarre{margin:8px 0 2px;height:8px;background:transparent;box-shadow:none}
+#tb .tk .tbarre i{background:#1D1D1B}
+#tb .tk .tbarre u{top:-4px;bottom:-4px;width:2px;background:#2fa84f;box-shadow:none}

@@ -714,12 +714,24 @@ function aeAfficher(d){
 // Graphique par jour: s'affiche seulement si le service fournit m.jours = [{j,ce,cn,dispo}] (en %, pas encore disponible).
 function graphJours(m){
   if(!m.jours || !m.jours.length) return "";
-  var cible = m.cibleCe || 80, mx = 100; m.jours.forEach(function(d){ mx = Math.max(mx, (d.ce||0)+(d.cn||0)+Math.max(0,(d.dispo||0))); }); mx = Math.ceil(mx / 20) * 20;   // échelle sur la plus haute barre (fait + restant + disponible), comme Trak
-  return '<div class="gj"><div class="gjl"><span class="gc">▬</span> Cible <span class="ge">▪</span> Effectuée <span class="gn">▪</span> Non terminée <span class="gd">▪</span> Disponible</div><div class="gjb">' +
-    m.jours.map(function(d){
-      var tot = (d.ce||0)+(d.cn||0), dp = Math.max(0,(d.dispo||0));
-      return '<div class="gjj"><div class="gjv">'+Math.round(tot)+'</div><div class="gjc" style="height:'+Math.min(100,(tot+dp)/160*100)+'%"><i class="d" style="height:'+(dp/(tot+dp||1)*100)+'%"></i><i class="n" style="height:'+((d.cn||0)/(tot+dp||1)*100)+'%"></i><i class="e" style="height:'+((d.ce||0)/(tot+dp||1)*100)+'%"></i></div><div class="gjd">'+esc(String(d.j).split(' ').pop())+'</div></div>';
-    }).join("") + '<u style="bottom:calc(18px + '+(cible/mx)+' * (100% - 34px))"></u></div></div>';
+  var cible = m.cibleCe || 80, mx = 100; m.jours.forEach(function(d){ mx = Math.max(mx, (d.ce||0)+(d.cn||0)+Math.max(0,(d.dispo||0))); }); mx = Math.ceil(mx / 20) * 20;   // échelle sur la plus haute barre, graduations de 20 %, comme Trak
+  var mois = String(m.label).split(" ")[0].toLowerCase(), grad = "", lignes = "";
+  for(var v = 0; v <= mx; v += 20){ grad += '<span style="bottom:'+(v/mx*100)+'%">'+v+' %</span>'; if(v > 0) lignes += '<s style="bottom:'+(v/mx*100)+'%"></s>'; }
+  var barres = "", nums = "";
+  m.jours.forEach(function(d){
+    var ce = Math.round(d.ce||0), cn = Math.round(d.cn||0), dp = Math.round(Math.max(0,(d.dispo||0))), t = ce+cn+dp, j = String(d.j).split(' ').pop();
+    var txt = j+' '+mois+' · fait '+ce+' % · restant '+cn+' % · disponible '+dp+' %';
+    barres += '<div class="gjj" data-t="'+esc(txt)+'" title="'+esc(txt)+'"><div class="gjc" style="height:'+(t/mx*100)+'%"><i class="d" style="height:'+(t ? dp/t*100 : 0)+'%"></i><i class="n" style="height:'+(t ? cn/t*100 : 0)+'%"></i><i class="e" style="height:'+(t ? ce/t*100 : 0)+'%"></i></div></div>';
+    nums += '<span>'+esc(j)+'</span>';
+  });
+  return '<div class="gj"><div class="gjt">&nbsp;</div><div class="gjl"><span class="gc">▬</span> Pourcentage cible <span class="ge">▪</span> % fait <span class="gn">▪</span> % restant <span class="gd">▪</span> % disponible</div>' +
+    '<div class="gjw"><div class="gja">'+grad+'</div><div class="gjr"><div class="gjp">'+lignes+barres+'<u style="bottom:'+(cible/mx*100)+'%"></u></div><div class="gjx">'+nums+'</div></div></div></div>';
+}
+function graphJoursActif(el){
+  var t = el.querySelector(".gjt"), bs = el.querySelectorAll(".gjj"); if(!t || !bs.length) return;
+  function choisir(b){ bs.forEach(function(x){ x.classList.remove("sel"); }); b.classList.add("sel"); t.textContent = b.getAttribute("data-t"); }
+  bs.forEach(function(b){ b.onmouseenter = b.onclick = function(){ choisir(b); }; });
+  choisir(bs[bs.length-1]);
 }
 function tableau(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Charges de travail</h1><div id="tb"></div></div>';
@@ -741,11 +753,10 @@ function tableau(){
       var vide = val === null || val === undefined, ok = vide ? null : (sens === "plus" ? val >= cible : val <= cible);
       var pastille = vide ? "" : '<span class="pas '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>';
       var larg = vide ? 0 : Math.min(100, val), pc = Math.min(100, cible);
-      return '<div class="tcarte'+(vide ? ' sans' : '')+'"><div class="tct"><span>'+nom+'</span></div>' +
-        (vide ? '' : '<div class="tgros">'+val+'<small>%</small></div>') +
-        '<div class="tbarre"><i style="width:'+larg+'%"></i><u style="left:'+pc+'%"></u></div>' +
-        (vide ? '' : '<div class="tind '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</div>') +
-        '<div class="tcib">Cible '+cible+' % '+(sens === "plus" ? "et +" : "et −")+'</div></div>';
+      var cq = cle === "cn" ? "#1D1D1B" : "#8D806A";
+      return '<div class="tcarte tk'+(vide ? ' sans' : '')+'"><div class="tct"><span><b class="tq" style="background:'+cq+'"></b>'+nom+'</span>'+(vide ? '' : '<span class="tind '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>')+'</div>' +
+        '<div class="tl">'+(vide ? '' : '<div class="tgros">'+val+'<small>%</small></div>')+'<div class="tcib">Moyenne · cible '+cible+' % '+(sens === "plus" ? "et +" : "et −")+'</div></div>' +
+        '<div class="tbarre"><i style="width:'+larg+'%"></i><u style="left:'+pc+'%"></u></div></div>';
     }
     function dessiner(){
       var m = ms[i], h = '<div class="tnav"><button id="tp" '+(i >= ms.length - 1 ? "disabled" : "")+'>Précédent</button><div class="tmois">'+esc(m.label).toUpperCase()+'</div><button id="ts" '+(i <= 0 ? "disabled" : "")+'>Suivant</button></div>' +
@@ -753,7 +764,7 @@ function tableau(){
       if(m.absent) h += '<div class="bandeau">▪ AUCUN TRAVAIL CE MOIS-LÀ</div>';
       else h += carte("CHARGE EFFECTUÉE", m.ce, m.cibleCe || 80, "plus", m, "ce") + carte("CHARGE NON TERMINÉE", m.cn, 5, "moins", m, "cn") + carte("OBJECTIFS ATTEINTS", m.obj, 80, "plus", m, "obj") +
         graphJours(m) + '<p class="aide">Heures par semaine : '+(m.heures === null ? "—" : String(m.heures).replace(".", ","))+(m.cibleHeures ? ' · cible '+m.cibleHeures : "")+'</p>';
-      el.innerHTML = h;
+      el.innerHTML = h; graphJoursActif(el);
       document.getElementById("tp").onclick = function(){ i++; dessiner(); };
       document.getElementById("ts").onclick = function(){ i--; dessiner(); };
     }
