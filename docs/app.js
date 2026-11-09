@@ -20,7 +20,6 @@ var PICTOS = {
  "Employés": "M3 4h6v6h-6zM15 4h6v6h-6zM3 13h18v8h-18z",
  "Employé actuel": "M8 2h8v8h-8zM4 12h16v10h-16zM10 15h4v4h-4z",
  "Utilisation": "M6 2h12v20h-12zM8 4h8v13h-8zM10 19h4v2h-4z",
- "Mes entretiens": "M4 2 L15 2 L20 7 L20 22 L4 22zM8 10h8v2h-8zM8 14h8v2h-8zM8 18h5v2h-5z",
  "Direction": "M2 3h11v9h-11zM14 9h8v9h-8z",
  "Gestionnaire": "M2 3h11v9h-11zM14 9h8v9h-8z",
  "Suivi de charge": "M2 3h16v4h-16zM2 10h10v4h-10zM2 17h20v4h-20z",
@@ -35,7 +34,7 @@ function picto(n){ return PICTOS[n] ? '<svg class="ic" viewBox="0 0 24 24" aria-
 var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Calendrier", "Rencontre", "Mon profil", "Mes heures"];
 var app = document.getElementById("app");
 // Pictogramme à gauche du titre de chaque page de section (même jeu que le menu de l'accueil).
-var PICTO_TITRES = {"mes heures":"Mes heures","messages":"Messages","tableau de bord":"Tableau de bord","calendrier":"Calendrier","rencontre":"Rencontre","autoévaluation":"Autoévaluation","rémunération":"Rémunération","manuel d'employé":"Manuel","plan d'incendie":"Plan d'incendie","mon profil":"Mon profil","mes entretiens":"Mes entretiens","direction":"Direction","gestionnaire":"Gestionnaire","suivi de charge":"Suivi de charge","stationnement":"Stationnement","casier":"Casier","finance":"Finance","portrait d'un employé":"Portrait d’un employé","positionnement embauche":"Positionnement"};
+var PICTO_TITRES = {"mes heures":"Mes heures","messages":"Messages","tableau de bord":"Tableau de bord","calendrier":"Calendrier","rencontre":"Rencontre","autoévaluation":"Autoévaluation","rémunération":"Rémunération","manuel d'employé":"Manuel","plan d'incendie":"Plan d'incendie","mon profil":"Mon profil","mes entretiens":"Entretien machinerie","direction":"Direction","gestionnaire":"Gestionnaire","suivi de charge":"Suivi de charge","stationnement":"Stationnement","casier":"Casier","finance":"Finance","portrait d'un employé":"Portrait d’un employé","positionnement embauche":"Positionnement"};
 function decorerTitres(){
   Array.prototype.forEach.call(app.querySelectorAll(".page:not(.vue) > h1:not([data-pt])"), function(h){
     h.setAttribute("data-pt", "1");
@@ -231,7 +230,7 @@ function menu(){
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' +
     (peutEcrire() ? '<a href="#" id="resp">'+picto(MOI.role === "direction" ? "Direction" : "Gestionnaire")+(MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</a>' : '') +
     ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'"><span>'+picto(PICTO_DE[i])+SECTIONS[i]+'</span></a>'; }).join("") +
-    (peutEcrire() ? '' : '<a href="#" id="entr">'+picto("Mes entretiens")+'Mes entretiens</a>') +
+    (peutEcrire() ? '' : '<a href="#" id="entr">'+picto("Entretien machinerie")+'Entretien machinerie</a>') +
     '<a class="sortie" href="#" id="sortie">Déconnexion →</a></div>';
   if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ a.style.animationDelay = (0.7 + k * 0.09) + "s"; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = (0.7 + k * 0.09) + "s"; });
   Array.prototype.forEach.call(app.querySelectorAll("a[data-i]"), function(a){
@@ -833,7 +832,7 @@ function attributionPage(genre){
 // Entretien machinerie : responsables et direction consultent et modifient; l'employé voit seulement ses machines (« Mes entretiens »).
 function entretien(){
   var tous = peutEcrire(), d = null, vue = "secteur", sel = "non", msg = "", mode = "liste", fiche = null, pick = false, supprime = false;
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(tous ? "Entretien machinerie" : "Mes entretiens")+'</h1><div id="en"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+"Entretien machinerie"+'</h1><div id="en"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(tous && mode !== "liste"){ mode = "liste"; pick = false; dessiner(); } else if(tous) responsable(); else menu(); };
   function nomsLignes(t){ return String(t).split("\n").map(function(x){ return x.replace(/^\s*[▪•]\s*/, ""); }); }
   function nomHtml(t){ return nomsLignes(t).map(function(x, i, a){ return (a.length > 1 ? "▪ " : "") + esc(x); }).join("<br>"); }
