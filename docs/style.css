@@ -609,3 +609,7 @@ textarea.bx{min-height:90px;resize:vertical}
 .gcas b{display:flex;align-items:center;justify-content:center;height:44px;font-weight:400;font-size:15px}
 .gcas .occ{background:#0D1319;color:#8EFF60}
 .gcas .lib{background:#B4AB9B;color:#0D1319}
+
+.demarrage .lgx{width:62vw;max-width:300px;aspect-ratio:679/564}
+.demarrage .lgx img{width:100%;max-width:none;height:100%;aspect-ratio:auto}
+.connexion .lgx img{animation:none!important}
