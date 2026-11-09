@@ -671,4 +671,4 @@ textarea.bx{min-height:90px;resize:vertical}
 .gpl .bat .p4{border-left:0;border-right:6px solid #111;border-top:4px solid transparent;border-bottom:4px solid transparent;top:82%;left:0}
 .gpl b{aspect-ratio:auto!important}
 /* Zone sûre en haut (publication 98): une bande fixe de la couleur de la page, de la hauteur de l'heure du téléphone; le défilement passe dessous, rien n'est jamais visible sous l'heure */
-.page::before,.menu::before{content:"";position:fixed;left:0;right:0;top:0;height:calc(max(env(safe-area-inset-top,0px),47px) + 4px);background:inherit;z-index:15;pointer-events:none}
+.page::before{content:"";position:fixed;left:0;right:0;top:0;height:calc(max(env(safe-area-inset-top,0px),47px) + 4px);background:inherit;z-index:15;pointer-events:none}
