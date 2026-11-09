@@ -25,6 +25,7 @@ var PICTOS = {
  "Suivi de charge": "M2 3h16v4h-16zM2 10h10v4h-10zM2 17h20v4h-20z",
  "Stationnement": "M2 2h20v20h-20zM5 5h14v14h-14z",
  "Casier": "M2 2h20v20h-20zM4 4h7v7h-7zM13 4h7v7h-7zM4 13h7v7h-7zM13 13h7v7h-7z",
+ "États financiers": "M2 3h20v5h-20zM2 10h13v5h-13zM17 10h5v5h-5zM2 17h20v4h-20z",
  "Finance": "M2 2h2v20h-2zM2 20h20v2h-20zM6 16 L10 11 L14 14 L21 5 L21 9 L14 18 L10 15 L6 19z",
  "Portrait d’un employé": "M2 2h20v20h-20zM5 5h14v14h-14zM9 7h6v5h-6zM7 14h10v3h-10z",
  "Positionnement": "M2 17h5v5h-5zM7 12h5v10h-5zM12 7h5v15h-5zM17 2h5v20h-5z"
@@ -34,7 +35,7 @@ function picto(n){ return PICTOS[n] ? '<svg class="ic" viewBox="0 0 24 24" aria-
 var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Calendrier", "Rencontre", "Mon profil", "Mes heures"];
 var app = document.getElementById("app");
 // Pictogramme à gauche du titre de chaque page de section (même jeu que le menu de l'accueil).
-var PICTO_TITRES = {"mes heures":"Mes heures","messages":"Messages","tableau de bord":"Tableau de bord","calendrier":"Calendrier","rencontre":"Rencontre","autoévaluation":"Autoévaluation","rémunération":"Rémunération","manuel d'employé":"Manuel","plan d'incendie":"Plan d'incendie","mon profil":"Mon profil","mes entretiens":"Entretien machinerie","direction":"Direction","gestionnaire":"Gestionnaire","suivi de charge":"Suivi de charge","stationnement":"Stationnement","casier":"Casier","finance":"Finance","portrait d'un employé":"Portrait d’un employé","positionnement embauche":"Positionnement"};
+var PICTO_TITRES = {"mes heures":"Mes heures","messages":"Messages","tableau de bord":"Tableau de bord","calendrier":"Calendrier","rencontre":"Rencontre","autoévaluation":"Autoévaluation","rémunération":"Rémunération","manuel d'employé":"Manuel","plan d'incendie":"Plan d'incendie","mon profil":"Mon profil","mes entretiens":"Entretien machinerie","direction":"Direction","gestionnaire":"Gestionnaire","suivi de charge":"Suivi de charge","stationnement":"Stationnement","casier":"Casier","finance":"Finance","états financiers":"États financiers","portrait d'un employé":"Portrait d’un employé","positionnement embauche":"Positionnement"};
 function decorerTitres(){
   Array.prototype.forEach.call(app.querySelectorAll(".page:not(.vue) > h1:not([data-pt])"), function(h){
     h.setAttribute("data-pt", "1");
@@ -753,7 +754,7 @@ function prefsNotifs(){
   appelService({action:"prefs_lire", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.prefs && document.getElementById("prefs")){ etat = r.prefs; dessiner(); } }).catch(function(){});
 }
 // Page Responsable (responsables et direction seulement; le service refuse les autres) : Contacts cliquables (appel, texto, courriel).
-var PICTO_RESP = {rn:"Nouveau message", rsc:"Suivi de charge", rc:"Contacts", rs:"Stationnement", rk:"Casier", rme:"Messages envoyés", rrd:"Rencontres demandées", re:"Entretien machinerie", rpo:"Portrait d’un employé", rpe:"Positionnement", rpm:"Positionnement", rec:"Échelle salariale", rcf:"Conseil d'administration", rem:"Employés", rea:"Employé actuel", rut:"Utilisation"};
+var PICTO_RESP = {rn:"Nouveau message", rsc:"Suivi de charge", rc:"Contacts", rs:"Stationnement", rk:"Casier", rme:"Messages envoyés", rrd:"Rencontres demandées", re:"Entretien machinerie", rpo:"Portrait d’un employé", rpe:"Positionnement", rpm:"Positionnement", rec:"Échelle salariale", rcf:"Conseil d'administration", ref:"États financiers", rem:"Employés", rea:"Employé actuel", rut:"Utilisation"};
 function iconesResp(){
   Object.keys(PICTO_RESP).forEach(function(id){
     var a = document.getElementById(id), sp = a && a.querySelector("span"); if(!sp) return;
@@ -761,7 +762,7 @@ function iconesResp(){
   });
 }
 function responsable(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span></a><a class="doc" href="#" id="rk"><span>▪ Casier</span></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span></a><a class="doc" href="#" id="rpe"><span>▪ Positionnement embauche</span></a><a class="doc" href="#" id="rpm"><span>▪ Positionnement employé</span></a><a class="doc" href="#" id="rec"><span>▪ Échelle salariale</span></a><a class="doc" href="#" id="rcf"><span>▪ Conseil d\'administration</span></a><a class="doc" href="#" id="rem"><span>▪ Employés</span></a><a class="doc" href="#" id="rea"><span>▪ Employé actuel</span></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span></a>' : "")+'</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span></a><a class="doc" href="#" id="rk"><span>▪ Casier</span></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span></a><a class="doc" href="#" id="rpe"><span>▪ Positionnement embauche</span></a><a class="doc" href="#" id="rpm"><span>▪ Positionnement employé</span></a><a class="doc" href="#" id="rec"><span>▪ Échelle salariale</span></a><a class="doc" href="#" id="rcf"><span>▪ Conseil d\'administration</span></a><a class="doc" href="#" id="ref"><span>▪ États financiers</span></a><a class="doc" href="#" id="rem"><span>▪ Employés</span></a><a class="doc" href="#" id="rea"><span>▪ Employé actuel</span></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span></a>' : "")+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   iconesResp();
   document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("message"); };
@@ -772,6 +773,7 @@ function responsable(){
   document.getElementById("re").onclick = function(e){ e.preventDefault(); entretien(); };
   var rpo = document.getElementById("rpo"); if(rpo) rpo.onclick = function(e){ e.preventDefault(); portrait(); };
   var rec = document.getElementById("rec"); if(rec) rec.onclick = function(e){ e.preventDefault(); echOuvrir(); };
+  var ref = document.getElementById("ref"); if(ref) ref.onclick = function(e){ e.preventDefault(); efOuvrir(); };
   var rcf = document.getElementById("rcf"); if(rcf) rcf.onclick = function(e){ e.preventDefault(); financeMenu(); };
   var rpm = document.getElementById("rpm"); if(rpm){ rpm.onclick = function(e){ e.preventDefault(); posEmpOuvrir(); }; posEmpPrecharger(); }
   var rpe = document.getElementById("rpe"); if(rpe){ rpe.onclick = function(e){ e.preventDefault(); embauchePos(); }; embPrecharger(); }
