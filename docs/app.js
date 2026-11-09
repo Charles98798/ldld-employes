@@ -158,11 +158,19 @@ function pastilleDirection(){
   var n = nbDemandesNeuves();
   if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = pastilleTexte(n); a.appendChild(p); }
 }
+// Une autoévaluation est disponible 14 jours avant la date de la rencontre, jusqu'à ce jour inclus, et seulement si elle n'est pas terminée.
+function aeARemplir(m){
+  if(m.terminee || !/^\d{4}-\d\d-\d\d$/.test(m.date || "")) return false;
+  var p = m.date.split("-"), j = new Date(+p[0], +p[1]-1, +p[2]), t = new Date(); t = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  var diff = Math.round((j - t) / 86400000);
+  return diff >= 0 && diff <= 14;
+}
+function aeDateTxt(iso){ var p = /^(\d{4})-(\d\d)-(\d\d)/.exec(iso || ""); return p ? (+p[3] === 1 ? "1er" : +p[3]) + " " + MOIS_LONGS[+p[2]-1] + " " + p[1] : ""; }
 function pastilleAuto(){
   var a = app.querySelector('a[data-i="2"]'); if(!a) return;
-  var ae = lireCache("ae"), reste = ae && ae.rencontres && ae.rencontres.some(function(m){ return !m.terminee; });
+  var ae = lireCache("ae"), reste = ae && ae.rencontres && ae.rencontres.some(aeARemplir);
   var p = a.querySelector(".pastille"); if(p) p.remove();
-  if(reste){ p = document.createElement("span"); p.className = "pastille"; p.textContent = "À remplir"; a.appendChild(p); }
+  if(reste){ p = document.createElement("span"); p.className = "pastille"; p.textContent = "Disponible"; a.appendChild(p); }
 }
 function precharger(){
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
@@ -647,19 +655,20 @@ function evaluations(){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   obtenir("ae", {action:"ae_lire"}, function(r){
     var el = document.getElementById("ev"); if(!el) return;
-    if(!r.rencontres.length){ el.innerHTML = '<div class="bandeau">▪ AUCUNE AUTOÉVALUATION POUR LE MOMENT</div>'; return; }
-    if(r.rencontres.length === 1){ autoeval(r.rencontres[0].rencontre, true); return; }   // une seule : on l'ouvre directement
-    el.innerHTML = r.rencontres.map(function(m){
-      return '<a class="rang" href="#" data-r="'+m.rencontre+'">▪ Autoévaluation · rencontre '+m.rencontre+'<small>'+(m.terminee ? 'Terminée' : 'À remplir')+'</small></a>'; }).join("");
-    Array.prototype.forEach.call(el.querySelectorAll("a[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); autoeval(+a.getAttribute("data-r")); }; });
+    var dues = r.rencontres.filter(aeARemplir);   // seulement celles à remplir, jamais les anciennes
+    if(!dues.length){ el.innerHTML = '<div class="bandeau">▪ AUCUNE AUTOÉVALUATION DISPONIBLE</div>'; return; }
+    if(dues.length === 1){ autoeval(dues[0].rencontre, true, dues[0].date); return; }   // une seule : on l'ouvre directement
+    el.innerHTML = dues.map(function(m){
+      return '<a class="rang" href="#" data-r="'+m.rencontre+'" data-d="'+esc(m.date || "")+'">▪ Autoévaluation · rencontre '+m.rencontre+'<small>'+'Rencontre du '+esc(aeDateTxt(m.date))+'</small></a>'; }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll("a[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); autoeval(+a.getAttribute("data-r"), false, a.getAttribute("data-d")); }; });
   }, function(){ document.getElementById("ev").innerHTML = '<div class="bandeau">▪ AUTOÉVALUATION INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
 }
 // Autoévaluation : même fiche et mêmes règles que la page envoyée par courriel (6 étapes). Les réponses vont dans la fiche de l'employé.
 var AE_ETAPES = ["Évaluation des compétences","Valeurs humaines","Connaissances et développement","Rythme et charge de travail","Priorités et engagements","Commentaires de l’employé","Mon expérience au laboratoire","Pour préparer notre rencontre"];
 var AE_NIVEAUX_RH = ["Pas du tout d’accord","Peu d’accord","Moyennement d’accord","Plutôt d’accord","Tout à fait d’accord"];
 function aeSection(f){ var n = +f.cell.slice(1); if(f.cell === "A68" || f.cell === "A70") return 7; if(n >= 59) return 6; if(f.cell === "B44") return 5; if(f.cell === "B42" || f.cell === "B43") return 4; return n >= 35 ? 2 : n >= 28 ? 1 : 0; }
-function autoeval(rencontre, direct){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">'+(direct ? "Retour" : "Retour")+'</a><h1>Autoévaluation</h1><div id="ae"></div></div>';
+function autoeval(rencontre, direct, date){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">'+(direct ? "Retour" : "Retour")+'</a><h1>Autoévaluation</h1>'+(date ? '<div class="etiq">▪ RENCONTRE DU '+esc(aeDateTxt(date)).toUpperCase()+'</div>' : '')+'<div id="ae"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(direct) menu(); else evaluations(); };
   obtenir("ae"+rencontre, {action:"ae_lire", rencontre:rencontre}, aeAfficher,
     function(){ document.getElementById("ae").innerHTML = '<div class="bandeau">▪ FICHE INDISPONIBLE · RÉESSAYEZ</div>'; }, false);
