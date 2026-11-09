@@ -581,9 +581,9 @@ textarea.bx{min-height:90px;resize:vertical}
 .bl h1.ti{position:relative;display:table;max-width:calc(100% - 87px);margin:34px 0 0 87px;padding:0 18px;min-height:56px;background:#0D1319;color:#fff!important;font-size:19px!important;letter-spacing:.05em;font-weight:300;line-height:1.15;white-space:normal!important;display:flex;align-items:center;width:fit-content}
 /* Listes sans lignes de séparation */
 .page .doc,.page .rang,.page .ligne{border-bottom:0}
-/* Le bouton vert Retour n'apparaît que lorsque le bloc de la flèche n'est plus visible */
-.page.bl-ok:not(.hors) .retour{opacity:0;pointer-events:none}
-.page.bl-ok .retour{transition:opacity .2s}
+/* Le bouton vert Retour est placé à la fin de la page (il ne couvre plus le texte) */
+.page.bl-ok .retour{position:static!important;top:auto!important;left:auto!important;bottom:auto!important;display:inline-block;margin:30px 0 26px;width:auto}
+.page.p-manuel .doc em.ok,.page.p-manuel .doc em.maj{display:none}
 @media (prefers-reduced-motion:no-preference){
 .bl .rt{animation:blG .5s cubic-bezier(.2,.7,.2,1) both}
 .bl h1.ti{animation:blD .6s cubic-bezier(.2,.7,.2,1) .12s both}

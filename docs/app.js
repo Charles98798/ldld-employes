@@ -35,7 +35,8 @@ function decorerTitres(){
     fl.onclick = function(e){ e.preventDefault(); if(retour) retour.click(); };
     page.insertBefore(bl, h); bl.appendChild(fl); h.classList.add("ti"); bl.appendChild(h);
     page.classList.add("bl-ok");
-    if(window.IntersectionObserver) new IntersectionObserver(function(en){ page.classList.toggle("hors", !en[0].isIntersecting); }).observe(bl);
+    if(/^manuel/i.test(h.textContent.trim())) page.classList.add("p-manuel");
+    if(retour) page.appendChild(retour);
   });
 }
 new MutationObserver(decorerTitres).observe(app, {childList: true, subtree: true});
