@@ -625,10 +625,11 @@ textarea.bx{min-height:90px;resize:vertical}
 .moisbar{gap:8px}.moisbar b{flex:1;text-align:center;white-space:nowrap;font-size:14px;letter-spacing:.1em}
 .moisbar button{padding:0 10px;font-size:11px;white-space:nowrap}
 /* États financiers (Direction) */
-.ef .efsel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:6px 0 10px}
+.ef .efsel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:6px 0 14px}
 .ef .efsel span{background:#fff;color:#111;padding:10px;font-size:13px;letter-spacing:.1em}
-.ef .efl{display:grid;grid-template-columns:1fr 92px 64px;gap:4px;align-items:baseline;text-align:right;font-size:15px;font-weight:300;padding:10px 0;border-bottom:1px solid var(--pl)}
-.ef .efh{font-size:9px;letter-spacing:.12em;color:var(--pg);padding:4px 0 6px;text-transform:uppercase}
+.ef .sect,.ef .sect .lab{border-bottom:0}
+.ef .efl{display:grid;grid-template-columns:1fr 92px 64px;gap:4px;align-items:baseline;text-align:right;font-size:15px;font-weight:300;padding:11px 0}
+.ef .efh{font-size:9px;letter-spacing:.12em;color:var(--pg);padding:4px 0 2px;text-transform:uppercase}
 .ef .efl .n{text-align:left;overflow-wrap:anywhere}.ef .efm{display:inline-block;width:14px;font-style:normal}
-.ef .efr{cursor:pointer}.ef .efg{display:none}.ef .efr.o+.efg{display:block}
-.ef .efd{font-size:13px;padding-left:14px;color:var(--pt)}
+.ef .efr{cursor:pointer}.ef .efg{display:none;margin-bottom:6px}.ef .efr.o+.efg{display:block}
+.ef .efd{font-size:14px;font-weight:400;padding:8px 0 8px 14px;color:#1d1d1b}
