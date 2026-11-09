@@ -7,7 +7,7 @@ function echFr(v, d){ return v == null ? "" : echArr(v, d).toFixed(d).replace(".
 function echNum(t){ t = String(t == null ? "" : t).replace(/\s/g, "").replace("$", "").replace("%", "").replace(",", "."); if(t === "") return null; var n = Number(t); return isNaN(n) ? null : n; }
 function echCase(id, v, suf, large){ return '<div class="echc"><input id="' + id + '" inputmode="decimal" autocomplete="off" class="' + (v == null ? "vide" : "") + '" value="' + echEsc(echFr(v, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1")) + '"><u>' + suf + '</u></div>'; }
 function echOuvrir(){
-  app.innerHTML = '<div class="page ppx ech"><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"><p class="finnote">Chargement…</p></div></div>';
+  app.innerHTML = '<div class="page ppx ech"><h1>Échelle salariale</h1><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"><p class="finnote">Chargement…</p></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   appelService({action: "ech_donnees", session: sessionGardee()}).then(function(r){
     if(r && r.ok){ ECH.d = r.r; echRendu(); }
@@ -38,7 +38,7 @@ function echEcarts(){
   return h;
 }
 function echRendu(){
-  var d = ECH.d, h = '<h1>Échelle salariale ' + d.annee + '</h1><div class="band">Année suivante en préparation — ' + d.annee + '</div>';
+  var d = ECH.d, h = '<div class="band">Année suivante en préparation — ' + d.annee + '</div>';
   h += '<div class="sect"><span class="num">01</span><span class="lab">Taux d’augmentation applicable</span></div><div class="tr"><span>Taux d’augmentation</span>' + echCase("ech_taux", d.taux, "%") + '</div>';
   h += '<div class="sect"><span class="num">02</span><span class="lab">Taux du marché</span></div>' + d.marche.map(function(m, i){ return '<div class="tr"><span>' + echEsc(m.nom) + '</span>' + echCase("ech_mar" + i, m.val, "%") + '</div>'; }).join("");
   h += '<div class="sect"><span class="num">03</span><span class="lab">Écart de la grille avec le marché</span></div><div id="ech_ecarts">' + echEcarts() + '</div>';

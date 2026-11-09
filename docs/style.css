@@ -650,3 +650,10 @@ textarea.bx{min-height:90px;resize:vertical}
 .colonnes .txk dd{margin:0}
 .cli{border-top:0;white-space:nowrap}.cdt{flex:0 0 92px}.cli span:nth-child(2){white-space:normal}
 .cg .cj{opacity:1;color:var(--tx)}
+/* Échelle salariale: style de l'application (aucun trait de séparation, champs soulignés comme les dates) */
+.ech .sect,.ech .tr,.ech .g6,.ech .e5,.ech .e5>div{border-top:0;border-bottom:0}
+.ech .tr,.ech .g6{padding:11px 0}
+.ech .echc input{border:0;border-bottom:1.5px solid var(--pn);background:transparent}
+.ech .echc input.vide{background:#f4b3c4;border-bottom-color:#f4b3c4}
+.ech .e5 .mx{border-top:0}
+.fin .finl,.fin .sect{border-bottom:0}.fin select.finsel{appearance:none;-webkit-appearance:none}
