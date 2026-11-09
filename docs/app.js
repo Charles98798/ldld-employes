@@ -41,12 +41,13 @@ function decorerTitres(){
 }
 function majRetour(){
   Array.prototype.forEach.call(app.querySelectorAll(".page.bl-ok > a.retour"), function(r){
-    r.style.display = "none";
-    var tient = document.documentElement.scrollHeight <= window.innerHeight + 2;
-    r.style.display = tient ? "none" : "";
+    var bl = r.parentNode.querySelector(".bl");
+    var vu = !bl || bl.getBoundingClientRect().bottom > 0;
+    r.style.display = vu ? "none" : "";
   });
 }
-new MutationObserver(function(){ decorerTitres(); majRetour(); setTimeout(majRetour, 400); }).observe(app, {childList: true, subtree: true});
+new MutationObserver(function(){ decorerTitres(); majRetour(); }).observe(app, {childList: true, subtree: true});
+window.addEventListener("scroll", majRetour, {passive: true});
 window.addEventListener("resize", majRetour);
 
 // Ordre d'affichage de l'accueil (choisi par la direction) : numéros de SECTIONS. Messages 0, Manuel 1, Autoévaluation 2, Rémunération 3, Tableau de bord 4, Plan d'incendie 5, Calendrier 6, Rencontre 7, Mon profil 8.
@@ -221,7 +222,6 @@ function menu(){
     (peutEcrire() ? '<a href="#" id="resp">'+picto(MOI.role === "direction" ? "Direction" : "Gestionnaire")+(MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</a>' : '') +
     ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'"><span>'+picto(PICTO_DE[i])+SECTIONS[i]+'</span></a>'; }).join("") +
     (peutEcrire() ? '' : '<a href="#" id="entr">'+picto("Mes entretiens")+'Mes entretiens</a>') +
-    '<img class="symbole" src="assets/LDLD_symbole_blanc_transparent.png" alt="">' +
     '<a class="sortie" href="#" id="sortie">Déconnexion →</a></div>';
   if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ a.style.animationDelay = (0.7 + k * 0.09) + "s"; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = (0.7 + k * 0.09) + "s"; });
   Array.prototype.forEach.call(app.querySelectorAll("a[data-i]"), function(a){
