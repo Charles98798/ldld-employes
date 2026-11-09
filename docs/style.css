@@ -673,3 +673,15 @@ textarea.bx{min-height:90px;resize:vertical}
 .gpl b{aspect-ratio:auto!important}
 /* Zone sûre en haut (publication 98): une bande fixe de la couleur de la page, de la hauteur de l'heure du téléphone; le défilement passe dessous, rien n'est jamais visible sous l'heure */
 .page::before{content:"";position:fixed;left:0;right:0;top:0;height:calc(max(env(safe-area-inset-top,0px),47px) + 4px);background:inherit;z-index:15;pointer-events:none}
+/* Charges de travail (Tableau de bord): version claire, texte noir lisible sur fond beige */
+#tb .tcarte{background:#E3DFD3;color:#1D1D1B}
+#tb .tct{color:#6f6556}
+#tb .tgros,#tb .tgros small,#tb .tcib,#tb .tcum,#tb .tcum b{color:#1D1D1B}
+#tb .tcib,#tb .tcum span{color:#4a443a}
+#tb .tbarre{background:#fff}#tb .tbarre i{background:#1D1D1B}
+#tb .tmois{background:#E3DFD3;color:#1D1D1B}
+#tb .tnav button{color:#1D1D1B;border-color:#8D806A}
+#tb .gjl,#tb .gjv{color:#1D1D1B}
+#tb .gc{color:#2e9d46}#tb .ge{color:#8D806A}#tb .gn{color:#1D1D1B}#tb .gd{color:#c2bcad}
+#tb .gjc .d{background:#E3DFD3}#tb .gjc .e{background:#8D806A}#tb .gjc .n{background:#fff;box-shadow:inset 0 0 0 1px #8D806A}
+#tb .gjd{color:#4a443a}
