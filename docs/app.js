@@ -1,7 +1,25 @@
+// Pictogrammes de l'accueil : blocs carrés pleins sur une grille de 24, couleur du texte.
+var PICTOS = {
+ "Mes heures": "M2 2h20v20h-20zM5 5h14v14h-14zM11 6 L13 6 L13 11 L17 11 L17 13 L11 13z",
+ "Messages": "M2 3h20v14h-20zM5 6h14v8h-14zM2 17 L7 17 L2 22z",
+ "Tableau de bord": "M2 20h20v2h-20zM3 12h5v7h-5zM10 5h5v14h-5zM17 9h5v10h-5z",
+ "Calendrier": "M2 5h20v5h-20zM2 12h3v7h-3zM19 12h3v7h-3zM2 19h20v3h-20zM6 2h3v3h-3zM15 2h3v3h-3zM13 13h4v4h-4z",
+ "Rencontre": "M3 3h6v6h-6zM2 11h8v10h-8zM14 7h6v6h-6zM13 15h8v6h-8z",
+ "Autoévaluation": "M2 5h12v2h-12zM18 5h4v2h-4zM14 2h4v8h-4zM2 11h4v2h-4zM10 11h12v2h-12zM6 8h4v8h-4zM2 17h13v2h-13zM19 17h3v2h-3zM15 14h4v8h-4z",
+ "Rémunération": "M6 2h16v5h-16zM2 9h16v5h-16zM6 16h16v5h-16z",
+ "Manuel": "M2 6h9v16h-9zM13 2h9v16h-9z",
+ "Plan d'incendie": "M12 2 L18 9 L18 16 L14 22 L8 22 L5 17 L5 12 L8 9 L9 12 L12 8zM10 15h4v4h-4z",
+ "Mon profil": "M8 2h8v8h-8zM4 12h16v10h-16z",
+ "Mes entretiens": "M4 2 L15 2 L20 7 L20 22 L4 22zM8 10h8v2h-8zM8 14h8v2h-8zM8 18h5v2h-5z",
+ "Direction": "M2 3h11v9h-11zM14 9h8v9h-8z",
+ "Gestionnaire": "M2 3h11v9h-11zM14 9h8v9h-8z"
+};
+function picto(n){ return PICTOS[n] ? '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="'+PICTOS[n]+'"/></svg>' : '▪ '; }
 // Étape 1 : démarrage, connexion et menu. Aucune donnée réelle : la connexion et les sections sont des gabarits.
 var SECTIONS = ["Messages", "Manuel d'employé", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Calendrier", "Rencontre", "Mon profil", "Mes heures"];
 var app = document.getElementById("app");
 // Ordre d'affichage de l'accueil (choisi par la direction) : numéros de SECTIONS. Messages 0, Manuel 1, Autoévaluation 2, Rémunération 3, Tableau de bord 4, Plan d'incendie 5, Calendrier 6, Rencontre 7, Mon profil 8.
+var PICTO_DE = ["Messages", "Manuel", "Autoévaluation", "Rémunération", "Tableau de bord", "Plan d'incendie", "Calendrier", "Rencontre", "Mon profil", "Mes heures"];
 var ORDRE_MENU = [9, 0, 4, 6, 7, 2, 3, 1, 5, 8];
 
 function demarrage(){
@@ -167,12 +185,14 @@ function menu(){
   if(notifPossible() && Notification.permission === "granted" && !menu.abonne){ menu.abonne = true; abonnerNotifs().catch(function(){}); }
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger();
-  app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' +
-    (peutEcrire() ? '<a href="#" id="resp">▪ '+(MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</a>' : '') +
-    ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'">▪ '+SECTIONS[i]+'</a>'; }).join("") +
-    (peutEcrire() ? '' : '<a href="#" id="entr">▪ Mes entretiens</a>') +
+  var animer = !menu.anime; menu.anime = true;
+  app.innerHTML = '<div class="menu'+(animer ? ' anim' : '')+'"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' +
+    (peutEcrire() ? '<a href="#" id="resp">'+picto(MOI.role === "direction" ? "Direction" : "Gestionnaire")+(MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</a>' : '') +
+    ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'"><span>'+picto(PICTO_DE[i])+SECTIONS[i]+'</span></a>'; }).join("") +
+    (peutEcrire() ? '' : '<a href="#" id="entr">'+picto("Mes entretiens")+'Mes entretiens</a>') +
     '<img class="symbole" src="assets/LDLD_symbole_blanc_transparent.png" alt="">' +
     '<a class="sortie" href="#" id="sortie">Déconnexion →</a></div>';
+  if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ a.style.animationDelay = (0.7 + k * 0.09) + "s"; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = (0.7 + k * 0.09) + "s"; });
   Array.prototype.forEach.call(app.querySelectorAll("a[data-i]"), function(a){
     a.onclick = function(e){ e.preventDefault(); section(+a.getAttribute("data-i")); };
   });
