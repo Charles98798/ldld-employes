@@ -76,7 +76,7 @@ var URL_SERVICE = "https://script.google.com/macros/s/AKfycbwq9SXysg5GHL6GsPFBST
 var MOI = null;   // {nom, poste, responsable} après connexion
 var FILE_APPELS = [], APPELS_EN_COURS = 0, APPELS_MAX = 4;   // au plus 4 appels au service en même temps (le service relit les classeurs à chaque appel)
 function appelBrut(corps){
-  return new Promise(function(ok, ko){ FILE_APPELS.unshift({c: corps, ok: ok, ko: ko}); suiteAppels();   // le plus récent passe en premier: un clic passe avant les préchargements });
+  return new Promise(function(ok, ko){ FILE_APPELS.unshift({c: corps, ok: ok, ko: ko}); suiteAppels(); });   // le plus récent passe en premier: un clic passe avant les préchargements
 }
 function suiteAppels(){
   while(APPELS_EN_COURS < APPELS_MAX && FILE_APPELS.length){
