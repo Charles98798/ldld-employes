@@ -786,3 +786,5 @@ body:has(.btnbas) .page{padding-bottom:90px}
 .ctc.bq{opacity:1}.ctc:disabled{opacity:1;cursor:default}
 .menu a[data-k]>span{display:flex;align-items:center;min-width:0}
 .ctg{grid-auto-rows:min-content;align-content:start}.ctc{display:block;height:22px;min-height:0;max-height:22px;margin:0;box-sizing:border-box}
+.menu .ast{font-weight:400;margin-left:6px}
+.vub{display:flex;justify-content:flex-end;margin:0 0 10px}.vubb{background:#0D1319;color:#fff;border:0;border-radius:0;font:inherit;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:8px 11px;cursor:pointer}

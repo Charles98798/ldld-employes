@@ -102,7 +102,9 @@ var RCACHE = {};
 var LECT = {production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
 var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
-function cleLecture(c){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); return JSON.stringify(o); }
+// Vue « employé au hasard » (Direction seulement, lecture seule): pendant qu'elle est active, la session de l'employé tiré sert aux appels et rien n'est gardé en cache local.
+var VUE = {on:false, reel:null, session:null, nom:"", relancer:null};
+function cleLecture(c){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); if(VUE.on) o._v = VUE.session; return JSON.stringify(o); }
 function appelService(corps){
   var a = corps && corps.action;
   if(!LECT[a]){ if(!NEUTRE[a] && !/_liste$|_fichier$/.test(a || "")) RCACHE = {}; return appelBrut(corps); }
@@ -126,10 +128,10 @@ function prechargerLectures(){
 
 // Tout est préchargé avant l'arrivée sur la page : copie locale affichée tout de suite, vérification silencieuse ensuite.
 var CACHE = {};
-function lireCache(cle){ if(CACHE[cle]) return CACHE[cle]; try { var v = JSON.parse(localStorage.getItem("ldld-c-"+cle)); if(v) CACHE[cle] = v; return v; } catch(e){ return null; } }
+function lireCache(cle){ if(VUE.on) return null; if(CACHE[cle]) return CACHE[cle]; try { var v = JSON.parse(localStorage.getItem("ldld-c-"+cle)); if(v) CACHE[cle] = v; return v; } catch(e){ return null; } }
 function chercher(cle, corps){
   corps.session = sessionGardee();
-  return appelService(corps).then(function(r){ if(r && r.ok){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
+  return appelService(corps).then(function(r){ if(r && r.ok && !VUE.on){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
 }
 function viderCache(){ CACHE = {}; RCACHE = {}; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
 /** Affiche la copie locale (sans écran de chargement) puis remplace en silence si la version a changé. */
@@ -187,7 +189,7 @@ function precharger(){
     if(r && r.ok && r.rencontres) r.rencontres.forEach(function(m){ chercher("ae"+m.rencontre, {action:"ae_lire", rencontre:m.rencontre}).catch(function(){}); });
   }).catch(function(){});
 }
-function sessionGardee(){ try { return localStorage.getItem("ldld-session"); } catch(e){ return null; } }
+function sessionGardee(){ if(VUE.on) return VUE.session; try { return localStorage.getItem("ldld-session"); } catch(e){ return null; } }
 function garderSession(s){ if(!s) viderCache(); try { if(s) localStorage.setItem("ldld-session", s); else localStorage.removeItem("ldld-session"); } catch(e){} }
 function ouvrirSession(){
   var s = sessionGardee();
@@ -297,12 +299,12 @@ function chargerAujourdhui(){
 // Accueil unique: chaque entrée a un groupe, un pictogramme et des droits par défaut [employé, responsable, direction].
 // La page Contrôle (Direction) peut changer les droits des entrées non verrouillées; le service refuse aussi l'accès.
 var ENT = [
- {id:"mes_heures", g:"Mon compte", l:"Mes heures", p:"Mes heures", d:[1,1,1], i:9, f:function(){ section(9); }},
- {id:"messages", g:"Mon compte", l:"Messages", p:"Messages", d:[1,1,1], i:0, f:function(){ section(0); }},
- {id:"tableau_de_bord", g:"Mon compte", l:"Tableau de bord", p:"Tableau de bord", d:[1,1,1], i:4, f:function(){ section(4); }},
+ {id:"mes_heures", g:"Mon compte", h:1, l:"Mes heures", p:"Mes heures", d:[1,1,1], i:9, f:function(){ section(9); }},
+ {id:"messages", g:"Mon compte", h:1, l:"Messages", p:"Messages", d:[1,1,1], i:0, f:function(){ section(0); }},
+ {id:"tableau_de_bord", g:"Mon compte", h:1, l:"Tableau de bord", p:"Tableau de bord", d:[1,1,1], i:4, f:function(){ section(4); }},
  {id:"calendrier", g:"Mon compte", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
  {id:"rencontre", g:"Mon compte", l:"Rencontre", p:"Rencontre", d:[1,1,1], i:7, f:function(){ section(7); }},
- {id:"autoevaluation", g:"Mon compte", l:"Autoévaluation", p:"Autoévaluation", d:[1,1,1], i:2, f:function(){ section(2); }},
+ {id:"autoevaluation", g:"Mon compte", h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,1,1], i:2, f:function(){ section(2); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
  {id:"nouveau_message", g:"Équipe", l:"Nouveau message", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
@@ -351,6 +353,7 @@ function entreesVisibles(){
   return l;
 }
 function menu(){
+  vueFin();
   var dejaDemande = false; try { dejaDemande = localStorage.getItem("ldld-notif-demande") === "1"; } catch(e){}
   if(notifPossible() && !dejaDemande && Notification.permission === "default") return ecranNotifs();
   if(notifPossible() && Notification.permission === "granted" && !menu.abonne){ menu.abonne = true; abonnerNotifs().catch(function(){}); }
@@ -361,11 +364,10 @@ function menu(){
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
   vis.forEach(function(x){
     if(grp && x.g !== g){ g = x.g; h += '<div class="gtit">▪ '+esc(g)+'</div>'; }
-    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.l)+'</span></a>';
+    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.l)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+'</span></a>';
   });
   if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { posEmpPrecharger(); embPrecharger(); } catch(e){} }
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' + h +
-    (MOI.role === "direction" ? '<a href="#" id="rcomme">Antonio</a>' : '') +   // TEMPORAIRE (Charles 11-09): voir l'application comme Antonio; à retirer
     (vueComme() ? '<a href="#" id="rcommefin">Revenir à mon compte</a>' : '') +
     '<a class="sortie" href="#" id="sortie">Déconnexion</a></div>';
   window.scrollTo(0, 0);   // l'accueil s'ouvre toujours en haut (le clavier du code de connexion peut avoir fait défiler la page)
@@ -373,7 +375,6 @@ function menu(){
   Array.prototype.forEach.call(app.querySelectorAll("a[data-k]"), function(a){
     a.onclick = function(e){ e.preventDefault(); var x = ENT_PAR_ID[a.getAttribute("data-k")]; if(x) x.f(); };
   });
-  var rco = document.getElementById("rcomme"); if(rco) rco.onclick = function(e){ e.preventDefault(); voirComme("Antonio"); };
   var rcf = document.getElementById("rcommefin"); if(rcf) rcf.onclick = function(e){ e.preventDefault(); revenirDeComme(); };
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
   pastilleAuto(); pastilleMessages(); chargerAujourdhui();
@@ -1740,7 +1741,40 @@ function heures(){
   }
   obtenir("heures", {action:"heures"}, afficherH, function(){ var z = document.getElementById("hz"); if(z) z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
+var VUE_ONGLETS = [9, 0, 4, 2];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
 function section(i){
+  if(MOI && MOI.role === "direction" && !vueComme() && VUE_ONGLETS.indexOf(i) >= 0) return vueEmploye(i);
+  sectionBase(i);
+}
+function vueEmploye(i){
+  var reelle = VUE.on ? VUE.reel : sessionGardee(), ancien = VUE.on ? VUE.session : null, prec = VUE.nom;
+  VUE.on = false;
+  app.innerHTML = '<div class="page"><h1>'+esc(SECTIONS[i])+'</h1></div>';
+  VUE.pend = true;
+  appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:prec}).then(function(r){
+    VUE.pend = false;
+    if(!r || !r.ok){ VUE.on = false; app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ EMPLOYÉ INTROUVABLE · RÉESSAYEZ</div></div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; return; }
+    if(ancien) appelBrut({action:"sortie", session:ancien}).catch(function(){});
+    VUE = {on:true, reel:reelle, session:r.session, nom:r.nom || "", relancer:function(){ vueEmploye(i); }};
+    sectionBase(i);
+  }).catch(function(){ VUE.pend = false; VUE.on = false; sectionBase(i); });
+}
+function vueFin(){
+  if(!VUE.on) return;
+  var s = VUE.session; VUE = {on:false, reel:null, session:null, nom:"", relancer:null};
+  appelBrut({action:"sortie", session:s}).catch(function(){});
+}
+(function(){
+  var cible = document.getElementById("app");
+  new MutationObserver(function(){
+    if(!VUE.on || !cible.querySelector(".page") || cible.querySelector(".vub")) return;
+    var p = cible.querySelector(".page"), d = document.createElement("div"); d.className = "vub";
+    var b = document.createElement("button"); b.type = "button"; b.className = "vubb"; b.textContent = "Employé · " + nomTitre(VUE.nom);
+    b.onclick = function(){ b.textContent = "Employé · …"; if(VUE.relancer) VUE.relancer(); };
+    d.appendChild(b); p.insertBefore(d, p.firstChild);
+  }).observe(cible, {childList:true});
+})();
+function sectionBase(i){
   if(i === 0) return messages("");
   if(i === 4) return tableau();
   if(i === 5) return incendie();
