@@ -464,7 +464,9 @@ function incendie(){
   obtenir("incendie_texte", {action:"incendie_texte"}, function(r){
     var el = document.getElementById("txt"); if(!el) return;
     if(!r.blocs){ el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; return; }
-    el.innerHTML = blocsHtml(r.blocs);
+    var blocs = r.blocs.filter(function(b){ return !(typeof b.v === "string" && /laboratoire dentaire lafond desjardins et associ/i.test(b.v) && /dition/i.test(b.v)); }).map(function(b){
+      return b.t === "kv" ? {t:b.t, v:b.v.filter(function(x){ return !/^entreprise$/i.test(String(x[0]).trim()); })} : b; });
+    el.innerHTML = blocsHtml(blocs);
   }, function(){ var e = document.getElementById("txt"); if(e) e.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
 }
 // Salaire : protégé par un code envoyé au courriel (valable 10 minutes, session salaire de 15 minutes d'inactivité).
