@@ -575,8 +575,12 @@ textarea.bx{min-height:90px;resize:vertical}
 @keyframes lgDev{to{clip-path:inset(0 0 0 0);transform:none}}
 @keyframes lnApp{to{opacity:1;transform:none}}
 @keyframes icBat{to{clip-path:inset(0 0 0 0)}}}
-.page h1 .ic{width:30px;height:30px;fill:currentColor;flex:none;margin-right:14px;position:relative;top:-1px}
-.vue h1 .ic{width:24px;height:24px;margin-right:10px;top:-2px}
-/* Accueil : symbole seul, sous la barre d'état du téléphone */
-.menu.accueil{padding-top:calc(max(env(safe-area-inset-top,0px),47px) + 8px)}
-.menu .logo.sym{width:110px;height:auto;aspect-ratio:auto;margin-bottom:22px}
+/* Titre de page en blocs décalés, comme les écrans de la vidéo */
+.bl{position:relative;margin:4px 0 18px;min-height:80px}
+.bl .rt{position:absolute;left:0;top:0;width:56px;height:40px;background:#0D1319;color:#fff;font-size:20px;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.bl h1.ti{position:relative;display:table;max-width:calc(100% - 44px);margin:26px 0 0 44px;padding:14px 18px;background:#0D1319;color:#fff!important;font-size:20px!important;letter-spacing:.06em;font-weight:300;line-height:1.15;border-left:5px solid #CECCC5;white-space:normal!important}
+@media (prefers-reduced-motion:no-preference){
+.bl .rt{animation:blG .5s cubic-bezier(.2,.7,.2,1) both}
+.bl h1.ti{animation:blD .6s cubic-bezier(.2,.7,.2,1) .12s both}
+@keyframes blG{from{transform:translateX(-70px);opacity:0}to{transform:none;opacity:1}}
+@keyframes blD{from{transform:translateX(90px);opacity:0}to{transform:none;opacity:1}}}

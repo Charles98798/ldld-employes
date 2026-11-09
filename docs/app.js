@@ -27,10 +27,13 @@ var app = document.getElementById("app");
 // Pictogramme à gauche du titre de chaque page de section (même jeu que le menu de l'accueil).
 var PICTO_TITRES = {"mes heures":"Mes heures","messages":"Messages","tableau de bord":"Tableau de bord","calendrier":"Calendrier","rencontre":"Rencontre","autoévaluation":"Autoévaluation","rémunération":"Rémunération","manuel d'employé":"Manuel","plan d'incendie":"Plan d'incendie","mon profil":"Mon profil","mes entretiens":"Mes entretiens","direction":"Direction","gestionnaire":"Gestionnaire","suivi de charge":"Suivi de charge","stationnement":"Stationnement","casier":"Casier","finance":"Finance","portrait d'un employé":"Portrait d’un employé","positionnement embauche":"Positionnement"};
 function decorerTitres(){
-  Array.prototype.forEach.call(app.querySelectorAll(".page h1:not([data-pt])"), function(h){
+  Array.prototype.forEach.call(app.querySelectorAll(".page:not(.vue) > h1:not([data-pt])"), function(h){
     h.setAttribute("data-pt", "1");
-    var n = PICTO_TITRES[h.textContent.trim().toLowerCase().replace(/’/g, "'")];
-    if(n && PICTOS[n]) h.insertAdjacentHTML("afterbegin", picto(n));
+    var page = h.parentNode, retour = page.querySelector("a.retour");
+    var bl = document.createElement("div"); bl.className = "bl";
+    var fl = document.createElement("a"); fl.className = "rt"; fl.href = "#"; fl.textContent = "←"; fl.setAttribute("aria-label", "Retour");
+    fl.onclick = function(e){ e.preventDefault(); if(retour) retour.click(); };
+    page.insertBefore(bl, h); bl.appendChild(fl); h.classList.add("ti"); bl.appendChild(h);
   });
 }
 new MutationObserver(decorerTitres).observe(app, {childList: true, subtree: true});
