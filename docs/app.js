@@ -888,7 +888,7 @@ function planPlace(num){
 }
 function profil(){
   var m = MOI || {};
-  var lignes = [["Nom", m.nom || ""], ["Poste", m.poste || ""], ["Responsable", m.responsable || ""]];
+  var lignes = [["Nom", m.nom || ""], ["Titre", m.poste || ""], ["Responsable", m.responsable || ""]];
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mon profil</h1>' +
     lignes.map(function(l){ return '<div class="ligne"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
     '<div id="stat"></div>' +
