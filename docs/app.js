@@ -12,7 +12,7 @@ var PICTOS = {
  "Mon profil": "M8 2h8v8h-8zM4 12h16v10h-16z",
  "Nouveau message": "M2 3h20v13h-20zM11 5h2v3h3v2h-3v3h-2v-3h-3v-2h3zM5 17h4v4h-4z",
  "Contacts": "M4 2h16v20h-16zM8 6h8v5h-8zM8 13h8v2h-8zM8 17h8v2h-8z",
- "Messages envoyés": "M2 4h20v16h-20zM6 11h8v-3l5 4-5 4v-3h-8z",
+ "Messages envoyés": "M2 5h20v14h-20zM5 8h14v2h-14zM5 12h8v2h-8z",
  "Rencontres demandées": "M2 3h13v8h-13zM9 13h13v8h-13z",
  "Entretien machinerie": "M9 2h6v3h-6zM9 19h6v3h-6zM2 9h3v6h-3zM19 9h3v6h-3zM6 6h12v12h-12zM10 10h4v4h-4z",
  "Échelle salariale": "M2 18h5v4h-5zM9 13h5v9h-5zM16 7h6v15h-6z",
@@ -676,7 +676,7 @@ function tableau(){
         '<div class="tcum"><span>Cumul de l\'année</span><b>'+cumul(m, cle)+'</b></div></div>';
     }
     function dessiner(){
-      var m = ms[i], h = '<div class="tnav"><button id="tp" '+(i >= ms.length - 1 ? "disabled" : "")+'>‹</button><div class="tmois">'+esc(m.label).toUpperCase()+'</div><button id="ts" '+(i <= 0 ? "disabled" : "")+'>›</button></div>' +
+      var m = ms[i], h = '<div class="tnav"><button id="tp" '+(i >= ms.length - 1 ? "disabled" : "")+'>Précédent</button><div class="tmois">'+esc(m.label).toUpperCase()+'</div><button id="ts" '+(i <= 0 ? "disabled" : "")+'>Suivant</button></div>' +
         '<div class="etiq">▪ '+esc((MOI && MOI.nom) || "").toUpperCase()+'</div>';
       if(m.absent) h += '<div class="bandeau">▪ AUCUN TRAVAIL CE MOIS-LÀ</div>';
       else h += carte("CHARGE EFFECTUÉE", m.ce, m.cibleCe, "plus", m, "ce") + carte("CHARGE NON TERMINÉE", m.cn, 5, "moins", m, "cn") + carte("OBJECTIFS ATTEINTS", m.obj, 80, "plus", m, "obj") +

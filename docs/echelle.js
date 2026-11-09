@@ -7,7 +7,7 @@ function echFr(v, d){ return v == null ? "" : echArr(v, d).toFixed(d).replace(".
 function echNum(t){ t = String(t == null ? "" : t).replace(/\s/g, "").replace("$", "").replace("%", "").replace(",", "."); if(t === "") return null; var n = Number(t); return isNaN(n) ? null : n; }
 function echCase(id, v, suf, large){ return '<div class="echc"><input id="' + id + '" inputmode="decimal" autocomplete="off" class="' + (v == null ? "vide" : "") + '" value="' + echEsc(echFr(v, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1")) + '"><u>' + suf + '</u></div>'; }
 function echOuvrir(){
-  app.innerHTML = '<div class="page ppx ech"><a class="retour" href="#" id="retour">← Retour</a><div id="ech_app"><p class="finnote">Chargement…</p></div></div>';
+  app.innerHTML = '<div class="page ppx ech"><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"><p class="finnote">Chargement…</p></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   appelService({action: "ech_donnees", session: sessionGardee()}).then(function(r){
     if(r && r.ok){ ECH.d = r.r; echRendu(); }
@@ -46,7 +46,7 @@ function echRendu(){
   h += '<div class="sect"><span class="num">05</span><span class="lab">Bonification mensuelle — production</span></div><div class="lab" style="text-align:right">Montant mensuel</div>' +
     d.bonusMensuel.map(function(b, i){ return '<div class="tr"><span>' + echEsc(b.lab) + '</span>' + echCase("ech_bm" + i, b.val == null && i === 0 ? 0 : b.val, "$") + '</div>'; }).join("");
   h += '<div class="sect"><span class="num">06</span><span class="lab">Bonification annuelle — gestionnaires</span></div><div class="lab" style="display:flex;justify-content:space-between"><span>Marge brute</span><span>% du salaire annuel</span></div>' +
-    d.bonusAnnuel.map(function(b, i){ return '<div class="g6">' + echCase("ech_bam" + i, b.marge, "%") + '<span class="f">' + echEsc(b.mot || "") + '</span><span class="ar">→</span>' + echCase("ech_bap" + i, b.pct == null && i === 0 ? 0 : b.pct, "%") + '</div>'; }).join("");
+    d.bonusAnnuel.map(function(b, i){ return '<div class="g6">' + echCase("ech_bam" + i, b.marge, "%") + '<span class="f">' + echEsc(b.mot || "") + '</span><span class="ar"></span>' + echCase("ech_bap" + i, b.pct == null && i === 0 ? 0 : b.pct, "%") + '</div>'; }).join("");
   h += '<p class="finnote" id="ech_etat"></p>';
   document.getElementById("ech_app").innerHTML = h;
   function lier(id, maj, champ, ind){

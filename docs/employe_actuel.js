@@ -12,7 +12,7 @@ function eaTrier(l){
   });
 }
 function eaOuvrir(){
-  app.innerHTML = '<div class="page ppx ea"><a class="retour" href="#" id="retour">← Retour</a><div id="ea_app"><p class="finnote">Chargement…</p></div></div>';
+  app.innerHTML = '<div class="page ppx ea"><a class="retour" href="#" id="retour">Retour</a><div id="ea_app"><p class="finnote">Chargement…</p></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   appelService({action: "emp_donnees", session: sessionGardee()}).then(function(r){
     if(r && r.ok){ EA.d = {employes: eaTrier(r.r.employes || [])}; EA.i = 0; eaRendu(); }

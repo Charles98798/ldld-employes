@@ -49,7 +49,7 @@ function financeOuvrir(){
   app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>Finance</h1></div>' +
     '<div class="finsous">Conseil d\'administration <span class="b2n">EXEMPLE</span></div>' +
     '<select class="finsel" id="fin_sel">' + o + '</select><div id="fin_corps"></div>' +
-    '<a class="retour" href="#" id="retour">← Retour</a></div>';
+    '<a class="retour" href="#" id="retour">Retour</a></div>';
   FIN_PERIODE = "A"; finRendu();
   document.getElementById("fin_sel").onchange = function(){ FIN_PERIODE = this.value; finRendu(); };
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); financeMenu(); };
@@ -131,7 +131,7 @@ function financeGraphique(type){
   function dessiner(){
     app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>Finance</h1></div><div class="finsous">Conseil d\'administration <span class="b2n">EXEMPLE</span></div>' +
       '<div class="sect"><span class="num">'+pg[0]+'</span><span class="lab">'+pg[1]+'</span></div><div class="fgdesc">'+pg[2]+'</div>' + fgSel() + fgGraphique(type) +
-      '<a class="retour" href="#" id="retour">← Retour</a></div>';
+      '<a class="retour" href="#" id="retour">Retour</a></div>';
     Array.prototype.forEach.call(document.querySelectorAll(".fgsel select"), function(el){
       el.onchange = function(){ var k = el.getAttribute("data-k"), v = +el.value; FG.act = k;
         if(k === "M"){ FG.m = v; FG.t = Math.floor(v/3); } else if(k === "T"){ FG.t = v; FG.m = Math.min(v*3+2, 9); } else { FG.a = v; }
@@ -141,8 +141,8 @@ function financeGraphique(type){
   dessiner();
 }
 function financeMenu(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>Conseil d\'administration</h1>' +
-    '<a class="doc" href="#" id="fm0"><span>▪ Indicateurs</span><em>→</em></a><a class="doc" href="#" id="fm1"><span>▪ Ratios vs objectifs</span><em>→</em></a><a class="doc" href="#" id="fm2"><span>▪ Ventes vs an passé</span><em>→</em></a><a class="doc" href="#" id="fm3"><span>▪ Trésorerie</span><em>→</em></a><a class="doc" href="#" id="fm4"><span>▪ Comptes clients</span><em>→</em></a></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Conseil d\'administration</h1>' +
+    '<a class="doc" href="#" id="fm0"><span>▪ Indicateurs</span></a><a class="doc" href="#" id="fm1"><span>▪ Ratios vs objectifs</span></a><a class="doc" href="#" id="fm2"><span>▪ Ventes vs an passé</span></a><a class="doc" href="#" id="fm3"><span>▪ Trésorerie</span></a><a class="doc" href="#" id="fm4"><span>▪ Comptes clients</span></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   document.getElementById("fm0").onclick = function(e){ e.preventDefault(); financeOuvrir(); };
   [["fm1","ratios"],["fm2","ventes"],["fm3","tres"],["fm4","cli"]].forEach(function(a){ document.getElementById(a[0]).onclick = function(e){ e.preventDefault(); financeGraphique(a[1]); }; });

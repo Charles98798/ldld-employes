@@ -60,7 +60,7 @@ function embauchePos(){
   if(!EMB.S) EMB.S = embVierge();
   EMB.surD = function(){ if(EMB.page && document.getElementById("pe")) embDessiner(); };
   EMB.page = true;
-  app.innerHTML = '<div class="page pe" style="padding-bottom:110px"><a class="retour" href="#" id="retour">← Retour</a><div id="pe"></div></div>';
+  app.innerHTML = '<div class="page pe" style="padding-bottom:110px"><a class="retour" href="#" id="retour">Retour</a><div id="pe"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); embSortir(); };
   embPrecharger(); embAvantages(); embDessiner();
 }
@@ -84,7 +84,7 @@ function embPage1(z){
     '<div style="display:flex;gap:8px"><div style="flex:1">'+inp("prenom", "Prénom", 40)+'</div><div style="flex:1">'+inp("famille", "Nom", 40)+'</div></div>'+inp("adresse", "Adresse", 80)+
     '<div style="display:flex;gap:8px"><div style="flex:1">'+inp("ville", "Ville", 40)+'</div><div style="flex:1">'+inp("cp", "Code postal", 7)+'</div></div>'+inp("naissance", "Date de naissance", 10, "date")+
     '<div class="lab">02 · Le poste</div>'+sel("poste", "Poste", postes)+sel("exp", "Expérience dans le métier", exp)+sel("dip", "Diplôme relié", dips)+sel("hors", "Expérience hors poste", hors)+sel("heures", "Heures par semaine", hres);
-  function maj(){ boutonBas("Suivant →", embRempli(S), function(){ S.page = 2; embDessiner(); window.scrollTo(0, 0); }); }
+  function maj(){ boutonBas("Suivant", embRempli(S), function(){ S.page = 2; embDessiner(); window.scrollTo(0, 0); }); }
   Array.prototype.forEach.call(z.querySelectorAll(".pk"), function(el){
     var k = el.getAttribute("data-k"), t = el.getAttribute("data-t");
     if(t === "date"){ el.onfocus = function(){ el.type = "date"; }; el.onblur = function(){ if(!el.value) el.type = "text"; }; if(S[k]) el.type = "date"; }
@@ -112,7 +112,7 @@ function embPage2(z){
   document.getElementById("ppos").onchange = function(){ S.pos = +this.value; S.posEdit = true; embDessiner(); };
   var rb = document.getElementById("rb"); if(rb) rb.onclick = function(e){ e.preventDefault(); S.posEdit = false; S.pos = null; embDessiner(); };
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); S.page = 1; embDessiner(); };
-  boutonBas("Suivant →", true, function(){ S.page = 3; embDessiner(); window.scrollTo(0, 0); });
+  boutonBas("Suivant", true, function(){ S.page = 3; embDessiner(); window.scrollTo(0, 0); });
 }
 function embPage3(z){
   var S = EMB.S, r = embResultat(S), E = embEchelle(S);
@@ -138,7 +138,7 @@ function embPage3(z){
     '<table class="tb"><tr style="white-space:nowrap"><td></td><td style="text-align:right">Départ '+r.dep+' %</td><td style="text-align:right">Avancement '+(r.mx > r.dep ? r.mx : r.dep)+' %</td></tr>'+tab+'</table>'+(note ? '<div class="bandeau">▪ '+esc(note.toUpperCase())+'</div>' : "")+
     '<div id="pmsg"></div><div class="aeact" id="pbts" style="margin-top:14px"><button type="button" class="bouton" id="penr" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)"'+(m ? "" : " disabled")+'>Enregistrer</button></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); S.page = 2; embDessiner(); };
-  boutonBas("Enregistrer et envoyer →", !!m, function(){ embFenetreCourriel(r, m); });
+  boutonBas("Enregistrer et envoyer", !!m, function(){ embFenetreCourriel(r, m); });
   document.getElementById("penr").onclick = function(){ embLancer(r, m, ""); };
 }
 // Fenêtre « Enregistrer et envoyer »: une seule case de courriel.
@@ -178,6 +178,6 @@ function embLancer(r, m, courriel){
 }
 function embRetablir(r, m){
   var bts = document.getElementById("pbts"); if(bts) bts.style.display = "";
-  boutonBas("Enregistrer et envoyer →", true, function(){ embFenetreCourriel(r, m); });
+  boutonBas("Enregistrer et envoyer", true, function(){ embFenetreCourriel(r, m); });
   var e = document.getElementById("penr"); if(e) e.onclick = function(){ embLancer(r, m, ""); };
 }

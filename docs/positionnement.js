@@ -3,7 +3,7 @@
 var POS_CACHE = {d: null};
 var POS_FERMER = null;
 function posEmpOuvrir(){
-  app.innerHTML = '<div class="page ppx"><a class="retour" href="#" id="retour">← Retour</a><div id="pp_app" class="sansemp"></div><div class="voile" id="pp_voile"></div></div>';
+  app.innerHTML = '<div class="page ppx"><a class="retour" href="#" id="retour">Retour</a><div id="pp_app" class="sansemp"></div><div class="voile" id="pp_voile"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(POS_FERMER) POS_FERMER(); responsable(); };
   (function(){
 
@@ -148,7 +148,7 @@ function majChoix(){var e=D.employes[i],sel=$('choix'),o=options(e),x=null;
  if(!$('alerte').dataset.file){$('alerte').style.display=al.length?'block':'none';$('alerte').innerHTML=al.map(esc).join('<br>')}
  if(!x){['aug','ecart'].forEach(function(k){$(k).textContent='—'});$('augn').textContent='';}
  else{
-  $('aug').textContent=pct(sR/e.sal-1,1);$('augn').textContent=money(e.sal)+' → '+money(sR)+' (+ '+money(sR-e.sal)+' / h)';
+  $('aug').textContent=pct(sR/e.sal-1,1);$('augn').textContent=money(e.sal)+' à '+money(sR)+' (+ '+money(sR-e.sal)+' / h)';
   var sc=salairePour(e,o[0]);$('ecart').textContent=x.v==='C'?'0,00 $':'+ '+money(sR-sc);
  }
  $('etat').innerHTML=(D.confErreur?' <b style="color:#b00">Envoi salarial : '+esc(D.confErreur)+'</b>':'')+' <span class="pastille'+(enAttente(e)?'" style="background:#e8e4da">écriture en cours':(confirme?' ok">confirmé en réunion':'">à confirmer'))+'</span>';
