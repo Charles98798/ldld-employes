@@ -10,6 +10,16 @@ var PICTOS = {
  "Manuel": "M2 6h9v16h-9zM13 2h9v16h-9z",
  "Plan d'incendie": "M12 2 L18 9 L18 16 L14 22 L8 22 L5 17 L5 12 L8 9 L9 12 L12 8zM10 15h4v4h-4z",
  "Mon profil": "M8 2h8v8h-8zM4 12h16v10h-16z",
+ "Nouveau message": "M2 3h20v13h-20zM11 5h2v3h3v2h-3v3h-2v-3h-3v-2h3zM5 17h4v4h-4z",
+ "Contacts": "M4 2h16v20h-16zM8 6h8v5h-8zM8 13h8v2h-8zM8 17h8v2h-8z",
+ "Messages envoyés": "M2 4h20v16h-20zM6 11h8v-3l5 4-5 4v-3h-8z",
+ "Rencontres demandées": "M2 3h13v8h-13zM9 13h13v8h-13z",
+ "Entretien machinerie": "M9 2h6v3h-6zM9 19h6v3h-6zM2 9h3v6h-3zM19 9h3v6h-3zM6 6h12v12h-12zM10 10h4v4h-4z",
+ "Échelle salariale": "M2 18h5v4h-5zM9 13h5v9h-5zM16 7h6v15h-6z",
+ "Conseil d'administration": "M9 2h6v5h-6zM2 9h20v4h-20zM4 15h3v6h-3zM17 15h3v6h-3z",
+ "Employés": "M3 4h6v6h-6zM15 4h6v6h-6zM3 13h18v8h-18z",
+ "Employé actuel": "M8 2h8v8h-8zM4 12h16v10h-16zM10 15h4v4h-4z",
+ "Utilisation": "M6 2h12v20h-12zM8 4h8v13h-8zM10 19h4v2h-4z",
  "Mes entretiens": "M4 2 L15 2 L20 7 L20 22 L4 22zM8 10h8v2h-8zM8 14h8v2h-8zM8 18h5v2h-5z",
  "Direction": "M2 3h11v9h-11zM14 9h8v9h-8z",
  "Gestionnaire": "M2 3h11v9h-11zM14 9h8v9h-8z",
@@ -742,9 +752,17 @@ function prefsNotifs(){
   appelService({action:"prefs_lire", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.prefs && document.getElementById("prefs")){ etat = r.prefs; dessiner(); } }).catch(function(){});
 }
 // Page Responsable (responsables et direction seulement; le service refuse les autres) : Contacts cliquables (appel, texto, courriel).
+var PICTO_RESP = {rn:"Nouveau message", rsc:"Suivi de charge", rc:"Contacts", rs:"Stationnement", rk:"Casier", rme:"Messages envoyés", rrd:"Rencontres demandées", re:"Entretien machinerie", rpo:"Portrait d’un employé", rpe:"Positionnement", rpm:"Positionnement", rec:"Échelle salariale", rcf:"Conseil d'administration", rem:"Employés", rea:"Employé actuel", rut:"Utilisation"};
+function iconesResp(){
+  Object.keys(PICTO_RESP).forEach(function(id){
+    var a = document.getElementById(id), sp = a && a.querySelector("span"); if(!sp) return;
+    sp.innerHTML = picto(PICTO_RESP[id]) + sp.textContent.replace(/^\s*▪\s*/, "");
+  });
+}
 function responsable(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">← Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span><em>→</em></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span><em>→</em></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span><em>→</em></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span><em>→</em></a><a class="doc" href="#" id="rk"><span>▪ Casier</span><em>→</em></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span><em>→</em></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span><em>→</em></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span><em>→</em></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span><em>→</em></a><a class="doc" href="#" id="rpe"><span>▪ Positionnement embauche</span><em>→</em></a><a class="doc" href="#" id="rpm"><span>▪ Positionnement employé</span><em>→</em></a><a class="doc" href="#" id="rec"><span>▪ Échelle salariale</span><em>→</em></a><a class="doc" href="#" id="rcf"><span>▪ Conseil d\'administration</span><em>→</em></a><a class="doc" href="#" id="rem"><span>▪ Employés</span><em>→</em></a><a class="doc" href="#" id="rea"><span>▪ Employé actuel</span><em>→</em></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span><em>→</em></a>' : "")+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  iconesResp();
   document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("message"); };
   document.getElementById("rsc").onclick = function(e){ e.preventDefault(); suiviCharge(); };
   document.getElementById("rc").onclick = function(e){ e.preventDefault(); contactsResp(); };

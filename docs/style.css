@@ -617,3 +617,6 @@ textarea.bx{min-height:90px;resize:vertical}
 .page .doc,.page .rang{text-transform:uppercase;letter-spacing:.1em;font-size:15px;padding:15px 0}
 .page .doc em{text-transform:none;letter-spacing:0}
 .page .rang small{text-transform:none;letter-spacing:0;font-size:12px}
+.page .doc .ic{width:22px;height:22px;fill:currentColor;flex:none;vertical-align:middle;margin-right:14px;position:relative;top:-2px}
+.page .doc>span{display:flex;align-items:center}
+.page .doc{align-items:center}
