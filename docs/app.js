@@ -74,7 +74,17 @@ function demarrage(){
 // Service LDLD (Google Apps Script) : connexion par code envoyé au courriel LDLD; il ne répond qu'avec les données de l'employé connecté.
 var URL_SERVICE = "https://script.google.com/macros/s/AKfycbwq9SXysg5GHL6GsPFBSTmoKZzm9_wGr4E3W0e-RzXcHeknz5_DMBFIxBarHHczgpwnZw/exec";
 var MOI = null;   // {nom, poste, responsable} après connexion
+var FILE_APPELS = [], APPELS_EN_COURS = 0, APPELS_MAX = 4;   // au plus 4 appels au service en même temps (le service relit les classeurs à chaque appel)
 function appelBrut(corps){
+  return new Promise(function(ok, ko){ FILE_APPELS.unshift({c: corps, ok: ok, ko: ko}); suiteAppels();   // le plus récent passe en premier: un clic passe avant les préchargements });
+}
+function suiteAppels(){
+  while(APPELS_EN_COURS < APPELS_MAX && FILE_APPELS.length){
+    var x = FILE_APPELS.shift(); APPELS_EN_COURS++;
+    appelDirect(x.c).then(x.ok, x.ko).then(function(){ APPELS_EN_COURS--; suiteAppels(); });
+  }
+}
+function appelDirect(corps){
   var ctl = window.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function(){ ctl.abort(); }, 30000) : 0;   // jamais de « CHARGEMENT… » sans fin
   return fetch(URL_SERVICE, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined})
     .then(function(r){ clearTimeout(t); return r.json(); }, function(e){ clearTimeout(t); throw e; });
