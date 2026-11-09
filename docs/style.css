@@ -575,10 +575,15 @@ textarea.bx{min-height:90px;resize:vertical}
 @keyframes lgDev{to{clip-path:inset(0 0 0 0);transform:none}}
 @keyframes lnApp{to{opacity:1;transform:none}}
 @keyframes icBat{to{clip-path:inset(0 0 0 0)}}}
-/* Titre de page en blocs décalés, comme les écrans de la vidéo */
-.bl{position:relative;margin:4px 0 18px;min-height:80px}
-.bl .rt{position:absolute;left:0;top:0;width:56px;height:40px;background:#0D1319;color:#fff;font-size:20px;text-decoration:none;display:flex;align-items:center;justify-content:center}
-.bl h1.ti{position:relative;display:table;max-width:calc(100% - 44px);margin:26px 0 0 44px;padding:14px 18px;background:#0D1319;color:#fff!important;font-size:20px!important;letter-spacing:.06em;font-weight:300;line-height:1.15;border-left:5px solid #CECCC5;white-space:normal!important}
+/* Titre de page en blocs décalés, aux proportions du logo (grand bloc de la flèche à gauche, bloc du titre plus bas, fente entre les deux) */
+.bl{position:relative;display:flow-root;margin:4px 0 20px;min-height:96px}
+.bl .rt{position:absolute;left:0;top:0;width:84px;height:74px;background:#0D1319;color:#fff;font-size:24px;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.bl h1.ti{position:relative;display:table;max-width:calc(100% - 87px);margin:34px 0 0 87px;padding:0 18px;min-height:56px;background:#0D1319;color:#fff!important;font-size:19px!important;letter-spacing:.05em;font-weight:300;line-height:1.15;white-space:normal!important;display:flex;align-items:center;width:fit-content}
+/* Listes sans lignes de séparation */
+.page .doc,.page .rang,.page .ligne{border-bottom:0}
+/* Le bouton vert Retour n'apparaît que lorsque le bloc de la flèche n'est plus visible */
+.page.bl-ok:not(.hors) .retour{opacity:0;pointer-events:none}
+.page.bl-ok .retour{transition:opacity .2s}
 @media (prefers-reduced-motion:no-preference){
 .bl .rt{animation:blG .5s cubic-bezier(.2,.7,.2,1) both}
 .bl h1.ti{animation:blD .6s cubic-bezier(.2,.7,.2,1) .12s both}
