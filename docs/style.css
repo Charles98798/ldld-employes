@@ -657,3 +657,6 @@ textarea.bx{min-height:90px;resize:vertical}
 .ech .e5 .mx{border-top:0}
 .fin .finl,.fin .sect{border-bottom:0}.fin select.finsel{appearance:none;-webkit-appearance:none}
 
+
+/* Titres dans une zone redessinée souvent: pas d'animation à chaque redessin */
+.bl.sa .rt,.bl.sa h1.ti{animation:none}
