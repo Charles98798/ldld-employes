@@ -737,8 +737,8 @@ function tableau(){
       var vide = val === null || val === undefined, ok = vide ? null : (sens === "plus" ? val >= cible : val <= cible);
       var pastille = vide ? "" : '<span class="pas '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>';
       var larg = vide ? 0 : Math.min(100, val), pc = Math.min(100, cible);
-      return '<div class="tcarte"><div class="tct"><span>'+nom+'</span>'+pastille+'</div>' +
-        '<div class="tgros">'+(vide ? "—" : val)+'<small>%</small></div><div class="tcib">Cible '+cible+' % '+(sens === "plus" ? "et +" : "et −")+'</div>' +
+      return '<div class="tcarte'+(vide ? ' sans' : '')+'"><div class="tct"><span>'+nom+'</span>'+pastille+'</div>' +
+        (vide ? '' : '<div class="tgros">'+val+'<small>%</small></div>')+'<div class="tcib">Cible '+cible+' % '+(sens === "plus" ? "et +" : "et −")+'</div>' +
         '<div class="tbarre"><i style="width:'+larg+'%"></i><u style="left:'+pc+'%"></u></div>' +
         '<div class="tcum"><span>Cumul de l\'année</span><b>'+cumul(m, cle)+'</b></div></div>';
     }

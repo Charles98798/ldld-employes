@@ -687,3 +687,4 @@ textarea.bx{min-height:90px;resize:vertical}
 #tb .gjd{color:#4a443a}
 /* Cartes Charges de travail: barres aux couleurs du graphique */
 #tb .tbarre{background:#CBC6B8}#tb .tbarre i{background:#8D806A}
+#tb .tcarte.sans{display:block}#tb .tcarte.sans .tcib{text-align:left}
