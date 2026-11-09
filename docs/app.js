@@ -714,12 +714,12 @@ function aeAfficher(d){
 // Graphique par jour: s'affiche seulement si le service fournit m.jours = [{j,ce,cn,dispo}] (en %, pas encore disponible).
 function graphJours(m){
   if(!m.jours || !m.jours.length) return "";
-  var haut = 160, cible = m.cibleCe || 80;
+  var cible = m.cibleCe || 80, mx = 100; m.jours.forEach(function(d){ mx = Math.max(mx, (d.ce||0)+(d.cn||0)+Math.max(0,(d.dispo||0))); }); mx = Math.ceil(mx / 20) * 20;   // échelle sur la plus haute barre (fait + restant + disponible), comme Trak
   return '<div class="gj"><div class="gjl"><span class="gc">▬</span> Cible <span class="ge">▪</span> Effectuée <span class="gn">▪</span> Non terminée <span class="gd">▪</span> Disponible</div><div class="gjb">' +
     m.jours.map(function(d){
       var tot = (d.ce||0)+(d.cn||0), dp = Math.max(0,(d.dispo||0));
       return '<div class="gjj"><div class="gjv">'+Math.round(tot)+'</div><div class="gjc" style="height:'+Math.min(100,(tot+dp)/160*100)+'%"><i class="d" style="height:'+(dp/(tot+dp||1)*100)+'%"></i><i class="n" style="height:'+((d.cn||0)/(tot+dp||1)*100)+'%"></i><i class="e" style="height:'+((d.ce||0)/(tot+dp||1)*100)+'%"></i></div><div class="gjd">'+esc(String(d.j).split(' ').pop())+'</div></div>';
-    }).join("") + '<u style="bottom:calc(18px + '+(cible/160)+' * (100% - 34px))"></u></div></div>';
+    }).join("") + '<u style="bottom:calc(18px + '+(cible/mx)+' * (100% - 34px))"></u></div></div>';
 }
 function tableau(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Charges de travail</h1><div id="tb"></div></div>';
@@ -751,7 +751,7 @@ function tableau(){
       var m = ms[i], h = '<div class="tnav"><button id="tp" '+(i >= ms.length - 1 ? "disabled" : "")+'>Précédent</button><div class="tmois">'+esc(m.label).toUpperCase()+'</div><button id="ts" '+(i <= 0 ? "disabled" : "")+'>Suivant</button></div>' +
         '<div class="etiq">▪ '+esc((MOI && MOI.nom) || "").toUpperCase()+(m.courant && m.jusquAu ? ' · JUSQU\'AU '+esc(m.jusquAu.slice(8)+"/"+m.jusquAu.slice(5,7)) : "")+'</div>';
       if(m.absent) h += '<div class="bandeau">▪ AUCUN TRAVAIL CE MOIS-LÀ</div>';
-      else h += carte("CHARGE EFFECTUÉE", m.ce, m.cibleCe, "plus", m, "ce") + carte("CHARGE NON TERMINÉE", m.cn, 5, "moins", m, "cn") + carte("OBJECTIFS ATTEINTS", m.obj, 80, "plus", m, "obj") +
+      else h += carte("CHARGE EFFECTUÉE", m.ce, m.cibleCe || 80, "plus", m, "ce") + carte("CHARGE NON TERMINÉE", m.cn, 5, "moins", m, "cn") + carte("OBJECTIFS ATTEINTS", m.obj, 80, "plus", m, "obj") +
         graphJours(m) + '<p class="aide">Heures par semaine : '+(m.heures === null ? "—" : String(m.heures).replace(".", ","))+(m.cibleHeures ? ' · cible '+m.cibleHeures : "")+'</p>';
       el.innerHTML = h;
       document.getElementById("tp").onclick = function(){ i++; dessiner(); };
@@ -763,7 +763,9 @@ function tableau(){
     var MG = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
     chercher("charges_jours", {action:"charges_jours"}).then(function(c){
       if(!c || !c.ok || !c.mois) return;
-      ms.forEach(function(m){ if(m.courant) return; var q = String(m.label).split(" "), k = MG.indexOf(q[0]); if(k < 0) return; var cle = q[1]+"-"+("0"+(k+1)).slice(-2); if(c.mois[cle]) m.jours = c.mois[cle]; });
+      ms.forEach(function(m){ if(m.courant) return; var q = String(m.label).split(" "), k = MG.indexOf(q[0]); if(k < 0) return; var cle = q[1]+"-"+("0"+(k+1)).slice(-2); if(c.mois[cle]) m.jours = c.mois[cle];
+        // mois sans valeur mensuelle (pas encore dans le fichier mensuel de Michel): moyenne des jours travaillés, comme Trak
+        var mo = c.moyennes && c.moyennes[cle]; if(mo && (m.ce === null || m.ce === undefined)) m.ce = mo.ce; if(mo && (m.cn === null || m.cn === undefined)) m.cn = mo.cn; });
       if(document.getElementById("tb")) dessiner();
     }).catch(function(){});
   }, function(e){ var rep = e && e.reponse, el = document.getElementById("tb"); if(!el) return;
