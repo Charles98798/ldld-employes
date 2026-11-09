@@ -634,7 +634,7 @@ textarea.bx{min-height:90px;resize:vertical}
 .ef .efr{cursor:pointer}.ef .efg{display:none;margin-bottom:6px}.ef .efr.o+.efg{display:block}
 .ef .efd{font-size:14px;font-weight:300;padding:8px 0 8px 14px;color:var(--pg)}
 /* Bande fixe en haut des pages (sauf l'accueil, dont le logo ne doit jamais être touché): le texte qui défile ne passe pas sous l'heure du téléphone */
-.page::before{content:"";position:fixed;top:0;left:0;right:0;height:max(env(safe-area-inset-top,0px),47px);background:var(--noir);z-index:15;pointer-events:none}
+.page::before{content:"";position:fixed;top:0;left:0;right:0;height:calc(max(env(safe-area-inset-top,0px),47px) + 6px);background:var(--noir);z-index:15;pointer-events:none}
 .ef .eft{padding:14px 0 6px;font-size:16px;font-weight:400;color:var(--pn)}
 .ef .efres{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin:4px 0 14px}
 .ef .efres small{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--pg)}
