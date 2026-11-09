@@ -92,8 +92,8 @@ function appelDirect(corps){
 
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
-var LECT = {heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
-var NEUTRE = {moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1};
+var LECT = {tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
+var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 function cleLecture(c){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); return JSON.stringify(o); }
 function appelService(corps){
@@ -160,6 +160,7 @@ function pastilleAuto(){
 function precharger(){
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
   chercher("tableau", {action:"tableau"}).catch(function(){});
+  chercher("tableau_courant", {action:"tableau_courant"}).catch(function(){});
   chercher("incendie_texte", {action:"incendie_texte"}).catch(function(){});
   chercher("manuel_texte", {action:"manuel_texte"}).catch(function(){});
   chercher("calendrier", {action:"calendrier"}).catch(function(){});
@@ -727,6 +728,9 @@ function tableau(){
     var el = document.getElementById("tb"); if(!el) return;
     if(!r.mois){ el.innerHTML = '<div class="bandeau">▪ PAS DE TABLEAU DE BORD POUR VOTRE POSTE</div>'; return; }
     var ms = r.mois, i = 0;
+    // Mois en cours (jusqu'à hier, jamais la journée en cours): la page s'ouvre dessus.
+    function avecCourant(c){ if(!(c && c.ok && c.mois && c.mois.courant)) return false; ms = [c.mois].concat(r.mois.filter(function(x){ return x.label !== c.mois.label; })); i = 0; return true; }
+    avecCourant(lireCache("tableau_courant"));
     function annee(m){ return String(m.label).split(" ").pop(); }
     function cumul(m, cle){
       var t = 0, n = 0;
@@ -737,14 +741,15 @@ function tableau(){
       var vide = val === null || val === undefined, ok = vide ? null : (sens === "plus" ? val >= cible : val <= cible);
       var pastille = vide ? "" : '<span class="pas '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>';
       var larg = vide ? 0 : Math.min(100, val), pc = Math.min(100, cible);
-      return '<div class="tcarte'+(vide ? ' sans' : '')+'"><div class="tct"><span>'+nom+'</span>'+pastille+'</div>' +
-        (vide ? '' : '<div class="tgros">'+val+'<small>%</small></div>')+'<div class="tcib">Cible '+cible+' % '+(sens === "plus" ? "et +" : "et −")+'</div>' +
+      return '<div class="tcarte'+(vide ? ' sans' : '')+'"><div class="tct"><span>'+nom+'</span></div>' +
+        (vide ? '' : '<div class="tgros">'+val+'<small>%</small></div>') +
         '<div class="tbarre"><i style="width:'+larg+'%"></i><u style="left:'+pc+'%"></u></div>' +
-        '<div class="tcum"><span>Cumul de l\'année</span><b>'+cumul(m, cle)+'</b></div></div>';
+        (vide ? '' : '<div class="tind '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</div>') +
+        '<div class="tcib">Cible '+cible+' % '+(sens === "plus" ? "et +" : "et −")+'</div></div>';
     }
     function dessiner(){
       var m = ms[i], h = '<div class="tnav"><button id="tp" '+(i >= ms.length - 1 ? "disabled" : "")+'>Précédent</button><div class="tmois">'+esc(m.label).toUpperCase()+'</div><button id="ts" '+(i <= 0 ? "disabled" : "")+'>Suivant</button></div>' +
-        '<div class="etiq">▪ '+esc((MOI && MOI.nom) || "").toUpperCase()+'</div>';
+        '<div class="etiq">▪ '+esc((MOI && MOI.nom) || "").toUpperCase()+(m.courant && m.jusquAu ? ' · JUSQU\'AU '+esc(m.jusquAu.slice(8)+"/"+m.jusquAu.slice(5,7)) : "")+'</div>';
       if(m.absent) h += '<div class="bandeau">▪ AUCUN TRAVAIL CE MOIS-LÀ</div>';
       else h += carte("CHARGE EFFECTUÉE", m.ce, m.cibleCe, "plus", m, "ce") + carte("CHARGE NON TERMINÉE", m.cn, 5, "moins", m, "cn") + carte("OBJECTIFS ATTEINTS", m.obj, 80, "plus", m, "obj") +
         graphJours(m) + '<p class="aide">Heures par semaine : '+(m.heures === null ? "—" : String(m.heures).replace(".", ","))+(m.cibleHeures ? ' · cible '+m.cibleHeures : "")+'</p>';
@@ -753,11 +758,12 @@ function tableau(){
       document.getElementById("ts").onclick = function(){ i--; dessiner(); };
     }
     dessiner();
+    if(!ms[0].courant) chercher("tableau_courant", {action:"tableau_courant"}).then(function(c){ if(avecCourant(c) && document.getElementById("tb")) dessiner(); }).catch(function(){});
     // Graphique par jour (fichier séparé de Gestion): ajouté sans attente, la page s'affiche d'abord
     var MG = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
     chercher("charges_jours", {action:"charges_jours"}).then(function(c){
       if(!c || !c.ok || !c.mois) return;
-      ms.forEach(function(m){ var q = String(m.label).split(" "), k = MG.indexOf(q[0]); if(k < 0) return; var cle = q[1]+"-"+("0"+(k+1)).slice(-2); if(c.mois[cle]) m.jours = c.mois[cle]; });
+      ms.forEach(function(m){ if(m.courant) return; var q = String(m.label).split(" "), k = MG.indexOf(q[0]); if(k < 0) return; var cle = q[1]+"-"+("0"+(k+1)).slice(-2); if(c.mois[cle]) m.jours = c.mois[cle]; });
       if(document.getElementById("tb")) dessiner();
     }).catch(function(){});
   }, function(e){ var rep = e && e.reponse, el = document.getElementById("tb"); if(!el) return;

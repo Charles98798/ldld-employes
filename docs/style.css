@@ -691,3 +691,11 @@ textarea.bx{min-height:90px;resize:vertical}
 /* Le bloc du titre n'est jamais couvert par la bande du haut; le carré ← garde sa taille complète */
 .bl{z-index:16}
 .bl .rt{border:0;padding:0;box-sizing:border-box;height:74px;min-height:74px}
+/* Cartes Charges de travail: barre, indicateur Dans/Sous la cible, cible en bas (plus de cumul de l'année) */
+#tb .tcarte{display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center}
+#tb .tcarte .tct{grid-column:1/3}#tb .tcarte .tgros{grid-row:2/4}#tb .tcarte .tbarre{grid-column:2;grid-row:2}
+#tb .tind{grid-column:2;grid-row:3;justify-self:start;font-size:12px;padding:3px 8px;border:1px solid #1D1D1B;color:#1D1D1B}
+#tb .tind.dans{background:#8EFF60;border-color:#8EFF60}
+#tb .tcarte .tcib{grid-column:1/3;grid-row:4;text-align:left;margin-top:6px}
+#tb .tcarte.sans{display:block}#tb .tcarte.sans .tcib{margin-top:6px}
+#tb .tcarte .tgros{min-width:84px}
