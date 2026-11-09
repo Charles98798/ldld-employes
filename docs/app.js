@@ -818,6 +818,15 @@ function responsable(){
   var nd = nbDemandesNeuves(); if(nd){ var sp = document.createElement("span"); sp.className = "nombre"; sp.style.marginLeft = "10px"; sp.textContent = pastilleTexte(nd); document.getElementById("rrd").firstChild.appendChild(sp); }
 }
 // Stationnement et Casier : choisir un employé, voir son numéro, le libérer (✕, avec confirmation) ou lui en attribuer un libre.
+function planStationnement(plan, libres, emps){
+  var l = {}, pris = {};
+  (libres || []).forEach(function(n){ l[String(n)] = 1; });
+  (emps || []).forEach(function(x){ if(/^\d+$/.test(String(x.place))) pris[String(+x.place)] = 1; });
+  var nc = plan.reduce(function(m, r){ return Math.max(m, r.length); }, 0), h = '<div class="gpl" style="grid-template-columns:repeat('+nc+',1fr)">';
+  plan.forEach(function(r){ for(var j = 0; j < nc; j++){ var t = String(r[j] || "").trim();
+    if(/^\d+$/.test(t)) h += '<b class="'+(l[String(+t)] && !pris[String(+t)] ? "lib" : "occ")+'">'+(+t)+'</b>'; else h += '<i></i>'; } });
+  return h + '</div>';
+}
 function grilleNumeros(libres, tous){
   var l = {}, t = {}, h = '<div class="gcas">';
   (libres || []).forEach(function(n){ l[String(n)] = 1; t[+n] = 1; });
@@ -833,7 +842,7 @@ function attributionPage(genre){
   function champsDe(e){ return estPlace ? [["place","Place"]] : [["casier1","Casier"]].concat(e.casier2 ? [["casier2","Casier 2"]] : []); }
   function dessiner(){
     var el = document.getElementById("ap"); if(!el) return;
-    var h = estPlace ? grilleNumeros(d.placesLibres, d.employes.map(function(x){ return x.place; })) : grilleNumeros(d.casiersLibres, Array.apply(null, Array(60)).map(function(_, i){ return i + 1; }));
+    var h = estPlace ? (d.plan && d.plan.length ? planStationnement(d.plan, d.placesLibres, d.employes) : grilleNumeros(d.placesLibres, d.employes.map(function(x){ return x.place; }))) : grilleNumeros(d.casiersLibres, Array.apply(null, Array(60)).map(function(_, i){ return i + 1; }));
     h += '<select class="champ" id="aps"><option value="">Choisir un employé</option>' + d.employes.map(function(e){ return '<option value="'+e.ligne+'"'+(String(e.ligne) === choisi ? " selected" : "")+'>'+esc(e.nom)+'</option>'; }).join("") + '</select>';
     var e = d.employes.filter(function(x){ return String(x.ligne) === choisi; })[0];
     if(e){

@@ -663,3 +663,8 @@ textarea.bx{min-height:90px;resize:vertical}
 /* Bande du haut collante (dans la page, pas par-dessus): au repos elle occupe sa place au-dessus du logo, donc ne peut jamais le couvrir; au défilement le texte s'arrête juste sous l'heure */
 .page{padding-top:0!important}
 .page::before{content:"";display:block;position:sticky;top:0;z-index:15;height:calc(max(env(safe-area-inset-top,0px),47px) + 6px);margin:0 -26px 8px;background:var(--noir);pointer-events:none}
+/* La bande ne sert que quand la page défile: au repos le logo/titre n'est jamais coupé */
+.page:not(.defile)::before{display:none}
+.gpl{display:grid;gap:2px;margin:6px 0 26px}
+.gpl b,.gpl i{display:flex;align-items:center;justify-content:center;aspect-ratio:1;font-weight:400;font-size:9px;font-style:normal}
+.gpl .occ{background:#0D1319;color:#8EFF60}.gpl .lib{background:#B4AB9B;color:#0D1319}
