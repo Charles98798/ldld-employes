@@ -162,7 +162,7 @@ function pastilleAuto(){
   var a = app.querySelector('a[data-i="2"]'); if(!a) return;
   var ae = lireCache("ae"), reste = ae && ae.rencontres && ae.rencontres.some(function(m){ return !m.terminee; });
   var p = a.querySelector(".pastille"); if(p) p.remove();
-  if(reste){ p = document.createElement("span"); p.className = "pastille"; p.setAttribute("aria-label","À remplir"); a.appendChild(p); }
+  if(reste){ p = document.createElement("span"); p.className = "pastille"; p.textContent = "À remplir"; a.appendChild(p); }
 }
 function precharger(){
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
@@ -451,11 +451,21 @@ function sectionDocs(p, titre, aide){
   }).catch(function(){ var l; try { l = JSON.parse(localStorage.getItem("ldld-liste-"+p)); } catch(e){} if(l) dessinerD(l); else liste.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function numTitre(t){ var m = /^(\d\d)\s+(.*)$/.exec(t); return m ? '<span class="nm">'+esc(m[1])+'</span><span class="tt">'+esc(m[2])+'</span>' : esc(t); }
+// Organigramme du Manuel (l'image du document, refaite en texte): aucun nom d'employé
+var ORGANIGRAMME = '<div class="org"><div class="orp">Présidence</div>' +
+  '<div class="oc od">Direction de production</div><div class="og4">' +
+    ["Pièce","Fixe","Acrylique"].map(function(x){ return '<div class="oc"><i>Expertise technique</i>'+x+'</div>'; }).join("") +
+    '<div class="oc on ov"><i>Équipe</i>commune</div>' +
+    ["Pièce","Fixe","Acrylique"].map(function(x){ return '<div class="oc on"><i>Équipe</i>'+x+'</div>'; }).join("") +
+  '</div>' +
+  '<div class="olg">Autres directions</div><div class="og2"><div class="ogr"><div class="ogt">Développement et expérience client</div><div class="oc on"><i>Équipe</i>administrative</div></div>' +
+  '<div class="ogr"><div class="ogt">Finances et comptabilité</div></div></div></div>';
 function blocsHtml(blocs){
   var nImg = 0;   // les plans d'incendie sont des images de l'application (plans/plan1.png…), dans l'ordre du document
   return blocs.map(function(b){
     if(b.t === "h") return '<h2 class="txh">'+numTitre(b.v)+'</h2>';
     if(b.t === "s") return '<div class="txs">'+esc(b.v)+'</div>';
+    if(b.t === "p" && /Image à replacer\s*:\s*organigramme/i.test(String(b.v))) return ORGANIGRAMME;
     if(b.t === "p") return '<p class="txp">'+esc(b.v)+'</p>';
     if(b.t === "u") return '<div class="txu"><b>'+esc(b.titre||"")+'</b>'+esc(b.v)+'</div>';
     if(b.t === "li") return '<ul class="txl">'+b.v.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ul>';
@@ -471,7 +481,8 @@ function sansAccent(t){ return String(t).normalize("NFD").replace(/[\u0300-\u036
 function manuel(){
   var repli = function(){ var e = document.getElementById("mn"); if(e) e.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; };
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Manuel d\'employé</h1><div id="mn"></div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  var retourSec = null;   // Retour (bouton vert et bloc ←) remonte d'un seul niveau: d'une section vers la table des matières
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(retourSec) retourSec(); else menu(); };
   obtenir("manuel_texte", {action:"manuel_texte"}, function(r){
     var el = document.getElementById("mn"); if(!el) return;
     if(!r.blocs){ return repli(); }
@@ -491,8 +502,7 @@ function manuel(){
       res.innerHTML = ""; rech.value = mot || ""; corps.innerHTML = blocsHtml(secs[i].blocs);
       if(mot) surligner(corps, mot);
       var m = corps.querySelector("mark"); window.scrollTo(0, 0); if(m) m.scrollIntoView({block:"center"});
-      corps.insertAdjacentHTML("afterbegin", '<a class="retour" href="#" id="toc">Table des matières</a>');
-      document.getElementById("toc").onclick = function(e){ e.preventDefault(); corps.innerHTML = ""; rech.value = ""; toc(); };
+      retourSec = function(){ retourSec = null; corps.innerHTML = ""; rech.value = mot || ""; if(mot) chercherMot(); else toc(); window.scrollTo(0, 0); };
     }
     function surligner(racine, mot){
       var n = sansAccent(mot), w = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT), noeuds = [], t;
@@ -859,7 +869,7 @@ function iconesResp(){
   });
 }
 function responsable(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span></a><a class="doc" href="#" id="rk"><span>▪ Casier</span></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span></a><a class="doc" href="#" id="rpe"><span>▪ Positionnement embauche</span></a><a class="doc" href="#" id="rpm"><span>▪ Positionnement employé</span></a><a class="doc" href="#" id="rec"><span>▪ Échelle salariale</span></a><a class="doc" href="#" id="rcf"><span>▪ Conseil d\'administration</span></a><a class="doc" href="#" id="rfi"><span>▪ Finances</span></a><a class="doc" href="#" id="rem"><span>▪ Employés</span></a><a class="doc" href="#" id="rea"><span>▪ Employé actuel</span></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span></a>' : "")+'</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span></a><a class="doc" href="#" id="rk"><span>▪ Casier</span></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span></a><a class="doc" href="#" id="rpe"><span>▪ Positionnement embauche</span></a><a class="doc" href="#" id="rpm"><span>▪ Positionnement employé</span></a><a class="doc" href="#" id="rec"><span>▪ Échelle salariale</span></a><a class="doc" href="#" id="rcf"><span>▪ Conseil d\'administration</span></a><a class="doc" href="#" id="rfi"><span>▪ Finances</span></a><a class="doc" href="#" id="rem"><span>▪ Retirer un employé</span></a><a class="doc" href="#" id="rea"><span>▪ Employé actuel</span></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span></a>' : "")+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   iconesResp();
   document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("message"); };
@@ -904,12 +914,18 @@ function attributionPage(genre){
   var estPlace = genre === "place", titre = estPlace ? "Stationnement" : "Casier";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titre+'</h1><div id="ap"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  var d = null, choisi = "", msg = "", confirmer = null;
+  var d = null, choisi = "", msg = "", confirmer = null, caseSel = "";
   function champsDe(e){ return estPlace ? [["place","Place"]] : [["casier1","Casier"]].concat(e.casier2 ? [["casier2","Casier 2"]] : []); }
   function dessiner(){
     var el = document.getElementById("ap"); if(!el) return;
     var h = estPlace ? (d.plan && d.plan.length ? planStationnement(d.plan, d.placesLibres, d.employes) : grilleNumeros(d.placesLibres, d.employes.map(function(x){ return x.place; }))) : grilleNumeros(d.casiersLibres, Array.apply(null, Array(60)).map(function(_, i){ return i + 1; }));
     h += '<select class="champ" id="aps"><option value="">Choisir un employé</option>' + d.employes.map(function(e){ return '<option value="'+e.ligne+'"'+(String(e.ligne) === choisi ? " selected" : "")+'>'+esc(e.nom)+'</option>'; }).join("") + '</select>';
+    var occ = {}, nums = [];
+    d.employes.forEach(function(x){ (estPlace ? [["place", x.place]] : [["casier1", x.casier1], ["casier2", x.casier2]]).forEach(function(c){ if(/^\d+$/.test(String(c[1]))) occ[+c[1]] = {e: x, champ: c[0]}; }); });
+    var tn = {}; (estPlace ? d.placesLibres : d.casiersLibres).forEach(function(n){ tn[+n] = 1; }); Object.keys(occ).forEach(function(n){ tn[+n] = 1; });
+    if(!estPlace) for(var q = 1; q <= 60; q++) tn[q] = 1;
+    nums = Object.keys(tn).map(Number).sort(function(x, y){ return x - y; });
+    h += '<select class="champ" id="apc"><option value="">Choisir une case</option>' + nums.map(function(n){ return '<option value="'+n+'"'+(String(n) === caseSel ? " selected" : "")+'>'+n+' · '+(occ[n] ? esc(occ[n].e.nom) : "libre")+'</option>'; }).join("") + '</select>';
     var e = d.employes.filter(function(x){ return String(x.ligne) === choisi; })[0];
     if(e){
       champsDe(e).forEach(function(c){ var v = e[c[0]];
@@ -923,17 +939,32 @@ function attributionPage(genre){
       });
       if(!estPlace && !e.casier2 && e.casier1 === "") h += "";
     }
+    if(caseSel && !e){
+      var o = occ[+caseSel], champ = estPlace ? "place" : "casier1";
+      if(o){
+        h += '<div class="ligne"><span>'+(estPlace ? "Place " : "Casier ")+esc(caseSel)+' · '+esc(o.e.nom)+'</span>'+(confirmer === "case" ? '<span><button type="button" class="ib" data-coui="1">OUI</button> <button type="button" class="ib" data-cnon="1">NON</button></span>' : '<button type="button" class="ib" data-cx="1" aria-label="Libérer">✕</button>')+'</div>';
+        if(confirmer === "case") h += '<div class="bandeau">▪ LIBÉRER ?</div>';
+      } else {
+        var sans = d.employes.filter(function(x){ return !x[champ]; });
+        h += '<div class="ligne"><span>'+(estPlace ? "Place " : "Casier ")+esc(caseSel)+' libre</span></div><select class="champ" id="ape"><option value="">'+(sans.length ? "Choisir un employé" : "Aucun employé sans numéro")+'</option>' + sans.map(function(x){ return '<option value="'+x.ligne+'">'+esc(x.nom)+'</option>'; }).join("") + '</select><button type="button" class="bouton" data-catt="1">Attribuer</button>';
+      }
+    }
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
     el.innerHTML = h;
-    document.getElementById("aps").onchange = function(){ choisi = this.value; confirmer = null; msg = ""; dessiner(); };
+    document.getElementById("aps").onchange = function(){ choisi = this.value; caseSel = ""; confirmer = null; msg = ""; dessiner(); };
+    document.getElementById("apc").onchange = function(){ caseSel = this.value; choisi = ""; confirmer = null; msg = ""; dessiner(); };
+    Array.prototype.forEach.call(el.querySelectorAll("[data-cx]"), function(b){ b.onclick = function(){ confirmer = "case"; dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-cnon]"), function(b){ b.onclick = function(){ confirmer = null; dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-coui]"), function(b){ b.onclick = function(){ var o = occ[+caseSel]; if(o) ecrire(o.champ, "", o.e.ligne); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-catt]"), function(b){ b.onclick = function(){ var v = document.getElementById("ape").value; if(!v){ msg = "▪ CHOISISSEZ UN EMPLOYÉ"; dessiner(); return; } ecrire(estPlace ? "place" : "casier1", caseSel, Number(v)); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-x]"), function(b){ b.onclick = function(){ confirmer = b.getAttribute("data-x"); dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-non]"), function(b){ b.onclick = function(){ confirmer = null; dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-oui]"), function(b){ b.onclick = function(){ ecrire(b.getAttribute("data-oui"), ""); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-att]"), function(b){ b.onclick = function(){ var t = b.getAttribute("data-att"), v = document.getElementById("apn-"+t).value; if(!v){ msg = "▪ CHOISISSEZ UN NUMÉRO"; dessiner(); return; } ecrire(t, v); }; });
   }
-  function ecrire(type, valeur){
+  function ecrire(type, valeur, ligne){
     msg = "▪ ENREGISTREMENT…"; confirmer = null; dessiner();
-    appelService({action:"parking_ecrire", session:sessionGardee(), type:type, ligne:Number(choisi), valeur:valeur}).then(function(r){
+    appelService({action:"parking_ecrire", session:sessionGardee(), type:type, ligne:(ligne !== undefined ? ligne : Number(choisi)), valeur:valeur}).then(function(r){
       if(r && r.ok){ d = r; msg = "▪ ENREGISTRÉ"; } else msg = "▪ " + String((r && r.erreur) || "ÉCHEC").toUpperCase();
       dessiner();
     }).catch(function(){ msg = "▪ ÉCHEC · RÉESSAYEZ"; dessiner(); });
@@ -1027,10 +1058,10 @@ function entretien(){
     };
   }
   appelService({action:"entretien_lire", session:sessionGardee()}).then(function(r){
-    if(!r || !r.ok) throw 0; d = r;
+    if(!r || !r.ok) throw new Error((r && r.erreur) || "réponse vide"); d = r;
     if(tous){ var s = secteurs(); if(!d.machines.some(function(m){ return !m.resp; })) sel = s[0] || "non"; }
     dessiner();
-  }).catch(function(){ var el = document.getElementById("en"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
+  }).catch(function(e){ var el = document.getElementById("en"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>' + (tous && e && e.message ? '<div class="etiq" style="margin-top:10px">'+esc(String(e.message).slice(0,160))+'</div>' : ""); });
 }
 // Nouveau message / Nouvelle réunion (agendas Google de la personne connectée) et Mes événements.
 var JOURS_C = ["L","M","M","J","V","S","D"];
@@ -1299,7 +1330,7 @@ function mesEvenements(){
   function dessiner(){
     var el = document.getElementById("me"); if(!el) return;
     var h = liste.length ? liste.map(function(e, i){ var d0 = new Date(e.debut);
-      return '<a href="#" class="ligne" data-i="'+i+'" style="color:inherit;text-decoration:none'+(choisi === i ? ';background:var(--tx);color:var(--noir)' : '')+'"><span>'+esc(e.titre)+'</span><span>'+d0.getDate()+" "+MOIS_LONGS[d0.getMonth()].slice(0,4)+". · "+heureTxt(d0.getHours(), d0.getMinutes())+(e.serie ? " · série" : "")+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR</div>';
+      return '<a href="#" class="ligne" data-i="'+i+'" style="color:inherit;text-decoration:none'+(choisi === i ? ';background:var(--tx);color:var(--noir)' : '')+'"><span>'+esc(e.titre)+'</span><span>'+d0.getDate()+" "+MOIS_LONGS[d0.getMonth()].slice(0,4)+". · "+heureTxt(d0.getHours(), d0.getMinutes())+(e.serie ? " · série" : "")+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE MOIS</div>';
     if(choisi !== null && !mode) h += '<div class="aeact"><button type="button" class="bouton" id="mm">Modifier</button><button type="button" class="bouton" id="ms">Supprimer</button></div>';
     if(choisi !== null && mode){ h += '<div class="etq" style="margin-top:12px">SUPPRIMER</div><div class="aeact"><button type="button" class="bouton" id="m1">Cet événement</button>'+(liste[choisi].serie ? '<button type="button" class="bouton" id="m2">Toute la série</button>' : '')+'</div>'; }
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
@@ -1423,7 +1454,7 @@ function suiviCharge(){
   }).catch(function(){ var el = document.getElementById("sc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function gestionEmployes(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Employés</h1><div id="ge"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Retirer un employé</h1><div id="ge"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function agir(id, nom, actif){
     confirmerOuiNon((actif ? "Réactiver " : "Désactiver ")+nom+"?", function(){
@@ -1445,11 +1476,18 @@ function gestionEmployes(){
     var el = document.getElementById("ge"); if(!el) return;
     if(!r || !r.ok) throw 0;
     el.innerHTML = '<div class="etq">CHOISIR UN EMPLOYÉ</div><select class="champ" id="gs">'+r.actifs.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
-      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0">Désactiver</button></div>' +
+      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gret" style="margin:0">Retirer</button></div>' +
       '<div class="etiq">▪ INACTIFS</div>' +
       (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:6px 14px">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:6px 14px">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
-    document.getElementById("gdes").onclick = function(){ var s = document.getElementById("gs"); if(s.value) agir(s.value, s.options[s.selectedIndex].text, false); };
-    document.getElementById("gsup").onclick = function(){ var s = document.getElementById("gs"); if(s.value) supprimer(s.value, s.options[s.selectedIndex].text); };
+    document.getElementById("gret").onclick = function(){ var s = document.getElementById("gs"); if(!s.value) return; var id = s.value, nom = s.options[s.selectedIndex].text;
+      var f = document.createElement("div");
+      f.style.cssText = "position:fixed;inset:0;background:rgba(15,20,32,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50";
+      f.innerHTML = '<div style="background:#e3dfd3;color:#111;border:1.5px solid #111;padding:20px;width:100%;max-width:340px"><div style="font-size:15px;line-height:1.5;margin-bottom:16px">Retirer '+esc(nom)+' ?</div><div class="aeact" style="margin:0;flex-direction:column;gap:8px"><button type="button" class="bouton" id="rdes" style="margin:0">Désactiver</button><button type="button" class="bouton" id="rsup" style="margin:0;background:#a32d2d;color:#fff">Supprimer</button><button type="button" class="bouton" id="rann" style="margin:0">Annuler</button></div></div>';
+      document.body.appendChild(f);
+      document.getElementById("rann").onclick = function(){ f.remove(); };
+      document.getElementById("rdes").onclick = function(){ f.remove(); agir(id, nom, false); };
+      document.getElementById("rsup").onclick = function(){ f.remove(); supprimer(id, nom); };
+    };
     Array.prototype.forEach.call(el.querySelectorAll("button[data-s]"), function(b){ b.onclick = function(){ var x = r.inactifs[+b.getAttribute("data-s")]; supprimer(x.id, x.nom); }; });
     Array.prototype.forEach.call(el.querySelectorAll("button[data-k]"), function(b){ b.onclick = function(){ var x = r.inactifs[+b.getAttribute("data-k")]; agir(x.id, x.nom, true); }; });
   }).catch(function(){ var el = document.getElementById("ge"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
@@ -1526,7 +1564,7 @@ function calendrier(){
     var jours = r.jours, m = new Date(); m.setDate(1);
     el.innerHTML = '<div class="moisbar"><button type="button" id="cp" aria-label="Mois précédent">Précédent</button><b id="ct"></b><button type="button" id="cn" aria-label="Mois suivant">Suivant</button></div><div class="cg" id="cg"></div>' +
       '<div class="leg"><span><i class="sq" style="background:var(--tx)"></i>Férié</span><span><i class="sq" style="background:#8EFF60"></i>Fermeture</span><span><i class="sq" style="border:1.5px solid var(--tx)"></i>Réunion</span><span><i class="sq" style="border-bottom:3px solid var(--tx)"></i>Congé</span></div>' +
-      '<div class="etiq" style="margin-top:24px">▪ À VENIR</div><div id="cl"></div>';
+      '<div class="etiq" style="margin-top:24px">▪ ÉVÉNEMENTS DU MOIS</div><div id="cl"></div>';
     function iso(y, mo, d){ return y+"-"+("0"+(mo+1)).slice(-2)+"-"+("0"+d).slice(-2); }
     function dessiner(){
       var y = m.getFullYear(), mo = m.getMonth(), nb = new Date(y, mo+1, 0).getDate(), prem = (new Date(y, mo, 1).getDay()+6)%7;
@@ -1540,8 +1578,8 @@ function calendrier(){
         g += '<div class="'+cl+'">'+d+'</div>';
       }
       document.getElementById("cg").innerHTML = g;
-      var auj = new Date(); auj.setHours(0,0,0,0); var deb = iso(auj.getFullYear(), auj.getMonth(), auj.getDate());
-      var li = jours.filter(function(x){ return x.d >= deb; });
+      var pm = iso(y, mo, 1).slice(0, 7);   // seulement le mois choisi dans le calendrier
+      var li = jours.filter(function(x){ return x.d.slice(0, 7) === pm; });
       document.getElementById("cl").innerHTML = li.length ? li.map(function(x){ var a = x.d.split("-");
         return '<div class="cli"><span class="cdt">'+(+a[2])+" "+MOIS_COURTS[+a[1]-1]+"</span><span>"+esc(x.n)+'</span>'+(x.h ? '<span class="chh">'+esc(x.h)+'</span>' : '')+'</div>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR</div>';
     }

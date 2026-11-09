@@ -209,7 +209,7 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .pied-connexion .emp{font-size:15px;color:var(--tx);margin-top:8px}
 .menu a[data-i]{justify-content:space-between;gap:10px}
 .nombre{font-size:11px;letter-spacing:.5px;font-weight:500;padding:3px 8px;text-transform:none}
-.menu a[data-i] .pastille{width:8px;height:8px;padding:0;background:var(--tx2);font-size:0}
+.menu a[data-i] .pastille{font-size:11px;letter-spacing:.5px;font-weight:500;padding:3px 8px;text-transform:none}
 @media (min-width:900px){
   .connexion .pied-connexion{position:static;left:auto;right:auto}
   .pied-connexion .ldld{font-size:clamp(70px,10vw,170px)}
@@ -759,3 +759,14 @@ textarea.bx{min-height:90px;resize:vertical}
 .bl{min-height:71px;margin:4px 0 20px}
 .bl .rt{width:78px;height:56px;min-height:56px}
 .bl h1.ti{margin:28px 0 0 81px;min-height:43px;max-width:calc(100% - 81px)}
+/* Organigramme du Manuel */
+.org{margin:10px 0 18px}.org .orp{display:block;background:#0D1319;color:#fff;padding:14px 16px;letter-spacing:.2em;text-transform:uppercase;font-size:13px;text-align:center;margin:0 0 6px}
+.org .ogr{background:#E3DFD3;color:#0D1319;padding:12px;margin:0 0 6px;border-top:3px solid #0D1319}.org .ogt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px}
+.org .og4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.org .og2{display:grid;grid-template-columns:1fr 1fr;gap:6px}.org .og2 .ogr{margin:0}
+.org .oc{border:1px solid #0D1319;padding:9px 8px;font-size:11px;line-height:1.25;overflow-wrap:anywhere;hyphens:auto}.org .oc i{display:block;font-style:normal;opacity:.6;font-size:8px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+.org .oc.on{background:#0D1319;color:#fff}.org .oc.on i{color:#8EFF60;opacity:1}.org .oz{grid-column:1/-1;border-style:dashed;font-size:12px}.org .ov{grid-row:span 2}
+
+.org .olg{font-size:10px;letter-spacing:.2em;text-transform:uppercase;text-align:center;margin:26px 0 8px;display:flex;align-items:center;gap:10px}.org .olg:before,.org .olg:after{content:"";flex:1;height:1px;background:#0D1319}
+.org .og2 .ogr{background:transparent;border:1px solid #0D1319;border-top:3px solid #0D1319}
+.org>.ogr{border:1px solid #0D1319;border-top:3px solid #0D1319}
+.org .od{background:#E3DFD3;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:14px 12px;margin:0 0 6px}
