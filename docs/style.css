@@ -613,3 +613,7 @@ textarea.bx{min-height:90px;resize:vertical}
 .demarrage .lgx{width:62vw;max-width:300px;aspect-ratio:679/564}
 .demarrage .lgx img{width:100%;max-width:none;height:100%;aspect-ratio:auto}
 .connexion .lgx img{animation:none!important}
+/* Même style que l'accueil partout : majuscules espacées, 15 px */
+.page .doc,.page .rang{text-transform:uppercase;letter-spacing:.1em;font-size:15px;padding:15px 0}
+.page .doc em{text-transform:none;letter-spacing:0}
+.page .rang small{text-transform:none;letter-spacing:0;font-size:12px}
