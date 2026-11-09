@@ -53,6 +53,7 @@ function decorerTitres(){
   });
 }
 function majRetour(){
+  var pg = app.querySelector(".page"); if(pg) pg.classList.toggle("defile", (window.pageYOffset || 0) > 2);
   Array.prototype.forEach.call(app.querySelectorAll(".page.bl-ok > a.retour"), function(r){
     var bl = r.parentNode.querySelector(".bl");
     var vu = !bl || bl.getBoundingClientRect().bottom > 0;
@@ -74,10 +75,37 @@ function demarrage(){
 // Service LDLD (Google Apps Script) : connexion par code envoyé au courriel LDLD; il ne répond qu'avec les données de l'employé connecté.
 var URL_SERVICE = "https://script.google.com/macros/s/AKfycbwq9SXysg5GHL6GsPFBSTmoKZzm9_wGr4E3W0e-RzXcHeknz5_DMBFIxBarHHczgpwnZw/exec";
 var MOI = null;   // {nom, poste, responsable} après connexion
-function appelService(corps){
+function appelBrut(corps){
   var ctl = window.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function(){ ctl.abort(); }, 30000) : 0;   // jamais de « CHARGEMENT… » sans fin
   return fetch(URL_SERVICE, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined})
     .then(function(r){ clearTimeout(t); return r.json(); }, function(e){ clearTimeout(t); throw e; });
+}
+
+// Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
+var RCACHE = {};
+var LECT = {ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
+var NEUTRE = {moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1};
+function copie(r){ return JSON.parse(JSON.stringify(r)); }
+function cleLecture(c){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); return JSON.stringify(o); }
+function appelService(corps){
+  var a = corps && corps.action;
+  if(!LECT[a]){ if(!NEUTRE[a] && !/_liste$|_fichier$/.test(a || "")) RCACHE = {}; return appelBrut(corps); }
+  var k = cleLecture(corps), e = RCACHE[k], t = Date.now();
+  if(e && t - e.t < 180000){
+    if(t - e.t > 20000 && !e.maj){ e.maj = 1; appelBrut(corps).then(function(r){ if(r && r.ok) RCACHE[k] = {t: Date.now(), p: Promise.resolve(r)}; }).catch(function(){}); }
+    return e.p.then(copie);
+  }
+  var p = appelBrut(corps); RCACHE[k] = {t: t, p: p};
+  p.then(function(r){ if(!(r && r.ok) && RCACHE[k] && RCACHE[k].p === p) delete RCACHE[k]; }, function(){ if(RCACHE[k] && RCACHE[k].p === p) delete RCACHE[k]; });
+  return p.then(copie);
+}
+function prechargerLectures(){
+  if(!MOI) return;
+  var l = [{action:"agenda_mes"}, {action:"rencontre_liste"}, {action:"prefs_lire"}];
+  if(MOI.role === "direction" || MOI.role === "responsable") l = l.concat([{action:"charge_equipe"}, {action:"entretien_lire"}, {action:"parking_lire"}, {action:"equipe_groupes"}, {action:"utilisation"}, {action:"agenda_liste"}]);
+  if(MOI.role === "direction") l = l.concat([{action:"employes_etat"}, {action:"emp_donnees"}, {action:"ech_donnees"}, {action:"embauche_donnees"}, {action:"embauche_avantages"}, {action:"pos_donnees"}, {action:"portrait", id:""}]);
+  var i = 0; function suite(){ if(i >= l.length) return; var c = l[i++]; c.session = sessionGardee(); var e = RCACHE[cleLecture(c)]; ((e && Date.now() - e.t < 150000) ? Promise.resolve() : appelService(c).catch(function(){})).then(suite); }
+  suite(); setTimeout(suite, 300);
 }
 
 // Tout est préchargé avant l'arrivée sur la page : copie locale affichée tout de suite, vérification silencieuse ensuite.
@@ -87,7 +115,7 @@ function chercher(cle, corps){
   corps.session = sessionGardee();
   return appelService(corps).then(function(r){ if(r && r.ok){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
 }
-function viderCache(){ CACHE = {}; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
+function viderCache(){ CACHE = {}; RCACHE = {}; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
 /** Affiche la copie locale (sans écran de chargement) puis remplace en silence si la version a changé. */
 function obtenir(cle, corps, afficher, erreur, majSilencieuse){
   var local = lireCache(cle);
@@ -229,7 +257,7 @@ function menu(){
   if(notifPossible() && !dejaDemande && Notification.permission === "default") return ecranNotifs();
   if(notifPossible() && Notification.permission === "granted" && !menu.abonne){ menu.abonne = true; abonnerNotifs().catch(function(){}); }
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
-  precharger();
+  precharger(); setTimeout(prechargerLectures, 400);
   var animer = !menu.anime; menu.anime = true;
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' +
     (peutEcrire() ? '<a href="#" id="resp">'+picto(MOI.role === "direction" ? "Direction" : "Gestionnaire")+(MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</a>' : '') +
@@ -325,7 +353,7 @@ function prechargerDocs(){
     }).catch(function(){});
   }));
 }
-document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && sessionGardee() && MOI){ prechargerDocs(); precharger(); } });
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && sessionGardee() && MOI){ prechargerDocs(); precharger(); prechargerLectures(); } });
 // Visionneuse intégrée (consultation seulement) : le PDF est dessiné page par page dans l'application, sans barre ni bouton d'enregistrement.
 function chargerScript(src){ return new Promise(function(ok, ko){ var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }); }
 function visionneuse(titre, blob, retour){

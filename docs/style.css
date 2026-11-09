@@ -657,3 +657,6 @@ textarea.bx{min-height:90px;resize:vertical}
 .ech .echc input.vide{background:#f4b3c4;border-bottom-color:#f4b3c4}
 .ech .e5 .mx{border-top:0}
 .fin .finl,.fin .sect{border-bottom:0}.fin select.finsel{appearance:none;-webkit-appearance:none}
+
+/* La bande ne sert que quand la page défile: au repos le logo/titre n'est jamais coupé */
+.page:not(.defile)::before{display:none}
