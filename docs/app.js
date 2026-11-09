@@ -92,8 +92,8 @@ function appelDirect(corps){
 
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
-var LECT = {heures:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
-var NEUTRE = {moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1};
+var LECT = {heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
+var NEUTRE = {moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 function cleLecture(c){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); return JSON.stringify(o); }
 function appelService(corps){
@@ -753,6 +753,13 @@ function tableau(){
       document.getElementById("ts").onclick = function(){ i--; dessiner(); };
     }
     dessiner();
+    // Graphique par jour (fichier séparé de Gestion): ajouté sans attente, la page s'affiche d'abord
+    var MG = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
+    chercher("charges_jours", {action:"charges_jours"}).then(function(c){
+      if(!c || !c.ok || !c.mois) return;
+      ms.forEach(function(m){ var q = String(m.label).split(" "), k = MG.indexOf(q[0]); if(k < 0) return; var cle = q[1]+"-"+("0"+(k+1)).slice(-2); if(c.mois[cle]) m.jours = c.mois[cle]; });
+      if(document.getElementById("tb")) dessiner();
+    }).catch(function(){});
   }, function(e){ var rep = e && e.reponse, el = document.getElementById("tb"); if(!el) return;
     el.innerHTML = '<div class="bandeau">▪ '+(rep && rep.erreur ? esc(String(rep.erreur).toUpperCase()) : (MOI && MOI.role === "direction" ? "PAS DE TABLEAU DE BORD POUR CE COMPTE" : "TABLEAU DE BORD INDISPONIBLE · RÉESSAYEZ"))+'</div>'; }, true);
 }
@@ -1492,7 +1499,7 @@ function calendrier(){
     if(!r || !r.jours) throw 0;
     var jours = r.jours, m = new Date(); m.setDate(1);
     el.innerHTML = '<div class="moisbar"><button type="button" id="cp" aria-label="Mois précédent">Précédent</button><b id="ct"></b><button type="button" id="cn" aria-label="Mois suivant">Suivant</button></div><div class="cg" id="cg"></div>' +
-      '<div class="leg"><span><i class="sq" style="background:var(--tx)"></i>Férié</span><span><i class="sq" style="background:#8EFF60"></i>Fermeture</span><span><i class="sq" style="border:1.5px solid var(--tx)"></i>Réunion</span></div>' +
+      '<div class="leg"><span><i class="sq" style="background:var(--tx)"></i>Férié</span><span><i class="sq" style="background:#8EFF60"></i>Fermeture</span><span><i class="sq" style="border:1.5px solid var(--tx)"></i>Réunion</span><span><i class="sq" style="border-bottom:3px solid var(--tx)"></i>Congé</span></div>' +
       '<div class="etiq" style="margin-top:24px">▪ À VENIR</div><div id="cl"></div>';
     function iso(y, mo, d){ return y+"-"+("0"+(mo+1)).slice(-2)+"-"+("0"+d).slice(-2); }
     function dessiner(){
@@ -1502,7 +1509,7 @@ function calendrier(){
       for(var i = 0; i < prem; i++) g += '<div class="cd"></div>';
       for(var d = 1; d <= nb; d++){
         var j = iso(y, mo, d), ev = jours.filter(function(x){ return x.d === j; }), cl = "cd";
-        if(ev.some(function(x){ return x.t === "f"; })) cl += " cf"; else if(ev.some(function(x){ return x.t === "c"; })) cl += " cc";
+        if(ev.some(function(x){ return x.t === "f"; })) cl += " cf"; else if(ev.some(function(x){ return x.t === "c"; })) cl += " cc"; else if(ev.some(function(x){ return x.t === "p"; })) cl += " cp";
         if(ev.some(function(x){ return x.t === "r"; })) cl += " cr";
         g += '<div class="'+cl+'">'+d+'</div>';
       }
@@ -1515,6 +1522,13 @@ function calendrier(){
     document.getElementById("cp").onclick = function(){ m.setMonth(m.getMonth()-1); dessiner(); };
     document.getElementById("cn").onclick = function(){ m.setMonth(m.getMonth()+1); dessiner(); };
     dessiner();
+    // Congés, fériés et fermetures du laboratoire (fichier séparé de Gestion)
+    chercher("calendrier_labo", {action:"calendrier_labo"}).then(function(c){
+      if(!c || !c.ok || !c.jours || !document.getElementById("cal")) return;
+      jours = jours.filter(function(x){ return x.t === "r"; }).concat(c.jours);
+      jours.sort(function(a, b){ return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; });
+      dessiner();
+    }).catch(function(){});
   }, function(){ var el = document.getElementById("cal"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
 }
 // Rencontre : l'employé choisit son responsable et un sujet; la demande arrive dans les Messages du responsable.
