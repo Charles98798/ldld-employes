@@ -1,5 +1,5 @@
 // Employé actuel (Direction): un employé à la fois, toutes les colonnes de la feuille « Employés — actuelle » (sauf colonnes cachées), dans l'ordre de la feuille.
-// Colonnes modifiables (M) = champ « mod » vrai: seules celles-ci s'enregistrent (pont: emp_actuel_donnees, emp_actuel_enregistrer). Les autres sont en lecture seule.
+// Version 1: LECTURE SEULE (décision 11-09): les changements passent par la fiche « Modifier un employé ». Pont: action emp_donnees. L'enregistrement des colonnes M (emp_actuel_enregistrer) est prêt mais désactivé.
 // Liste des employés: classement par catégorie (Direction, Gestionnaire, Expert technique, Administratif, Technologue, Professionnel en informatique, Auxiliaire), puis ordre alphabétique (prénom nom).
 var EA = {d: null, i: 0};
 var EA_ORDRE = ["direction", "gestionnaire", "expert technique", "administratif", "technologue", "professionnel en informatique", "auxiliaire"];
@@ -14,7 +14,7 @@ function eaTrier(l){
 function eaOuvrir(){
   app.innerHTML = '<div class="page ppx ea"><a class="retour" href="#" id="retour">← Retour</a><div id="ea_app"><p class="finnote">Chargement…</p></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  appelService({action: "emp_actuel_donnees", session: sessionGardee()}).then(function(r){
+  appelService({action: "emp_donnees", session: sessionGardee()}).then(function(r){
     if(r && r.ok){ EA.d = {employes: eaTrier(r.r.employes || [])}; EA.i = 0; eaRendu(); }
     else document.getElementById("ea_app").innerHTML = '<p class="finnote">' + eaEsc((r && r.erreur) || "Échec.") + '</p>';
   }).catch(function(){ document.getElementById("ea_app").innerHTML = '<p class="finnote">Réseau indisponible.</p>'; });
@@ -30,12 +30,12 @@ function eaChamps(){
   var e = EA.d.employes[EA.i], h = "";
   e.champs.forEach(function(c){
     h += '<div class="lab">' + eaEsc(c.titre) + '</div>';
-    if(c.mod) h += '<div class="fld"><input id="ea_' + eaEsc(c.cle) + '" autocomplete="off" class="' + (c.valeur === "" || c.valeur == null ? "vide" : "") + '" value="' + eaEsc(c.valeur) + '"></div>';
+    if(false && c.mod) h += '<div class="fld"><input id="ea_' + eaEsc(c.cle) + '" autocomplete="off" class="' + (c.valeur === "" || c.valeur == null ? "vide" : "") + '" value="' + eaEsc(c.valeur) + '"></div>';
     else h += '<div class="ro"><span>' + (c.valeur === "" || c.valeur == null ? "&nbsp;" : eaEsc(c.valeur)) + '</span></div>';
   });
   document.getElementById("ea_champs").innerHTML = h;
   e.champs.forEach(function(c){
-    if(!c.mod) return;
+    return;
     var el = document.getElementById("ea_" + c.cle); if(!el) return;
     el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; };
     el.onchange = function(){ eaSauver(e.id, c.cle, el.value); };
