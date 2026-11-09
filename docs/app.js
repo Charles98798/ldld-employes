@@ -41,7 +41,7 @@ function decorerTitres(){
   Array.prototype.forEach.call(app.querySelectorAll(".page:not(.vue) > h1:not([data-pt]), .page:not(.vue) > .pph > h1:not([data-pt]), .page:not(.vue) #pe > h1:not([data-pt]), .page:not(.vue) #ea_app > h1:not([data-pt]), .page:not(.vue) #pt > h1:not([data-pt])"), function(h){
     h.setAttribute("data-pt", "1");
     // Nouvelle page (titre différent): on repart en haut, sinon le titre reste caché sous l'heure du téléphone
-    if(h.textContent !== dernierTitre){ dernierTitre = h.textContent; window.scrollTo(0, 0); }
+    if(h.textContent !== dernierTitre){ dernierTitre = h.textContent; window.scrollTo(0, 0); requestAnimationFrame(function(){ window.scrollTo(0, 0); }); setTimeout(function(){ if(window.scrollY < 140) window.scrollTo(0, 0); }, 350); }
     var page = h.closest(".page"), retour = page.querySelector("a.retour");
     var bl = document.createElement("div"); bl.className = "bl" + (h.parentNode === page ? "" : " sa");
     var fl = document.createElement("a"); fl.className = "rt"; fl.href = "#"; fl.textContent = "←"; fl.setAttribute("aria-label", "Retour");

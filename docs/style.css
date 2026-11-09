@@ -685,6 +685,12 @@ textarea.bx{min-height:90px;resize:vertical}
 #tb .gc{color:#2e9d46}#tb .ge{color:#8D806A}#tb .gn{color:#1D1D1B}#tb .gd{color:#c2bcad}
 #tb .gjc .d{background:#E3DFD3}#tb .gjc .e{background:#8D806A}#tb .gjc .n{background:#fff;box-shadow:inset 0 0 0 1px #8D806A}
 #tb .gjd{color:#4a443a}
+<<<<<<< Updated upstream
 /* Cartes Charges de travail: barres aux couleurs du graphique */
 #tb .tbarre{background:#CBC6B8}#tb .tbarre i{background:#8D806A}
 #tb .tcarte.sans{display:block}#tb .tcarte.sans .tcib{text-align:left}
+=======
+/* Le bloc du titre n'est jamais couvert par la bande du haut; le carré ← garde sa taille complète */
+.bl{z-index:16}
+.bl .rt{border:0;padding:0;box-sizing:border-box;height:74px;min-height:74px}
+>>>>>>> Stashed changes
