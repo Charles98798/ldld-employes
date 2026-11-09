@@ -1508,5 +1508,13 @@ if("serviceWorker" in navigator){
   // Nouvelle version : si une autre prend le relais, on recharge une seule fois (hors connexion et saisie en cours)
   var avaitControleur = !!navigator.serviceWorker.controller, rechargee = false;
   navigator.serviceWorker.addEventListener("controllerchange", function(){ if(!avaitControleur || rechargee) return; rechargee = true; var a = document.activeElement; if(a && /INPUT|TEXTAREA/.test(a.tagName)) return; location.reload(); });
-  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").then(function(r){ try { r.update(); } catch(e){} }).catch(function(){}); });
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").then(function(r){
+    try { r.update(); } catch(e){}
+    // Retour dans l'application (écran d'accueil rouvert): nouvelle vérification de version, au plus une fois par minute
+    var derniere = Date.now();
+    document.addEventListener("visibilitychange", function(){
+      if(document.visibilityState !== "visible" || Date.now() - derniere < 60000) return;
+      derniere = Date.now(); try { r.update(); } catch(e){}
+    });
+  }).catch(function(){}); });
 }
