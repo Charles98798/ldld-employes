@@ -407,6 +407,8 @@ function manuel(){
     var secs = [], cur = {titre:"", blocs:[]};
     r.blocs.forEach(function(b){ if(b.t === "h"){ if(cur.blocs.length || cur.titre) secs.push(cur); cur = {titre:b.v, blocs:[b]}; } else cur.blocs.push(b); });
     secs.push(cur);
+    var prenom = MOI && MOI.nom ? String(MOI.nom).trim().split(/\s+/)[0] : "";
+    if(prenom) secs.forEach(function(x){ if(/mot de la direction/i.test(x.titre || "") && !(x.blocs[1] && /^bonjour/i.test(x.blocs[1].v || ""))) x.blocs.splice(1, 0, {t:"p", v:"Bonjour "+prenom+","}); });
     secs.forEach(function(x){ x.texte = sansAccent(JSON.stringify(x.blocs.map(function(b){ return b.v; }))); });
     var q0 = "";
     el.innerHTML = '<input class="rech" id="rech" type="search" placeholder="Rechercher un mot" autocomplete="off" aria-label="Rechercher un mot"><div id="res"></div><div id="corps"></div>';
