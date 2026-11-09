@@ -100,7 +100,7 @@ function appelService(corps){
   var a = corps && corps.action;
   if(!LECT[a]){ if(!NEUTRE[a] && !/_liste$|_fichier$/.test(a || "")) RCACHE = {}; return appelBrut(corps); }
   var k = cleLecture(corps), e = RCACHE[k], t = Date.now();
-  if(e && t - e.t < 180000){
+  if(e && t - e.t < 1800000){
     if(t - e.t > 20000 && !e.maj){ e.maj = 1; appelBrut(corps).then(function(r){ if(r && r.ok) RCACHE[k] = {t: Date.now(), p: Promise.resolve(r)}; }).catch(function(){}); }
     return e.p.then(copie);
   }
@@ -110,7 +110,7 @@ function appelService(corps){
 }
 function prechargerLectures(){
   if(!MOI) return;
-  var l = [{action:"heures"}, {action:"agenda_mes"}, {action:"rencontre_liste"}, {action:"prefs_lire"}];
+  var l = [{action:"heures"}, {action:"agenda_mes"}, {action:"rencontre_liste"}, {action:"prefs_lire"}, {action:"entretien_lire"}];
   if(MOI.role === "direction" || MOI.role === "responsable") l = l.concat([{action:"charge_equipe"}, {action:"entretien_lire"}, {action:"parking_lire"}, {action:"equipe_groupes"}, {action:"utilisation"}, {action:"agenda_liste"}]);
   if(MOI.role === "direction") l = l.concat([{action:"employes_etat"}, {action:"emp_donnees"}, {action:"ech_donnees"}, {action:"embauche_donnees"}, {action:"embauche_avantages"}, {action:"pos_donnees"}, {action:"portrait", id:""}]);
   var i = 0; function suite(){ if(i >= l.length) return; var c = l[i++]; c.session = sessionGardee(); var e = RCACHE[cleLecture(c)]; ((e && Date.now() - e.t < 150000) ? Promise.resolve() : appelService(c).catch(function(){})).then(suite); }
@@ -164,6 +164,8 @@ function precharger(){
   chercher("manuel_texte", {action:"manuel_texte"}).catch(function(){});
   chercher("calendrier", {action:"calendrier"}).catch(function(){});
   chercher("heures", {action:"heures"}).catch(function(){});
+  chercher("stationnement", {action:"stationnement"}).catch(function(){});
+  if(MOI && (MOI.role === "direction" || MOI.role === "responsable")) chercher("contacts", {action:"contacts"}).catch(function(){});
   chercher("ae", {action:"ae_lire"}).then(function(r){
     pastilleAuto();
     if(r && r.ok && r.rencontres) r.rencontres.forEach(function(m){ chercher("ae"+m.rencontre, {action:"ae_lire", rencontre:m.rencontre}).catch(function(){}); });
