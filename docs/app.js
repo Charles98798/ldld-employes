@@ -822,9 +822,11 @@ function planStationnement(plan, libres, emps){
   var l = {}, pris = {};
   (libres || []).forEach(function(n){ l[String(n)] = 1; });
   (emps || []).forEach(function(x){ if(/^\d+$/.test(String(x.place))) pris[String(+x.place)] = 1; });
-  var nc = plan.reduce(function(m, r){ return Math.max(m, r.length); }, 0), h = '<div class="gpl" style="grid-template-columns:repeat('+nc+',1fr)">';
-  plan.forEach(function(r){ for(var j = 0; j < nc; j++){ var t = String(r[j] || "").trim();
-    if(/^\d+$/.test(t)) h += '<b class="'+(l[String(+t)] && !pris[String(+t)] ? "lib" : "occ")+'">'+(+t)+'</b>'; else h += '<i></i>'; } });
+  var nc = plan.reduce(function(m, r){ return Math.max(m, r.length); }, 0), nr = plan.length;
+  var h = '<div class="gpl" style="grid-template-columns:repeat('+nc+',1fr);grid-template-rows:repeat('+nr+',1fr);aspect-ratio:'+nc+' / '+nr+'">';
+  if(nc >= 19 && nr >= 10) h += '<div class="bat" style="grid-area:3 / 10 / '+(nr + 1)+' / '+(nc + 1)+'"><span>LAFOND DESJARDINS</span><u class="p1"></u><u class="p2"></u><u class="p3"></u><u class="p4"></u></div>';
+  plan.forEach(function(r, i){ for(var j = 0; j < nc; j++){ var t = String(r[j] || "").trim();
+    if(/^\d+$/.test(t)) h += '<b style="grid-area:'+(i + 1)+' / '+(j + 1)+'" class="'+(l[String(+t)] && !pris[String(+t)] ? "lib" : "occ")+'">'+(+t)+'</b>'; } });
   return h + '</div>';
 }
 function grilleNumeros(libres, tous){
