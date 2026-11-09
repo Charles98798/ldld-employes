@@ -12,7 +12,7 @@ function eaTrier(l){
   });
 }
 function eaOuvrir(nomDebut){
-  app.innerHTML = '<div class="page ppx ea"><a class="retour" href="#" id="retour">Retour</a><div id="ea_app"><p class="finnote">Chargement…</p></div></div>';
+  app.innerHTML = '<div class="page ppx ea"><a class="retour" href="#" id="retour">Retour</a><div id="ea_app"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   appelService({action: "emp_donnees", session: sessionGardee()}).then(function(r){
     if(r && r.ok){ EA.d = {employes: eaTrier(r.r.employes || [])}; EA.i = 0; if(nomDebut){ EA.d.employes.forEach(function(e, k){ if(String(e.nom).toLowerCase().indexOf(nomDebut) === 0 && EA.i === 0) EA.i = k; }); } eaRendu(); }

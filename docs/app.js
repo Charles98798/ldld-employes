@@ -163,6 +163,7 @@ function precharger(){
   chercher("incendie_texte", {action:"incendie_texte"}).catch(function(){});
   chercher("manuel_texte", {action:"manuel_texte"}).catch(function(){});
   chercher("calendrier", {action:"calendrier"}).catch(function(){});
+  chercher("heures", {action:"heures"}).catch(function(){});
   chercher("ae", {action:"ae_lire"}).then(function(r){
     pastilleAuto();
     if(r && r.ok && r.rencontres) r.rencontres.forEach(function(m){ chercher("ae"+m.rencontre, {action:"ae_lire", rencontre:m.rencontre}).catch(function(){}); });
@@ -313,7 +314,7 @@ var FILTRE_MSG = "";
 function messages(filtre){
   if(typeof filtre === "string") FILTRE_MSG = filtre;
   var titreMsg = FILTRE_MSG === "envoyes" ? "Messages envoyés" : FILTRE_MSG === "rencontres" ? "Rencontres demandées" : "Messages";
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1><div id="liste"><div class="bandeau">▪ CHARGEMENT…</div></div>' +
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1><div id="liste"></div>' +
     (peutEcrire() && !FILTRE_MSG ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
   var w = document.getElementById("ecrire"); if(w) w.onclick = function(e){ e.preventDefault(); nouveau("message"); };
@@ -530,7 +531,7 @@ function dollars(n){ return n === null || n === undefined || n === "" ? "—" : 
 function taux(n){ var x = parseFloat(String(n).replace(",", ".")); return isNaN(x) ? "—" : x.toFixed(2).replace(".", ","); }
 function pctTxt(p){ var x = parseFloat(String(p).replace("%", "").replace(",", ".")); if(isNaN(x)) return String(p); if(x <= 1.5) x = x * 100; return Math.round(x) + " %"; }
 function salaire(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Rémunération</h1><div id="sa"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Rémunération</h1><div id="sa"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   appelService({action:"salaire_lire", session:sessionGardee()}).then(function(r){
     if(r && r.ok) return salaireEcran(r, 0);
@@ -622,7 +623,7 @@ function salaireNotes(r, k){
 }
 // Étape 5 : évaluations. L'autoévaluation reproduit la page du portail (mêmes 8 onglets, mêmes questions); en essai elle ne lit ni n'enregistre rien.
 function evaluations(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Autoévaluation</h1><div id="ev"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Autoévaluation</h1><div id="ev"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   obtenir("ae", {action:"ae_lire"}, function(r){
     var el = document.getElementById("ev"); if(!el) return;
@@ -638,7 +639,7 @@ var AE_ETAPES = ["Évaluation des compétences","Valeurs humaines","Connaissance
 var AE_NIVEAUX_RH = ["Pas du tout d’accord","Peu d’accord","Moyennement d’accord","Plutôt d’accord","Tout à fait d’accord"];
 function aeSection(f){ var n = +f.cell.slice(1); if(f.cell === "A68" || f.cell === "A70") return 7; if(n >= 59) return 6; if(f.cell === "B44") return 5; if(f.cell === "B42" || f.cell === "B43") return 4; return n >= 35 ? 2 : n >= 28 ? 1 : 0; }
 function autoeval(rencontre, direct){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">'+(direct ? "Retour" : "Retour")+'</a><h1>Autoévaluation</h1><div id="ae"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">'+(direct ? "Retour" : "Retour")+'</a><h1>Autoévaluation</h1><div id="ae"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(direct) menu(); else evaluations(); };
   obtenir("ae"+rencontre, {action:"ae_lire", rencontre:rencontre}, aeAfficher,
     function(){ document.getElementById("ae").innerHTML = '<div class="bandeau">▪ FICHE INDISPONIBLE · RÉESSAYEZ</div>'; }, false);
@@ -718,7 +719,7 @@ function graphJours(m){
     }).join("") + '<u style="bottom:calc(18px + '+(cible/160)+' * (100% - 34px))"></u></div></div>';
 }
 function tableau(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Charges de travail</h1><div id="tb"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Charges de travail</h1><div id="tb"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   obtenir("tableau", {action:"tableau"}, function(r){
     var el = document.getElementById("tb"); if(!el) return;
@@ -866,7 +867,7 @@ function grilleNumeros(libres, tous){
 }
 function attributionPage(genre){
   var estPlace = genre === "place", titre = estPlace ? "Stationnement" : "Casier";
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titre+'</h1><div id="ap"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titre+'</h1><div id="ap"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var d = null, choisi = "", msg = "", confirmer = null;
   function champsDe(e){ return estPlace ? [["place","Place"]] : [["casier1","Casier"]].concat(e.casier2 ? [["casier2","Casier 2"]] : []); }
@@ -909,7 +910,7 @@ function attributionPage(genre){
 // Entretien machinerie : responsables et direction consultent et modifient; l'employé voit seulement ses machines (« Mes entretiens »).
 function entretien(){
   var tous = peutEcrire(), d = null, vue = "secteur", sel = "non", msg = "", mode = "liste", fiche = null, pick = false, supprime = false;
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+"Entretien machinerie"+'</h1><div id="en"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+"Entretien machinerie"+'</h1><div id="en"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(tous && mode !== "liste"){ mode = "liste"; pick = false; dessiner(); } else if(tous) responsable(); else menu(); };
   function nomsLignes(t){ return String(t).split("\n").map(function(x){ return x.replace(/^\s*[▪•]\s*/, ""); }); }
   function nomHtml(t){ return nomsLignes(t).map(function(x, i, a){ return (a.length > 1 ? "▪ " : "") + esc(x); }).join("<br>"); }
@@ -1166,7 +1167,7 @@ function nouveau(onglet){
   onglet = onglet === "reunion" ? "reunion" : "message";
   app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Nouveau message</h1>' +
     '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton" id="ongM" style="margin:0;flex:1;'+(onglet === "message" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Message</button><button type="button" class="bouton" id="ongR" style="margin:0;flex:1;'+(onglet === "reunion" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Réunion</button></div>' +
-    '<div id="npart"><div class="bandeau">▪ CHARGEMENT…</div></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
+    '<div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); retirerBoutonBas(); responsable(); };
   var dire = function(t){ var e = document.getElementById("ne"); if(e){ e.style.display = "block"; e.textContent = t; } };
   var part = null, dh = dateHeure({}, function(){ majBouton(); }), brouillon = {titre: "", texte: "", sujet: "", repeter: "aucune"};
@@ -1218,7 +1219,7 @@ function nouveau(onglet){
 }
 // Modifier une réunion créée dans l'application: même formulaire que « Nouveau message · Réunion », déjà rempli.
 function modifierReunion(e){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Modifier la réunion</h1><div id="npart"><div class="bandeau">▪ CHARGEMENT…</div></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Modifier la réunion</h1><div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   var retour = function(){ retirerBoutonBas(); mesEvenements(); };
   document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); retour(); };
   var dire = function(t){ var x = document.getElementById("ne"); if(x){ x.style.display = "block"; x.textContent = t; } };
@@ -1257,7 +1258,7 @@ function modifierReunion(e){
   }).catch(function(){ document.getElementById("npart").innerHTML = '<div class="bandeau">▪ LISTE INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function mesEvenements(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes événements</h1><div id="me"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes événements</h1><div id="me"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
   var liste = [], choisi = null, msg = "", mode = "";
   function dessiner(){
@@ -1290,7 +1291,7 @@ function confirmerOuiNon(question, oui, rouge){
   document.getElementById("coui").onclick = function(){ f.remove(); oui(); };
 }
 function utilisationApp(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Utilisation</h1><div id="ut"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Utilisation</h1><div id="ut"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function pc(x){ return Math.round(x*100)+" %"; }
   function barre(x){ return '<div style="height:10px;border:1px solid var(--tx2);margin:4px 0 10px"><i style="display:block;height:100%;width:'+Math.round(x*100)+'%;background:var(--tx)"></i></div>'; }
@@ -1307,7 +1308,7 @@ function utilisationApp(){
 // Suivi de charge (responsables et direction): un employé à la fois, du premier au dernier, avec le bouton du bas.
 var SC_AGENDAS = null;
 function suiviCharge(){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi de charge</h1><div id="sc"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi de charge</h1><div id="sc"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var liste = [], i = 0, etat = "", noteOn = false, planOn = false, msg = "", occupe = false;
   var dh = null;
@@ -1387,7 +1388,7 @@ function suiviCharge(){
   }).catch(function(){ var el = document.getElementById("sc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function gestionEmployes(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Employés</h1><div id="ge"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Employés</h1><div id="ge"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function agir(id, nom, actif){
     confirmerOuiNon((actif ? "Réactiver " : "Désactiver ")+nom+"?", function(){
@@ -1438,7 +1439,7 @@ function sectionsPortrait(p){
   return h;
 }
 function portrait(id){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><div id="pt"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><div id="pt"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function dollars(n){ return n === null || n === undefined ? "—" : String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")+" $"; }
   appelService({action:"portrait", session:sessionGardee(), id:id || ""}).then(function(r){
@@ -1463,7 +1464,7 @@ function portrait(id){
 }
 function chiffresTel(t){ var d = String(t || "").replace(/\D/g, ""); return d.length === 10 ? "+1"+d : (d.length === 11 && d[0] === "1" ? "+"+d : d); }
 function contactsResp(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contacts</h1><input class="champ" id="cq" placeholder="Rechercher" autocomplete="off"><div class="ctl" id="ctl"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contacts</h1><input class="champ" id="cq" placeholder="Rechercher" autocomplete="off"><div class="ctl" id="ctl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var liste = [];
   function dessiner(){
@@ -1482,7 +1483,7 @@ function contactsResp(){
 var MOIS_COURTS = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
 var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 function calendrier(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   obtenir("calendrier", {action:"calendrier"}, function(r){
     var el = document.getElementById("cal"); if(!el) return;
@@ -1516,7 +1517,7 @@ function calendrier(){
 }
 // Rencontre : l'employé choisit son responsable et un sujet; la demande arrive dans les Messages du responsable.
 function rencontre(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre</h1><div id="rc"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre</h1><div id="rc"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   appelService({action:"rencontre_liste", session:sessionGardee()}).then(function(r){
     var el = document.getElementById("rc"); if(!el) return;
@@ -1550,13 +1551,13 @@ function rencontre(){
 }
 function heures(){
   // Vraies heures du logiciel de gestion (pointages de la borne, mises à jour aux 15 minutes). Tout tient sur un écran.
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes heures</h1><div id="hz"><div class="bandeau">▪ CHARGEMENT…</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes heures</h1><div id="hz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   function hm(m){ if(m === null || m === undefined) return "—"; var h = Math.floor(m / 60), n = m % 60; return h + " h " + (n < 10 ? "0" : "") + n; }
   var JOURS = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
   function ligne(x){ var d = new Date(x.date + "T12:00:00"); return [JOURS[d.getDay()] + " " + d.getDate(), hm(x.min)]; }
   function col(t, r){ var tot = 0, vu = false; r.forEach(function(x){ if(x.min !== null){ tot += x.min; vu = true; } }); return '<div><h2 class="h2">'+t+'</h2>'+r.map(function(x){ var l = ligne(x); return '<div class="hc"><span>'+l[0]+'</span><b>'+l[1]+'</b></div>'; }).join("")+'<div class="htot"><span>Total</span><b>'+(vu ? hm(tot) : "—")+'</b></div></div>'; }
-  appelService({action:"heures", session:sessionGardee()}).then(function(r){
+  function afficherH(r){
     var z = document.getElementById("hz"); if(!z) return;
     if(!r || !r.ok){ z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; return; }
     var pts = (r.pointagesAuj || []).map(function(x, i, a){
@@ -1566,7 +1567,8 @@ function heures(){
     z.innerHTML = '<div class="hgros" style="margin-top:18px">'+(r.minutesAuj === null || r.minutesAuj === undefined ? "—" : hm(r.minutesAuj))+'</div><div class="hsous">Faites depuis le début de la journée</div>' +
       (pts ? '<h2 class="h2" style="margin-top:22px">Aujourd\'hui</h2>'+pts : '') +
       '<div class="hcols">'+col("Cette semaine", r.cette || [])+col("Semaine passée", r.passee || [])+'</div>';
-  }).catch(function(){ var z = document.getElementById("hz"); if(z) z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; });
+  }
+  obtenir("heures", {action:"heures"}, afficherH, function(){ var z = document.getElementById("hz"); if(z) z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
 function section(i){
   if(i === 0) return messages("");
