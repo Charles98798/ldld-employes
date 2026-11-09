@@ -661,10 +661,7 @@ textarea.bx{min-height:90px;resize:vertical}
 /* Titres dans une zone redessinée souvent: pas d'animation à chaque redessin */
 .bl.sa .rt,.bl.sa h1.ti{animation:none}
 /* Bande du haut collante (dans la page, pas par-dessus): au repos elle occupe sa place au-dessus du logo, donc ne peut jamais le couvrir; au défilement le texte s'arrête juste sous l'heure */
-.page{padding-top:0!important}
-.page::before{content:"";display:block;position:sticky;top:0;z-index:15;height:calc(max(env(safe-area-inset-top,0px),47px) + 6px);margin:0 -26px 8px;background:var(--noir);pointer-events:none}
 /* La bande ne sert que quand la page défile: au repos le logo/titre n'est jamais coupé */
-.page:not(.defile)::before{display:none}
 .gpl{display:grid;gap:2px;margin:6px 0 26px}
 .gpl b,.gpl i{display:flex;align-items:center;justify-content:center;aspect-ratio:1;font-weight:400;font-size:9px;font-style:normal}
 .gpl .occ{background:#0D1319;color:#8EFF60}.gpl .lib{background:#B4AB9B;color:#0D1319}
@@ -673,3 +670,5 @@ textarea.bx{min-height:90px;resize:vertical}
 .gpl .bat .p1{left:12%}.gpl .bat .p2{left:30%}.gpl .bat .p3{left:62%}
 .gpl .bat .p4{border-left:0;border-right:6px solid #111;border-top:4px solid transparent;border-bottom:4px solid transparent;top:82%;left:0}
 .gpl b{aspect-ratio:auto!important}
+/* Zone sûre en haut (publication 98): une bande fixe de la couleur de la page, de la hauteur de l'heure du téléphone; le défilement passe dessous, rien n'est jamais visible sous l'heure */
+.page::before,.menu::before{content:"";position:fixed;left:0;right:0;top:0;height:calc(max(env(safe-area-inset-top,0px),47px) + 4px);background:inherit;z-index:15;pointer-events:none}
