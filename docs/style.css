@@ -770,3 +770,19 @@ textarea.bx{min-height:90px;resize:vertical}
 .org .og2 .ogr{background:transparent;border:1px solid #0D1319;border-top:3px solid #0D1319}
 .org>.ogr{border:1px solid #0D1319;border-top:3px solid #0D1319}
 .org .od{background:#E3DFD3;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:14px 12px;margin:0 0 6px}
+.moisbar{max-width:100%}.moisbar b{min-width:0;white-space:normal;font-size:12px;letter-spacing:.06em;line-height:1.25}
+body:has(.btnbas) .page{padding-bottom:90px}
+/* Accueil unique à groupes */
+.menu a[data-k]{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.menu a[data-k] .pastille{font-size:11px;letter-spacing:.5px;font-weight:500;padding:3px 8px;text-transform:none}
+.menu .gtit{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#8D806A;margin:26px 0 2px}
+.menu .gtit:first-of-type{margin-top:18px}
+
+.ctg{display:grid;grid-template-columns:1fr 58px 80px 66px;gap:8px 4px;align-items:center;margin-top:14px}
+.ctg>b{font-weight:400;font-size:9px;letter-spacing:.08em;text-transform:uppercase;text-align:center}.ctg>b i{display:block;width:14px;height:4px;margin:4px auto 0}
+.ctg .ctt{grid-column:1/-1;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#8D806A;margin-top:14px}
+.ctg .ctn{font-size:12px;letter-spacing:.08em;text-transform:uppercase}.ctg .ctn small{font-size:9px;color:#8D806A}
+.ctc{justify-self:center;width:22px;height:22px;padding:0;border:1.5px solid #0D1319;background:transparent;border-radius:0}
+.ctc.bq{opacity:1}.ctc:disabled{opacity:1;cursor:default}
+.menu a[data-k]>span{display:flex;align-items:center;min-width:0}
+.ctg{grid-auto-rows:min-content;align-content:start}.ctc{display:block;height:22px;min-height:0;max-height:22px;margin:0;box-sizing:border-box}

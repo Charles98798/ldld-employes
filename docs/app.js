@@ -153,7 +153,7 @@ function nbDemandesNeuves(){
 }
 function pastilleTexte(n){ return n + (n > 1 ? " nouveaux" : " nouveau"); }
 function pastilleDirection(){
-  var a = document.getElementById("resp"); if(!a) return;
+  var a = app.querySelector('a[data-k="rencontres_demandees"]'); if(!a) return;
   var p = a.querySelector(".nombre"); if(p) p.remove();
   var n = nbDemandesNeuves();
   if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = pastilleTexte(n); a.appendChild(p); }
@@ -294,6 +294,62 @@ function chargerAujourdhui(){
   appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(lundiDe(t)), agenda:"primary"}).then(function(r){
     if(r && r.ok){ AUJ = r.evenements; dessinerAujourdhui(); } }).catch(function(){});
 }
+// Accueil unique: chaque entrée a un groupe, un pictogramme et des droits par défaut [employé, responsable, direction].
+// La page Contrôle (Direction) peut changer les droits des entrées non verrouillées; le service refuse aussi l'accès.
+var ENT = [
+ {id:"mes_heures", g:"Mon compte", l:"Mes heures", p:"Mes heures", d:[1,1,1], i:9, f:function(){ section(9); }},
+ {id:"messages", g:"Mon compte", l:"Messages", p:"Messages", d:[1,1,1], i:0, f:function(){ section(0); }},
+ {id:"tableau_de_bord", g:"Mon compte", l:"Tableau de bord", p:"Tableau de bord", d:[1,1,1], i:4, f:function(){ section(4); }},
+ {id:"calendrier", g:"Mon compte", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
+ {id:"rencontre", g:"Mon compte", l:"Rencontre", p:"Rencontre", d:[1,1,1], i:7, f:function(){ section(7); }},
+ {id:"autoevaluation", g:"Mon compte", l:"Autoévaluation", p:"Autoévaluation", d:[1,1,1], i:2, f:function(){ section(2); }},
+ {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
+ {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
+ {id:"nouveau_message", g:"Équipe", l:"Nouveau message", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
+ {id:"suivi_charge", g:"Équipe", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
+ {id:"contacts", g:"Équipe", l:"Contacts", p:"Contacts", d:[0,1,1], f:function(){ contactsResp(); }},
+ {id:"messages_envoyes", g:"Équipe", l:"Messages envoyés", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
+ {id:"rencontres_demandees", g:"Équipe", l:"Rencontres demandées", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
+ {id:"employe_actuel", g:"Équipe", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
+ {id:"portrait", g:"Équipe", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portrait(); }},
+ {id:"retirer_employe", g:"Équipe", l:"Retirer un employé", p:"Employés", d:[0,0,1], f:function(){ gestionEmployes(); }},
+ {id:"positionnement_embauche", g:"Équipe", l:"Positionnement embauche", p:"Positionnement", d:[0,0,1], f:function(){ embauchePos(); }},
+ {id:"positionnement_employe", g:"Équipe", l:"Positionnement employé", p:"Positionnement", d:[0,0,1], f:function(){ posEmpOuvrir(); }},
+ {id:"echelle_salariale", g:"Équipe", l:"Échelle salariale", p:"Échelle salariale", d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
+ {id:"utilisation", g:"Équipe", l:"Utilisation de l'application", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
+ {id:"stationnement", g:"Installations", l:"Stationnement", p:"Stationnement", d:[0,1,1], f:function(){ attributionPage("place"); }},
+ {id:"casier", g:"Installations", l:"Casier", p:"Casier", d:[0,1,1], f:function(){ attributionPage("casier"); }},
+ {id:"entretien_machinerie", g:"Installations", l:"Entretien machinerie", p:"Entretien machinerie", d:[1,1,1], f:function(){ entretien(); }},
+ {id:"conseil", g:"Finances", l:"Conseil d'administration", p:"Conseil d'administration", d:[0,0,1], f:function(){ financeMenu(); }},
+ {id:"finances", g:"Finances", l:"Finances", p:"Finances", d:[0,0,1], v:1, f:function(){ financesMenu(); }},
+ {id:"conseil_production", g:"Finances", l:"Conseil · Production", p:"Production", d:[0,0,1], s:1},
+ {id:"conseil_indicateurs", g:"Finances", l:"Conseil · Indicateurs", p:"Indicateurs", d:[0,0,1], s:1},
+ {id:"conseil_ratios", g:"Finances", l:"Conseil · Ratios en %", p:"Ratios par catégorie", d:[0,0,1], s:1},
+ {id:"finances_indicateurs", g:"Finances", l:"Finances · Indicateurs", p:"Indicateurs", d:[0,0,1], v:1, s:1},
+ {id:"finances_ratios", g:"Finances", l:"Finances · Ratios en $", p:"Ratios par catégorie", d:[0,0,1], v:1, s:1},
+ {id:"finances_ventes", g:"Finances", l:"Finances · Ventes vs an passé", p:"Ventes vs an passé", d:[0,0,1], v:1, s:1},
+ {id:"finances_tresorerie", g:"Finances", l:"Finances · Trésorerie", p:"Trésorerie", d:[0,0,1], v:1, s:1},
+ {id:"finances_clients", g:"Finances", l:"Finances · Comptes clients", p:"Comptes clients", d:[0,0,1], v:1, s:1},
+ {id:"finances_etats", g:"Finances", l:"Finances · États financiers", p:"États financiers", d:[0,0,1], v:1, s:1},
+ {id:"manuel", g:"Documents", l:"Manuel d'employé", p:"Manuel", d:[1,1,1], i:1, f:function(){ section(1); }},
+ {id:"plan_incendie", g:"Documents", l:"Plan d'incendie", p:"Plan d'incendie", d:[1,1,1], i:5, f:function(){ section(5); }},
+ {id:"controle", g:"Contrôle", l:"Contrôle", p:"Contrôle", d:[0,0,1], v:1, f:function(){ controleOuvrir(); }}
+];
+var ENT_PAR_ID = {}; ENT.forEach(function(x){ ENT_PAR_ID[x.id] = x; });
+var ORDRE_EMPLOYE = ["mes_heures","messages","tableau_de_bord","calendrier","rencontre","autoevaluation","remuneration","manuel","plan_incendie","mon_profil","entretien_machinerie"];
+var DROITS_SERVICE = null;   // {id: true/false} pour mon rôle, lu du service (action onglets_lire); absent = droits par défaut
+function roleIdx(){ return MOI && MOI.role === "direction" ? 2 : (MOI && MOI.role === "responsable" ? 1 : 0); }
+function entreeOk(x){
+  var r = roleIdx();
+  if(r === 2 || x.v) return !!x.d[r];
+  if(DROITS_SERVICE && DROITS_SERVICE.hasOwnProperty(x.id)) return !!DROITS_SERVICE[x.id];
+  return !!x.d[r];
+}
+function entreesVisibles(){
+  var l = ENT.filter(function(x){ return !x.s && entreeOk(x); });
+  if(!peutEcrire()){ var o = ORDRE_EMPLOYE; l.sort(function(a, b){ var x = o.indexOf(a.id), y = o.indexOf(b.id); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); }); }
+  return l;
+}
 function menu(){
   var dejaDemande = false; try { dejaDemande = localStorage.getItem("ldld-notif-demande") === "1"; } catch(e){}
   if(notifPossible() && !dejaDemande && Notification.permission === "default") return ecranNotifs();
@@ -301,20 +357,22 @@ function menu(){
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger(); setTimeout(prechargerLectures, 400);
   var animer = !menu.anime; menu.anime = true;
-  app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' +
-    (peutEcrire() ? '<a href="#" id="resp">'+picto(MOI.role === "direction" ? "Direction" : "Gestionnaire")+(MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</a>' : '') +
-    ORDRE_MENU.filter(function(i){ return !peutEcrire() || (i !== 9 && i !== 4); }).map(function(i){ return '<a href="#" data-i="'+i+'"><span>'+picto(PICTO_DE[i])+SECTIONS[i]+'</span></a>'; }).join("") +
-    (peutEcrire() ? '' : '<a href="#" id="entr">'+picto("Entretien machinerie")+'Entretien machinerie</a>') +
+  if(!menu.onglets){ menu.onglets = true; chargerDroits(); }
+  var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
+  vis.forEach(function(x){
+    if(grp && x.g !== g){ g = x.g; h += '<div class="gtit">▪ '+esc(g)+'</div>'; }
+    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.l)+'</span></a>';
+  });
+  if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { posEmpPrecharger(); embPrecharger(); } catch(e){} }
+  app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' + h +
     (MOI.role === "direction" ? '<a href="#" id="rcomme">Antonio</a>' : '') +   // TEMPORAIRE (Charles 11-09): voir l'application comme Antonio; à retirer
     (vueComme() ? '<a href="#" id="rcommefin">Revenir à mon compte</a>' : '') +
     '<a class="sortie" href="#" id="sortie">Déconnexion</a></div>';
   window.scrollTo(0, 0);   // l'accueil s'ouvre toujours en haut (le clavier du code de connexion peut avoir fait défiler la page)
-  if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ a.style.animationDelay = (0.7 + k * 0.09) + "s"; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = (0.7 + k * 0.09) + "s"; });
-  Array.prototype.forEach.call(app.querySelectorAll("a[data-i]"), function(a){
-    a.onclick = function(e){ e.preventDefault(); section(+a.getAttribute("data-i")); };
+  if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ var dl = (0.7 + Math.min(k, 12) * 0.09) + "s"; a.style.animationDelay = dl; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = dl; });
+  Array.prototype.forEach.call(app.querySelectorAll("a[data-k]"), function(a){
+    a.onclick = function(e){ e.preventDefault(); var x = ENT_PAR_ID[a.getAttribute("data-k")]; if(x) x.f(); };
   });
-  var en = document.getElementById("entr"); if(en) en.onclick = function(e){ e.preventDefault(); entretien(); };
-  var rp = document.getElementById("resp"); if(rp) rp.onclick = function(e){ e.preventDefault(); responsable(); };
   var rco = document.getElementById("rcomme"); if(rco) rco.onclick = function(e){ e.preventDefault(); voirComme("Antonio"); };
   var rcf = document.getElementById("rcommefin"); if(rcf) rcf.onclick = function(e){ e.preventDefault(); revenirDeComme(); };
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
@@ -877,29 +935,52 @@ function iconesResp(){
     sp.innerHTML = picto(PICTO_RESP[id]) + sp.textContent.replace(/^\s*▪\s*/, "");
   });
 }
-function responsable(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+(MOI && MOI.role === "direction" ? "Direction" : "Gestionnaire")+'</h1><a class="doc" href="#" id="rn"><span>▪ Nouveau message</span></a><a class="doc" href="#" id="rsc"><span>▪ Suivi de charge</span></a><a class="doc" href="#" id="rc"><span>▪ Contacts</span></a><a class="doc" href="#" id="rs"><span>▪ Stationnement</span></a><a class="doc" href="#" id="rk"><span>▪ Casier</span></a><a class="doc" href="#" id="rme"><span>▪ Messages envoyés</span></a><a class="doc" href="#" id="rrd"><span>▪ Rencontres demandées</span></a><a class="doc" href="#" id="re"><span>▪ Entretien machinerie</span></a>'+(MOI && MOI.role === "direction" ? '<a class="doc" href="#" id="rpo"><span>▪ Portrait d\'un employé</span></a><a class="doc" href="#" id="rpe"><span>▪ Positionnement embauche</span></a><a class="doc" href="#" id="rpm"><span>▪ Positionnement employé</span></a><a class="doc" href="#" id="rec"><span>▪ Échelle salariale</span></a><a class="doc" href="#" id="rcf"><span>▪ Conseil d\'administration</span></a><a class="doc" href="#" id="rfi"><span>▪ Finances</span></a><a class="doc" href="#" id="rem"><span>▪ Retirer un employé</span></a><a class="doc" href="#" id="rea"><span>▪ Employé actuel</span></a><a class="doc" href="#" id="rut"><span>▪ Utilisation de l\'application</span></a>' : "")+'</div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  iconesResp();
-  document.getElementById("rn").onclick = function(e){ e.preventDefault(); nouveau("message"); };
-  document.getElementById("rsc").onclick = function(e){ e.preventDefault(); suiviCharge(); };
-  document.getElementById("rc").onclick = function(e){ e.preventDefault(); contactsResp(); };
-  document.getElementById("rs").onclick = function(e){ e.preventDefault(); attributionPage("place"); };
-  document.getElementById("rk").onclick = function(e){ e.preventDefault(); attributionPage("casier"); };
-  document.getElementById("re").onclick = function(e){ e.preventDefault(); entretien(); };
-  var rpo = document.getElementById("rpo"); if(rpo) rpo.onclick = function(e){ e.preventDefault(); portrait(); };
-  var rec = document.getElementById("rec"); if(rec) rec.onclick = function(e){ e.preventDefault(); echOuvrir(); };
-  var rfi = document.getElementById("rfi"); if(rfi) rfi.onclick = function(e){ e.preventDefault(); financesMenu(); };
-  var rcf = document.getElementById("rcf"); if(rcf) rcf.onclick = function(e){ e.preventDefault(); financeMenu(); };
-  var rpm = document.getElementById("rpm"); if(rpm){ rpm.onclick = function(e){ e.preventDefault(); posEmpOuvrir(); }; posEmpPrecharger(); }
-  var rpe = document.getElementById("rpe"); if(rpe){ rpe.onclick = function(e){ e.preventDefault(); embauchePos(); }; embPrecharger(); }
-  var rem = document.getElementById("rem"); if(rem) rem.onclick = function(e){ e.preventDefault(); gestionEmployes(); };
-  var rea = document.getElementById("rea"); if(rea) rea.onclick = function(e){ e.preventDefault(); eaOuvrir(); };
-  var rut = document.getElementById("rut"); if(rut) rut.onclick = function(e){ e.preventDefault(); utilisationApp(); };
-  document.getElementById("rme").onclick = function(e){ e.preventDefault(); messages("envoyes"); };
-  document.getElementById("rrd").onclick = function(e){ e.preventDefault(); messages("rencontres"); };
-  var nd = nbDemandesNeuves(); if(nd){ var sp = document.createElement("span"); sp.className = "nombre"; sp.style.marginLeft = "10px"; sp.textContent = pastilleTexte(nd); document.getElementById("rrd").firstChild.appendChild(sp); }
+
+// Droits des onglets: lus du service pour mon rôle (la Direction voit et modifie le tableau complet dans la page Contrôle).
+function chargerDroits(){
+  appelService({action:"onglets_lire", session:sessionGardee()}).then(function(r){
+    if(!r || !r.ok || !r.onglets) return;
+    DROITS_SERVICE = r.onglets;
+    if(app.querySelector(".menu.accueil")) menu();
+  }).catch(function(){});
 }
+var CTL_COULEURS = ["#8D806A", "#0D1319", "#8EFF60"];
+function controleOuvrir(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrôle</h1><div id="ctl"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  var t = {}, msg = "";
+  ENT.forEach(function(x){ t[x.id] = [!!x.d[0], !!x.d[1], !!x.d[2]]; });
+  function dessiner(){
+    var el = document.getElementById("ctl"); if(!el) return;
+    var noms = ["Employé", "Responsable", "Direction"];
+    var h = '<div class="ctg"><span></span>' + noms.map(function(n, k){ return '<b>'+n+'<i style="background:'+CTL_COULEURS[k]+'"></i></b>'; }).join("");
+    var g = "";
+    ENT.forEach(function(x){
+      if(x.g !== g){ g = x.g; h += '<div class="ctt">▪ '+esc(g === "Contrôle" ? "Contrôle des onglets" : g)+'</div>'; }
+      h += '<span class="ctn">'+esc(x.l)+(x.v ? '<small> · verrouillé</small>' : "")+'</span>';
+      for(var k = 0; k < 3; k++){
+        var on = t[x.id][k], bloque = x.v || k === 2;
+        h += '<button type="button" class="ctc'+(on ? " on" : "")+(bloque ? " bq" : "")+'" data-id="'+x.id+'" data-k="'+k+'" style="'+(on ? 'background:'+CTL_COULEURS[k]+';border-color:'+CTL_COULEURS[k] : "")+'" aria-pressed="'+on+'" aria-label="'+esc(x.l)+' · '+noms[k]+'"'+(bloque ? " disabled" : "")+'></button>';
+      }
+    });
+    el.innerHTML = h + '</div>' + (msg ? '<div class="bandeau">'+esc(msg)+'</div>' : "");
+    Array.prototype.forEach.call(el.querySelectorAll("button.ctc:not(.bq)"), function(b){
+      b.onclick = function(){
+        var id = b.getAttribute("data-id"), k = +b.getAttribute("data-k"), v = !t[id][k];
+        t[id][k] = v; msg = ""; dessiner();
+        appelService({action:"onglets_ecrire", session:sessionGardee(), id:id, role:k === 0 ? "employe" : "responsable", valeur:v}).then(function(r){
+          if(!r || !r.ok){ t[id][k] = !v; msg = "▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); dessiner(); }
+        }).catch(function(){ t[id][k] = !v; msg = "▪ NON ENREGISTRÉ · RÉSEAU"; dessiner(); });
+      };
+    });
+  }
+  dessiner();
+  appelService({action:"onglets_lire", session:sessionGardee()}).then(function(r){
+    if(r && r.ok && r.tableau){ r.tableau.forEach(function(x){ if(t[x.id]) t[x.id] = [!!x.employe, !!x.responsable, !!x.direction]; }); dessiner(); }
+  }).catch(function(){});
+}
+// La page Direction/Gestionnaire n'existe plus: tout est sur l'accueil, en groupes.
+function responsable(){ menu(); }
 // Stationnement et Casier : choisir un employé, voir son numéro, le libérer (✕, avec confirmation) ou lui en attribuer un libre.
 function planStationnement(plan, libres, emps){
   var l = {}, pris = {};
@@ -1168,7 +1249,7 @@ function dateHeure(opts, surChangement){
       var ag = (DH_CACHE.agendas || []).map(function(a){ var v = a.principal ? "primary" : a.id; return '<option value="'+esc(v)+'"'+(v === S.agenda ? " selected" : "")+'>'+esc(a.principal ? "Mon agenda" : a.nom)+'</option>'; }).join("") || '<option value="primary">Mon agenda</option>';
       h += '<span class="lbl">Agenda</span><select class="bx" id="dhag">'+ag+'</select>';
     }
-    h += '<span class="lbl">Calendrier · semaine du '+S.lundi.getDate()+" "+MOIS_LONGS[S.lundi.getMonth()]+'</span><div class="moisbar" style="margin-top:0"><button type="button" id="dhp" aria-label="Semaine précédente">Précédente</button><b>'+S.lundi.getDate()+" "+MOIS_LONGS[S.lundi.getMonth()].toUpperCase()+" — "+fin.getDate()+" "+MOIS_LONGS[fin.getMonth()].toUpperCase()+'</b><button type="button" id="dhn" aria-label="Semaine suivante">Suivante</button></div>';
+    h += '<span class="lbl">Calendrier · semaine du '+S.lundi.getDate()+" "+MOIS_LONGS[S.lundi.getMonth()]+'</span><div class="moisbar" style="margin-top:0"><button type="button" id="dhp" aria-label="Semaine précédente">Précédente</button><b>'+S.lundi.getDate()+" "+MOIS[S.lundi.getMonth()]+" — "+fin.getDate()+" "+MOIS[fin.getMonth()]+'</b><button type="button" id="dhn" aria-label="Semaine suivante">Suivante</button></div>';
     var g = '<div class="gs"><div class="d"></div>';
     for(var k = 0; k < 7; k++){ var dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); var ij = isoJour(dj), passe = ij < aujIso;
       var avec = S.evs.some(function(e){ return isoJour(new Date(e.debut)) === ij; });

@@ -143,20 +143,21 @@ function financeGraphique(type){
 var FIN_ORIGINE = "conseil";
 function finRetour(){ if(FIN_ORIGINE === "finances") financesMenu(); else financeMenu(); }
 // Conseil d'administration: Production, Indicateurs et ratios par catégorie (sans montants)
+function finOk(id){ return typeof entreeOk === "function" && ENT_PAR_ID[id] ? entreeOk(ENT_PAR_ID[id]) : true; }
 function financeMenu(){
   FIN_ORIGINE = "conseil";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Conseil d\'administration</h1>' +
-    '<a class="doc" href="#" id="fm5"><span>'+picto("Production")+'Production</span></a><a class="doc" href="#" id="fm0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fm1"><span>'+picto("Ratios par catégorie")+'Ratios par catégorie</span></a></div>';
+    (finOk("conseil_production") ? '<a class="doc" href="#" id="fm5"><span>'+picto("Production")+'Production</span></a>' : '')+(finOk("conseil_indicateurs") ? '<a class="doc" href="#" id="fm0"><span>'+picto("Indicateurs")+'Indicateurs</span></a>' : '')+(finOk("conseil_ratios") ? '<a class="doc" href="#" id="fm1"><span>'+picto("Ratios par catégorie")+'Ratios en %</span></a>' : '')+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  document.getElementById("fm5").onclick = function(e){ e.preventDefault(); productionOuvrir(); };
-  document.getElementById("fm0").onclick = function(e){ e.preventDefault(); financeOuvrir(); };
-  document.getElementById("fm1").onclick = function(e){ e.preventDefault(); financeGraphique("ratios"); };
+  var f5 = document.getElementById("fm5"); if(f5) f5.onclick = function(e){ e.preventDefault(); productionOuvrir(); };
+  var f0 = document.getElementById("fm0"); if(f0) f0.onclick = function(e){ e.preventDefault(); financeOuvrir(); };
+  var f1 = document.getElementById("fm1"); if(f1) f1.onclick = function(e){ e.preventDefault(); financeGraphique("ratios"); };
 }
 // Finances (Direction): tout le financier, y compris la copie des ratios par catégorie avec montants
 function financesMenu(){
   FIN_ORIGINE = "finances";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Finances</h1>' +
-    '<a class="doc" href="#" id="fi0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fi1"><span>'+picto("Ratios par catégorie")+'Ratios par catégorie</span></a><a class="doc" href="#" id="fi2"><span>'+picto("Ventes vs an passé")+'Ventes vs an passé</span></a><a class="doc" href="#" id="fi3"><span>'+picto("Trésorerie")+'Trésorerie</span></a><a class="doc" href="#" id="fi4"><span>'+picto("Comptes clients")+'Comptes clients</span></a><a class="doc" href="#" id="fi5"><span>'+picto("États financiers")+'États financiers</span></a></div>';
+    '<a class="doc" href="#" id="fi0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fi1"><span>'+picto("Ratios par catégorie")+'Ratios en $</span></a><a class="doc" href="#" id="fi2"><span>'+picto("Ventes vs an passé")+'Ventes vs an passé</span></a><a class="doc" href="#" id="fi3"><span>'+picto("Trésorerie")+'Trésorerie</span></a><a class="doc" href="#" id="fi4"><span>'+picto("Comptes clients")+'Comptes clients</span></a><a class="doc" href="#" id="fi5"><span>'+picto("États financiers")+'États financiers</span></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   document.getElementById("fi0").onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeOuvrir(); };
   document.getElementById("fi1").onclick = function(e){ e.preventDefault(); financesRatios(); };
