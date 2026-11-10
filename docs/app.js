@@ -1001,7 +1001,7 @@ function profil(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mon profil</h1>' +
     lignes.map(function(l){ return l[2] ? '<div class="ligne pfg"><span>'+esc(l[1])+'</span></div>' : '<div class="ligne pfg"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
     '<div id="stat"></div>' +
-    '<a class="doc" href="#" id="vnotif"><span>Contrôle des notifications</span></a><div id="planz"></div></div>';
+    '<a class="doc" href="#" id="vnotif" style="display:block;border:2px solid #0d1117;padding:13px 14px;margin:18px 0;text-align:center;text-transform:uppercase;letter-spacing:.16em;font-size:13px"><span>Contrôle des notifications</span></a><div id="planz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   // Stationnement et casier de l'employé (jamais ceux des autres), lus dans le classeur du conseil par le service.
   obtenir("stationnement", {action:"stationnement"}, function(r){
