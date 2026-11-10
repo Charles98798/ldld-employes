@@ -425,7 +425,7 @@ var DROITS_SERVICE = null;   // {id: true/false} pour mon rôle, lu du service (
 function roleIdx(){ return MOI && MOI.role === "direction" ? 2 : (MOI && MOI.role === "responsable" ? 1 : 0); }
 function entreeOk(x){
   var r = roleIdx();
-  if(r === 2 || x.v) return !!x.d[r];
+  if(x.v) return !!x.d[r];
   if(DROITS_SERVICE && DROITS_SERVICE.hasOwnProperty(x.id)) return !!DROITS_SERVICE[x.id];
   return !!x.d[r];
 }
@@ -1043,7 +1043,7 @@ function controleOuvrir(){
       if(x.g !== g){ g = x.g; h += '<div class="ctt">▪ '+esc(g === "Contrôle" ? "Contrôle des onglets" : g)+'</div>'; }
       h += '<span class="ctn">'+esc(x.l)+(x.v ? '<small> · verrouillé</small>' : "")+'</span>';
       for(var k = 0; k < 3; k++){
-        var on = t[x.id][k], bloque = x.v || k === 2;
+        var on = t[x.id][k], bloque = x.v;
         h += '<button type="button" class="ctc'+(on ? " on" : "")+(bloque ? " bq" : "")+'" data-id="'+x.id+'" data-k="'+k+'" style="'+(on ? 'background:'+CTL_COULEURS[k]+';border-color:'+CTL_COULEURS[k] : "")+'" aria-pressed="'+on+'" aria-label="'+esc(x.l)+' · '+noms[k]+'"'+(bloque ? " disabled" : "")+'></button>';
       }
     });
