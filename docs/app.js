@@ -2179,6 +2179,7 @@ function heures(){
   function col(t, r){ var tot = 0, vu = false; r.forEach(function(x){ if(x.min !== null){ tot += x.min; vu = true; } }); return '<div><h2 class="h2">'+t+'</h2>'+r.map(function(x){ var l = ligne(x); return '<div class="hc"><span>'+l[0]+'</span><b>'+l[1]+'</b></div>'; }).join("")+'<div class="htot"><span>Total</span><b>'+(vu ? hm(tot) : "—")+'</b></div></div>'; }
   function afficherH(r){
     var z = document.getElementById("hz"); if(!z) return;
+    if(r && r.ok === false && /donn/i.test(String(r.erreur || ""))){ z.innerHTML = '<div class="bandeau">▪ AUCUNE HEURE À AFFICHER POUR CE COMPTE</div>'; return; }
     if(!r || !r.ok){ z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; return; }
     var pts = (r.pointagesAuj || []).map(function(x, i, a){
       var lib = x.s === "entree" ? (i === 0 ? "Arrivée" : "Retour") : (i === a.length - 1 && r.etat === "parti" ? "Départ" : "Pause");
