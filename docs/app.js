@@ -1191,8 +1191,8 @@ var NE_ETAPES = [
  {t:"Poste", c:[
   {k:"cat", l:"Catégorie", r:1, o:["Administratif","Auxiliaire","Professionnel en informatique","Technologue","Gestionnaire / Expert"]},
   {k:"entree", l:"Date d'entrée en fonction", r:1, ty:"date"}, {k:"exp", l:"Expérience dans le métier (années)", r:1, ty:"nombre"},
-  {k:"resp", l:"Responsable des évaluations", r:1, dyn:1}, {k:"prog", l:"Programme de reconnaissance", auto:1, si:function(v){ return !!NE_PROG[v.cat]; }}]},
- {t:"Horaire", c:[{k:"horaire", l:"Horaire", ty:"horaire"}, {k:"heures", l:"Heures par semaine", r:1, ty:"nombre", d:"40"}, {k:"arrivee", l:"Arrivée, première journée", r:1, ty:"heure", d:"08:00"}, {k:"accueil", l:"Personne qui accueille", r:1, dyn:1}]},
+  {k:"resp", l:"Responsable des évaluations", r:1, dyn:1, d:"CHARLES"}, {k:"prog", l:"Programme de reconnaissance", auto:1, si:function(v){ return !!NE_PROG[v.cat]; }}]},
+ {t:"Horaire", c:[{k:"horaire", l:"Horaire", ty:"horaire"}, {k:"heures", l:"Heures par semaine", r:1, ty:"nombre", d:"40"}, {k:"arrivee", l:"Arrivée, première journée", r:1, ty:"heure", d:"08:00"}, {k:"accueil", l:"Personne qui accueille", r:1, dyn:1, d:"Charles Desjardins"}]},
  {t:"Documents", c:[{k:"docs", l:"Documents à apporter", ty:"liste"}]},
  {t:"Avantages", c:[
   {k:"assur", l:"Assurance annuelle", r:1, ty:"nombre"}, {k:"otpadq", l:"Cotisation OTPADQ", r:1, ty:"nombre"}, {k:"boni", l:"Boni", r:1, ty:"nombre"},
