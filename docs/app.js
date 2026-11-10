@@ -1,12 +1,12 @@
   function agir(id, nom, actif){
     confirmerOuiNon((actif ? "Réactiver " : "Désactiver ")+nom+"?", function(){
-      neTache({nom: nom, duree: 8000, lib: actif ? {cours: "Réactivation en cours", ok: "Employé réactivé", non: "Employé non réactivé"} : {cours: "Désactivation en cours", ok: "Employé désactivé", non: "Employé non désactivé"},
+      neTache({nom: nom, duree: 8000, reste: true, fin: function(E){ if(E.etat === "ok") setTimeout(function(){ if(document.getElementById("ge")) gestionEmployes(); }, 1500); }, lib: actif ? {cours: "Réactivation en cours", ok: "Employé réactivé", non: "Employé non réactivé"} : {cours: "Désactivation en cours", ok: "Employé désactivé", non: "Employé non désactivé"},
         run: function(){ return appelService({action:"employe_actif", session:sessionGardee(), id:id, actif:actif}); }});
     });
   }
   function supprimer(id, nom){
     confirmerOuiNon("Supprimer "+nom+"? Ses archives sont gardées 4 ans.", function(){
-      neTache({nom: nom, duree: 20000, lib: {cours: "Suppression en cours", ok: "Employé supprimé", non: "Employé non supprimé"}, reseau: "Réponse non reçue, vérifiez le classeur",
+      neTache({nom: nom, duree: 20000, reste: true, fin: function(E){ if(E.etat === "ok") setTimeout(function(){ if(document.getElementById("ge")) gestionEmployes(); }, 1500); }, lib: {cours: "Suppression en cours", ok: "Employé supprimé", non: "Employé non supprimé"}, reseau: "Réponse non reçue, vérifiez le classeur",
         run: function(){ return appelService({action:"employe_supprimer", session:sessionGardee(), id:id}); }});
     }, true);
   }
@@ -1239,7 +1239,14 @@ function neValide(ty, v){
 // Règle de Charles: un employé s'ajoute toujours par « Position embauche ». Cet onglet ne reprend que les candidats de la liste d'attente (fiches préparées là-bas).
 var NE_ENV = null;
 function neMonCourriel(){ var c = (MOI && MOI.courriel) || ""; if(!c){ try { c = localStorage.getItem("ldld-courriel") || ""; } catch(e){} } return c || "votre courriel de connexion"; }
+function neBarrePage(){
+  var z = document.getElementById("gebar"); var E = NE_ENV; if(!z) return;
+  if(!E){ z.innerHTML = ""; return; }
+  var rouge = E.etat === "non", t = E.etat === "cours" ? E.lib.cours : (E.etat === "ok" ? E.lib.ok : E.lib.non + " · " + (E.err || ""));
+  z.innerHTML = '<div style="margin:12px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(E.etat === "non" ? 0 : E.p)+'%;background:#0d1117"></i></div><div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(E.etat === "non" ? 0 : E.p)+' %</div></div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:#8EFF60;color:#1D1D1B")+';padding:10px 12px;font-weight:600">▪ '+esc(t.toUpperCase())+'<br>'+esc(E.nom)+'</div>';
+}
 function neEnvDessiner(){
+  neBarrePage();
   var z = document.getElementById("envg"); if(!z) return;
   var E = NE_ENV; if(!E){ z.innerHTML = ""; return; }
   var L = E.lib, st = "background:#8EFF60;color:#1D1D1B;font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:12px 14px;line-height:1.5;margin:0 0 22px;cursor:pointer", h = "";
@@ -1254,12 +1261,13 @@ function neTache(cfg){
   var t0 = Date.now(), fin = false;
   var E = NE_ENV = {etat: "cours", p: 0, nom: cfg.nom, lib: cfg.lib, cfg: cfg};
   var tick = setInterval(function(){ if(!fin){ E.p = 92 * (1 - Math.exp(-(Date.now() - t0) / (cfg.duree || 40000))); if(NE_ENV === E) neEnvDessiner(); } }, 500);
-  responsable(); neEnvDessiner();
+  if(cfg.reste){ neBarrePage(); } else { responsable(); neEnvDessiner(); }
   cfg.run().then(function(r){
     fin = true; clearInterval(tick);
     if(r && r.ok){ E.etat = "ok"; E.p = 100; E.ldld = cfg.suite ? cfg.suite(r) : ""; }
     else { E.etat = "non"; E.err = String((r && r.erreur) || "Réessayez"); }
     if(NE_ENV === E) neEnvDessiner();
+    if(cfg.fin) cfg.fin(E);
   }).catch(function(){ fin = true; clearInterval(tick); E.etat = "non"; E.err = cfg.reseau || "Réseau, réessayez"; if(NE_ENV === E) neEnvDessiner(); });
 }
 function neEnvoyer(dem){
@@ -1992,7 +2000,7 @@ function suiviCharge(){
   }).catch(function(){ var el = document.getElementById("sc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function gestionEmployes(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Retirer un employé</h1><div id="ge"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Retirer un employé</h1><div id="gebar"></div><div id="ge"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function agir(id, nom, actif){
     confirmerOuiNon((actif ? "Réactiver " : "Désactiver ")+nom+"?", function(){
@@ -2015,7 +2023,7 @@ function gestionEmployes(){
     if(!r || !r.ok) throw 0;
     el.innerHTML = '<div class="etq">CHOISIR UN EMPLOYÉ</div><select class="champ" id="gs">'+r.actifs.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
       '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0;flex:1">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0;flex:1">Désactiver</button></div>' +
-      '<div style="background:#0d1117;color:#E3DFD3;font-size:15px;letter-spacing:.2em;text-transform:uppercase;padding:14px 14px;margin:44px 0 16px">INACTIFS</div>' +
+      '<div style="color:#8D806A;font-size:26px;letter-spacing:.12em;text-transform:uppercase;border-top:4px solid #8D806A;padding-top:12px;margin:44px 0 16px">Inactifs · '+r.inactifs.length+'</div>' +
       (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:6px 14px">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:6px 14px">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
     function choisi(){ var s = document.getElementById("gs"); return s.value ? {id: s.value, nom: s.options[s.selectedIndex].text} : null; }
     document.getElementById("gdes").onclick = function(){ var c = choisi(); if(c) agir(c.id, c.nom, false); };
