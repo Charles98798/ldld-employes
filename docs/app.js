@@ -2015,7 +2015,7 @@ function gestionEmployes(){
     if(!r || !r.ok) throw 0;
     el.innerHTML = '<div class="etq">CHOISIR UN EMPLOYÉ</div><select class="champ" id="gs">'+r.actifs.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
       '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0;flex:1">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0;flex:1">Désactiver</button></div>' +
-      '<div class="etiq">▪ INACTIFS</div>' +
+      '<div style="background:#0d1117;color:#E3DFD3;font-size:15px;letter-spacing:.2em;text-transform:uppercase;padding:14px 14px;margin:44px 0 16px">INACTIFS</div>' +
       (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:6px 14px">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:6px 14px">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
     function choisi(){ var s = document.getElementById("gs"); return s.value ? {id: s.value, nom: s.options[s.selectedIndex].text} : null; }
     document.getElementById("gdes").onclick = function(){ var c = choisi(); if(c) agir(c.id, c.nom, false); };
