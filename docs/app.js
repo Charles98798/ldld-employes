@@ -1,21 +1,22 @@
 // Pictogrammes de l'accueil : blocs carrés pleins sur une grille de 24, couleur du texte.
 var PICTOS = {
  "Mes heures": "M2 2h20v20h-20zM5 5h14v14h-14zM11 6 L13 6 L13 11 L17 11 L17 13 L11 13z",
- "Messages": "M2 3h20v14h-20zM5 6h14v8h-14zM2 17 L7 17 L2 22z",
- "Tableau de bord": "M2 20h20v2h-20zM3 12h5v7h-5zM10 5h5v14h-5zM17 9h5v10h-5z",
+ "Messages": "M2 3h20v3h-20zM2 6h3v12h-3zM19 6h3v12h-3zM2 18h20v3h-20zM5 6h3v3h-3zM8 9h3v3h-3zM11 9h2v3h-2zM13 9h3v3h-3zM16 6h3v3h-3z",
+ "Tableau de bord": "M2 3h20v18h-20zM5 8h14v10h-14zM7 13h3v5h-3zM11 10h3v8h-3zM15 12h2v6h-2z",
  "Calendrier": "M2 5h20v5h-20zM2 12h3v7h-3zM19 12h3v7h-3zM2 19h20v3h-20zM6 2h3v3h-3zM15 2h3v3h-3zM13 13h4v4h-4z",
  "Rencontre": "M3 3h6v6h-6zM2 11h8v10h-8zM14 7h6v6h-6zM13 15h8v6h-8z",
  "Autoévaluation": "M2 5h12v2h-12zM18 5h4v2h-4zM14 2h4v8h-4zM2 11h4v2h-4zM10 11h12v2h-12zM6 8h4v8h-4zM2 17h13v2h-13zM19 17h3v2h-3zM15 14h4v8h-4z",
- "Rémunération": "M6 2h16v5h-16zM2 9h16v5h-16zM6 16h16v5h-16z",
- "Manuel": "M2 6h9v16h-9zM13 2h9v16h-9z",
+ "Rémunération": "M10 0h4v3h-4zM5 3h14v3h-14zM5 6h4v4h-4zM5 10h14v4h-14zM15 14h4v4h-4zM5 18h14v3h-14zM10 21h4v3h-4z",
+ "Manuel": "M6 2h16v20h-16zM2 5h6v3h-6zM2 11h6v3h-6zM2 17h6v3h-6zM11 6h8v2h-8zM11 11h8v2h-8z",
  "Plan d'incendie": "M12 2 L18 9 L18 16 L14 22 L8 22 L5 17 L5 12 L8 9 L9 12 L12 8zM10 15h4v4h-4z",
  "Mon profil": "M8 2h8v8h-8zM4 12h16v10h-16z",
- "Nouveau message": "M2 3h20v13h-20zM11 5h2v3h3v2h-3v3h-2v-3h-3v-2h3zM5 17h4v4h-4z",
- "Contacts": "M4 2h16v20h-16zM8 6h8v5h-8zM8 13h8v2h-8zM8 17h8v2h-8z",
- "Messages envoyés": "M2 5h20v14h-20zM5 8h14v2h-14zM5 12h8v2h-8z",
- "Rencontres demandées": "M2 3h13v8h-13zM9 13h13v8h-13z",
- "Entretien machinerie": "M9 2h6v3h-6zM9 19h6v3h-6zM2 9h3v6h-3zM19 9h3v6h-3zM6 6h12v12h-12zM10 10h4v4h-4z",
- "Échelle salariale": "M2 18h5v4h-5zM9 13h5v9h-5zM16 7h6v15h-6z",
+ "Nouveau message": "M2 3h20v3h-20zM2 6h3v9h-3zM19 6h3v9h-3zM2 15h20v3h-20zM5 18h4v4h-4zM8 8h8v2h-8zM8 11h5v2h-5z",
+ "Contacts": "M7 1h10v22h-10zM9 4h6v13h-6zM10.5 19h3v2h-3z",
+ "Messages envoyés": "M4 4h18v3h-18zM4 7h3v9h-3zM19 7h3v9h-3zM4 16h18v3h-18zM7 7h3v3h-3zM10 10h3v3h-3zM13 10h3v3h-3zM16 7h3v3h-3zM0 5h3v3h-3zM0 10h3v3h-3zM0 15h3v3h-3z",
+ "Rencontres demandées": "M9 5h6v6h-6zM7 12h10v10h-10zM18 2h3v10h-3z",
+ "Entretien machinerie": "M2 19h20v3h-20zM3 9h4v10h-4zM9 9h6v10h-6zM17 4h4v15h-4zM4 3h3v6h-3zM15 9h2v3h-2z",
+ "Positionnement employé": "M4 4h16v3h-16zM4 17h16v3h-16zM4 7h3v10h-3zM17 7h3v10h-3zM10 0h4v4h-4zM10 20h4v4h-4zM0 10h4v4h-4zM20 10h4v4h-4zM10 10h4v4h-4z",
+ "Échelle salariale": "M2 3h20v4h-20zM2 9h4v3h-4zM8 9h4v3h-4zM14 9h4v3h-4zM19 9h3v12h-3zM2 14h4v3h-4zM8 14h4v3h-4zM14 14h4v3h-4zM2 19h4v2h-4zM8 19h4v2h-4zM14 19h4v2h-4z",
  "Indicateurs": "M3 12h5v9h-5zM10 6h5v15h-5zM17 2h5v19h-5z",
  "Ratios par catégorie": "M2 5h16v5h-16zM2 14h11v5h-11zM20 3h2v18h-2z",
  "Ventes vs an passé": "M2 12h4v9h-4zM7 8h4v13h-4zM13 14h4v7h-4zM18 4h4v17h-4z",
@@ -23,20 +24,24 @@ var PICTOS = {
  "Comptes clients": "M3 3h18v18h-18zM7 8h10v2h-10zM7 12h10v2h-10zM7 16h5v2h-5z",
  "Production": "M2 4h6v6h-6zM9 4h6v6h-6zM16 4h6v6h-6zM2 13h20v3h-20zM4 18h4v4h-4zM16 18h4v4h-4z",
  "Contrôle": "M2 2h20v20h-20zM5 5h14v14h-14zM7 12h3v3h-3zM10 15h3v3h-3zM13 9h3v6h-3z",
- "Finances": "M2 4h20v6h-20zM6 13h16v7h-16z",
- "Conseil d'administration": "M9 2h6v5h-6zM2 9h20v4h-20zM4 15h3v6h-3zM17 15h3v6h-3z",
+ "Finances": "M4 1h16v22h-16zM7 4h10v5h-10zM7 12h3v3h-3zM11 12h2v3h-2zM14 12h3v3h-3zM7 17h3v3h-3zM11 17h2v3h-2zM14 17h3v3h-3z",
+ "Conseil d'administration": "M5 9h14v6h-14zM6 4h4v3h-4zM14 4h4v3h-4zM6 17h4v3h-4zM14 17h4v3h-4zM2 10h2v4h-2zM20 10h2v4h-2z",
  "Employés": "M3 4h6v6h-6zM15 4h6v6h-6zM3 13h18v8h-18z",
  "Employé actuel": "M8 2h8v8h-8zM4 12h16v10h-16zM10 15h4v4h-4z",
- "Utilisation": "M6 2h12v20h-12zM8 4h8v13h-8zM10 19h4v2h-4z",
+ "Retirer un employé": "M2 2h8v8h-8zM1 12h11v10h-11zM14 8.5h9v3h-9z",
+ "Nouvel employé": "M2 2h8v8h-8zM1 12h11v10h-11zM17 5h3v3.5h-3zM17 11.5h3v3.5h-3zM14 8.5h9v3h-9z",
+ "Envoi salarial": "M2 3h8v8h-8zM14 13h8v8h-8zM17 2h3v3h-3zM14 6h3v3h-3zM11 10h3v3h-3zM8 14h3v3h-3zM5 18h3v3h-3z",
+ "Utilisation": "M7 4h10v3h-10zM3 7h4v3h-4zM17 7h4v3h-4zM1 10h3v4h-3zM20 10h3v4h-3zM3 14h4v3h-4zM17 14h4v3h-4zM7 17h10v3h-10zM9 9h6v6h-6z",
  "Direction": "M2 3h11v9h-11zM14 9h8v9h-8z",
  "Gestionnaire": "M2 3h11v9h-11zM14 9h8v9h-8z",
- "Suivi de charge": "M2 3h16v4h-16zM2 10h10v4h-10zM2 17h20v4h-20z",
- "Stationnement": "M2 2h20v20h-20zM5 5h14v14h-14z",
+ "Suivi de charge": "M11 2h2v18h-2zM3 5h18v2h-18zM2 8h7v5h-7zM15 8h7v5h-7zM6 20h12v2h-12z",
+ "Stationnement": "M2 2h20v20h-20zM5 5h14v14h-14zM11 5h2v14h-2z",
  "Casier": "M2 2h20v20h-20zM4 4h7v7h-7zM13 4h7v7h-7zM4 13h7v7h-7zM13 13h7v7h-7z",
  "États financiers": "M2 3h20v5h-20zM2 10h13v5h-13zM17 10h5v5h-5zM2 17h20v4h-20z",
  "Finance": "M2 2h2v20h-2zM2 20h20v2h-20zM6 16 L10 11 L14 14 L21 5 L21 9 L14 18 L10 15 L6 19z",
  "Portrait d’un employé": "M2 2h20v20h-20zM5 5h14v14h-14zM9 7h6v5h-6zM7 14h10v3h-10z",
- "Positionnement": "M2 17h5v5h-5zM7 12h5v10h-5zM12 7h5v15h-5zM17 2h5v20h-5z"
+ "Positionnement": "M2 17h5v5h-5zM7 12h5v10h-5zM12 7h5v15h-5zM17 2h5v20h-5z",
+ "Positionnement embauche": "M0 9h12v3h-12zM0 18h12v3h-12zM0 12h3v6h-3zM9 12h3v6h-3zM4 13h4v4h-4zM17 5h3v3.5h-3zM17 11.5h3v3.5h-3zM14 8.5h9v3h-9z",
 };
 function picto(n){ return PICTOS[n] ? '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="'+PICTOS[n]+'"/></svg>' : '▪ '; }
 // Étape 1 : démarrage, connexion et menu. Aucune donnée réelle : la connexion et les sections sont des gabarits.
@@ -45,11 +50,25 @@ var app = document.getElementById("app");
 // Pictogramme à gauche du titre de chaque page de section (même jeu que le menu de l'accueil).
 var PICTO_TITRES = {"mes heures":"Mes heures","messages":"Messages","tableau de bord":"Tableau de bord","calendrier":"Calendrier","rencontre":"Rencontre","autoévaluation":"Autoévaluation","rémunération":"Rémunération","manuel d'employé":"Manuel","plan d'incendie":"Plan d'incendie","mon profil":"Mon profil","mes entretiens":"Entretien machinerie","direction":"Direction","gestionnaire":"Gestionnaire","suivi de charge":"Suivi de charge","stationnement":"Stationnement","casier":"Casier","finance":"Finance","états financiers":"États financiers","portrait d'un employé":"Portrait d’un employé","positionnement embauche":"Positionnement"};
 var dernierTitre = "";
+// Retour: on revient à la même place dans la page précédente (position mémorisée par page), pas en haut de l'écran.
+var POS_PAGE = {}, RETOUR_T = 0;
+function clePos(){ return app.querySelector(".menu") ? "__menu" : dernierTitre; }
+function retourRecent(){ return Date.now() - RETOUR_T < 2000; }
+function reprendrePos(cle){
+  var y = POS_PAGE[cle]; if(!retourRecent() || !y){ return false; }
+  var f = function(){ window.scrollTo(0, y); }; f(); requestAnimationFrame(f); setTimeout(f, 120); setTimeout(f, 400);
+  return true;
+}
+document.addEventListener("click", function(e){
+  var t = e.target; if(!t || !t.closest) return;
+  if(t.closest("a.retour, a.rt")){ RETOUR_T = Date.now(); return; }
+  if(t.closest("a, button") && !t.closest(".bl")){ POS_PAGE[clePos()] = window.scrollY; }
+}, true);
 function decorerTitres(){
   Array.prototype.forEach.call(app.querySelectorAll(".page:not(.vue) > h1:not([data-pt]), .page:not(.vue) > .pph > h1:not([data-pt]), .page:not(.vue) #pe > h1:not([data-pt]), .page:not(.vue) #ea_app > h1:not([data-pt]), .page:not(.vue) #pt > h1:not([data-pt])"), function(h){
     h.setAttribute("data-pt", "1");
     // Nouvelle page (titre différent): on repart en haut, sinon le titre reste caché sous l'heure du téléphone
-    if(h.textContent !== dernierTitre){ dernierTitre = h.textContent; window.scrollTo(0, 0); requestAnimationFrame(function(){ window.scrollTo(0, 0); }); setTimeout(function(){ if(window.scrollY < 140) window.scrollTo(0, 0); }, 350); }
+    if(h.textContent !== dernierTitre){ dernierTitre = h.textContent; if(!reprendrePos(dernierTitre)){ window.scrollTo(0, 0); requestAnimationFrame(function(){ window.scrollTo(0, 0); }); setTimeout(function(){ if(window.scrollY < 140) window.scrollTo(0, 0); }, 350); } }
     var page = h.closest(".page"), retour = page.querySelector("a.retour");
     var bl = document.createElement("div"); bl.className = "bl" + (h.parentNode === page ? "" : " sa");
     var fl = document.createElement("a"); fl.className = "rt"; fl.href = "#"; fl.textContent = "←"; fl.setAttribute("aria-label", "Retour");
@@ -197,6 +216,13 @@ function aeARemplir(m){
 }
 function aeDateTxt(iso){ var p = /^(\d{4})-(\d\d)-(\d\d)/.exec(iso || ""); return p ? (+p[3] === 1 ? "1er" : +p[3]) + " " + MOIS_LONGS[+p[2]-1] + " " + p[1] : ""; }
 // Toucher la ligne ouvre directement l'autoévaluation disponible; sinon « Non disponible » reste 5 secondes sur la ligne, sans autre page.
+// Lignes à programmer plus tard: un toucher affiche « À venir » 5 secondes sur la ligne.
+function bientot(x){
+  var a = app.querySelector('a[data-k="'+x.id+'"]'); if(!a) return;
+  var p = a.querySelector(".pasnon"); if(p) p.remove();
+  var n = document.createElement("span"); n.className = "pastille pasnon"; n.textContent = "À venir"; a.appendChild(n);
+  setTimeout(function(){ if(n.parentNode) n.remove(); }, 5000);
+}
 function aeNonDispo(){
   var a = app.querySelector('a[data-i="2"]'); if(!a) return;
   var p = a.querySelector(".pastille"); if(p) p.remove();
@@ -353,26 +379,27 @@ function chargerAujourdhui(){
 // Accueil unique: chaque entrée a un groupe, un pictogramme et des droits par défaut [employé, responsable, direction].
 // La page Contrôle (Direction) peut changer les droits des entrées non verrouillées; le service refuse aussi l'accès.
 var ENT = [
- {id:"mes_heures", g:"Mon compte", h:1, l:"Mes heures", p:"Mes heures", d:[1,1,1], i:9, f:function(){ section(9); }},
- {id:"messages", g:"Mon compte", h:1, l:"Messages", p:"Messages", d:[1,1,1], i:0, f:function(){ section(0); }},
- {id:"tableau_de_bord", g:"Mon compte", h:1, l:"Tableau de bord", p:"Tableau de bord", d:[1,1,1], i:4, f:function(){ section(4); }},
- {id:"calendrier", g:"Mon compte", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
- {id:"rencontre", g:"Mon compte", l:"Rencontre", p:"Rencontre", d:[1,1,1], i:7, f:function(){ section(7); }},
+ {id:"mes_heures", g:"Mon travail", h:1, l:"Mes heures", p:"Mes heures", d:[1,1,1], i:9, f:function(){ section(9); }},
+ {id:"messages", g:"Mon travail", h:1, l:"Message reçu", p:"Messages", d:[1,1,1], i:0, f:function(){ section(0); }},
+ {id:"tableau_de_bord", g:"Mon travail", h:1, l:"Tableau de bord", p:"Tableau de bord", d:[1,1,1], i:4, f:function(){ section(4); }},
+ {id:"calendrier", g:"Mon travail", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
+ {id:"rencontre", g:"Mon travail", l:"Rencontre", p:"Rencontre", d:[1,1,1], i:7, f:function(){ section(7); }},
  {id:"autoevaluation", g:"Mon compte", h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,1,1], i:2, f:function(){ aeEntree(); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
- {id:"nouveau_message", g:"Équipe", l:"Nouveau message", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
- {id:"suivi_charge", g:"Équipe", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
  {id:"contacts", g:"Équipe", l:"Contacts", p:"Contacts", d:[0,1,1], f:function(){ contactsResp(); }},
+ {id:"nouveau_message", g:"Équipe", l:"Nouveau message", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
  {id:"messages_envoyes", g:"Équipe", l:"Messages envoyés", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontres demandées", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
- {id:"employe_actuel", g:"Équipe", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
- {id:"portrait", g:"Équipe", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portrait(); }},
- {id:"retirer_employe", g:"Équipe", l:"Retirer un employé", p:"Employés", d:[0,0,1], f:function(){ gestionEmployes(); }},
- {id:"positionnement_embauche", g:"Équipe", l:"Positionnement embauche", p:"Positionnement", d:[0,0,1], f:function(){ embauchePos(); }},
- {id:"positionnement_employe", g:"Équipe", l:"Positionnement employé", p:"Positionnement", d:[0,0,1], f:function(){ posEmpOuvrir(); }},
- {id:"echelle_salariale", g:"Équipe", l:"Échelle salariale", p:"Échelle salariale", d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
- {id:"utilisation", g:"Équipe", l:"Utilisation de l'application", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
+ {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
+ {id:"positionnement_embauche", g:"Gestion des employés", l:"Positionnement embauche", p:"Positionnement embauche", d:[0,0,1], f:function(){ embauchePos(); }},
+ {id:"nouvel_employe", g:"Gestion des employés", l:"Nouvel employé", p:"Nouvel employé", d:[0,0,1], v:1, f:function(){ bientot(this); }},
+ {id:"retirer_employe", g:"Gestion des employés", l:"Retirer un employé", p:"Retirer un employé", d:[0,0,1], f:function(){ gestionEmployes(); }},
+ {id:"portrait", g:"Gestion des employés", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portrait(); }},
+ {id:"suivi_charge", g:"Gestion des employés", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
+ {id:"echelle_salariale", g:"Gestion des employés", l:"Échelle salariale", p:"Échelle salariale", d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
+ {id:"positionnement_employe", g:"Gestion des employés", l:"Positionnement employé", p:"Positionnement employé", d:[0,0,1], f:function(){ posEmpOuvrir(); }},
+ {id:"envoi_salarial", g:"Gestion des employés", l:"Envoi salarial", p:"Envoi salarial", d:[0,0,1], v:1, f:function(){ bientot(this); }},
  {id:"stationnement", g:"Installations", l:"Stationnement", p:"Stationnement", d:[0,1,1], f:function(){ attributionPage("place"); }},
  {id:"casier", g:"Installations", l:"Casier", p:"Casier", d:[0,1,1], f:function(){ attributionPage("casier"); }},
  {id:"entretien_machinerie", g:"Installations", l:"Entretien machinerie", p:"Entretien machinerie", d:[1,1,1], f:function(){ entretien(); }},
@@ -389,6 +416,7 @@ var ENT = [
  {id:"finances_etats", g:"Finances", l:"Finances · États financiers", p:"États financiers", d:[0,0,1], v:1, s:1},
  {id:"manuel", g:"Documents", l:"Manuel d'employé", p:"Manuel", d:[1,1,1], i:1, f:function(){ section(1); }},
  {id:"plan_incendie", g:"Documents", l:"Plan d'incendie", p:"Plan d'incendie", d:[1,1,1], i:5, f:function(){ section(5); }},
+ {id:"utilisation", g:"Contrôle", l:"Utilisation de l'application", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
  {id:"controle", g:"Contrôle", l:"Contrôle", p:"Contrôle", d:[0,0,1], v:1, f:function(){ controleOuvrir(); }}
 ];
 var ENT_PAR_ID = {}; ENT.forEach(function(x){ ENT_PAR_ID[x.id] = x; });
@@ -424,7 +452,7 @@ function menu(){
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' + h +
     (vueComme() ? '<a href="#" id="rcommefin">Revenir à mon compte</a>' : '') +
     '<a class="sortie" href="#" id="sortie">Déconnexion</a></div>';
-  window.scrollTo(0, 0);   // l'accueil s'ouvre toujours en haut (le clavier du code de connexion peut avoir fait défiler la page)
+  if(!reprendrePos("__menu")) window.scrollTo(0, 0);   // l'accueil s'ouvre en haut, sauf au retour d'une page (même place qu'avant)
   if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ var dl = (0.7 + Math.min(k, 12) * 0.09) + "s"; a.style.animationDelay = dl; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = dl; });
   Array.prototype.forEach.call(app.querySelectorAll("a[data-k]"), function(a){
     a.onclick = function(e){ e.preventDefault(); var x = ENT_PAR_ID[a.getAttribute("data-k")]; if(x) x.f(); };
@@ -445,7 +473,7 @@ function peutEcrire(){ return MOI && (MOI.role === "direction" || MOI.role === "
 var FILTRE_MSG = "";
 function messages(filtre){
   if(typeof filtre === "string") FILTRE_MSG = filtre;
-  var titreMsg = FILTRE_MSG === "envoyes" ? "Messages envoyés" : FILTRE_MSG === "rencontres" ? "Rencontres demandées" : "Messages";
+  var titreMsg = FILTRE_MSG === "envoyes" ? "Messages envoyés" : FILTRE_MSG === "rencontres" ? "Rencontres demandées" : "Message reçu";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1><div id="liste"></div>' +
     (peutEcrire() && !FILTRE_MSG ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
