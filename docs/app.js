@@ -331,7 +331,7 @@ function saisieCode(c){
     if(code.length !== 6){ msg.textContent = "Entrez les 6 chiffres du code."; return; }
     msg.textContent = "Vérification…";
     appelService({action:"verifier", courriel:c, code:code}).then(function(r){
-      if(r && r.ok){ garderSession(r.session); MOI = r; garderMoi(r.session, r); menu(); } else { msg.textContent = "Code invalide ou expiré. Demandez-en un nouveau."; }
+      if(r && r.ok){ try { localStorage.setItem("ldld-courriel", c); } catch(e){} garderSession(r.session); MOI = r; garderMoi(r.session, r); menu(); } else { msg.textContent = "Code invalide ou expiré. Demandez-en un nouveau."; }
     }).catch(function(){ msg.textContent = "Connexion impossible. Réessayez."; });
   };
 }
@@ -1226,6 +1226,7 @@ function neValide(ty, v){
 }
 // Règle de Charles: un employé s'ajoute toujours par « Position embauche ». Cet onglet ne reprend que les candidats de la liste d'attente (fiches préparées là-bas).
 var NE_ENV = null;
+function neMonCourriel(){ var c = (MOI && MOI.courriel) || ""; if(!c){ try { c = localStorage.getItem("ldld-courriel") || ""; } catch(e){} } return c || "votre courriel de connexion"; }
 function neEnvDessiner(){
   var z = document.getElementById("envg"); if(!z) return;
   var E = NE_ENV; if(!E){ z.innerHTML = ""; return; }
@@ -1387,7 +1388,7 @@ function neFormulaire(cand){
       h += '<div class="bandeau">▪ ENVOI PAR DOCUSIGN · À VENIR</div>';
     } else h += et.c.map(champ).join("");
     h += '<div class="aeact tro">'+(S.e ? '<button type="button" class="bouton lg" id="nep">Précédent</button>' : "")+(S.e < 8 ? '<button type="button" class="bouton" id="nes"'+(etapeOk(S.e) ? "" : " disabled")+'>Suivant</button>' : '<button type="button" class="bouton" id="neok">Envoyer le contrat</button>')+'</div>';
-    if(S.pop) h += '<div class="pop"><div class="popc"><div class="popt">Envoyer le contrat via DocuSign ?</div><div class="popd"><div>'+esc((S.v.prenom || "")+" "+(S.v.nom || ""))+'</div><div>'+esc(S.v.courriel || "")+'</div><div>Signature : l’employé, puis la Société</div><div>Dossier et numéro LDLD créés</div></div>'+'<div class="aeact"><button type="button" class="bouton" id="neoui">Oui, envoyer</button><button type="button" class="bouton lg" id="nenon">Non</button></div></div></div>';
+    if(S.pop) h += '<div class="pop"><div class="popc"><div class="popt">Envoyer le contrat via DocuSign ?</div><div class="popd"><div>'+esc((S.v.prenom || "")+" "+(S.v.nom || ""))+'</div><div>'+esc(S.v.courriel || "")+'</div><div>Signature : l’employé, puis la Société</div><div>Dossier et numéro LDLD créés</div><div>Confirmation d’envoi par courriel :</div><div>'+esc(neMonCourriel())+'</div></div>'+'<div class="aeact"><button type="button" class="bouton" id="neoui">Oui, envoyer</button><button type="button" class="bouton lg" id="nenon">Non</button></div></div></div>';
     el.innerHTML = h;
     Array.prototype.forEach.call(el.querySelectorAll("[data-k]"), function(q){ q.oninput = q.onchange = function(){ S.v[q.getAttribute("data-k")] = q.value; majBtn(q); sauverVite(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-d]"), function(q){ q.oninput = function(){ S.docs[Number(q.getAttribute("data-d"))] = q.value; majBtn(q); }; });
