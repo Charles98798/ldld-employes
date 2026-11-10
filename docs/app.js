@@ -2138,7 +2138,8 @@ function calendrier(){
 function rencontre(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Demander rencontre</h1><div id="rc"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  appelService({action:"rencontre_liste", session:sessionGardee()}).then(function(r){
+  var locR = lireCache("rencontre_liste");
+  (locR ? Promise.resolve(locR) : chercher("rencontre_liste", {action:"rencontre_liste"})).then(function(r){
     var el = document.getElementById("rc"); if(!el) return;
     if(!r || !r.ok) throw 0;
     if(!r.responsables.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN RESPONSABLE</div>'; return; }
