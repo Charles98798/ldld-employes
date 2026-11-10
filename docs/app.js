@@ -1,3 +1,15 @@
+  function agir(id, nom, actif){
+    confirmerOuiNon((actif ? "Réactiver " : "Désactiver ")+nom+"?", function(){
+      neTache({nom: nom, duree: 8000, lib: actif ? {cours: "Réactivation en cours", ok: "Employé réactivé", non: "Employé non réactivé"} : {cours: "Désactivation en cours", ok: "Employé désactivé", non: "Employé non désactivé"},
+        run: function(){ return appelService({action:"employe_actif", session:sessionGardee(), id:id, actif:actif}); }});
+    });
+  }
+  function supprimer(id, nom){
+    confirmerOuiNon("Supprimer "+nom+"? Ses archives sont gardées 4 ans.", function(){
+      neTache({nom: nom, duree: 20000, lib: {cours: "Suppression en cours", ok: "Employé supprimé", non: "Employé non supprimé"}, reseau: "Réponse non reçue, vérifiez le classeur",
+        run: function(){ return appelService({action:"employe_supprimer", session:sessionGardee(), id:id}); }});
+    }, true);
+  }
 // Pictogrammes de l'accueil : blocs carrés pleins sur une grille de 24, couleur du texte.
 var PICTOS = {
  "Mes heures": "M2 2h20v20h-20zM5 5h14v14h-14zM11 6 L13 6 L13 11 L17 11 L17 13 L11 13z",
@@ -1230,25 +1242,30 @@ function neMonCourriel(){ var c = (MOI && MOI.courriel) || ""; if(!c){ try { c =
 function neEnvDessiner(){
   var z = document.getElementById("envg"); if(!z) return;
   var E = NE_ENV; if(!E){ z.innerHTML = ""; return; }
-  var st = "background:#8EFF60;color:#1D1D1B;font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:12px 14px;line-height:1.5;margin:0 0 22px;cursor:pointer", h = "";
-  if(E.etat === "cours") h = '▪ Envoi contrat en cours · '+Math.round(E.p)+' %<br>'+esc(E.nom);
-  else if(E.etat === "ok") h = '▪ Contrat envoyé · 100 %<br>'+esc(E.nom)+(E.ldld ? ' · '+esc(E.ldld) : "");
-  else { st = st.replace("#8EFF60", "#a32a2d").replace("#1D1D1B", "#fff"); h = '▪ Contrat non envoyé<br>'+esc(E.nom)+' · '+esc(E.err || "")+'<br>Touchez pour réessayer'; }
+  var L = E.lib, st = "background:#8EFF60;color:#1D1D1B;font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:12px 14px;line-height:1.5;margin:0 0 22px;cursor:pointer", h = "";
+  if(E.etat === "cours") h = '▪ '+esc(L.cours)+' · '+Math.round(E.p)+' %<br>'+esc(E.nom);
+  else if(E.etat === "ok") h = '▪ '+esc(L.ok)+' · 100 %<br>'+esc(E.nom)+(E.ldld ? ' · '+esc(E.ldld) : "");
+  else { st = st.replace("#8EFF60", "#a32a2d").replace("#1D1D1B", "#fff"); h = '▪ '+esc(L.non)+'<br>'+esc(E.nom)+' · '+esc(E.err || "")+'<br>Touchez pour réessayer'; }
   z.innerHTML = '<div id="envb" style="'+st+'">'+h+'</div>';
-  var b = document.getElementById("envb"); if(b) b.onclick = function(){ if(E.etat === "ok"){ NE_ENV = null; neEnvDessiner(); } else if(E.etat === "non") neEnvoyer(E.dem); };
+  var b = document.getElementById("envb"); if(b) b.onclick = function(){ if(E.etat === "ok"){ NE_ENV = null; neEnvDessiner(); } else if(E.etat === "non") neTache(E.cfg); };
 }
-function neEnvoyer(dem){
+// Tâche en arrière-plan avec bandeau d'état sur l'accueil (vert en cours/terminé, rouge en cas d'échec).
+function neTache(cfg){
   var t0 = Date.now(), fin = false;
-  NE_ENV = {etat: "cours", p: 0, nom: dem.nom, dem: dem};
-  var E = NE_ENV;
-  var tick = setInterval(function(){ if(!fin){ E.p = 92 * (1 - Math.exp(-(Date.now() - t0) / 40000)); if(NE_ENV === E) neEnvDessiner(); } }, 500);
+  var E = NE_ENV = {etat: "cours", p: 0, nom: cfg.nom, lib: cfg.lib, cfg: cfg};
+  var tick = setInterval(function(){ if(!fin){ E.p = 92 * (1 - Math.exp(-(Date.now() - t0) / (cfg.duree || 40000))); if(NE_ENV === E) neEnvDessiner(); } }, 500);
   responsable(); neEnvDessiner();
-  appelService({action: "docusign_envoyer", session: sessionGardee(), id: dem.id, courriel: dem.courriel, confirme: true}).then(function(r){
+  cfg.run().then(function(r){
     fin = true; clearInterval(tick);
-    if(r && r.ok){ E.etat = "ok"; E.p = 100; E.ldld = (r.r && r.r.ldld) || ""; NE_ATT = null; NE_ATTP = null; menu.attPre = false; }
+    if(r && r.ok){ E.etat = "ok"; E.p = 100; E.ldld = cfg.suite ? cfg.suite(r) : ""; }
     else { E.etat = "non"; E.err = String((r && r.erreur) || "Réessayez"); }
     if(NE_ENV === E) neEnvDessiner();
-  }).catch(function(){ fin = true; clearInterval(tick); E.etat = "non"; E.err = "Réponse non reçue, vérifiez votre courriel avant de réessayer"; if(NE_ENV === E) neEnvDessiner(); });
+  }).catch(function(){ fin = true; clearInterval(tick); E.etat = "non"; E.err = cfg.reseau || "Réseau, réessayez"; if(NE_ENV === E) neEnvDessiner(); });
+}
+function neEnvoyer(dem){
+  neTache({nom: dem.nom, lib: {cours: "Envoi contrat en cours", ok: "Contrat envoyé", non: "Contrat non envoyé"}, reseau: "Réponse non reçue, vérifiez votre courriel avant de réessayer",
+    run: function(){ return appelService({action: "docusign_envoyer", session: sessionGardee(), id: dem.id, courriel: dem.courriel, confirme: true}).then(function(r){ if(r && r.ok){ NE_ATT = null; NE_ATTP = null; menu.attPre = false; } return r; }); },
+    suite: function(r){ return (r.r && r.r.ldld) || ""; }});
 }
 var NE_ATT = null, NE_BRP = {}, NE_ATTP = null, NE_ATTT = 0;
 function neAttCharger(){
