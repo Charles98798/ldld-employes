@@ -1264,6 +1264,7 @@ function neFormulaire(cand){
   if(cand && cand.v) Object.keys(cand.v).forEach(function(k){ var v = cand.v[k]; if(v === null || v === undefined || v === "" || k === "enregistre" || k === "envoye" || k === "programme") return;
     if(k === "exp" && Number(v) > 1900) v = String(new Date().getFullYear() - Number(v));
     S.v[CORR[k] || k] = String(v); });
+  if(S.v.cat && !Object.keys(S.h).length){ var hh0 = S.v.cat === "Administratif" ? NE_HOR_ADM : NE_HOR_PROD; hh0.forEach(function(x, i){ S.h[i] = {a:x[0], b:x[1]}; }); if(!(cand && cand.v && cand.v.heures)) S.v.heures = neHeures(S.h); if(!S.v.arrivee) S.v.arrivee = "08:00"; }
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="ne"></div></div>';
   function visible(c){ return !c.si || c.si(S.v); }
   function horaireOk(){
