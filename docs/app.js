@@ -1347,7 +1347,7 @@ function neFormulaire(cand){
       h += '<div class="bandeau">▪ ENVOI PAR DOCUSIGN · À VENIR</div>';
     } else h += et.c.map(champ).join("");
     h += '<div class="aeact tro">'+(S.e ? '<button type="button" class="bouton lg" id="nep">Précédent</button>' : "")+(S.e < 8 ? '<button type="button" class="bouton" id="nes"'+(etapeOk(S.e) ? "" : " disabled")+'>Suivant</button>' : '<button type="button" class="bouton" id="neok">Envoyer le contrat</button>')+'</div>';
-    if(S.pop) h += '<div class="pop"><div class="popc"><div class="popt">Envoyer le contrat à '+esc((S.v.prenom || "")+" "+(S.v.nom || ""))+', '+esc(S.v.courriel || "")+', par DocuSign ?</div>'+'<div class="aeact"><button type="button" class="bouton" id="neoui">Oui, envoyer</button><button type="button" class="bouton lg" id="nenon">Non</button></div></div></div>';
+    if(S.pop) h += '<div class="pop"><div class="popc"><div class="popt">Envoyer le contrat via DocuSign ?</div><div class="popd"><div>'+esc((S.v.prenom || "")+" "+(S.v.nom || ""))+'</div><div>'+esc(S.v.courriel || "")+'</div><div>Signature : l’employé, puis la Société</div><div>Le dossier et le numéro LDLD sont créés maintenant</div></div>'+'<div class="aeact"><button type="button" class="bouton" id="neoui">Oui, envoyer</button><button type="button" class="bouton lg" id="nenon">Non</button></div></div></div>';
     el.innerHTML = h;
     Array.prototype.forEach.call(el.querySelectorAll("[data-k]"), function(q){ q.oninput = q.onchange = function(){ S.v[q.getAttribute("data-k")] = q.value; majBtn(q); sauverVite(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-d]"), function(q){ q.oninput = function(){ S.docs[Number(q.getAttribute("data-d"))] = q.value; majBtn(q); }; });
