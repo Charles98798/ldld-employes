@@ -129,15 +129,24 @@ function appelBrut(corps){
   var bg = ARRIERE;
   return new Promise(function(ok, ko){ var x = {c: corps, ok: ok, ko: ko, bg: bg}; if(bg) FILE_APPELS.push(x); else FILE_APPELS.unshift(x); suiteAppels(); });   // un clic passe avant les préchargements
 }
+var EN_VOL = [];   // appels partis, avec leur heure: si l'appareil les fige (iPhone en arrière-plan), la place est libérée de force
 function suiteAppels(){
+  var nu = Date.now();
+  EN_VOL = EN_VOL.filter(function(v){ if(!v.fini && nu - v.t > 45000){ v.fini = true; APPELS_EN_COURS = Math.max(0, APPELS_EN_COURS - 1); try { if(v.ctl) v.ctl.abort(); } catch(e){} v.ko(new Error("delai")); return false; } return !v.fini; });
   while(APPELS_EN_COURS < APPELS_MAX && FILE_APPELS.length){
     if(FILE_APPELS[0].bg && APPELS_EN_COURS >= APPELS_MAX - 1) break;
     var x = FILE_APPELS.shift(); APPELS_EN_COURS++;
-    appelDirect(x.c).then(x.ok, x.ko).then(function(){ APPELS_EN_COURS--; suiteAppels(); });
+    (function(x){
+      var v = {t: Date.now(), fini: false, ko: x.ko, ctl: null}; if(x.c && x.c.action === "docusign_envoyer") v.t += 130000; EN_VOL.push(v);
+      appelDirect(x.c, function(c){ v.ctl = c; }).then(function(r){ if(!v.fini){ v.fini = true; APPELS_EN_COURS--; x.ok(r); } }, function(e){ if(!v.fini){ v.fini = true; APPELS_EN_COURS--; x.ko(e); } }).then(suiteAppels);
+    })(x);
   }
 }
-function appelDirect(corps){
-  var ctl = window.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function(){ ctl.abort(); }, corps && corps.action === "docusign_envoyer" ? 170000 : 60000) : 0;   // jamais de « CHARGEMENT… » sans fin
+setInterval(suiteAppels, 5000);
+document.addEventListener("visibilitychange", function(){ if(!document.hidden) suiteAppels(); });
+function appelDirect(corps, vu){
+  var ctl = window.AbortController ? new AbortController() : null; if(vu) vu(ctl);
+  var  t = ctl ? setTimeout(function(){ ctl.abort(); }, corps && corps.action === "docusign_envoyer" ? 170000 : 60000) : 0;   // jamais de « CHARGEMENT… » sans fin
   return fetch(URL_SERVICE, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined})
     .then(function(r){ clearTimeout(t); return r.json(); }, function(e){ clearTimeout(t); throw e; });
 }
