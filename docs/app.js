@@ -68,7 +68,11 @@ function clePos(){ return app.querySelector(".menu") ? "__menu" : dernierTitre; 
 function retourRecent(){ return Date.now() - RETOUR_T < 2000; }
 function reprendrePos(cle){
   var y = POS_PAGE[cle]; if(!retourRecent() || !y){ return false; }
-  var f = function(){ window.scrollTo(0, y); }; f(); requestAnimationFrame(f); setTimeout(f, 120); setTimeout(f, 400);
+  // Le contenu de la page précédente peut arriver après coup (listes, bandeaux): on réessaie jusqu'à 3 s, sauf si la personne fait défiler elle-même.
+  var stop = false, t0 = Date.now(), ar = function(){ stop = true; };
+  window.addEventListener("touchstart", ar, {once:true, passive:true}); window.addEventListener("wheel", ar, {once:true, passive:true});
+  var f = function(){ if(stop) return; if(Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y); if(Date.now() - t0 < 3000) setTimeout(f, 100); };
+  f(); requestAnimationFrame(f);
   return true;
 }
 document.addEventListener("click", function(e){
