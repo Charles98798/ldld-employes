@@ -1022,12 +1022,20 @@ function controleOuvrir(){
     Array.prototype.forEach.call(el.querySelectorAll("button.ctc:not(.bq)"), function(b){
       b.onclick = function(){
         var id = b.getAttribute("data-id"), k = +b.getAttribute("data-k"), v = !t[id][k];
-        t[id][k] = v; msg = ""; dessiner();
-        appelService({action:"onglets_ecrire", session:sessionGardee(), id:id, role:k === 0 ? "employe" : "responsable", valeur:v}).then(function(r){
-          if(!r || !r.ok){ t[id][k] = !v; msg = "▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); dessiner(); }
-        }).catch(function(){ t[id][k] = !v; msg = "▪ NON ENREGISTRÉ · RÉSEAU"; dessiner(); });
+        var x = ENT_PAR_ID[id], role = ["Employé", "Responsable", "Direction"][k];
+        confirmerOuiNon((v ? "Donner" : "Retirer")+" l'accès à « "+(x ? x.l : id)+" » pour : "+role+" ?", function(){ appliquer(id, k, v); });
       };
     });
+  }
+  function appliquer(id, k, v){
+    {
+      {
+        t[id][k] = v; msg = ""; dessiner();
+        appelService({action:"onglets_ecrire", session:sessionGardee(), id:id, role:["employe", "responsable", "direction"][k], valeur:v}).then(function(r){
+          if(!r || !r.ok){ t[id][k] = !v; msg = "▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); dessiner(); }
+        }).catch(function(){ t[id][k] = !v; msg = "▪ NON ENREGISTRÉ · RÉSEAU"; dessiner(); });
+      }
+    }
   }
   dessiner();
   appelService({action:"onglets_lire", session:sessionGardee()}).then(function(r){
