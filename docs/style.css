@@ -848,3 +848,7 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 /* Largeur visible imposée (voir app.js): rien ne dépasse à droite */
 @media (max-width:700px){html,body{width:var(--lw,100%);max-width:var(--lw,100vw)}
 .menu,.page,.connexion{width:var(--lw,100%);max-width:var(--lw,100vw);margin-left:0;margin-right:0}}
+
+/* Nouvel employé: champ date (calendrier) à la largeur des autres champs */
+#ne input[type="date"].bx{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;height:auto;min-height:50px;text-align:left;padding:0 14px;line-height:50px}
+#ne input[type="date"].bx::-webkit-date-and-time-value{text-align:left;min-height:1.2em}
