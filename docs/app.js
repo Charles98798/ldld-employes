@@ -1239,7 +1239,10 @@ function nouvelEmploye(){
 function neFormulaire(cand){
   var S = {e:0, v:{}, h:{}, docs:NE_DOCS.slice(), id:(cand && cand.id) || ""};
   NE_ETAPES.forEach(function(et){ et.c.forEach(function(c){ if(c.d) S.v[c.k] = c.d; }); });
-  if(cand && cand.v) Object.keys(cand.v).forEach(function(k){ S.v[k] = String(cand.v[k]); });
+  var CORR = {responsable:"resp", assurance:"assur", vacances:"vac", appartement:"appt", province:"prov", permisExp:"permis", commentaires:"comm", prenomUsuel:"usuel", naissance:"naiss"};
+  if(cand && cand.v) Object.keys(cand.v).forEach(function(k){ var v = cand.v[k]; if(v === null || v === undefined || v === "" || k === "enregistre" || k === "envoye" || k === "programme") return;
+    if(k === "exp" && Number(v) > 1900) v = String(new Date().getFullYear() - Number(v));
+    S.v[CORR[k] || k] = String(v); });
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="ne"></div></div>';
   function visible(c){ return !c.si || c.si(S.v); }
   function horaireOk(){

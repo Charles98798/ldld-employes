@@ -161,6 +161,9 @@ function embLancer(r, m, courriel){
   var S = EMB.S, envoi = !!courriel, z = document.getElementById("pmsg"), bts = document.getElementById("pbts"); if(!z || !m) return;
   var etapes = envoi ? ["Vérification du calcul", "Préparation de la fiche « Nouvel employé »", "Courriel inscrit dans la fiche", "Envoi du courriel"] : ["Vérification du calcul", "Préparation de la fiche « Nouvel employé »"];
   retirerBoutonBas(); bts.style.display = "none"; var t0 = Date.now(), fin = false;
+  // Tant que ce n'est pas à 100 %, on ne peut pas quitter la page: Retour est grisé et ne fait rien.
+  var rt = document.getElementById("retour"); if(rt){ rt.style.opacity = ".35"; rt.style.pointerEvents = "none"; rt.onclick = function(e){ e.preventDefault(); }; }
+  function libererRetour(){ var q = document.getElementById("retour"); if(q){ q.style.opacity = ""; q.style.pointerEvents = ""; q.onclick = function(e){ e.preventDefault(); S.page = 2; embDessiner(); }; } }
   function dess(p, termine, msg, rouge){ var cur = termine ? etapes.length : Math.min(etapes.length - 1, Math.floor(p / (100 / etapes.length)));
     z.innerHTML = '<div style="margin:16px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(p)+'%;background:var(--tx)"></i></div>'+
       '<div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(p)+' %</div>'+etapes.map(function(e, i){ return '<div style="font-size:13px;opacity:'+(i <= cur ? 1 : .45)+'">▪ '+esc(e)+(i < cur ? " ✓" : "")+'</div>'; }).join("")+'</div>'+
@@ -173,8 +176,8 @@ function embLancer(r, m, courriel){
     if(res && res.ok){ var o = res.r || {};
       dess(100, true, "▪ "+(envoi ? "FICHE « NOUVEL EMPLOYÉ » PRÉPARÉE ET COURRIEL ENVOYÉ À "+(o.courriel || courriel)+(o.copie ? ". COPIE À "+o.copie : "") : "BROUILLON DE LA FICHE « NOUVEL EMPLOYÉ » PRÉPARÉ")+" · DÉPART "+o.dep+" % · "+embFmt(o.taux)+" $/H"+(o.entente ? " · POSITION DÉCIDÉE EN RENCONTRE (BARÈME "+o.bareme+" %)" : ""), false);
       setTimeout(function(){ if(EMB.page){ EMB.S = null; embSortir(); } }, 2200);
-    } else { dess(0, false, "▪ NON ENREGISTRÉ · "+String((res && res.erreur) || "RÉESSAYEZ").toUpperCase()+(envoi ? " · RIEN N'A ÉTÉ ENVOYÉ" : ""), true); embRetablir(r, m); }
-  }).catch(function(){ fin = true; clearInterval(tick); if(document.getElementById("pmsg")){ dess(0, false, "▪ NON ENREGISTRÉ · RÉSEAU · RIEN N'A ÉTÉ ENVOYÉ", true); embRetablir(r, m); } });
+    } else { dess(0, false, "▪ NON ENREGISTRÉ · "+String((res && res.erreur) || "RÉESSAYEZ").toUpperCase()+(envoi ? " · RIEN N'A ÉTÉ ENVOYÉ" : ""), true); libererRetour(); embRetablir(r, m); }
+  }).catch(function(){ fin = true; clearInterval(tick); if(document.getElementById("pmsg")){ dess(0, false, "▪ NON ENREGISTRÉ · RÉSEAU · RIEN N'A ÉTÉ ENVOYÉ", true); libererRetour(); embRetablir(r, m); } });
 }
 function embRetablir(r, m){
   var bts = document.getElementById("pbts"); if(bts) bts.style.display = "";
