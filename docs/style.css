@@ -866,4 +866,4 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 #ne .nrb{padding:8px 0 10px}#ne .nrb b{display:block;font-weight:400;font-size:11px;letter-spacing:2px;color:var(--tx2);margin-bottom:4px}#ne .nrb div{font-size:13px;line-height:1.4;padding:3px 0}
 #ne .nrx{display:flex;align-items:center;justify-content:space-between;gap:12px}#ne .nrxb{flex:none;width:34px;height:34px;background:transparent;border:0;color:#0d1117;font-size:22px;line-height:1;padding:0;cursor:pointer}
 
-.popd{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;font-size:15px;line-height:1.3}.popd div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.popd{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;font-size:15px;line-height:1.3}.popd div{overflow-wrap:anywhere}
