@@ -119,7 +119,7 @@ function garderMoi(s, r){ if(VUE.on || vueComme()) return; try { localStorage.se
 // Service LDLD (Google Apps Script) : connexion par code envoyé au courriel LDLD; il ne répond qu'avec les données de l'employé connecté.
 var URL_SERVICE = "https://script.google.com/macros/s/AKfycbwq9SXysg5GHL6GsPFBSTmoKZzm9_wGr4E3W0e-RzXcHeknz5_DMBFIxBarHHczgpwnZw/exec";
 var MOI = null;   // {nom, poste, responsable} après connexion
-var FILE_APPELS = [], APPELS_EN_COURS = 0, APPELS_MAX = 5, ARRIERE = false;   // au plus 5 appels en même temps; les préchargements (arrière-plan) en occupent au plus 4: une place reste toujours libre pour un clic
+var FILE_APPELS = [], APPELS_EN_COURS = 0, APPELS_MAX = 3, ARRIERE = false;   // au plus 5 appels en même temps; les préchargements (arrière-plan) en occupent au plus 4: une place reste toujours libre pour un clic
 function enArriere(f){ var a = ARRIERE; ARRIERE = true; try { return f(); } finally { ARRIERE = a; } }
 function appelBrut(corps){
   var bg = ARRIERE;
