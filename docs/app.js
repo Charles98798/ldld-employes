@@ -1222,9 +1222,24 @@ function neValide(ty, v){
   if(ty === "heure") return /^\d{2}:\d{2}$/.test(v);
   return true;
 }
+// Règle de Charles: un employé s'ajoute toujours par « Position embauche ». Cet onglet ne reprend que les candidats de la liste d'attente (fiches préparées là-bas).
 function nouvelEmploye(){
-  var S = {e:0, v:{}, h:{}, docs:NE_DOCS.slice()};
+  var MSG = "Veuillez utiliser l’onglet Position embauche afin de créer une fiche nouvel employé.";
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="nl"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div class="bandeau">▪ '+esc(MSG.toUpperCase())+'</div>'; }
+  appelService({action: "embauche_attente", session: sessionGardee()}).then(function(r){
+    var z = document.getElementById("nl"); if(!z) return;
+    var l = (r && r.ok && r.r && r.r.length) ? r.r : [];
+    if(!l.length){ vide(); return; }
+    z.innerHTML = '<div class="etq">▪ CANDIDATS EN ATTENTE</div>'+l.map(function(c, i){ return '<a class="doc" href="#" data-i="'+i+'"><span>▪ '+esc(((c.v && c.v.prenom) || "")+" "+((c.v && c.v.nom) || ""))+'</span></a>'; }).join("");
+    Array.prototype.forEach.call(z.querySelectorAll("[data-i]"), function(q){ q.onclick = function(e){ e.preventDefault(); neFormulaire(l[Number(q.getAttribute("data-i"))]); }; });
+  }).catch(vide);
+}
+function neFormulaire(cand){
+  var S = {e:0, v:{}, h:{}, docs:NE_DOCS.slice(), id:(cand && cand.id) || ""};
   NE_ETAPES.forEach(function(et){ et.c.forEach(function(c){ if(c.d) S.v[c.k] = c.d; }); });
+  if(cand && cand.v) Object.keys(cand.v).forEach(function(k){ S.v[k] = String(cand.v[k]); });
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="ne"></div></div>';
   function visible(c){ return !c.si || c.si(S.v); }
   function horaireOk(){
@@ -1284,7 +1299,7 @@ function nouvelEmploye(){
     if(c && (c.k === "statut" || c.k === "cat")){ S.v.prog = NE_PROG[S.v.cat] || ""; dessiner(); return; }
     var n = document.getElementById("nes"); if(n) n.disabled = !etapeOk(S.e);
   }
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(S.e){ S.e--; dessiner(); } else responsable(); };
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(S.e){ S.e--; dessiner(); } else nouvelEmploye(); };
   dessiner();
 }
 // Fiche d'une machine: les tâches sont regroupées par fréquence (du plus fréquent au moins fréquent). La fréquence est lue à la fin de chaque tâche (« chaque jour », « aux 2 semaines »...); sans fréquence = « À préciser ». Les données de la feuille ne changent pas.
