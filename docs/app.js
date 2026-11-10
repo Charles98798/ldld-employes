@@ -2092,7 +2092,7 @@ function contactsResp(){
   obtenir("contacts", {action:"contacts"}, function(r){ liste = r.contacts || []; dessiner(); },
     function(){ var el = document.getElementById("ctl"); if(el) el.innerHTML = '<div class="bandeau">▪ CONTACTS INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
-// Calendrier : congés de l'entreprise (fériés en noir, fermetures en vert) et réunions de l'employé (jour encadré); un mois à la fois.
+// Calendrier : congés de l'entreprise (congé / fermé en noir) et réunions de l'employé (en vert); un mois à la fois.
 var MOIS_COURTS = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
 var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 function calendrier(){
@@ -2103,7 +2103,7 @@ function calendrier(){
     if(!r || !r.jours) throw 0;
     var jours = r.jours, m = new Date(); m.setDate(1);
     el.innerHTML = '<div class="moisbar"><button type="button" id="cp" aria-label="Mois précédent">Précédent</button><b id="ct"></b><button type="button" id="cn" aria-label="Mois suivant">Suivant</button></div><div class="cg" id="cg"></div>' +
-      '<div class="leg"><span><i class="sq" style="background:var(--tx)"></i>Férié</span><span><i class="sq" style="background:#8EFF60"></i>Fermeture</span><span><i class="sq" style="border:1.5px solid var(--tx)"></i>Réunion</span><span><i class="sq" style="border-bottom:3px solid var(--tx)"></i>Congé</span></div>' +
+      '<div class="leg"><span><i class="sq" style="background:#0d1117"></i>Congé / fermé</span><span><i class="sq" style="background:#8EFF60"></i>Réunion</span></div>' +
       '<div class="etiq" style="margin-top:24px">▪ ÉVÉNEMENTS DU MOIS</div><div id="cl"></div>';
     function iso(y, mo, d){ return y+"-"+("0"+(mo+1)).slice(-2)+"-"+("0"+d).slice(-2); }
     function dessiner(){
@@ -2113,8 +2113,7 @@ function calendrier(){
       for(var i = 0; i < prem; i++) g += '<div class="cd"></div>';
       for(var d = 1; d <= nb; d++){
         var j = iso(y, mo, d), ev = jours.filter(function(x){ return x.d === j; }), cl = "cd";
-        if(ev.some(function(x){ return x.t === "f"; })) cl += " cf"; else if(ev.some(function(x){ return x.t === "c"; })) cl += " cc"; else if(ev.some(function(x){ return x.t === "p"; })) cl += " cp";
-        if(ev.some(function(x){ return x.t === "r"; })) cl += " cr";
+        if(ev.some(function(x){ return x.t === "f" || x.t === "c" || x.t === "p"; })) cl += " cf"; else if(ev.some(function(x){ return x.t === "r"; })) cl += " cr";
         g += '<div class="'+cl+'">'+d+'</div>';
       }
       document.getElementById("cg").innerHTML = g;
