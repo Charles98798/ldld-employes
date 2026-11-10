@@ -121,7 +121,7 @@ function suiteAppels(){
   }
 }
 function appelDirect(corps){
-  var ctl = window.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function(){ ctl.abort(); }, 60000) : 0;   // jamais de « CHARGEMENT… » sans fin
+  var ctl = window.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function(){ ctl.abort(); }, corps && corps.action === "docusign_envoyer" ? 170000 : 60000) : 0;   // jamais de « CHARGEMENT… » sans fin
   return fetch(URL_SERVICE, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined})
     .then(function(r){ clearTimeout(t); return r.json(); }, function(e){ clearTimeout(t); throw e; });
 }
@@ -1347,7 +1347,7 @@ function neFormulaire(cand){
       h += '<div class="bandeau">▪ ENVOI PAR DOCUSIGN · À VENIR</div>';
     } else h += et.c.map(champ).join("");
     h += '<div class="aeact tro">'+(S.e ? '<button type="button" class="bouton lg" id="nep">Précédent</button>' : "")+(S.e < 8 ? '<button type="button" class="bouton" id="nes"'+(etapeOk(S.e) ? "" : " disabled")+'>Suivant</button>' : '<button type="button" class="bouton" id="neok">Envoyer le contrat</button>')+'</div>';
-    if(S.pop) h += '<div class="pop"><div class="popc"><div class="popt">Envoyer le contrat à '+esc((S.v.prenom || "")+" "+(S.v.nom || ""))+', '+esc(S.v.courriel || "")+', par DocuSign ?</div>'+(S.pop === 2 ? '<div class="bandeau">▪ ENVOI NON ACTIVÉ · À VENIR</div>' : "")+'<div class="aeact"><button type="button" class="bouton" id="neoui">Oui, envoyer</button><button type="button" class="bouton lg" id="nenon">Non</button></div></div></div>';
+    if(S.pop) h += '<div class="pop"><div class="popc"><div class="popt">Envoyer le contrat à '+esc((S.v.prenom || "")+" "+(S.v.nom || ""))+', '+esc(S.v.courriel || "")+', par DocuSign ?</div>'+'<div class="aeact"><button type="button" class="bouton" id="neoui">Oui, envoyer</button><button type="button" class="bouton lg" id="nenon">Non</button></div></div></div>';
     el.innerHTML = h;
     Array.prototype.forEach.call(el.querySelectorAll("[data-k]"), function(q){ q.oninput = q.onchange = function(){ S.v[q.getAttribute("data-k")] = q.value; majBtn(q); sauverVite(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-d]"), function(q){ q.oninput = function(){ S.docs[Number(q.getAttribute("data-d"))] = q.value; majBtn(q); }; });
@@ -1363,7 +1363,19 @@ function neFormulaire(cand){
     var dc = document.getElementById("nedoc"); if(dc) dc.onclick = function(){ S.docs.push(""); dessiner(); };
     var n = document.getElementById("nes"); if(n) n.onclick = function(){ if(etapeOk(S.e)){ S.e++; window.scrollTo(0, 0); dessiner(); sauver(); } };
     var ok = document.getElementById("neok"); if(ok) ok.onclick = function(){ S.pop = 1; dessiner(); };
-    var oui = document.getElementById("neoui"); if(oui) oui.onclick = function(){ S.pop = 2; dessiner(); };
+    var oui = document.getElementById("neoui"); if(oui) oui.onclick = function(){
+      if(S.envoi) return; S.envoi = 1; S.msg = ""; var t0 = Date.now(), fin = false;
+      function dess(p, msg, rouge){ var z = document.getElementById("neenv"); if(!z) return; z.innerHTML = '<div style="margin:12px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(p)+'%;background:#0d1117"></i></div><div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(p)+' %</div></div>'+(msg ? '<div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "")+'">'+esc(msg)+'</div>' : ""); }
+      var bs = document.querySelectorAll("#ne .popc button"); Array.prototype.forEach.call(bs, function(x){ x.disabled = true; });
+      var pc = document.querySelector("#ne .popc"); if(pc) pc.insertAdjacentHTML("beforeend", '<div id="neenv"></div>'); dess(0, "");
+      var tick = setInterval(function(){ if(!fin) dess(92 * (1 - Math.exp(-(Date.now() - t0) / 40000)), ""); }, 300);
+      var ret = document.getElementById("retour"); if(ret){ ret.style.opacity = ".35"; ret.style.pointerEvents = "none"; }
+      appelService({action: "docusign_envoyer", session: sessionGardee(), id: S.id, courriel: S.v.courriel || "", confirme: true}).then(function(r){
+        fin = true; clearInterval(tick);
+        if(r && r.ok){ dess(100, "▪ " + String(r.message || "CONTRAT ENVOYÉ PAR DOCUSIGN").toUpperCase()); setTimeout(function(){ if(document.getElementById("ne")) responsable(); }, 2600); }
+        else { S.envoi = 0; if(ret){ ret.style.opacity = ""; ret.style.pointerEvents = ""; } dess(0, "▪ NON ENVOYÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(), true); Array.prototype.forEach.call(bs, function(x){ x.disabled = false; }); }
+      }).catch(function(){ fin = true; clearInterval(tick); S.envoi = 0; if(ret){ ret.style.opacity = ""; ret.style.pointerEvents = ""; } dess(0, "▪ RÉPONSE NON REÇUE · VÉRIFIEZ VOTRE COURRIEL AVANT DE RÉESSAYER", true); Array.prototype.forEach.call(bs, function(x){ x.disabled = false; }); });
+    };
     var non = document.getElementById("nenon"); if(non) non.onclick = function(){ S.pop = 0; dessiner(); };
     var p = document.getElementById("nep"); if(p) p.onclick = function(){ S.e--; window.scrollTo(0, 0); dessiner(); sauver(); };
   }
