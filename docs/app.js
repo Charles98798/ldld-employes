@@ -1209,8 +1209,8 @@ var NE_HOR_PROD = [["08:00","17:00"],["07:00","17:00"],["07:00","17:00"],["07:00
 var NE_AVANT = {"Administratif":{assur:1500,otpadq:0,boni:"",vac:2,feries:10,maladie:6},"Auxiliaire":{assur:2300,otpadq:264,boni:4200,vac:2,feries:10,maladie:6},"Professionnel en informatique":{assur:1900,otpadq:264,boni:4200,vac:2,feries:10,maladie:6},"Technologue":{assur:2500,otpadq:680,boni:4200,vac:2,feries:10,maladie:6},"Gestionnaire / Expert":{assur:2500,otpadq:680,boni:4200,vac:3,feries:10,maladie:2}};
 function neHeures(h){
   var t = 0, n = 0;
-  for(var i = 0; i < 7; i++){ var d = h[i]; if(d && d.a && d.b && d.b > d.a){ n++; var m = (Number(d.b.slice(0,2)) * 60 + Number(d.b.slice(3))) - (Number(d.a.slice(0,2)) * 60 + Number(d.a.slice(3))); if(m >= 360) m -= 60; t += m; } }
-  return n ? String(Math.round(t / 6) / 10) : "";
+  for(var i = 0; i < 7; i++){ var d = h[i]; if(d && d.a && d.b && d.b > d.a){ n++; var m = (Number(d.b.slice(0,2)) * 60 + Number(d.b.slice(3))) - (Number(d.a.slice(0,2)) * 60 + Number(d.a.slice(3))); if(m > 360) m -= 60; t += m; } }
+  return n ? String(Math.round(t / 60 * 100) / 100) : "";
 }
 function neValide(ty, v){
   v = String(v || "").trim(); if(!v) return false;
@@ -1240,7 +1240,7 @@ function nouvelEmploye(){
         if(!v){ if(sp) sp.textContent = t0; q.removeAttribute("data-b"); neFormulaire(c); return; }
         var M = {nomFamille:"nom", codePostal:"cp", naissance:"naiss", experience:"exp", categorie:"cat", assurance:"assur", semainesVacances:"vac", joursFeries:"feries", joursMaladie:"maladie"};
         var w = {}; Object.keys(c.v || {}).forEach(function(k){ w[k] = c.v[k]; });
-        Object.keys(v).forEach(function(k){ if(["salaire","horaire","position","echelleAnnee"].indexOf(k) >= 0) return; var x = v[k]; if(x === null || x === undefined || x === "") return; w[M[k] || k] = x; });
+        Object.keys(v).forEach(function(k){ if(["salaire","position","echelleAnnee"].indexOf(k) >= 0) return; var x = v[k]; if(x === null || x === undefined || x === "") return; w[M[k] || k] = x; });
         neFormulaire({id: c.id, v: w});
       }).catch(function(){ if(sp) sp.textContent = t0; q.removeAttribute("data-b"); neFormulaire(c); }); }; });
   }).catch(vide);
@@ -1264,6 +1264,7 @@ function neFormulaire(cand){
   if(cand && cand.v) Object.keys(cand.v).forEach(function(k){ var v = cand.v[k]; if(v === null || v === undefined || v === "" || k === "enregistre" || k === "envoye" || k === "programme") return;
     if(k === "exp" && Number(v) > 1900) v = String(new Date().getFullYear() - Number(v));
     S.v[CORR[k] || k] = String(v); });
+  if(typeof S.v.horaire === "string" && S.v.horaire){ S.v.horaire.split(";").forEach(function(seg){ var m = seg.trim().match(/^(\S+)\s+(\d{2}:\d{2})-(\d{2}:\d{2})$/), i = m ? NE_JOURS.indexOf(m[1]) : -1; if(i >= 0) S.h[i] = {a:m[2], b:m[3]}; }); delete S.v.horaire; if(Object.keys(S.h).length && !(cand && cand.v && cand.v.heures)) S.v.heures = neHeures(S.h); }
   if(S.v.cat && !Object.keys(S.h).length){ var hh0 = S.v.cat === "Administratif" ? NE_HOR_ADM : NE_HOR_PROD; hh0.forEach(function(x, i){ S.h[i] = {a:x[0], b:x[1]}; }); if(!(cand && cand.v && cand.v.heures)) S.v.heures = neHeures(S.h); if(!S.v.arrivee) S.v.arrivee = "08:00"; }
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="ne"></div></div>';
   function visible(c){ return !c.si || c.si(S.v); }
