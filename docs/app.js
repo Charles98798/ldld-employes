@@ -1225,14 +1225,15 @@ function neValide(ty, v){
   return true;
 }
 // Règle de Charles: un employé s'ajoute toujours par « Position embauche ». Cet onglet ne reprend que les candidats de la liste d'attente (fiches préparées là-bas).
-var NE_ATT = null, NE_BRP = {};
+var NE_ATT = null, NE_BRP = {}, NE_ATTP = null, NE_ATTT = 0;
 function neAttCharger(){
-  var p = appelService({action: "embauche_attente", session: sessionGardee()}).then(function(r){
+  if(NE_ATTP) return NE_ATTP;
+  var p = NE_ATTP = appelService({action: "embauche_attente", session: sessionGardee()}).then(function(r){
     var l = (r && r.ok && r.r && r.r.length) ? r.r : [];
-    NE_ATT = l; NE_BRP = {};
+    NE_ATT = l; NE_ATTT = Date.now(); NE_ATTP = null; NE_BRP = {};
     l.forEach(function(c){ NE_BRP[c.id] = appelService({action: "embauche_brouillon", session: sessionGardee(), id: c.id}).catch(function(){ return null; }); });
     return l;
-  });
+  }, function(e){ NE_ATTP = null; throw e; });
   return p;
 }
 function nouvelEmploye(){
@@ -1258,7 +1259,8 @@ function nouvelEmploye(){
   }
   if(NE_ATT) montrer(NE_ATT);
   else { var z0 = document.getElementById("nl"); if(z0) z0.innerHTML = '<div class="etq">▪ CANDIDATS EN ATTENTE</div>'; }
-  neAttCharger().then(function(l){ if(!NE_ATT || document.getElementById("nl")) montrer(l); }).catch(function(){ if(!NE_ATT) vide(); });
+  if(NE_ATT && Date.now() - NE_ATTT < 90000) return;
+  neAttCharger().then(function(l){ if(document.getElementById("nl")) montrer(l); }).catch(function(){ if(!NE_ATT) vide(); });
 }
 var NE_LISTE = null;
 function neBilanResp(S){
