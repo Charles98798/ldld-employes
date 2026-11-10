@@ -799,3 +799,5 @@ body:has(.btnbas) .page{padding-bottom:90px}
 .menu a[data-k] .nbtot.nombre{font-size:12px;letter-spacing:.5px;padding:3px 9px;font-weight:500}
 .bl h1.ti{padding-top:8px;padding-bottom:8px;box-sizing:border-box}
 .menu a[data-k] .pastille.pasnon{background:transparent;color:var(--tx);padding:3px 0;margin-left:auto}
+
+.menu.accueil a[data-k]{font-size:var(--ft,21px)}

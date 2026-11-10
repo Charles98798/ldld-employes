@@ -392,18 +392,18 @@ var ENT = [
  {id:"messages_envoyes", g:"Équipe", l:"Historique message", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
  {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
- {id:"positionnement_embauche", g:"Gestion des employés", l:"Positionnement à l'embauche", p:"Positionnement embauche", d:[0,0,1], f:function(){ embauchePos(); }},
+ {id:"positionnement_embauche", g:"Gestion des employés", l:"Position embauche", p:"Positionnement embauche", d:[0,0,1], f:function(){ embauchePos(); }},
  {id:"nouvel_employe", g:"Gestion des employés", l:"Ajouter un employé", p:"Nouvel employé", d:[0,0,1], v:1, f:function(){ bientot(this); }},
  {id:"retirer_employe", g:"Gestion des employés", l:"Retirer un employé", p:"Retirer un employé", d:[0,0,1], f:function(){ gestionEmployes(); }},
  {id:"portrait", g:"Gestion des employés", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portrait(); }},
  {id:"suivi_charge", g:"Gestion des employés", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
  {id:"echelle_salariale", g:"Gestion des employés", l:"Échelle salariale", p:"Échelle salariale", d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
- {id:"positionnement_employe", g:"Gestion des employés", l:"Positionnement d'un employé", p:"Positionnement employé", d:[0,0,1], f:function(){ posEmpOuvrir(); }},
+ {id:"positionnement_employe", g:"Gestion des employés", l:"Position employé", p:"Positionnement employé", d:[0,0,1], f:function(){ posEmpOuvrir(); }},
  {id:"envoi_salarial", g:"Gestion des employés", l:"Envoi salarial", p:"Envoi salarial", d:[0,0,1], v:1, f:function(){ bientot(this); }},
  {id:"stationnement", g:"Installations", l:"Stationnement", p:"Stationnement", d:[0,1,1], f:function(){ attributionPage("place"); }},
  {id:"casier", g:"Installations", l:"Casier", p:"Casier", d:[0,1,1], f:function(){ attributionPage("casier"); }},
  {id:"entretien_machinerie", g:"Installations", l:"Entretien machinerie", p:"Entretien machinerie", d:[1,1,1], f:function(){ entretien(); }},
- {id:"conseil", g:"Finances", l:"Conseil d'administration", p:"Conseil d'administration", d:[0,0,1], f:function(){ financeMenu(); }},
+ {id:"conseil", g:"Finances", l:"Conseil d'admin.", p:"Conseil d'administration", d:[0,0,1], f:function(){ financeMenu(); }},
  {id:"finances", g:"Finances", l:"Finances", p:"Finances", d:[0,0,1], v:1, f:function(){ financesMenu(); }},
  {id:"conseil_production", g:"Finances", l:"Conseil · Production", p:"Production", d:[0,0,1], s:1},
  {id:"conseil_indicateurs", g:"Finances", l:"Conseil · Indicateurs", p:"Indicateurs", d:[0,0,1], s:1},
@@ -416,7 +416,7 @@ var ENT = [
  {id:"finances_etats", g:"Finances", l:"Finances · États financiers", p:"États financiers", d:[0,0,1], v:1, s:1},
  {id:"manuel", g:"Documents", l:"Manuel d'employé", p:"Manuel", d:[1,1,1], i:1, f:function(){ section(1); }},
  {id:"plan_incendie", g:"Documents", l:"Plan d'incendie", p:"Plan d'incendie", d:[1,1,1], i:5, f:function(){ section(5); }},
- {id:"utilisation", g:"Contrôle", l:"Utilisation de l'application", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
+ {id:"utilisation", g:"Contrôle", l:"Utilisation app", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
  {id:"controle", g:"Contrôle", l:"Contrôle", p:"Contrôle", d:[0,0,1], v:1, f:function(){ controleOuvrir(); }}
 ];
 var ENT_PAR_ID = {}; ENT.forEach(function(x){ ENT_PAR_ID[x.id] = x; });
@@ -460,8 +460,22 @@ function menu(){
   var rcf = document.getElementById("rcommefin"); if(rcf) rcf.onclick = function(e){ e.preventDefault(); revenirDeComme(); };
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
   pastilleAuto(); pastilleMessages(); chargerAujourdhui();
+  ajusterMenu();
   vuePreparer(sessionGardee());
 }
+// Aucun nom sur deux lignes: la taille du texte de l'accueil diminue (pour toutes les lignes à la fois) jusqu'à ce que chaque nom tienne sur une seule ligne.
+function ajusterMenu(){
+  var m = app.querySelector(".menu.accueil"); if(!m) return;
+  var L = Array.prototype.slice.call(m.querySelectorAll("a[data-k]")); if(!L.length) return;
+  var t = 21, ok = false;
+  while(t >= 12 && !ok){
+    m.style.setProperty("--ft", t + "px");
+    var mn = Math.min.apply(null, L.map(function(a){ return a.offsetHeight; }));
+    ok = L.every(function(a){ return a.offsetHeight <= mn + 6; });
+    if(!ok) t -= 0.5;
+  }
+}
+window.addEventListener("resize", function(){ try { ajusterMenu(); } catch(e){} });
 // Étape 2 : messages, lus et écrits par le service Google Apps Script (chaque employé ne reçoit que les siens).
 var MESSAGES = [];
 function lus(){ try { return JSON.parse(localStorage.getItem("ldld-lus") || "[]"); } catch(e){ return []; } }
