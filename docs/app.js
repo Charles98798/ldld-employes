@@ -450,7 +450,7 @@ function menu(){
     h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.l)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(x.n ? '<b class="nc">'+x.n+'</b>' : "")+'</span></a>';
   });
   if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { posEmpPrecharger(); embPrecharger(); } catch(e){} }
-  app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' + h +
+  app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="envg"></div><div id="auj"></div>' + h +
     (vueComme() ? '<a href="#" id="rcommefin">Revenir à mon compte</a>' : '') +
     '<a class="sortie" href="#" id="sortie">Déconnexion</a></div>';
   if(!reprendrePos("__menu")) window.scrollTo(0, 0);   // l'accueil s'ouvre en haut, sauf au retour d'une page (même place qu'avant)
@@ -460,7 +460,7 @@ function menu(){
   });
   var rcf = document.getElementById("rcommefin"); if(rcf) rcf.onclick = function(e){ e.preventDefault(); revenirDeComme(); };
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
-  pastilleAuto(); pastilleMessages(); chargerAujourdhui();
+  neEnvDessiner(); pastilleAuto(); pastilleMessages(); chargerAujourdhui();
   ajusterMenu();
   vuePreparer(sessionGardee());
 }
@@ -1225,6 +1225,30 @@ function neValide(ty, v){
   return true;
 }
 // Règle de Charles: un employé s'ajoute toujours par « Position embauche ». Cet onglet ne reprend que les candidats de la liste d'attente (fiches préparées là-bas).
+var NE_ENV = null;
+function neEnvDessiner(){
+  var z = document.getElementById("envg"); if(!z) return;
+  var E = NE_ENV; if(!E){ z.innerHTML = ""; return; }
+  var st = "background:#8EFF60;color:#1D1D1B;font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:12px 14px;line-height:1.5;margin:0 0 22px;cursor:pointer", h = "";
+  if(E.etat === "cours") h = '▪ Envoi contrat en cours · '+Math.round(E.p)+' %<br>'+esc(E.nom);
+  else if(E.etat === "ok") h = '▪ Contrat envoyé · 100 %<br>'+esc(E.nom)+(E.ldld ? ' · '+esc(E.ldld) : "");
+  else { st = st.replace("#8EFF60", "#a32a2d").replace("#1D1D1B", "#fff"); h = '▪ Contrat non envoyé<br>'+esc(E.nom)+' · '+esc(E.err || "")+'<br>Touchez pour réessayer'; }
+  z.innerHTML = '<div id="envb" style="'+st+'">'+h+'</div>';
+  var b = document.getElementById("envb"); if(b) b.onclick = function(){ if(E.etat === "ok"){ NE_ENV = null; neEnvDessiner(); } else if(E.etat === "non") neEnvoyer(E.dem); };
+}
+function neEnvoyer(dem){
+  var t0 = Date.now(), fin = false;
+  NE_ENV = {etat: "cours", p: 0, nom: dem.nom, dem: dem};
+  var E = NE_ENV;
+  var tick = setInterval(function(){ if(!fin){ E.p = 92 * (1 - Math.exp(-(Date.now() - t0) / 40000)); if(NE_ENV === E) neEnvDessiner(); } }, 500);
+  responsable(); neEnvDessiner();
+  appelService({action: "docusign_envoyer", session: sessionGardee(), id: dem.id, courriel: dem.courriel, confirme: true}).then(function(r){
+    fin = true; clearInterval(tick);
+    if(r && r.ok){ E.etat = "ok"; E.p = 100; E.ldld = (r.r && r.r.ldld) || ""; NE_ATT = null; NE_ATTP = null; menu.attPre = false; }
+    else { E.etat = "non"; E.err = String((r && r.erreur) || "Réessayez"); }
+    if(NE_ENV === E) neEnvDessiner();
+  }).catch(function(){ fin = true; clearInterval(tick); E.etat = "non"; E.err = "Réponse non reçue, vérifiez votre courriel avant de réessayer"; if(NE_ENV === E) neEnvDessiner(); });
+}
 var NE_ATT = null, NE_BRP = {}, NE_ATTP = null, NE_ATTT = 0;
 function neAttCharger(){
   if(NE_ATTP) return NE_ATTP;
@@ -1380,17 +1404,8 @@ function neFormulaire(cand){
     var n = document.getElementById("nes"); if(n) n.onclick = function(){ if(etapeOk(S.e)){ S.e++; window.scrollTo(0, 0); dessiner(); sauver(); } };
     var ok = document.getElementById("neok"); if(ok) ok.onclick = function(){ S.pop = 1; dessiner(); };
     var oui = document.getElementById("neoui"); if(oui) oui.onclick = function(){
-      if(S.envoi) return; S.envoi = 1; S.msg = ""; var t0 = Date.now(), fin = false;
-      function dess(p, msg, rouge){ var z = document.getElementById("neenv"); if(!z) return; z.innerHTML = '<div style="margin:12px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(p)+'%;background:#0d1117"></i></div><div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(p)+' %</div></div>'+(msg ? '<div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "")+'">'+esc(msg)+'</div>' : ""); }
-      var bs = document.querySelectorAll("#ne .popc button"); Array.prototype.forEach.call(bs, function(x){ x.disabled = true; });
-      var pc = document.querySelector("#ne .popc"); if(pc) pc.insertAdjacentHTML("beforeend", '<div id="neenv"></div>'); dess(0, "");
-      var tick = setInterval(function(){ if(!fin) dess(92 * (1 - Math.exp(-(Date.now() - t0) / 40000)), ""); }, 300);
-      var ret = document.getElementById("retour"); if(ret){ ret.style.opacity = ".35"; ret.style.pointerEvents = "none"; }
-      appelService({action: "docusign_envoyer", session: sessionGardee(), id: S.id, courriel: S.v.courriel || "", confirme: true}).then(function(r){
-        fin = true; clearInterval(tick);
-        if(r && r.ok){ dess(100, "▪ " + String(r.message || "CONTRAT ENVOYÉ PAR DOCUSIGN").toUpperCase()); setTimeout(function(){ if(document.getElementById("ne")) responsable(); }, 2600); }
-        else { S.envoi = 0; if(ret){ ret.style.opacity = ""; ret.style.pointerEvents = ""; } dess(0, "▪ NON ENVOYÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(), true); Array.prototype.forEach.call(bs, function(x){ x.disabled = false; }); }
-      }).catch(function(){ fin = true; clearInterval(tick); S.envoi = 0; if(ret){ ret.style.opacity = ""; ret.style.pointerEvents = ""; } dess(0, "▪ RÉPONSE NON REÇUE · VÉRIFIEZ VOTRE COURRIEL AVANT DE RÉESSAYER", true); Array.prototype.forEach.call(bs, function(x){ x.disabled = false; }); });
+      if(NE_ENV && NE_ENV.etat === "cours") return;
+      S.pop = 0; neEnvoyer({id: S.id, courriel: S.v.courriel || "", nom: ((S.v.prenom || "")+" "+(S.v.nom || "")).trim()});
     };
     var non = document.getElementById("nenon"); if(non) non.onclick = function(){ S.pop = 0; dessiner(); };
     var p = document.getElementById("nep"); if(p) p.onclick = function(){ S.e--; window.scrollTo(0, 0); dessiner(); sauver(); };
