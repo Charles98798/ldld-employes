@@ -453,7 +453,7 @@ function menu(){
   if(notifPossible() && Notification.permission === "granted" && !menu.abonne){ menu.abonne = true; abonnerNotifs().catch(function(){}); }
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger(); setTimeout(prechargerLectures, 400);
-  if(MOI && MOI.role === "direction" && !menu.attPre){ menu.attPre = true; setTimeout(function(){ neAttCharger().catch(function(){ menu.attPre = false; }); }, 1500); }
+  if(MOI && MOI.role === "direction" && !menu.attPre){ menu.attPre = true; setTimeout(function(){ neAttCharger(true).catch(function(){ menu.attPre = false; }); }, 25000); }
   var animer = !menu.anime; menu.anime = true;
   if(!menu.onglets){ menu.onglets = true; chargerDroits(); }
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
@@ -1276,12 +1276,12 @@ function neEnvoyer(dem){
     suite: function(r){ return (r.r && r.r.ldld) || ""; }});
 }
 var NE_ATT = null, NE_BRP = {}, NE_ATTP = null, NE_ATTT = 0;
-function neAttCharger(){
+function neAttCharger(sansBrouillons){
   if(NE_ATTP) return NE_ATTP;
   var p = NE_ATTP = appelService({action: "embauche_attente", session: sessionGardee()}).then(function(r){
     var l = (r && r.ok && r.r && r.r.length) ? r.r : [];
     NE_ATT = l; NE_ATTT = Date.now(); NE_ATTP = null; NE_BRP = {};
-    l.forEach(function(c){ NE_BRP[c.id] = appelService({action: "embauche_brouillon", session: sessionGardee(), id: c.id}).catch(function(){ return null; }); });
+    if(!sansBrouillons) l.forEach(function(c){ NE_BRP[c.id] = appelService({action: "embauche_brouillon", session: sessionGardee(), id: c.id}).catch(function(){ return null; }); });
     return l;
   }, function(e){ NE_ATTP = null; throw e; });
   return p;
