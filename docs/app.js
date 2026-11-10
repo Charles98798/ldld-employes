@@ -1111,7 +1111,8 @@ function attributionPage(genre){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titre+'</h1><div id="ap"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var d = null, choisi = "", msg = "", confirmer = null, caseSel = "", transf = null;
-  function menuP(k){ return k === "case" ? '<button type="button" class="ib" data-cx="1" aria-label="Libérer">✕</button>' : '<button type="button" class="ib" data-x="'+k+'" aria-label="Libérer">✕</button>'; }
+  function menuA(k){ return '<span class="actw"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1 3h6v6h-6zM0 11h8v10h-8zM13 3h6v6h-6zM12 11h8v10h-8z"/></svg><select class="act" data-m="'+k+'" aria-label="Actions"><option value="">Actions</option><option value="attribuer">Attribuer un numéro de '+(estPlace ? "stationnement" : "casier")+'</option></select></span>'; }
+  function menuP(k){ return '<span class="actw"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1 3h6v6h-6zM0 11h8v10h-8zM13 3h6v6h-6zM12 11h8v10h-8z"/></svg><select class="act" data-m="'+k+'" aria-label="Actions"><option value="">Actions</option><option value="transferer">Transférer un numéro de '+(estPlace ? "stationnement" : "casier")+'</option><option value="liberer">Retirer un numéro de '+(estPlace ? "stationnement" : "casier")+'</option></select></span>'; }
   function champsDe(e){ return estPlace ? [["place","Place"]] : [["casier1","Casier"]].concat(e.casier2 ? [["casier2","Casier 2"]] : []); }
   function dessiner(){
     var el = document.getElementById("ap"); if(!el) return;
@@ -1132,7 +1133,8 @@ function attributionPage(genre){
           if(confirmer === c[0]) h += '<div class="bandeau">▪ LIBÉRER ?</div>';
         } else {
           var libres = estPlace ? d.placesLibres : d.casiersLibres;
-          h += '<div class="ligne"><span>'+(estPlace ? "Aucune place" : "Aucun "+c[1].toLowerCase())+'</span></div><select class="champ" id="apn-'+c[0]+'"><option value="">'+(libres.length ? "Numéros libres" : "Aucun numéro libre")+'</option>' + libres.map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join("") + '</select><button type="button" class="bouton" data-att="'+c[0]+'">Attribuer</button>';
+          h += '<div class="ligne"><span>'+(estPlace ? "Aucune place" : "Aucun "+c[1].toLowerCase())+'</span>'+menuA(c[0])+'</div>';
+          if(transf === c[0]) h += '<select class="champ" id="apn-'+c[0]+'"><option value="">'+(libres.length ? "Numéros libres" : "Aucun numéro libre")+'</option>' + libres.map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join("") + '</select><button type="button" class="bouton" data-att="'+c[0]+'">Attribuer</button>';
         }
       });
       if(!estPlace && !e.casier2 && e.casier1 === "") h += "";
@@ -1156,7 +1158,7 @@ function attributionPage(genre){
     Array.prototype.forEach.call(el.querySelectorAll("[data-cnon]"), function(b){ b.onclick = function(){ confirmer = null; dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-coui]"), function(b){ b.onclick = function(){ var o = occ[+caseSel]; if(o) ecrire(o.champ, "", o.e.ligne); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-catt]"), function(b){ b.onclick = function(){ var v = document.getElementById("ape").value; if(!v){ msg = "▪ CHOISISSEZ UN EMPLOYÉ"; dessiner(); return; } var o2 = occ[+caseSel], nv = Number(v); if(o2) ecrire(o2.champ, "", o2.e.ligne, function(){ ecrire(estPlace ? "place" : "casier1", caseSel, nv); }); else ecrire(estPlace ? "place" : "casier1", caseSel, nv); }; });
-    Array.prototype.forEach.call(el.querySelectorAll("select[data-m]"), function(q){ q.onchange = function(){ var k = q.getAttribute("data-m"); if(q.value === "liberer"){ confirmer = k; transf = null; } else if(q.value === "transferer"){ transf = k; confirmer = null; } dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("select[data-m]"), function(q){ q.onchange = function(){ var k = q.getAttribute("data-m"); if(q.value === "liberer"){ confirmer = k; transf = null; } else if(q.value === "transferer" || q.value === "attribuer"){ transf = k; confirmer = null; } dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-x]"), function(b){ b.onclick = function(){ confirmer = b.getAttribute("data-x"); dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-non]"), function(b){ b.onclick = function(){ confirmer = null; dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-oui]"), function(b){ b.onclick = function(){ ecrire(b.getAttribute("data-oui"), ""); }; });
