@@ -60,7 +60,7 @@ function embauchePos(){
   if(!EMB.S) EMB.S = embVierge();
   EMB.surD = function(){ if(EMB.page && document.getElementById("pe")) embDessiner(); };
   EMB.page = true;
-  app.innerHTML = '<div class="page pe" style="padding-bottom:110px"><a class="retour" href="#" id="retour">Retour</a><div id="pe"></div></div>';
+  app.innerHTML = '<div class="page pe" style="padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))"><a class="retour" href="#" id="retour">Retour</a><div id="pe"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); embSortir(); };
   embPrecharger(); embAvantages(); embDessiner();
 }
@@ -135,10 +135,11 @@ function embPage3(z){
       '<tr class="t"><td>Total de la rémunération globale</td><td>'+embMoney(a.total)+'</td><td>'+embMoney(b.total)+'</td></tr>'; }
   var note = !m ? (EMB.AV ? (av ? "" : "Aucun employé actif dans ce poste : avantages introuvables, rémunération globale non calculée.") : "Lecture des avantages du poste en cours…") : "";
   z.innerHTML = '<h1>'+esc(S.prenom.trim()+" "+S.famille.trim())+'</h1><div class="lab">03 · Position dans l’échelle</div>'+ech+'<div class="lab">04 · Rémunération globale</div>'+
-    '<table class="tb"><tr style="white-space:nowrap"><td></td><td style="text-align:right">Départ '+r.dep+' %</td><td style="text-align:right">Avancement '+(r.mx > r.dep ? r.mx : r.dep)+' %</td></tr>'+tab+'</table>'+(note ? '<div class="bandeau">▪ '+esc(note.toUpperCase())+'</div>' : "")+
-    '<div id="pmsg"></div><div class="aeact" id="pbts" style="margin-top:14px"><button type="button" class="bouton" id="penr" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)"'+(m ? "" : " disabled")+'>Enregistrer</button></div>';
+    '<table class="tb"><colgroup><col style="width:40%"><col style="width:30%"><col style="width:30%"></colgroup><tr class="th"><td></td><td style="text-align:right">Départ '+r.dep+' %</td><td style="text-align:right">Avancement '+(r.mx > r.dep ? r.mx : r.dep)+' %</td></tr>'+tab+'</table>'+(note ? '<div class="bandeau">▪ '+esc(note.toUpperCase())+'</div>' : "")+
+    '<div id="pmsg"></div><div class="pbts" id="pbts"><button type="button" class="bouton" id="peev" style="margin:0"'+(m ? "" : " disabled")+'>Enregistrer et envoyer</button><button type="button" class="bouton" id="penr" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)"'+(m ? "" : " disabled")+'>Enregistrer</button></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); S.page = 2; embDessiner(); };
-  boutonBas("Enregistrer et envoyer", !!m, function(){ embFenetreCourriel(r, m); });
+  retirerBoutonBas();
+  document.getElementById("peev").onclick = function(){ embFenetreCourriel(r, m); };
   document.getElementById("penr").onclick = function(){ embLancer(r, m, ""); };
 }
 // Fenêtre « Enregistrer et envoyer »: une seule case de courriel.
@@ -171,13 +172,12 @@ function embLancer(r, m, courriel){
     fin = true; clearInterval(tick); var zz = document.getElementById("pmsg"); if(!zz) return;
     if(res && res.ok){ var o = res.r || {};
       dess(100, true, "▪ "+(envoi ? "FICHE « NOUVEL EMPLOYÉ » PRÉPARÉE ET COURRIEL ENVOYÉ À "+(o.courriel || courriel)+(o.copie ? ". COPIE À "+o.copie : "") : "BROUILLON DE LA FICHE « NOUVEL EMPLOYÉ » PRÉPARÉ")+" · DÉPART "+o.dep+" % · "+embFmt(o.taux)+" $/H"+(o.entente ? " · POSITION DÉCIDÉE EN RENCONTRE (BARÈME "+o.bareme+" %)" : ""), false);
-      zz.innerHTML += '<div class="aeact" style="margin-top:14px"><button type="button" class="bouton" id="pfer" style="margin:0">Fermer</button></div>';
-      document.getElementById("pfer").onclick = function(){ EMB.S = null; embSortir(); };
+      setTimeout(function(){ if(EMB.page){ EMB.S = null; embSortir(); } }, 2200);
     } else { dess(0, false, "▪ NON ENREGISTRÉ · "+String((res && res.erreur) || "RÉESSAYEZ").toUpperCase()+(envoi ? " · RIEN N'A ÉTÉ ENVOYÉ" : ""), true); embRetablir(r, m); }
   }).catch(function(){ fin = true; clearInterval(tick); if(document.getElementById("pmsg")){ dess(0, false, "▪ NON ENREGISTRÉ · RÉSEAU · RIEN N'A ÉTÉ ENVOYÉ", true); embRetablir(r, m); } });
 }
 function embRetablir(r, m){
   var bts = document.getElementById("pbts"); if(bts) bts.style.display = "";
-  boutonBas("Enregistrer et envoyer", true, function(){ embFenetreCourriel(r, m); });
+  var v = document.getElementById("peev"); if(v) v.onclick = function(){ embFenetreCourriel(r, m); };
   var e = document.getElementById("penr"); if(e) e.onclick = function(){ embLancer(r, m, ""); };
 }

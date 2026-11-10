@@ -393,7 +393,7 @@ var ENT = [
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
  {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
  {id:"positionnement_embauche", g:"Gestion des employés", l:"Position embauche", p:"Positionnement embauche", d:[0,0,1], f:function(){ embauchePos(); }},
- {id:"nouvel_employe", g:"Gestion des employés", l:"Ajouter un employé", p:"Nouvel employé", d:[0,0,1], v:1, f:function(){ bientot(this); }},
+ {id:"nouvel_employe", g:"Gestion des employés", l:"Ajouter un employé", p:"Nouvel employé", d:[0,0,1], v:1, f:function(){ nouvelEmploye(); }},
  {id:"retirer_employe", g:"Gestion des employés", l:"Retirer un employé", p:"Retirer un employé", d:[0,0,1], f:function(){ gestionEmployes(); }},
  {id:"portrait", g:"Gestion des employés", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portrait(); }},
  {id:"suivi_charge", g:"Gestion des employés", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
@@ -1174,6 +1174,118 @@ function attributionPage(genre){
   appelService({action:"parking_lire", session:sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0; d = r; dessiner();
   }).catch(function(){ var el = document.getElementById("ap"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
+
+// Nouvel employé (Direction): même parcours en 8 étapes que le formulaire du classeur. Rose = obligatoire pour le contrat, beige = facultatif. Rien n'est enregistré tant que le Service n'a pas la fonction de création.
+var NE_ETAPES = [
+ {t:"Identité", c:[
+  {k:"nom", l:"Nom de famille", r:1}, {k:"prenom", l:"Prénom", r:1}, {k:"usuel", l:"Prénom usuel"},
+  {k:"accord", l:"Accord dans les documents", r:1, o:["Féminin (employée)","Masculin (employé)"]},
+  {k:"naiss", l:"Date de naissance", r:1, ty:"date"},
+  {k:"statut", l:"Statut au Canada", r:1, o:["Citoyen canadien","Résident permanent","Permis de travail"]},
+  {k:"permis", l:"Expiration du permis de travail", r:1, ty:"date", si:function(v){ return v.statut === "Permis de travail"; }}]},
+ {t:"Coordonnées", c:[
+  {k:"adresse", l:"Adresse", r:1}, {k:"appt", l:"Appartement"}, {k:"ville", l:"Ville", r:1}, {k:"prov", l:"Province", d:"Québec"},
+  {k:"cp", l:"Code postal", r:1, ty:"cp"}, {k:"tel", l:"Téléphone", r:1, ty:"tel"}, {k:"tel2", l:"Autre téléphone", ty:"tel"},
+  {k:"courriel", l:"Courriel personnel", r:1, ty:"courriel"}]},
+ {t:"Poste", c:[
+  {k:"cat", l:"Catégorie", r:1, o:["Administratif","Auxiliaire","Professionnel en informatique","Technologue","Gestionnaire / Expert"]},
+  {k:"entree", l:"Date d'entrée en fonction", r:1, ty:"date"}, {k:"exp", l:"Expérience dans le métier (années)", r:1, ty:"nombre"},
+  {k:"resp", l:"Responsable des évaluations", r:1, dyn:1}, {k:"prog", l:"Programme de reconnaissance", auto:1, si:function(v){ return !!NE_PROG[v.cat]; }}]},
+ {t:"Horaire", c:[{k:"horaire", l:"Horaire", ty:"horaire"}, {k:"heures", l:"Heures par semaine", r:1, ty:"nombre", d:"40"}, {k:"arrivee", l:"Arrivée, première journée", r:1, ty:"heure", d:"08:00"}, {k:"accueil", l:"Personne qui accueille", r:1, dyn:1}]},
+ {t:"Documents", c:[{k:"docs", l:"Documents à apporter", ty:"liste"}]},
+ {t:"Avantages", c:[
+  {k:"assur", l:"Assurance annuelle", r:1, ty:"nombre"}, {k:"otpadq", l:"Cotisation OTPADQ", r:1, ty:"nombre"}, {k:"boni", l:"Boni", r:1, ty:"nombre"},
+  {k:"vac", l:"Semaines de vacances", r:1, ty:"nombre"}, {k:"feries", l:"Jours fériés", r:1, ty:"nombre"}, {k:"maladie", l:"Jours de maladie", r:1, ty:"nombre"}]},
+ {t:"Responsabilités", c:[{k:"resps", l:"Responsabilités", ty:"resp"}]},
+ {t:"Résumé", c:[{k:"comm", l:"Questions ou commentaires", ty:"long"}]}
+];
+var NE_PROG = {"Gestionnaire / Expert":"Gestion", "Auxiliaire":"Production", "Technologue":"Production", "Professionnel en informatique":"Production"};
+var NE_JOURS = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+var NE_DOCS = ["Votre numéro d'assurance sociale.","Une copie de votre permis de travail, s'il y a lieu.","Un spécimen de chèque, ou une preuve de dépôt direct de votre institution financière.","Une copie de vos diplômes et de votre carte de membre d'un ordre professionnel, s'il y a lieu.","Une preuve d'adresse récente, ainsi que votre courriel, votre numéro de téléphone et votre date de naissance."];
+var NE_HOR_ADM = [["08:00","17:00"],["07:30","17:00"],["07:30","17:00"],["07:30","17:00"],["07:30","12:00"]];
+var NE_HOR_PROD = [["08:00","17:00"],["07:00","17:00"],["07:00","17:00"],["07:00","17:00"],["07:00","12:00"]];
+// Valeurs par défaut du classeur (calculées là-bas depuis les employés actifs; à relire du Service quand il les fournira)
+var NE_AVANT = {"Administratif":{assur:1500,otpadq:0,boni:"",vac:2,feries:10,maladie:6},"Auxiliaire":{assur:2300,otpadq:264,boni:4200,vac:2,feries:10,maladie:6},"Professionnel en informatique":{assur:1900,otpadq:264,boni:4200,vac:2,feries:10,maladie:6},"Technologue":{assur:2500,otpadq:680,boni:4200,vac:2,feries:10,maladie:6},"Gestionnaire / Expert":{assur:2500,otpadq:680,boni:4200,vac:3,feries:10,maladie:2}};
+function neHeures(h){
+  var t = 0, n = 0;
+  for(var i = 0; i < 7; i++){ var d = h[i]; if(d && d.a && d.b && d.b > d.a){ n++; var m = (Number(d.b.slice(0,2)) * 60 + Number(d.b.slice(3))) - (Number(d.a.slice(0,2)) * 60 + Number(d.a.slice(3))); if(m >= 360) m -= 60; t += m; } }
+  return n ? String(Math.round(t / 6) / 10) : "";
+}
+function neValide(ty, v){
+  v = String(v || "").trim(); if(!v) return false;
+  if(ty === "courriel") return /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(v);
+  if(ty === "tel") return /^1?\d{10}$/.test(v.replace(/\D/g, ""));
+  if(ty === "cp") return /^[A-Za-z]\d[A-Za-z] ?\d[A-Za-z]\d$/.test(v);
+  if(ty === "nombre") return /^-?\d+([.,]\d+)?$/.test(v.replace(/[\s$]/g, ""));
+  if(ty === "date") return /^\d{4}-\d{2}-\d{2}$/.test(v);
+  if(ty === "heure") return /^\d{2}:\d{2}$/.test(v);
+  return true;
+}
+function nouvelEmploye(){
+  var S = {e:0, v:{}, h:{}, docs:NE_DOCS.slice()};
+  NE_ETAPES.forEach(function(et){ et.c.forEach(function(c){ if(c.d) S.v[c.k] = c.d; }); });
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="ne"></div></div>';
+  function visible(c){ return !c.si || c.si(S.v); }
+  function horaireOk(){
+    var n = 0; for(var i = 0; i < 7; i++){ var d = S.h[i] || {}; if(d.a || d.b){ if(!neValide("heure", d.a) || !neValide("heure", d.b) || d.b <= d.a) return false; n++; } }
+    return n > 0;
+  }
+  function champOk(c){
+    if(!visible(c) || c.auto) return true;
+    if(c.ty === "horaire") return horaireOk();
+    if(c.ty === "liste") return S.docs.some(function(x){ return x.trim(); });
+    if(c.ty === "resp" || c.ty === "long") return true;
+    if(!c.r) return !String(S.v[c.k] || "").trim() || neValide(c.ty, S.v[c.k]);
+    return neValide(c.ty, S.v[c.k]);
+  }
+  function etapeOk(i){ return NE_ETAPES[i].c.every(champOk); }
+  function champ(c){
+    if(!visible(c)) return "";
+    var v = S.v[c.k] || "", cl = "bx" + (c.r && !champOk(c) ? " rose" : (!c.r ? " beige" : ""));
+    if(c.auto) return '<div class="bx beige nauto"><span>'+c.l+'</span><b>'+esc(NE_PROG[S.v.cat] || "")+'</b></div>';
+    if(c.ty === "horaire") return '<div class="etq">▪ HORAIRE · AU MOINS UNE JOURNÉE</div>' + NE_JOURS.map(function(j, i){ var d = S.h[i] || {}; return '<div class="nhr"><span>'+j+'</span><input class="bx '+(d.a ? "" : "beige")+'" type="time" data-h="'+i+'a" value="'+esc(d.a || "")+'"><input class="bx '+(d.b ? "" : "beige")+'" type="time" data-h="'+i+'b" value="'+esc(d.b || "")+'"></div>'; }).join("");
+    if(c.ty === "liste") return '<div class="etq">▪ DOCUMENTS À APPORTER · 8 AU MAXIMUM</div>' + S.docs.map(function(x, i){ return '<input class="bx '+(x.trim() ? "" : (i ? "beige" : "rose"))+'" data-d="'+i+'" placeholder="Document '+(i + 1)+'" value="'+esc(x)+'">'; }).join("") + (S.docs.length < 8 ? '<div class="aeact"><button type="button" class="bouton lg" id="nedoc">Ajouter un document</button></div>' : "");
+    if(c.ty === "resp") return '<div class="bandeau">▪ LES RESPONSABILITÉS DU POSTE · À VENIR</div>';
+    if(c.ty === "long") return '<textarea class="bx beige" data-k="'+c.k+'" placeholder="'+c.l+'">'+esc(v)+'</textarea>';
+    if(c.o) return '<select class="'+cl+'" data-k="'+c.k+'"><option value="">'+c.l+'</option>'+c.o.map(function(o){ return '<option'+(o === v ? " selected" : "")+'>'+esc(o)+'</option>'; }).join("")+'</select>';
+    var im = c.ty === "tel" ? ' inputmode="tel"' : (c.ty === "nombre" ? ' inputmode="decimal"' : (c.ty === "courriel" ? ' inputmode="email"' : ""));
+    return '<input class="'+cl+'" data-k="'+c.k+'"'+im+' placeholder="'+c.l+(c.ty === "date" ? " · AAAA-MM-JJ" : "")+'" value="'+esc(v)+'">';
+  }
+  function dessiner(){
+    var el = document.getElementById("ne"), et = NE_ETAPES[S.e];
+    var h = '<div class="etq">▪ ÉTAPE '+(S.e + 1)+' SUR 8 · '+et.t.toUpperCase()+'</div><div class="nbar">'+NE_ETAPES.map(function(x, i){ return '<i class="'+(i <= S.e ? "on" : "")+'"></i>'; }).join("")+'</div>';
+    if(S.e === 7){
+      h += NE_ETAPES.slice(0, 6).map(function(x){ return x.c.filter(function(c){ return visible(c) && S.v[c.k] && !c.ty || visible(c) && S.v[c.k] && c.ty !== "horaire" && c.ty !== "liste"; }).map(function(c){ return '<div class="ligne"><span>'+esc(c.l)+'</span><span>'+esc(S.v[c.k])+'</span></div>'; }).join(""); }).join("");
+      h += et.c.map(champ).join("");
+      h += '<div class="bandeau">▪ ENVOI PAR DOCUSIGN · À VENIR</div>';
+    } else h += et.c.map(champ).join("");
+    h += '<div class="aeact tro">'+(S.e ? '<button type="button" class="bouton lg" id="nep">Précédent</button>' : "")+(S.e < 7 ? '<button type="button" class="bouton" id="nes"'+(etapeOk(S.e) ? "" : " disabled")+'>Suivant</button>' : '<button type="button" class="bouton" id="neok">Envoyer le contrat</button>')+'</div>';
+    if(S.pop) h += '<div class="pop"><div class="popc"><div class="popt">Envoyer le contrat à '+esc((S.v.prenom || "")+" "+(S.v.nom || ""))+', '+esc(S.v.courriel || "")+', par DocuSign ?</div>'+(S.pop === 2 ? '<div class="bandeau">▪ ENVOI NON ACTIVÉ · À VENIR</div>' : "")+'<div class="aeact"><button type="button" class="bouton" id="neoui">Oui, envoyer</button><button type="button" class="bouton lg" id="nenon">Non</button></div></div></div>';
+    el.innerHTML = h;
+    Array.prototype.forEach.call(el.querySelectorAll("[data-k]"), function(q){ q.oninput = q.onchange = function(){ S.v[q.getAttribute("data-k")] = q.value; majBtn(q); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-d]"), function(q){ q.oninput = function(){ S.docs[Number(q.getAttribute("data-d"))] = q.value; majBtn(q); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-h]"), function(q){ q.onchange = function(){ var m = q.getAttribute("data-h"), i = Number(m[0]); S.h[i] = S.h[i] || {}; S.h[i][m[1]] = q.value; S.v.heures = neHeures(S.h) || S.v.heures; dessiner(); }; });
+    var dc = document.getElementById("nedoc"); if(dc) dc.onclick = function(){ S.docs.push(""); dessiner(); };
+    var n = document.getElementById("nes"); if(n) n.onclick = function(){ if(etapeOk(S.e)){ S.e++; window.scrollTo(0, 0); dessiner(); } };
+    var ok = document.getElementById("neok"); if(ok) ok.onclick = function(){ S.pop = 1; dessiner(); };
+    var oui = document.getElementById("neoui"); if(oui) oui.onclick = function(){ S.pop = 2; dessiner(); };
+    var non = document.getElementById("nenon"); if(non) non.onclick = function(){ S.pop = 0; dessiner(); };
+    var p = document.getElementById("nep"); if(p) p.onclick = function(){ S.e--; window.scrollTo(0, 0); dessiner(); };
+  }
+  function majBtn(q){
+    var et = NE_ETAPES[S.e], k = q.getAttribute("data-k"), c = et.c.filter(function(x){ return x.k === k; })[0];
+    if(c && c.r){ q.classList.toggle("rose", !champOk(c)); }
+    if(c && c.k === "cat"){
+      var hh = S.v.cat === "Administratif" ? NE_HOR_ADM : NE_HOR_PROD; S.h = {};
+      hh.forEach(function(x, i){ S.h[i] = {a:x[0], b:x[1]}; }); S.v.heures = neHeures(S.h); S.v.arrivee = "08:00";
+      var av = NE_AVANT[S.v.cat] || {}; Object.keys(av).forEach(function(k){ S.v[k] = String(av[k]); });
+    }
+    if(c && (c.k === "statut" || c.k === "cat")){ S.v.prog = NE_PROG[S.v.cat] || ""; dessiner(); return; }
+    var n = document.getElementById("nes"); if(n) n.disabled = !etapeOk(S.e);
+  }
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(S.e){ S.e--; dessiner(); } else responsable(); };
+  dessiner();
 }
 // Fiche d'une machine: les tâches sont regroupées par fréquence (du plus fréquent au moins fréquent). La fréquence est lue à la fin de chaque tâche (« chaque jour », « aux 2 semaines »...); sans fréquence = « À préciser ». Les données de la feuille ne changent pas.
 var FREQS = ["Chaque matin", "Chaque jour", "Chaque soir", "Chaque lundi", "Chaque mardi", "Chaque mercredi", "Chaque jeudi", "Chaque vendredi", "Chaque semaine", "Aux 2 semaines", "Chaque mois", "Aux 3 mois", "Au besoin"];
