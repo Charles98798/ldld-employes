@@ -1169,6 +1169,24 @@ function attributionPage(genre){
     if(!r || !r.ok) throw 0; d = r; dessiner();
   }).catch(function(){ var el = document.getElementById("ap"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
+// Fiche d'une machine: les tâches sont regroupées par fréquence (du plus fréquent au moins fréquent). La fréquence est lue à la fin de chaque tâche (« chaque jour », « aux 2 semaines »...); sans fréquence = « À préciser ». Les données de la feuille ne changent pas.
+function groupesFrequence(taches){
+  var RANG = {"chaque matin":0, "chaque jour":1, "chaque soir":2, "chaque lundi":3, "chaque mardi":3.1, "chaque mercredi":3.2, "chaque jeudi":3.3, "chaque vendredi":3.4, "chaque semaine":3.5, "aux 2 semaines":4, "chaque mois":5, "aux 3 mois":6, "au besoin":8, "à préciser":9};
+  var G = {};
+  function ajouter(f, t){ t = t.replace(/\s+1x$/, "").replace(/^\s+|[\s.]+$/g, ""); if(!t) return; f = f.toLowerCase(); if(!G[f]) G[f] = []; G[f].push(t.charAt(0).toUpperCase() + t.slice(1) + "."); }
+  (taches || []).forEach(function(brut){
+    String(brut).replace(/(chaque \S+) et /g, "$1\u0001").split("\u0001").forEach(function(p){
+      p = p.replace(/[\s.]+$/, "");
+      var m = p.match(/^(.*?)\s*(chaque \S+|aux 2 semaines|aux 3 mois)$/i), d = p.match(/^chaque (\S+) (.+)$/i);
+      if(m && m[1]) ajouter(m[2], m[1]);
+      else if(d) ajouter("chaque " + d[1], d[2]);
+      else if((m = p.match(/^(.*?)\s*le soir$/i)) && m[1]) ajouter("chaque soir", m[1]);
+      else if((m = p.match(/^(.*?)\s*si nécessaire$/i)) && m[1]) ajouter("au besoin", m[1]);
+      else ajouter("à préciser", p);
+    });
+  });
+  return Object.keys(G).sort(function(a, b){ return (RANG[a] === undefined ? 8 : RANG[a]) - (RANG[b] === undefined ? 8 : RANG[b]); }).map(function(f){ return {f: f.charAt(0).toUpperCase() + f.slice(1), t: G[f]}; });
+}
 // Entretien machinerie : responsables et direction consultent et modifient; l'employé voit seulement ses machines (« Mes entretiens »).
 function entretien(){
   var tous = peutEcrire(), d = null, vue = "secteur", sel = "non", msg = "", mode = "liste", fiche = null, pick = false, supprime = false;
@@ -1236,7 +1254,7 @@ function entretien(){
     if(mode === "fiche"){
       h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><div class="ligne" style="display:block">'+nomHtml(m.machine)+'</div>' +
         (m.resp ? '<div class="etiq" style="margin-top:14px">▪ RESPONSABLE</div><div class="ligne">'+esc(m.resp)+'</div>' : "") +
-        '<div class="etiq" style="margin-top:14px">▪ ENTRETIEN À FAIRE</div>' + m.taches.map(function(t){ return '<div class="ligne">▪ '+esc(t)+'</div>'; }).join("") +
+        groupesFrequence(m.taches).map(function(g){ return '<div class="etiq" style="margin-top:14px">▪ FRÉQUENCE</div><div class="ligne">'+esc(g.f)+'</div><div class="etiq" style="margin-top:14px">▪ ENTRETIEN À FAIRE</div>'+g.t.map(function(t){ return '<div class="ligne">▪ '+esc(t)+'</div>'; }).join(""); }).join("") +
         (tous ? '<div class="aeact"><button type="button" class="bouton" id="enm">Modifier</button></div>' : "");
     } else {
       h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><textarea class="champ" id="enn" rows="2" placeholder="Nom de la machine (une machine par ligne)">'+esc(nomsLignes(m.machine).join("\n"))+'</textarea>' +
