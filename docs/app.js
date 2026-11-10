@@ -388,7 +388,7 @@ var ENT = [
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
  {id:"contacts", g:"Équipe", l:"Contact", p:"Contacts", d:[0,1,1], f:function(){ contactsResp(); }},
- {id:"nouveau_message", g:"Équipe", l:"Nouveau message", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
+ {id:"nouveau_message", g:"Équipe", l:"Envoyer message", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
  {id:"messages_envoyes", g:"Équipe", l:"Message envoyé", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
  {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
@@ -1413,7 +1413,7 @@ function chargerCaches(fin){
 // Nouveau message: onglets Message et Réunion, mêmes participants.
 // Nouveau message d'un employé: un seul écran, destinataire à choisir (Gestionnaire de production ou Direction), sujet, message.
 function nouveauEmploye(){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Nouveau message</h1>' +
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Envoyer message</h1>' +
     '<span class="lbl">À · obligatoire</span><select class="bx rose" id="nvers"><option value="">Choisir</option><option value="gestionnaire">Gestionnaire de production</option><option value="direction">Direction</option></select>' +
     '<span class="lbl">Sujet · obligatoire</span><input class="bx rose" id="nsuj" maxlength="120">' +
     '<span class="lbl">Message · obligatoire</span><textarea class="bx rose" id="ntxt" rows="6" maxlength="4000"></textarea>' +
@@ -1436,7 +1436,7 @@ function nouveauEmploye(){
 function nouveau(onglet){
   if(!peutEcrire()) return nouveauEmploye();
   onglet = onglet === "reunion" ? "reunion" : "message";
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Nouveau message</h1>' +
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Envoyer message</h1>' +
     '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton" id="ongM" style="margin:0;flex:1;'+(onglet === "message" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Message</button><button type="button" class="bouton" id="ongR" style="margin:0;flex:1;'+(onglet === "reunion" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Réunion</button></div>' +
     '<div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); retirerBoutonBas(); responsable(); };
