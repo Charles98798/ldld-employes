@@ -852,3 +852,14 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 /* Nouvel employé: champ date (calendrier) à la largeur des autres champs */
 #ne input[type="date"].bx{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;height:auto;min-height:50px;text-align:left;padding:0 14px;line-height:50px}
 #ne input[type="date"].bx::-webkit-date-and-time-value{text-align:left;min-height:1.2em}
+
+/* Nouvel employé, étape 7: une section à la fois */
+#ne .nrrow{display:flex;gap:6px;margin-bottom:10px}
+#ne .nrsel{flex:1;min-width:0;height:50px}
+#ne .nrnext{flex:none;width:50px;height:50px;background:#0d1117;color:#fff;border:0;font-size:22px;border-radius:0}
+#ne .nrnext:disabled{opacity:.35}
+#ne .nrr{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 0;font-size:13px;line-height:1.35;cursor:pointer}
+#ne .nrr.nrd{font-weight:400;letter-spacing:1px;text-transform:uppercase}
+#ne .nrs{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);padding:14px 0 4px}
+#ne .nrc{width:20px;height:20px;border:2px solid #0d1117;flex:none;box-sizing:border-box;display:block}
+#ne .nrc.on{background:#0d1117}

@@ -129,7 +129,7 @@ function appelDirect(corps){
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
 var LECT = {production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
-var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1};
+var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 // Copie gardée sur l'appareil (affichée tout de suite à l'ouverture, remplacée en silence par la version fraîche). JAMAIS de salaire ni de rémunération (Portrait, Échelle, Positionnement, Embauche, Employé actuel restent en mémoire seulement).
 // Données de l'employé lui-même: toutes les personnes. Données d'équipe: Direction seulement. Tout est effacé à la déconnexion (préfixe ldld-c-).
@@ -689,7 +689,7 @@ function manuel(){
       res.innerHTML = '<div class="txs">'+out.length+' RÉSULTAT'+(out.length > 1 ? "S" : "")+'</div>' + out.slice(0, 60).map(function(o){
         var a = Math.max(0, o.k-40), ext = o.p.slice(a, o.k+n.length+80);
         var h = esc(ext).replace(new RegExp("("+esc(o.p.slice(o.k, o.k+n.length)).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")+")", "i"), "<mark>$1</mark>");
-        return '<a href="#" class="rs" data-s="'+o.i+'"><b>'+esc(secs[o.i].titre || "Introduction")+'</b>'+(a ? "… " : "")+h+'</a>';
+        return '<a href="#" class="nrs" data-s="'+o.i+'"><b>'+esc(secs[o.i].titre || "Introduction")+'</b>'+(a ? "… " : "")+h+'</a>';
       }).join("");
     }
     res.onclick = function(e){ var a = e.target.closest("a[data-s]"); if(!a) return; e.preventDefault(); ouvrir(+a.getAttribute("data-s"), rech.value.trim().length >= 2 ? rech.value.trim() : ""); };
@@ -1246,6 +1246,11 @@ function nouvelEmploye(){
   }).catch(vide);
 }
 var NE_LISTE = null;
+var NE_RESP = null, NE_RESP_EN = false;
+function neRespCharger(fin){
+  if(NE_RESP){ fin(); return; } if(NE_RESP_EN) return; NE_RESP_EN = true;
+  appelService({action:"embauche_responsabilites", session:sessionGardee()}).then(function(r){ NE_RESP_EN = false; if(r && r.ok && r.r && r.r.groupes){ NE_RESP = r.r; fin(); } }).catch(function(){ NE_RESP_EN = false; });
+}
 function neChoix(rafraichir){
   function fin(r, a){ NE_LISTE = {resp: r, accueil: a}; rafraichir(); }
   appelService({action:"embauche_choix", session:sessionGardee()}).then(function(r){
@@ -1267,11 +1272,14 @@ function neFormulaire(cand){
   if(typeof S.v.horaire === "string" && S.v.horaire){ S.v.horaire.split(";").forEach(function(seg){ var m = seg.trim().match(/^(\S+)\s+(\d{2}:\d{2})-(\d{2}:\d{2})$/), i = m ? NE_JOURS.indexOf(m[1]) : -1; if(i >= 0) S.h[i] = {a:m[2], b:m[3]}; }); delete S.v.horaire; if(Object.keys(S.h).length && !(cand && cand.v && cand.v.heures)) S.v.heures = neHeures(S.h); }
   if(S.v.cat && !Object.keys(S.h).length){ var hh0 = S.v.cat === "Administratif" ? NE_HOR_ADM : NE_HOR_PROD; hh0.forEach(function(x, i){ S.h[i] = {a:x[0], b:x[1]}; }); if(!(cand && cand.v && cand.v.heures)) S.v.heures = neHeures(S.h); if(!S.v.arrivee) S.v.arrivee = "08:00"; }
   if(cand && cand.etat && cand.etat.v){ Object.keys(cand.etat.v).forEach(function(k){ S.v[k] = String(cand.etat.v[k]); }); if(cand.etat.h) S.h = cand.etat.h; if(cand.etat.docs && cand.etat.docs.length) S.docs = cand.etat.docs; if(typeof cand.etat.e === "number" && cand.etat.e >= 0 && cand.etat.e <= 7) S.e = cand.etat.e; }
+  S.rc = {}; S.rs = 0; var rinit = false;
+  if(cand && cand.etat && cand.etat.r){ cand.etat.r.forEach(function(k){ S.rc[k] = 1; }); rinit = true; if(typeof cand.etat.rs === "number") S.rs = cand.etat.rs; }
+  neRespCharger(function(){ if(!rinit){ (NE_RESP.defauts || []).forEach(function(k){ S.rc[k] = 1; }); rinit = true; } if(S.e === 6 && document.getElementById("ne")) dessiner(); });
   var sauvT = null, sauvJ = "";
   function sauver(){
     if(!/^[0-9a-f]{8}$/.test(S.id || "")) return;
     var v = {}; Object.keys(S.v).forEach(function(k){ if(S.v[k] !== "" && S.v[k] !== undefined && S.v[k] !== null) v[k] = S.v[k]; });
-    var j = JSON.stringify({v: v, h: S.h, docs: S.docs, e: S.e}); if(j.length > 5900 || j === sauJ()) return; sauvJ = j;
+    var j = JSON.stringify({v: v, h: S.h, docs: S.docs, e: S.e, r: Object.keys(S.rc), rs: S.rs}); if(j.length > 5900 || j === sauJ()) return; sauvJ = j;
     appelService({action: "embauche_brouillon_maj", session: sessionGardee(), id: S.id, etape: Math.min(7, S.e), etat: j}).catch(function(){});
   }
   function sauJ(){ return sauvJ; }
@@ -1297,7 +1305,14 @@ function neFormulaire(cand){
     if(c.auto) return '<div class="bx beige nauto"><span>'+c.l+'</span><b>'+esc(NE_PROG[S.v.cat] || "")+'</b></div>';
     if(c.ty === "horaire") return '<div class="etq">▪ HORAIRE · AU MOINS UNE JOURNÉE</div>' + NE_JOURS.map(function(j, i){ var d = S.h[i] || {}; return '<div class="nhr"><span>'+j+'</span><input class="bx '+(d.a ? "" : "beige")+'" type="time" data-h="'+i+'a" value="'+esc(d.a || "")+'"><input class="bx '+(d.b ? "" : "beige")+'" type="time" data-h="'+i+'b" value="'+esc(d.b || "")+'"></div>'; }).join("");
     if(c.ty === "liste") return '<div class="etq">▪ DOCUMENTS À APPORTER · 8 AU MAXIMUM</div>' + S.docs.map(function(x, i){ return '<input class="bx '+(x.trim() ? "" : (i ? "beige" : "rose"))+'" data-d="'+i+'" placeholder="Document '+(i + 1)+'" value="'+esc(x)+'">'; }).join("") + (S.docs.length < 8 ? '<div class="aeact"><button type="button" class="bouton lg" id="nedoc">Ajouter un document</button></div>' : "");
-    if(c.ty === "resp") return '<div class="bandeau">▪ LES RESPONSABILITÉS DU POSTE · À VENIR</div>';
+    if(c.ty === "resp"){
+      if(!NE_RESP) return '<div class="bandeau">▪ UN INSTANT</div>';
+      var G = NE_RESP.groupes, g = G[S.rs] || G[0], nb = Object.keys(S.rc).length;
+      var h2 = '<div class="nrrow"><select class="bx nrsel" id="rsel">'+G.map(function(x, i){ return '<option value="'+i+'"'+(i === S.rs ? " selected" : "")+'>'+(i + 1)+' / '+G.length+' · '+esc(String(x.groupe).toUpperCase())+'</option>'; }).join("")+'</select><button type="button" class="nrnext" id="rnext"'+(S.rs >= G.length - 1 ? " disabled" : "")+'>→</button></div>';
+      if(g.description) h2 += '<div class="nrr nrd" data-rkk="'+g.description.k+'"><span>'+esc(g.description.texte)+'</span><i class="nrc'+(S.rc[g.description.k] ? " on" : "")+'"></i></div>';
+      h2 += g.items.map(function(it){ return it.section ? '<div class="nrs">'+esc(it.texte)+'</div>' : '<div class="nrr" data-rkk="'+it.k+'"><span>'+esc(it.texte)+'</span><i class="nrc'+(S.rc[it.k] ? " on" : "")+'"></i></div>'; }).join("");
+      return h2 + '<div class="etq" style="margin-top:14px">▪ '+nb+' RESPONSABILITÉ'+(nb > 1 ? "S" : "")+' CHOISIE'+(nb > 1 ? "S" : "")+'</div>';
+    }
     if(c.ty === "long") return '<textarea class="bx beige" data-k="'+c.k+'" placeholder="'+c.l+'">'+esc(v)+'</textarea>';
     if(c.o) return '<select class="'+cl+'" data-k="'+c.k+'"><option value="">'+c.l+'</option>'+c.o.map(function(o){ return '<option'+(o === v ? " selected" : "")+'>'+esc(o)+'</option>'; }).join("")+'</select>';
     var im = c.ty === "tel" ? ' inputmode="tel"' : (c.ty === "nombre" ? ' inputmode="decimal"' : (c.ty === "courriel" ? ' inputmode="email"' : ""));
@@ -1319,6 +1334,13 @@ function neFormulaire(cand){
     Array.prototype.forEach.call(el.querySelectorAll("[data-k]"), function(q){ q.oninput = q.onchange = function(){ S.v[q.getAttribute("data-k")] = q.value; majBtn(q); sauverVite(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-d]"), function(q){ q.oninput = function(){ S.docs[Number(q.getAttribute("data-d"))] = q.value; majBtn(q); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-h]"), function(q){ q.onchange = function(){ var m = q.getAttribute("data-h"), i = Number(m[0]); S.h[i] = S.h[i] || {}; S.h[i][m[1]] = q.value; S.v.heures = neHeures(S.h) || S.v.heures; dessiner(); sauverVite(); }; });
+    var rsel = document.getElementById("rsel"); if(rsel) rsel.onchange = function(){ S.rs = Number(rsel.value); window.scrollTo(0, 0); dessiner(); sauverVite(); };
+    var rnx = document.getElementById("rnext"); if(rnx) rnx.onclick = function(){ S.rs = Math.min(NE_RESP.groupes.length - 1, S.rs + 1); window.scrollTo(0, 0); dessiner(); sauverVite(); };
+    Array.prototype.forEach.call(el.querySelectorAll("[data-rkk]"), function(q){ q.onclick = function(){
+      var k = q.getAttribute("data-rkk"), g = NE_RESP.groupes[S.rs], on = !S.rc[k];
+      if(g.description && g.description.k === k){ g.items.forEach(function(it){ if(!it.section){ if(on) S.rc[it.k] = 1; else delete S.rc[it.k]; } }); }
+      if(on) S.rc[k] = 1; else { delete S.rc[k]; if(g.description && g.description.k !== k) delete S.rc[g.description.k]; }
+      var y = window.scrollY; dessiner(); window.scrollTo(0, y); sauverVite(); }; });
     var dc = document.getElementById("nedoc"); if(dc) dc.onclick = function(){ S.docs.push(""); dessiner(); };
     var n = document.getElementById("nes"); if(n) n.onclick = function(){ if(etapeOk(S.e)){ S.e++; window.scrollTo(0, 0); dessiner(); sauver(); } };
     var ok = document.getElementById("neok"); if(ok) ok.onclick = function(){ S.pop = 1; dessiner(); };
