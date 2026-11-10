@@ -1001,7 +1001,7 @@ function profil(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mon profil</h1>' +
     lignes.map(function(l){ return l[2] ? '<div class="ligne pfg"><span>'+esc(l[1])+'</span></div>' : '<div class="ligne pfg"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
     '<div id="stat"></div>' +
-    '<a class="doc" href="#" id="vnotif"><span>Notifications</span></a><div id="planz"></div></div>';
+    '<a class="doc" href="#" id="vnotif"><span>Contrôle des notifications</span></a><div id="planz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   // Stationnement et casier de l'employé (jamais ceux des autres), lus dans le classeur du conseil par le service.
   obtenir("stationnement", {action:"stationnement"}, function(r){
@@ -1018,7 +1018,7 @@ function profil(){
 // Centre de contrôle des notifications : chaque employé choisit ses propres alertes (enregistrées par le service, par courriel).
 var PREFS_NOTIFS = [["courriel", "Courriel"], ["reunion_veille", "Réunions : la veille à 16 h"], ["reunion_1h", "Réunions : 1 heure avant"], ["rencontres", "Rencontres planifiées"], ["autoeval", "Autoévaluation à remplir"]];
 function prefsNotifs(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Notifications</h1><div id="notifs"></div><div id="prefs"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrôle des notifications</h1><div id="notifs"></div><div id="prefs"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); profil(); };
   var zone = document.getElementById("notifs");
   if(!notifPossible()){ zone.innerHTML = '<p class="aide">Pour recevoir les notifications sur iPhone, ajoutez l\'application à l\'écran d\'accueil (Partager > Sur l\'écran d\'accueil).</p>'; }
