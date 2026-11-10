@@ -1827,7 +1827,8 @@ function nouveau(onglet){
   function aller(o){ lireChamps(); onglet = o; nouveau.derniere = o; nouveau(o); }
   document.getElementById("ongM").onclick = function(){ if(onglet !== "message") nouveau("message"); };
   document.getElementById("ongR").onclick = function(){ if(onglet !== "reunion") nouveau("reunion"); };
-  appelService({action:"equipe_groupes", session:sessionGardee()}).then(function(r){
+  var locG = lireCache("equipe_groupes"); if(locG) chercher("equipe_groupes", {action:"equipe_groupes"}).catch(function(){});
+  (locG ? Promise.resolve(locG) : chercher("equipe_groupes", {action:"equipe_groupes"})).then(function(r){
     if(!r || !r.ok) throw 0;
     part = participants(r.personnes, r.groupes || [], majBouton);
     part.monter(document.getElementById("npart")); dessinerReste();
