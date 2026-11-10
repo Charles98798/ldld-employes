@@ -383,7 +383,7 @@ var ENT = [
  {id:"messages", g:"Mon travail", h:1, l:"Message reçu", p:"Messages", d:[1,1,1], i:0, f:function(){ section(0); }},
  {id:"tableau_de_bord", g:"Mon travail", h:1, l:"Tableau de bord", p:"Tableau de bord", d:[1,1,1], i:4, f:function(){ section(4); }},
  {id:"calendrier", g:"Mon travail", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
- {id:"rencontre", g:"Mon travail", l:"Rencontre", p:"Rencontre", d:[1,1,1], i:7, f:function(){ section(7); }},
+ {id:"rencontre", g:"Mon travail", l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
  {id:"autoevaluation", g:"Mon compte", h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,1,1], i:2, f:function(){ aeEntree(); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
@@ -1796,7 +1796,7 @@ function calendrier(){
 }
 // Rencontre : l'employé choisit son responsable et un sujet; la demande arrive dans les Messages du responsable.
 function rencontre(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre</h1><div id="rc"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Demander rencontre</h1><div id="rc"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   appelService({action:"rencontre_liste", session:sessionGardee()}).then(function(r){
     var el = document.getElementById("rc"); if(!el) return;
