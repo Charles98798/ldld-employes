@@ -1110,7 +1110,8 @@ function attributionPage(genre){
   var estPlace = genre === "place", titre = estPlace ? "Stationnement" : "Casier";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titre+'</h1><div id="ap"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  var d = null, choisi = "", msg = "", confirmer = null, caseSel = "";
+  var d = null, choisi = "", msg = "", confirmer = null, caseSel = "", transf = null;
+  function menuP(k){ return k === "case" ? '<button type="button" class="ib" data-cx="1" aria-label="Libérer">✕</button>' : '<button type="button" class="ib" data-x="'+k+'" aria-label="Libérer">✕</button>'; }
   function champsDe(e){ return estPlace ? [["place","Place"]] : [["casier1","Casier"]].concat(e.casier2 ? [["casier2","Casier 2"]] : []); }
   function dessiner(){
     var el = document.getElementById("ap"); if(!el) return;
@@ -1126,7 +1127,8 @@ function attributionPage(genre){
     if(e){
       champsDe(e).forEach(function(c){ var v = e[c[0]];
         if(v){
-          h += '<div class="ligne" data-t="'+c[0]+'"><span>'+(estPlace ? "Place " : c[1]+" ")+esc(v)+'</span>'+(confirmer === c[0] ? '<span><button type="button" class="ib" data-oui="'+c[0]+'">OUI</button> <button type="button" class="ib" data-non="1">NON</button></span>' : '<button type="button" class="ib" data-x="'+c[0]+'" aria-label="Libérer">✕</button>')+'</div>';
+          h += '<div class="ligne" data-t="'+c[0]+'"><span>'+(estPlace ? "Place " : c[1]+" ")+esc(v)+'</span>'+(confirmer === c[0] ? '<span><button type="button" class="ib" data-oui="'+c[0]+'">OUI</button> <button type="button" class="ib" data-non="1">NON</button></span>' : menuP(c[0]))+'</div>';
+          if(transf === c[0]){ var lb = estPlace ? d.placesLibres : d.casiersLibres; h += '<select class="champ" id="apn-'+c[0]+'"><option value="">'+(lb.length ? "Numéros libres" : "Aucun numéro libre")+'</option>' + lb.map(function(f){ return '<option value="'+f+'">'+f+'</option>'; }).join("") + '</select><button type="button" class="bouton" data-att="'+c[0]+'">Transférer</button>'; }
           if(confirmer === c[0]) h += '<div class="bandeau">▪ LIBÉRER ?</div>';
         } else {
           var libres = estPlace ? d.placesLibres : d.casiersLibres;
@@ -1138,7 +1140,8 @@ function attributionPage(genre){
     if(caseSel && !e){
       var o = occ[+caseSel], champ = estPlace ? "place" : "casier1";
       if(o){
-        h += '<div class="ligne"><span>'+(estPlace ? "Place " : "Casier ")+esc(caseSel)+' · '+esc(o.e.nom)+'</span>'+(confirmer === "case" ? '<span><button type="button" class="ib" data-coui="1">OUI</button> <button type="button" class="ib" data-cnon="1">NON</button></span>' : '<button type="button" class="ib" data-cx="1" aria-label="Libérer">✕</button>')+'</div>';
+        h += '<div class="ligne"><span>'+(estPlace ? "Place " : "Casier ")+esc(caseSel)+' · '+esc(o.e.nom)+'</span>'+(confirmer === "case" ? '<span><button type="button" class="ib" data-coui="1">OUI</button> <button type="button" class="ib" data-cnon="1">NON</button></span>' : menuP("case"))+'</div>';
+        if(transf === "case"){ var sx = d.employes.filter(function(x){ return !x[champ]; }); h += '<select class="champ" id="ape"><option value="">'+(sx.length ? "Choisir un employé" : "Aucun employé sans numéro")+'</option>' + sx.map(function(x){ return '<option value="'+x.ligne+'">'+esc(x.nom)+'</option>'; }).join("") + '</select><button type="button" class="bouton" data-catt="1">Transférer</button>'; }
         if(confirmer === "case") h += '<div class="bandeau">▪ LIBÉRER ?</div>';
       } else {
         var sans = d.employes.filter(function(x){ return !x[champ]; });
@@ -1152,16 +1155,17 @@ function attributionPage(genre){
     Array.prototype.forEach.call(el.querySelectorAll("[data-cx]"), function(b){ b.onclick = function(){ confirmer = "case"; dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-cnon]"), function(b){ b.onclick = function(){ confirmer = null; dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-coui]"), function(b){ b.onclick = function(){ var o = occ[+caseSel]; if(o) ecrire(o.champ, "", o.e.ligne); }; });
-    Array.prototype.forEach.call(el.querySelectorAll("[data-catt]"), function(b){ b.onclick = function(){ var v = document.getElementById("ape").value; if(!v){ msg = "▪ CHOISISSEZ UN EMPLOYÉ"; dessiner(); return; } ecrire(estPlace ? "place" : "casier1", caseSel, Number(v)); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-catt]"), function(b){ b.onclick = function(){ var v = document.getElementById("ape").value; if(!v){ msg = "▪ CHOISISSEZ UN EMPLOYÉ"; dessiner(); return; } var o2 = occ[+caseSel], nv = Number(v); if(o2) ecrire(o2.champ, "", o2.e.ligne, function(){ ecrire(estPlace ? "place" : "casier1", caseSel, nv); }); else ecrire(estPlace ? "place" : "casier1", caseSel, nv); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("select[data-m]"), function(q){ q.onchange = function(){ var k = q.getAttribute("data-m"); if(q.value === "liberer"){ confirmer = k; transf = null; } else if(q.value === "transferer"){ transf = k; confirmer = null; } dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-x]"), function(b){ b.onclick = function(){ confirmer = b.getAttribute("data-x"); dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-non]"), function(b){ b.onclick = function(){ confirmer = null; dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-oui]"), function(b){ b.onclick = function(){ ecrire(b.getAttribute("data-oui"), ""); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-att]"), function(b){ b.onclick = function(){ var t = b.getAttribute("data-att"), v = document.getElementById("apn-"+t).value; if(!v){ msg = "▪ CHOISISSEZ UN NUMÉRO"; dessiner(); return; } ecrire(t, v); }; });
   }
-  function ecrire(type, valeur, ligne){
-    msg = "▪ ENREGISTREMENT…"; confirmer = null; dessiner();
+  function ecrire(type, valeur, ligne, suite){
+    msg = "▪ ENREGISTREMENT…"; confirmer = null; transf = null; dessiner();
     appelService({action:"parking_ecrire", session:sessionGardee(), type:type, ligne:(ligne !== undefined ? ligne : Number(choisi)), valeur:valeur}).then(function(r){
-      if(r && r.ok){ d = r; msg = "▪ ENREGISTRÉ"; } else msg = "▪ " + String((r && r.erreur) || "ÉCHEC").toUpperCase();
+      if(r && r.ok){ d = r; msg = "▪ ENREGISTRÉ"; if(suite){ suite(); return; } } else msg = "▪ " + String((r && r.erreur) || "ÉCHEC").toUpperCase();
       dessiner();
     }).catch(function(){ msg = "▪ ÉCHEC · RÉESSAYEZ"; dessiner(); });
   }
@@ -1213,73 +1217,90 @@ function entretien(){
     if(mode === "fiche" || mode === "edition") return dessinerFiche(el);
     var h = "";
     if(tous){
-      h += '<div class="tg"><button type="button" class="ib" style="width:auto;padding:0 12px" data-v="secteur"'+(vue === "secteur" ? ' aria-pressed="true"' : "")+'>'+(vue === "secteur" ? "▪ " : "")+'PAR SECTEUR</button> <button type="button" class="ib" style="width:auto;padding:0 12px" data-v="employe">'+(vue === "employe" ? "▪ " : "")+'PAR EMPLOYÉ</button></div>';
-      h += '<select class="champ" id="ens"><option value="non"'+(sel === "non" ? " selected" : "")+'>Machines non attribuées</option>' +
+      h += '<div class="tgm"><button type="button" class="tgb'+(vue === "secteur" ? " on" : "")+'" data-v="secteur">Par secteur</button><button type="button" class="tgb'+(vue === "employe" ? " on" : "")+'" data-v="employe">Par employé</button><button type="button" class="tgb ajm" id="ena"><svg class="plus" viewBox="0 0 14 14" aria-hidden="true"><path d="M5.2 0h3.6v5.2H14v3.6H8.8V14H5.2V8.8H0V5.2h5.2z"/></svg> Machine</button></div>';
+      h += '<select class="champ selr" id="ens"><option value="non"'+(sel === "non" ? " selected" : "")+'>Machines non attribuées</option>' +
         (vue === "secteur" ? secteurs().map(function(z){ return '<option value="'+esc(z)+'"'+(sel === z ? " selected" : "")+'>'+esc(z)+'</option>'; }) : d.employes.map(function(e){ return '<option value="'+e.id+'"'+(sel === String(e.id) ? " selected" : "")+'>'+esc(e.nom)+'</option>'; })).join("") + '</select>';
     }
     var ms = tous ? machinesVue() : d.machines;
     if(!ms.length) h += '<div class="bandeau">▪ AUCUNE MACHINE</div>';
+    if(ms.length) h += '<div class="etiq tcol'+(tous ? "" : " un")+'"><span>▪ Machine</span>'+(tous ? '<span>'+(sel === "non" ? "▪ Secteur" : (vue === "secteur" ? "▪ Responsable" : ""))+'</span><span></span>' : "")+'</div>';
     var zone = "";
     ms.forEach(function(m){
       if(!tous && m.zone !== zone || tous && vue === "employe" && sel !== "non" && m.zone !== zone){ zone = m.zone; h += '<div class="etiq" style="margin-top:14px">▪ '+esc(zone.toUpperCase())+'</div>'; }
       var fin = "";
       if(tous){
         if(supprime) fin = '<button type="button" class="ib" data-del="'+m.ligne+'" aria-label="Supprimer">✕</button>';
-        else if(sel === "non") fin = '<button type="button" class="ib" data-att="'+m.ligne+'">+</button>';
-        else if(vue === "secteur") fin = m.resp ? '<button type="button" class="ib" data-moins="'+m.ligne+'" aria-label="Enlever">−</button>' : '<button type="button" class="ib" data-att="'+m.ligne+'">+</button>';
-        else fin = '<button type="button" class="ib" data-moins="'+m.ligne+'" aria-label="Enlever">−</button>';
+        else fin = '<span class="actw"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1 3h6v6h-6zM0 11h8v10h-8zM13 3h6v6h-6zM12 11h8v10h-8z"/></svg><select class="act" data-act="'+m.ligne+'" aria-label="Responsable"><option value="">Responsable</option>'+(m.resp ? '<option value="retirer">Retirer</option><option value="transferer">Transférer</option>' : '<option value="attribuer">Attribuer</option>')+'</select></span>';
       }
       var col2 = tous ? (sel === "non" ? esc(m.zone) : (vue === "secteur" ? esc(m.resp) : "")) : "";
-      h += '<div class="ligne"><a href="#" data-f="'+m.ligne+'" style="flex:1;color:inherit;text-decoration:none">'+nomHtml(m.machine)+'</a>'+(col2 ? '<span style="flex:1">'+col2+'</span>' : "")+fin+'</div>';
+      h += '<div class="ligne lgm'+(tous ? "" : " un")+'"><a href="#" data-f="'+m.ligne+'" style="color:inherit;text-decoration:none">'+nomHtml(m.machine)+'</a>'+(tous ? '<span>'+col2+'</span><span>'+fin+'</span>' : "")+'</div>';
     });
     if(tous && pick){
-      h += '<div class="etiq" style="margin-top:18px">▪ ATTRIBUER À</div>' + d.employes.map(function(e){
+      h += '<div class="etiq" style="margin-top:18px">▪ '+((d.machines.filter(function(m){ return m.ligne === pick; })[0] || {}).resp ? "TRANSFÉRER À" : "ATTRIBUER À")+'</div>' + d.employes.map(function(e){
         return '<a href="#" class="ligne" data-emp="'+e.id+'" style="color:inherit;text-decoration:none"><span style="flex:2">'+esc(e.nom)+'</span><span style="flex:1">'+e.nb+'</span><span style="flex:1">'+esc(e.niveau)+'</span></a>'; }).join("");
     }
     if(tous && sel !== "non" && vue === "employe") h += '';
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
-    if(tous && vue === "secteur" && sel !== "non") h += '<div class="aeact"><button type="button" class="bouton" id="ena">Ajouter</button><button type="button" class="bouton" id="ens2">'+(supprime ? "Terminer" : "Supprimer")+'</button></div>';
     el.innerHTML = h;
     Array.prototype.forEach.call(el.querySelectorAll("[data-v]"), function(b){ b.onclick = function(){ vue = b.getAttribute("data-v"); sel = "non"; pick = false; supprime = false; dessiner(); }; });
     var s = document.getElementById("ens"); if(s) s.onchange = function(){ sel = this.value; pick = false; supprime = false; dessiner(); };
     Array.prototype.forEach.call(el.querySelectorAll("[data-f]"), function(a){ a.onclick = function(e){ e.preventDefault(); fiche = d.machines.filter(function(m){ return String(m.ligne) === a.getAttribute("data-f"); })[0]; mode = "fiche"; dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("select.act"), function(q){ q.onchange = function(){ var l = Number(q.getAttribute("data-act")), v = q.value; if(v === "retirer") ecrire({op:"attribuer", ligne:l, employe:""}); else if(v){ pick = l; dessiner(); } }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-moins]"), function(b){ b.onclick = function(){ ecrire({op:"attribuer", ligne:Number(b.getAttribute("data-moins")), employe:""}); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-att]"), function(b){ b.onclick = function(){ pick = Number(b.getAttribute("data-att")); dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-emp]"), function(a){ a.onclick = function(e){ e.preventDefault(); var l = pick; pick = false; ecrire({op:"attribuer", ligne:l, employe:Number(a.getAttribute("data-emp"))}); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-del]"), function(b){ b.onclick = function(){ if(b.getAttribute("data-ok")){ ecrire({op:"supprimer", ligne:Number(b.getAttribute("data-del"))}); } else { b.setAttribute("data-ok","1"); b.textContent = "OUI ?"; b.style.width = "auto"; b.style.padding = "0 8px"; } }; });
-    var a1 = document.getElementById("ena"); if(a1) a1.onclick = function(){ fiche = {ligne:0, zone:sel, machine:"", resp:"", taches:[]}; mode = "edition"; dessiner(); };
-    var a2 = document.getElementById("ens2"); if(a2) a2.onclick = function(){ supprime = !supprime; dessiner(); };
+    var a1 = document.getElementById("ena"); if(a1) a1.onclick = function(){ fiche = {ligne:0, zone:(vue === "secteur" && sel !== "non" ? sel : (secteurs()[0] || "")), machine:"", resp:"", taches:[]}; mode = "edition"; dessiner(); };
+    
   }
   function dessinerFiche(el){
-    var m = fiche, h;
-    if(mode === "fiche"){
+    var m = fiche, h, edition = (mode === "edition");
+    function sig(){ return JSON.stringify([m.nomEd, m.respEd, (m.rows || []).filter(function(r){ return r.f || r.t.trim(); }).map(function(r){ return [r.f, r.t.trim()]; })]); }
+    if(edition && !m.rows){
+      m.rows = []; groupesFrequence(m.taches).forEach(function(g){ g.t.forEach(function(t){ m.rows.push({f: g.f === "À préciser" ? "" : g.f, t: t.replace(/\.$/, "")}); }); }); if(!m.rows.length) m.rows.push({f:"", t:""});
+      var re = (d.employes || []).filter(function(x){ return x.nom === m.resp; })[0];
+      m.nomEd = nomsLignes(m.machine).join("\n"); m.respEd = re ? String(re.id) : ""; m.sig0 = m.ligne ? sig() : "";
+    }
+    if(!edition){
       h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><div class="ligne" style="display:block">'+nomHtml(m.machine)+'</div>' +
         (m.resp ? '<div class="etiq" style="margin-top:14px">▪ RESPONSABLE</div><div class="ligne">'+esc(m.resp)+'</div>' : "") +
-        '<div class="etiq" style="margin-top:14px">▪ FRÉQUENCE · ENTRETIEN À FAIRE</div>' + groupesFrequence(m.taches).map(function(g){ return g.t.map(function(t, i){ return '<div class="ligne tfl"><span class="tff">'+(i ? "" : esc(g.f))+'</span><span class="tft">▪ '+esc(t)+'</span></div>'; }).join(""); }).join("") +
-        (tous ? '<div class="aeact"><button type="button" class="bouton" id="enm">Modifier</button></div>' : "");
+        '<div class="etiq tfh"><span class="tff">▪ Fréquence</span><span class="tft">▪ Entretien à faire</span></div>' + groupesFrequence(m.taches).map(function(g){ return g.t.map(function(t, i){ return '<div class="ligne tfl"><span class="tff">'+(i ? "" : esc(g.f))+'</span><span class="tft">▪ '+esc(t)+'</span></div>'; }).join(""); }).join("");
     } else {
-      if(!m.rows){ m.rows = []; groupesFrequence(m.taches).forEach(function(g){ g.t.forEach(function(t){ m.rows.push({f: g.f === "À préciser" ? "" : g.f, t: t.replace(/\.$/, "")}); }); }); if(!m.rows.length) m.rows.push({f:"", t:""}); }
-      h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><textarea class="champ" id="enn" rows="2" placeholder="Nom de la machine (une machine par ligne)">'+esc(nomsLignes(m.machine).join("\n"))+'</textarea>' +
-        '<div class="etiq">▪ FRÉQUENCE · ENTRETIEN À FAIRE</div>' + m.rows.map(function(r, i){
-          return '<div class="tl"><select class="tf'+(r.f ? "" : " rose")+'" data-i="'+i+'"><option value="">Fréquence</option>'+FREQS.map(function(f){ return '<option value="'+f+'"'+(r.f === f ? " selected" : "")+'>'+f+'</option>'; }).join("")+'</select><button type="button" class="ib" data-x="'+i+'" aria-label="Enlever">−</button><input class="tt'+(r.t ? "" : " rose")+'" data-i="'+i+'" maxlength="200" placeholder="Entretien à faire" value="'+esc(r.t)+'"></div>'; }).join("") +
-        '<div class="aeact"><button type="button" class="bouton" id="enp">Ajouter une tâche</button></div>' +
-        (msg ? '<div class="bandeau">'+esc(msg)+'</div>' : "") +
-        '<div class="aeact"><button type="button" class="bouton" id="enok">Enregistrer</button><button type="button" class="bouton" id="enx">Annuler</button></div>';
+      h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><textarea class="champ'+(m.nomEd.trim() ? "" : " rose")+'" id="enn" rows="2" placeholder="Machine">'+esc(m.nomEd)+'</textarea>' +
+        '<select class="champ'+(m.respEd ? "" : " rose")+'" id="enr"><option value="">Responsable</option>'+(d.employes || []).map(function(x){ return '<option value="'+x.id+'"'+(String(x.id) === m.respEd ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
+        '<div class="etiq tfh"><span class="tff">▪ Fréquence</span><span class="tft">▪ Entretien à faire</span></div>' + m.rows.map(function(r, i){
+          return '<div class="tl"><select class="tf'+(r.f ? "" : " rose")+'" data-i="'+i+'"><option value="">Fréquence</option>'+FREQS.map(function(f){ return '<option value="'+f+'"'+(r.f === f ? " selected" : "")+'>'+f+'</option>'; }).join("")+'</select><input class="tt'+(r.t.trim() ? "" : " rose")+'" data-i="'+i+'" maxlength="200" placeholder="Entretien à faire" value="'+esc(r.t)+'"></div>'; }).join("") +
+        '<div class="aeact"><button type="button" class="bouton lg" id="enp">Ajouter une tâche</button></div>';
     }
+    if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
+    if(tous) h += '<div class="aeact tro"><button type="button" class="bouton lg" id="enm"'+(edition ? " disabled" : "")+'>Modifier</button>'+(m.ligne ? '<button type="button" class="bouton lg" id="ens3"'+(edition ? " disabled" : "")+'>Supprimer</button>' : "")+'<button type="button" class="bouton" id="enok" disabled>Enregistrer</button></div>';
+    if(m.confirmeSup) h += '<div class="pop"><div class="popc"><div class="popt">Supprimer cette machine ?</div><div class="aeact"><button type="button" class="bouton" id="supoui">Oui, supprimer</button><button type="button" class="bouton lg" id="supnon">Non</button></div></div></div>';
     el.innerHTML = h;
-    Array.prototype.forEach.call(el.querySelectorAll("select.tf"), function(q){ q.onchange = function(){ m.rows[Number(q.getAttribute("data-i"))].f = q.value; q.classList.toggle("rose", !q.value); }; });
-    Array.prototype.forEach.call(el.querySelectorAll("input.tt"), function(q){ q.oninput = function(){ m.rows[Number(q.getAttribute("data-i"))].t = q.value; q.classList.toggle("rose", !q.value.trim()); }; });
-    Array.prototype.forEach.call(el.querySelectorAll("[data-x]"), function(q){ q.onclick = function(){ m.rows.splice(Number(q.getAttribute("data-x")), 1); if(!m.rows.length) m.rows.push({f:"", t:""}); dessiner(); }; });
-    var pl = document.getElementById("enp"); if(pl) pl.onclick = function(){ var n = document.getElementById("enn"); if(n) m.machine = n.value; m.rows.push({f:"", t:""}); dessiner(); };
+    function pleines(){ return m.rows.filter(function(r){ return r.f || r.t.trim(); }); }
+    function valide(){ var p = pleines(); return m.nomEd.trim() && m.respEd && p.length && p.every(function(r){ return r.f && r.t.trim(); }); }
+    function majBoutons(){ var ok = document.getElementById("enok"); if(ok) ok.disabled = !(edition && valide() && (!m.ligne || sig() !== m.sig0)); }
+    majBoutons();
+    var n = document.getElementById("enn"); if(n) n.oninput = function(){ m.nomEd = n.value; n.classList.toggle("rose", !n.value.trim()); majBoutons(); };
+    var r0 = document.getElementById("enr"); if(r0) r0.onchange = function(){ m.respEd = r0.value; r0.classList.toggle("rose", !r0.value); majBoutons(); };
+    Array.prototype.forEach.call(el.querySelectorAll("select.tf"), function(q){ q.onchange = function(){ m.rows[Number(q.getAttribute("data-i"))].f = q.value; q.classList.toggle("rose", !q.value); majBoutons(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("input.tt"), function(q){ q.oninput = function(){ m.rows[Number(q.getAttribute("data-i"))].t = q.value; q.classList.toggle("rose", !q.value.trim()); majBoutons(); }; });
+        var pl = document.getElementById("enp"); if(pl) pl.onclick = function(){ m.rows.push({f:"", t:""}); dessiner(); };
     var b = document.getElementById("enm"); if(b) b.onclick = function(){ m.rows = null; mode = "edition"; dessiner(); };
-    var x = document.getElementById("enx"); if(x) x.onclick = function(){ m.rows = null; mode = m.ligne ? "fiche" : "liste"; msg = ""; dessiner(); };
+    var sp = document.getElementById("ens3"); if(sp) sp.onclick = function(){ m.confirmeSup = true; dessiner(); };
+    var sn = document.getElementById("supnon"); if(sn) sn.onclick = function(){ m.confirmeSup = false; dessiner(); };
+    var so = document.getElementById("supoui"); if(so) so.onclick = function(){ m.confirmeSup = false; ecrire({op:"supprimer", ligne:m.ligne}).then(function(bon){ if(bon){ fiche = null; mode = "liste"; dessiner(); } }); };
     var ok = document.getElementById("enok"); if(ok) ok.onclick = function(){
-      var util = m.rows.filter(function(r){ return r.t.trim() || r.f; });
-      if(util.some(function(r){ return !r.t.trim() || !r.f; })){ msg = "▪ Choisissez une fréquence et écrivez la tâche pour chaque ligne."; dessiner(); return; }
+      if(!valide()) return;
       var corps = m.ligne ? {op:"modifier", ligne:m.ligne} : {op:"ajouter", zone:m.zone};
-      corps.machine = document.getElementById("enn").value;
-      corps.taches = util.map(function(r){ var t = r.t.trim().replace(/[\s.]+$/, ""); return r.f === "Au besoin" ? t + " si nécessaire." : t + " " + r.f.toLowerCase() + "."; }).join("\n");
-      ecrire(corps).then(function(bon){ if(bon){ m.rows = null; mode = "liste"; dessiner(); } });
+      corps.machine = m.nomEd;
+      corps.taches = pleines().map(function(r){ var t = r.t.trim().replace(/[\s.]+$/, ""); return r.f === "Au besoin" ? t + " si nécessaire." : t + " " + r.f.toLowerCase() + "."; }).join("\n");
+      ecrire(corps).then(function(bon){
+        if(!bon) return;
+        var nl = m.ligne || (d.machines.filter(function(x){ return x.zone === m.zone && nomsLignes(x.machine).join("\n") === m.nomEd; })[0] || {}).ligne;
+        var changeResp = m.respEd && nl && (d.employes.filter(function(x){ return String(x.id) === m.respEd; })[0] || {}).nom !== (m.ligne ? m.resp : "");
+        var fin = function(){ m.rows = null; mode = "liste"; dessiner(); };
+        if(changeResp) ecrire({op:"attribuer", ligne:nl, employe:Number(m.respEd)}).then(fin); else fin();
+      });
     };
   }
   appelService({action:"entretien_lire", session:sessionGardee()}).then(function(r){
