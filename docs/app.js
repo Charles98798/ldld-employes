@@ -2154,3 +2154,16 @@ if("serviceWorker" in navigator){
   window.addEventListener("resize", recaler);
   ["gesturestart","gesturechange"].forEach(function(n){ document.addEventListener(n, function(e){ e.preventDefault(); }); });
 })();
+
+// Largeur réelle de l'écran: sur certains iPhone la page se calcule un peu plus large que l'écran visible (la marge de droite sort de la vue). On impose la largeur visible à toute l'application.
+(function(){
+  function largeur(){
+    var w = window.innerWidth, vv = window.visualViewport;
+    if(vv && vv.width) w = Math.min(w, vv.width);
+    if(window.matchMedia && window.matchMedia("(orientation: portrait)").matches && window.screen && screen.width) w = Math.min(w, screen.width);
+    document.documentElement.style.setProperty("--lw", Math.round(w) + "px");
+  }
+  largeur();
+  window.addEventListener("resize", largeur); window.addEventListener("orientationchange", function(){ setTimeout(largeur, 250); });
+  if(window.visualViewport) window.visualViewport.addEventListener("resize", largeur);
+})();
