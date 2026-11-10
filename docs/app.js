@@ -392,8 +392,8 @@ var ENT = [
  {id:"messages_envoyes", g:"Équipe", l:"Historique message", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
  {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
- {id:"positionnement_embauche", g:"Gestion des employés", l:"Position embauche", p:"Positionnement embauche", d:[0,0,1], f:function(){ embauchePos(); }},
- {id:"nouvel_employe", g:"Gestion des employés", l:"Ajouter un employé", p:"Nouvel employé", d:[0,0,1], v:1, f:function(){ nouvelEmploye(); }},
+ {id:"positionnement_embauche", g:"Gestion des employés", l:"Position embauche", p:"Positionnement embauche", n:1, d:[0,0,1], f:function(){ embauchePos(); }},
+ {id:"nouvel_employe", g:"Gestion des employés", l:"Ajouter un employé", p:"Nouvel employé", n:2, d:[0,0,1], v:1, f:function(){ nouvelEmploye(); }},
  {id:"retirer_employe", g:"Gestion des employés", l:"Retirer un employé", p:"Retirer un employé", d:[0,0,1], f:function(){ gestionEmployes(); }},
  {id:"portrait", g:"Gestion des employés", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portrait(); }},
  {id:"suivi_charge", g:"Gestion des employés", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
@@ -446,7 +446,7 @@ function menu(){
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
   vis.forEach(function(x){
     if(grp && x.g !== g){ g = x.g; h += '<div class="gtit">▪ '+esc(g)+'</div>'; }
-    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.l)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+'</span></a>';
+    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.l)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(x.n ? '<b class="nc">'+x.n+'</b>' : "")+'</span></a>';
   });
   if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { posEmpPrecharger(); embPrecharger(); } catch(e){} }
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="auj"></div>' + h +
