@@ -393,7 +393,7 @@ var ENT = [
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
  {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
  {id:"positionnement_embauche", g:"Gestion des employés", l:"Positionnement embauche", p:"Positionnement embauche", d:[0,0,1], f:function(){ embauchePos(); }},
- {id:"nouvel_employe", g:"Gestion des employés", l:"Nouvel employé", p:"Nouvel employé", d:[0,0,1], v:1, f:function(){ bientot(this); }},
+ {id:"nouvel_employe", g:"Gestion des employés", l:"Ajouter un employé", p:"Nouvel employé", d:[0,0,1], v:1, f:function(){ bientot(this); }},
  {id:"retirer_employe", g:"Gestion des employés", l:"Retirer un employé", p:"Retirer un employé", d:[0,0,1], f:function(){ gestionEmployes(); }},
  {id:"portrait", g:"Gestion des employés", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portrait(); }},
  {id:"suivi_charge", g:"Gestion des employés", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
