@@ -872,3 +872,8 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .cd.cf,.cd.cc,.cd.cp{background:#0d1117;color:#E3DFD3;font-weight:500;box-shadow:none}
 .cd.cr{background:#8EFF60;color:#1D1D1B;outline:0;font-weight:600}
 .gs .clf,.gs .clc{background:repeating-linear-gradient(45deg,#0d1117,#0d1117 2px,transparent 2px,transparent 6px)}
+.gs .e{background:#8EFF60}
+.gs .n{background:transparent;box-shadow:inset 0 0 0 3px #0d1117}
+.gs .d.f,.gs .d.c,.gs .d.p{background:#0d1117;color:#E3DFD3;opacity:1}
+.gs .d.r{background:#8EFF60;color:#1D1D1B}
+.glg{display:flex;gap:18px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:4px 0 8px}.glg i{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px}
