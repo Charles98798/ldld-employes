@@ -1303,7 +1303,7 @@ function nouvelEmploye(){
   var MSG = "Veuillez utiliser l’onglet Position embauche afin de créer une fiche nouvel employé.";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="nl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div class="bandeau">▪ '+esc(MSG.toUpperCase())+'</div>'; }
+  function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div style="margin:22vh 0 0;background:#8EFF60;color:#1D1D1B;padding:26px 20px;text-align:center;font-size:16px;line-height:1.45;letter-spacing:.06em;text-transform:uppercase;font-weight:500">'+esc(MSG)+'</div>'; }
   function montrer(l){
     var z = document.getElementById("nl"); if(!z) return;
     if(!l.length){ vide(); return; }
