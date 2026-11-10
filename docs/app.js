@@ -1246,9 +1246,19 @@ function nouvelEmploye(){
   }).catch(vide);
 }
 var NE_LISTE = null;
+function neChoix(rafraichir){
+  function fin(r, a){ NE_LISTE = {resp: r, accueil: a}; rafraichir(); }
+  appelService({action:"embauche_choix", session:sessionGardee()}).then(function(r){
+    if(r && r.ok && r.r && r.r.responsables && r.r.accueil) return fin(r.r.responsables, r.r.accueil);
+    throw 0;
+  }).catch(function(){
+    appelService({action:"employes_etat", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.actifs){ var n = r.actifs.map(function(x){ return x.nom; }).filter(Boolean).sort(function(a, b){ return a.localeCompare(b, "fr"); }); fin(n, n); } }).catch(function(){});
+  });
+}
 function neFormulaire(cand){
-  if(!NE_LISTE) appelService({action:"employes_etat", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.actifs){ NE_LISTE = r.actifs.map(function(x){ return x.nom; }).filter(Boolean).sort(function(a, b){ return a.localeCompare(b, "fr"); }); if(document.getElementById("ne")) dessiner(); } }).catch(function(){});
+  if(!NE_LISTE) neChoix(function(){ if(document.getElementById("ne") && window.__neDess) window.__neDess(); });
   var S = {e:0, v:{}, h:{}, docs:NE_DOCS.slice(), id:(cand && cand.id) || ""};
+  window.__neDess = function(){ dessiner(); };
   NE_ETAPES.forEach(function(et){ et.c.forEach(function(c){ if(c.d) S.v[c.k] = c.d; }); });
   var CORR = {responsable:"resp", assurance:"assur", vacances:"vac", appartement:"appt", province:"prov", permisExp:"permis", commentaires:"comm", prenomUsuel:"usuel", naissance:"naiss"};
   if(cand && cand.v) Object.keys(cand.v).forEach(function(k){ var v = cand.v[k]; if(v === null || v === undefined || v === "" || k === "enregistre" || k === "envoye" || k === "programme") return;
@@ -1279,7 +1289,7 @@ function neFormulaire(cand){
     if(c.ty === "long") return '<textarea class="bx beige" data-k="'+c.k+'" placeholder="'+c.l+'">'+esc(v)+'</textarea>';
     if(c.o) return '<select class="'+cl+'" data-k="'+c.k+'"><option value="">'+c.l+'</option>'+c.o.map(function(o){ return '<option'+(o === v ? " selected" : "")+'>'+esc(o)+'</option>'; }).join("")+'</select>';
     var im = c.ty === "tel" ? ' inputmode="tel"' : (c.ty === "nombre" ? ' inputmode="decimal"' : (c.ty === "courriel" ? ' inputmode="email"' : ""));
-    if(c.dyn){ var lo = (NE_LISTE || []).slice(); if(v && lo.indexOf(v) < 0) lo.unshift(v); return '<select class="'+cl+'" data-k="'+c.k+'"><option value="">'+c.l+(NE_LISTE ? "" : " · CHARGEMENT")+'</option>'+lo.map(function(o){ return '<option'+(o === v ? " selected" : "")+'>'+esc(o)+'</option>'; }).join("")+'</select>'; }
+    if(c.dyn){ var lo = (NE_LISTE ? (c.k === "resp" ? NE_LISTE.resp : NE_LISTE.accueil) : []).slice(); if(v && lo.indexOf(v) < 0) lo.unshift(v); return '<select class="'+cl+'" data-k="'+c.k+'"><option value="">'+c.l+(NE_LISTE ? "" : " · CHARGEMENT")+'</option>'+lo.map(function(o){ return '<option'+(o === v ? " selected" : "")+'>'+esc(o)+'</option>'; }).join("")+'</select>'; }
     if(c.ty === "date") return '<span class="lbl">'+c.l+'</span><input type="date" class="'+cl+'" data-k="'+c.k+'" value="'+esc(v)+'">';
     return '<input class="'+cl+'" data-k="'+c.k+'"'+im+' placeholder="'+c.l+'" value="'+esc(v)+'">';
   }
