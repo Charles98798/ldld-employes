@@ -863,3 +863,5 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 #ne .nrs{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--tx2);padding:14px 0 4px}
 #ne .nrc{width:20px;height:20px;border:2px solid #0d1117;flex:none;box-sizing:border-box;display:block}
 #ne .nrc.on{background:#0d1117}
+#ne .nrb{padding:8px 0 10px}#ne .nrb b{display:block;font-weight:400;font-size:11px;letter-spacing:2px;color:var(--tx2);margin-bottom:4px}#ne .nrb div{font-size:13px;line-height:1.4;padding:3px 0}
+#ne .nrx{display:flex;align-items:center;justify-content:space-between;gap:12px}#ne .nrxb{flex:none;width:34px;height:34px;background:transparent;border:0;color:#0d1117;font-size:22px;line-height:1;padding:0;cursor:pointer}

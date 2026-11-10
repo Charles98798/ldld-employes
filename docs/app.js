@@ -1198,6 +1198,7 @@ var NE_ETAPES = [
   {k:"assur", l:"Assurance annuelle", r:1, ty:"nombre"}, {k:"otpadq", l:"Cotisation OTPADQ", r:1, ty:"nombre"}, {k:"boni", l:"Boni", r:1, ty:"nombre"},
   {k:"vac", l:"Semaines de vacances", r:1, ty:"nombre"}, {k:"feries", l:"Jours fériés", r:1, ty:"nombre"}, {k:"maladie", l:"Jours de maladie", r:1, ty:"nombre"}]},
  {t:"Responsabilités", c:[{k:"resps", l:"Responsabilités", ty:"resp"}]},
+ {t:"Bilan des responsabilités", c:[{k:"bilan", l:"Bilan", ty:"bilan"}]},
  {t:"Résumé", c:[{k:"comm", l:"Questions ou commentaires", ty:"long"}]}
 ];
 var NE_PROG = {"Gestionnaire / Expert":"Gestion", "Auxiliaire":"Production", "Technologue":"Production", "Professionnel en informatique":"Production"};
@@ -1246,6 +1247,22 @@ function nouvelEmploye(){
   }).catch(vide);
 }
 var NE_LISTE = null;
+function neBilanResp(S){
+  if(!NE_RESP) return "";
+  var tot = 0, h = "", vus = {};
+  NE_RESP.groupes.forEach(function(g){
+    var l = g.items.filter(function(it){ if(it.section || !S.rc[it.k]) return false; var n = String(it.texte).toLowerCase().replace(/\s+/g, " ").trim(); if(vus[n]) return false; vus[n] = 1; return true; });
+    if(!l.length) return;
+    h += '<div class="nrb"><b>'+esc(String(g.groupe).toUpperCase())+' · '+l.length+' TÂCHE'+(l.length > 1 ? "S" : "")+'</b>'+l.map(function(it){ tot++; return '<div class="nrx"><span>'+tot+'. '+esc(it.texte)+'</span><button type="button" class="nrxb" data-rx="'+it.k+'" aria-label="Retirer cette tâche">×</button></div>'; }).join("")+'</div>';
+  });
+  return h || '<div class="bandeau">▪ AUCUNE RESPONSABILITÉ CHOISIE</div>';
+}
+function neAff(c, v){
+  v = String(v || "");
+  if(c.ty === "date" && /^\d{4}-\d{2}-\d{2}$/.test(v)){ var M = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."]; return Number(v.slice(8)) + " " + M[Number(v.slice(5, 7)) - 1] + " " + v.slice(0, 4); }
+  if(c.ty === "tel"){ var d = v.replace(/\D/g, ""); if(d.length === 11 && d[0] === "1") d = d.slice(1); if(d.length === 10) return d.slice(0, 3) + "-" + d.slice(3, 6) + "-" + d.slice(6); }
+  return v;
+}
 var NE_RESP = null, NE_RESP_EN = false;
 function neRespCharger(fin){
   if(NE_RESP){ fin(); return; } if(NE_RESP_EN) return; NE_RESP_EN = true;
@@ -1271,10 +1288,10 @@ function neFormulaire(cand){
     S.v[CORR[k] || k] = String(v); });
   if(typeof S.v.horaire === "string" && S.v.horaire){ S.v.horaire.split(";").forEach(function(seg){ var m = seg.trim().match(/^(\S+)\s+(\d{2}:\d{2})-(\d{2}:\d{2})$/), i = m ? NE_JOURS.indexOf(m[1]) : -1; if(i >= 0) S.h[i] = {a:m[2], b:m[3]}; }); delete S.v.horaire; if(Object.keys(S.h).length && !(cand && cand.v && cand.v.heures)) S.v.heures = neHeures(S.h); }
   if(S.v.cat && !Object.keys(S.h).length){ var hh0 = S.v.cat === "Administratif" ? NE_HOR_ADM : NE_HOR_PROD; hh0.forEach(function(x, i){ S.h[i] = {a:x[0], b:x[1]}; }); if(!(cand && cand.v && cand.v.heures)) S.v.heures = neHeures(S.h); if(!S.v.arrivee) S.v.arrivee = "08:00"; }
-  if(cand && cand.etat && cand.etat.v){ Object.keys(cand.etat.v).forEach(function(k){ S.v[k] = String(cand.etat.v[k]); }); if(cand.etat.h) S.h = cand.etat.h; if(cand.etat.docs && cand.etat.docs.length) S.docs = cand.etat.docs; if(typeof cand.etat.e === "number" && cand.etat.e >= 0 && cand.etat.e <= 7) S.e = cand.etat.e; }
+  if(cand && cand.etat && cand.etat.v){ Object.keys(cand.etat.v).forEach(function(k){ S.v[k] = String(cand.etat.v[k]); }); if(cand.etat.h) S.h = cand.etat.h; if(cand.etat.docs && cand.etat.docs.length) S.docs = cand.etat.docs; if(typeof cand.etat.e === "number" && cand.etat.e >= 0 && cand.etat.e <= 8) S.e = cand.etat.e; }
   S.rc = {}; S.rs = 0; var rinit = false;
   if(cand && cand.etat && cand.etat.r){ cand.etat.r.forEach(function(k){ S.rc[k] = 1; }); rinit = true; if(typeof cand.etat.rs === "number") S.rs = cand.etat.rs; }
-  neRespCharger(function(){ if(!rinit){ (NE_RESP.defauts || []).forEach(function(k){ S.rc[k] = 1; }); rinit = true; } if(S.e === 6 && document.getElementById("ne")) dessiner(); });
+  neRespCharger(function(){ if(!rinit){ (NE_RESP.defauts || []).forEach(function(k){ S.rc[k] = 1; }); rinit = true; } if((S.e === 6 || S.e === 7) && document.getElementById("ne")) dessiner(); });
   var sauvT = null, sauvJ = "";
   function sauver(){
     if(!/^[0-9a-f]{8}$/.test(S.id || "")) return;
@@ -1294,7 +1311,7 @@ function neFormulaire(cand){
     if(!visible(c) || c.auto) return true;
     if(c.ty === "horaire") return horaireOk();
     if(c.ty === "liste") return S.docs.some(function(x){ return x.trim(); });
-    if(c.ty === "resp" || c.ty === "long") return true;
+    if(c.ty === "resp" || c.ty === "long" || c.ty === "bilan") return true;
     if(!c.r) return !String(S.v[c.k] || "").trim() || neValide(c.ty, S.v[c.k]);
     return neValide(c.ty, S.v[c.k]);
   }
@@ -1305,6 +1322,7 @@ function neFormulaire(cand){
     if(c.auto) return '<div class="bx beige nauto"><span>'+c.l+'</span><b>'+esc(NE_PROG[S.v.cat] || "")+'</b></div>';
     if(c.ty === "horaire") return '<div class="etq">▪ HORAIRE · AU MOINS UNE JOURNÉE</div>' + NE_JOURS.map(function(j, i){ var d = S.h[i] || {}; return '<div class="nhr"><span>'+j+'</span><input class="bx '+(d.a ? "" : "beige")+'" type="time" data-h="'+i+'a" value="'+esc(d.a || "")+'"><input class="bx '+(d.b ? "" : "beige")+'" type="time" data-h="'+i+'b" value="'+esc(d.b || "")+'"></div>'; }).join("");
     if(c.ty === "liste") return '<div class="etq">▪ DOCUMENTS À APPORTER · 8 AU MAXIMUM</div>' + S.docs.map(function(x, i){ return '<input class="bx '+(x.trim() ? "" : (i ? "beige" : "rose"))+'" data-d="'+i+'" placeholder="Document '+(i + 1)+'" value="'+esc(x)+'">'; }).join("") + (S.docs.length < 8 ? '<div class="aeact"><button type="button" class="bouton lg" id="nedoc">Ajouter un document</button></div>' : "");
+    if(c.ty === "bilan") return neBilanResp(S);
     if(c.ty === "resp"){
       if(!NE_RESP) return '<div class="bandeau">▪ UN INSTANT</div>';
       var G = NE_RESP.groupes, g = G[S.rs] || G[0], nb = Object.keys(S.rc).length;
@@ -1322,18 +1340,19 @@ function neFormulaire(cand){
   }
   function dessiner(){
     var el = document.getElementById("ne"), et = NE_ETAPES[S.e];
-    var h = '<div class="etq">▪ ÉTAPE '+(S.e + 1)+' SUR 8 · '+et.t.toUpperCase()+'</div><div class="nbar">'+NE_ETAPES.map(function(x, i){ return '<i class="'+(i <= S.e ? "on" : "")+'"></i>'; }).join("")+'</div>';
-    if(S.e === 7){
-      h += NE_ETAPES.slice(0, 6).map(function(x){ return x.c.filter(function(c){ return visible(c) && S.v[c.k] && !c.ty || visible(c) && S.v[c.k] && c.ty !== "horaire" && c.ty !== "liste"; }).map(function(c){ return '<div class="ligne"><span>'+esc(c.l)+'</span><span>'+esc(S.v[c.k])+'</span></div>'; }).join(""); }).join("");
+    var h = '<div class="etq">▪ ÉTAPE '+(S.e + 1)+' SUR '+NE_ETAPES.length+' · '+et.t.toUpperCase()+'</div><div class="nbar">'+NE_ETAPES.map(function(x, i){ return '<i class="'+(i <= S.e ? "on" : "")+'"></i>'; }).join("")+'</div>';
+    if(S.e === 8){
+      h += NE_ETAPES.slice(0, 6).map(function(x){ return x.c.filter(function(c){ return visible(c) && S.v[c.k] && !c.ty || visible(c) && S.v[c.k] && c.ty !== "horaire" && c.ty !== "liste"; }).map(function(c){ return '<div class="ligne"><span>'+esc(c.l)+'</span><span>'+esc(neAff(c, S.v[c.k]))+'</span></div>'; }).join(""); }).join("");
       h += et.c.map(champ).join("");
       h += '<div class="bandeau">▪ ENVOI PAR DOCUSIGN · À VENIR</div>';
     } else h += et.c.map(champ).join("");
-    h += '<div class="aeact tro">'+(S.e ? '<button type="button" class="bouton lg" id="nep">Précédent</button>' : "")+(S.e < 7 ? '<button type="button" class="bouton" id="nes"'+(etapeOk(S.e) ? "" : " disabled")+'>Suivant</button>' : '<button type="button" class="bouton" id="neok">Envoyer le contrat</button>')+'</div>';
+    h += '<div class="aeact tro">'+(S.e ? '<button type="button" class="bouton lg" id="nep">Précédent</button>' : "")+(S.e < 8 ? '<button type="button" class="bouton" id="nes"'+(etapeOk(S.e) ? "" : " disabled")+'>Suivant</button>' : '<button type="button" class="bouton" id="neok">Envoyer le contrat</button>')+'</div>';
     if(S.pop) h += '<div class="pop"><div class="popc"><div class="popt">Envoyer le contrat à '+esc((S.v.prenom || "")+" "+(S.v.nom || ""))+', '+esc(S.v.courriel || "")+', par DocuSign ?</div>'+(S.pop === 2 ? '<div class="bandeau">▪ ENVOI NON ACTIVÉ · À VENIR</div>' : "")+'<div class="aeact"><button type="button" class="bouton" id="neoui">Oui, envoyer</button><button type="button" class="bouton lg" id="nenon">Non</button></div></div></div>';
     el.innerHTML = h;
     Array.prototype.forEach.call(el.querySelectorAll("[data-k]"), function(q){ q.oninput = q.onchange = function(){ S.v[q.getAttribute("data-k")] = q.value; majBtn(q); sauverVite(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-d]"), function(q){ q.oninput = function(){ S.docs[Number(q.getAttribute("data-d"))] = q.value; majBtn(q); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-h]"), function(q){ q.onchange = function(){ var m = q.getAttribute("data-h"), i = Number(m[0]); S.h[i] = S.h[i] || {}; S.h[i][m[1]] = q.value; S.v.heures = neHeures(S.h) || S.v.heures; dessiner(); sauverVite(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-rx]"), function(q){ q.onclick = function(){ delete S.rc[q.getAttribute("data-rx")]; var y = window.scrollY; dessiner(); window.scrollTo(0, y); sauverVite(); }; });
     var rsel = document.getElementById("rsel"); if(rsel) rsel.onchange = function(){ S.rs = Number(rsel.value); window.scrollTo(0, 0); dessiner(); sauverVite(); };
     var rnx = document.getElementById("rnext"); if(rnx) rnx.onclick = function(){ S.rs = Math.min(NE_RESP.groupes.length - 1, S.rs + 1); window.scrollTo(0, 0); dessiner(); sauverVite(); };
     Array.prototype.forEach.call(el.querySelectorAll("[data-rkk]"), function(q){ q.onclick = function(){
