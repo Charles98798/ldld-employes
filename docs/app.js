@@ -93,7 +93,7 @@ function suiteAppels(){
   }
 }
 function appelDirect(corps){
-  var ctl = window.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function(){ ctl.abort(); }, 30000) : 0;   // jamais de « CHARGEMENT… » sans fin
+  var ctl = window.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function(){ ctl.abort(); }, 60000) : 0;   // jamais de « CHARGEMENT… » sans fin
   return fetch(URL_SERVICE, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined})
     .then(function(r){ clearTimeout(t); return r.json(); }, function(e){ clearTimeout(t); throw e; });
 }
@@ -158,8 +158,10 @@ function pastilleTexte(n){ return n + (n > 1 ? " nouveaux" : " nouveau"); }
 function pastilleDirection(){
   var a = app.querySelector('a[data-k="rencontres_demandees"]'); if(!a) return;
   var p = a.querySelector(".nombre"); if(p) p.remove();
-  var n = nbDemandesNeuves();
-  if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = pastilleTexte(n); a.appendChild(p); }
+  var t = a.querySelector(".nbtot"); if(t) t.remove();
+  var m = lireCache("messages"), tot = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && /^Demande de rencontre/.test(x.titre); }).length : 0;
+  t = document.createElement("span"); t.className = "nbtot"; t.textContent = String(tot); a.appendChild(t);
+  if(nbDemandesNeuves()) t.className = "nbtot nombre";   // vert seulement s'il y a du nouveau
 }
 // Une autoévaluation est disponible 14 jours avant la date de la rencontre, jusqu'à ce jour inclus, et seulement si elle n'est pas terminée.
 function aeARemplir(m){
@@ -169,6 +171,18 @@ function aeARemplir(m){
   return diff >= 0 && diff <= 14;
 }
 function aeDateTxt(iso){ var p = /^(\d{4})-(\d\d)-(\d\d)/.exec(iso || ""); return p ? (+p[3] === 1 ? "1er" : +p[3]) + " " + MOIS_LONGS[+p[2]-1] + " " + p[1] : ""; }
+// Toucher la ligne ouvre directement l'autoévaluation disponible; sinon « Non disponible » reste 5 secondes sur la ligne, sans autre page.
+function aeNonDispo(){
+  var a = app.querySelector('a[data-i="2"]'); if(!a) return;
+  var p = a.querySelector(".pastille"); if(p) p.remove();
+  var n = document.createElement("span"); n.className = "pastille pasnon"; n.textContent = "Non disponible"; a.appendChild(n);
+  setTimeout(function(){ if(n.parentNode) n.remove(); pastilleAuto(); }, 5000);
+}
+function aeEntree(){
+  var ae = lireCache("ae");
+  if(ae && ae.rencontres && !(MOI && MOI.role === "direction" && !vueComme()) && !ae.rencontres.some(aeARemplir)) return aeNonDispo();
+  section(2);
+}
 function pastilleAuto(){
   var a = app.querySelector('a[data-i="2"]'); if(!a) return;
   var ae = lireCache("ae"), reste = ae && ae.rencontres && ae.rencontres.some(aeARemplir);
@@ -305,7 +319,7 @@ var ENT = [
  {id:"tableau_de_bord", g:"Mon compte", h:1, l:"Tableau de bord", p:"Tableau de bord", d:[1,1,1], i:4, f:function(){ section(4); }},
  {id:"calendrier", g:"Mon compte", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
  {id:"rencontre", g:"Mon compte", l:"Rencontre", p:"Rencontre", d:[1,1,1], i:7, f:function(){ section(7); }},
- {id:"autoevaluation", g:"Mon compte", h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,1,1], i:2, f:function(){ section(2); }},
+ {id:"autoevaluation", g:"Mon compte", h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,1,1], i:2, f:function(){ aeEntree(); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
  {id:"nouveau_message", g:"Équipe", l:"Nouveau message", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
@@ -716,7 +730,7 @@ function evaluations(){
   obtenir("ae", {action:"ae_lire"}, function(r){
     var el = document.getElementById("ev"); if(!el) return;
     var dues = r.rencontres.filter(aeARemplir);   // seulement celles à remplir, jamais les anciennes
-    if(!dues.length){ el.innerHTML = '<div class="bandeau">▪ AUCUNE AUTOÉVALUATION DISPONIBLE</div>'; return; }
+    if(!dues.length){ menu(); aeNonDispo(); return; }
     if(dues.length === 1){ autoeval(dues[0].rencontre, true, dues[0].date); return; }   // une seule : on l'ouvre directement
     el.innerHTML = dues.map(function(m){
       return '<a class="rang" href="#" data-r="'+m.rencontre+'" data-d="'+esc(m.date || "")+'">▪ Autoévaluation · rencontre '+m.rencontre+'<small>'+'Rencontre du '+esc(aeDateTxt(m.date))+'</small></a>'; }).join("");
@@ -888,9 +902,9 @@ function planPlace(num){
 }
 function profil(){
   var m = MOI || {};
-  var lignes = [["Nom", m.nom || ""], ["Titre", m.poste || ""], ["Responsable", m.responsable || ""]];
+  var lignes = [["Nom", m.nom || "", 1], ["Titre", m.poste || "", 1], ["Responsable", m.responsable || ""]];
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mon profil</h1>' +
-    lignes.map(function(l){ return '<div class="ligne"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
+    lignes.map(function(l){ return l[2] ? '<div class="ligne pfg"><span>'+esc(l[1])+'</span></div>' : '<div class="ligne pfg"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
     '<div id="stat"></div>' +
     '<a class="doc" href="#" id="vnotif"><span>Notifications</span></a><div id="planz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
@@ -898,8 +912,8 @@ function profil(){
   obtenir("stationnement", {action:"stationnement"}, function(r){
     var st = document.getElementById("stat"), pz = document.getElementById("planz"); if(!st || !r || !r.ok) return;
     var place = String(r.place || "").trim(), cas = (r.casiers || []).join(" et "), h = "";
-    if(place) h += '<div class="ligne"><span>Stationnement</span><span>'+esc(place)+'</span></div>';
-    if(cas) h += '<div class="ligne"><span>'+((r.casiers || []).length > 1 ? "Casiers" : "Casier")+'</span><span>'+esc(cas)+'</span></div>';
+    if(place) h += '<div class="ligne pfg"><span>Stationnement</span><span>'+esc(place)+'</span></div>';
+    if(cas) h += '<div class="ligne pfg"><span>'+((r.casiers || []).length > 1 ? "Casiers" : "Casier")+'</span><span>'+esc(cas)+'</span></div>';
     st.innerHTML = h;
     if(/^\d+$/.test(place) && PLACES[+place]) pz.innerHTML = planPlace(+place);
     else if(/^rue$/i.test(place)) pz.innerHTML = '<p class="aide" style="margin-top:14px">Le stationnement est plein pour l\'instant. Vous pouvez vous stationner sur le boulevard Saint-Martin, au nord de la rue Salaberry. Nous vous aviserons dès qu\'une place se libérera.</p>';
@@ -1321,7 +1335,30 @@ function chargerCaches(fin){
   if(DH_CACHE.conges) un(); else obtenir("calendrier", {action:"calendrier"}, function(r){ var c = {}; (r.jours || []).forEach(function(x){ if(x.t === "f") c[x.d] = "f"; else if(x.t === "c" && !c[x.d]) c[x.d] = "c"; }); DH_CACHE.conges = c; un(); }, function(){ DH_CACHE.conges = {}; un(); }, true);
 }
 // Nouveau message: onglets Message et Réunion, mêmes participants.
+// Nouveau message d'un employé: un seul écran, destinataire à choisir (Gestionnaire de production ou Direction), sujet, message.
+function nouveauEmploye(){
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Nouveau message</h1>' +
+    '<span class="lbl">À · obligatoire</span><select class="bx rose" id="nvers"><option value="">Choisir</option><option value="gestionnaire">Gestionnaire de production</option><option value="direction">Direction</option></select>' +
+    '<span class="lbl">Sujet · obligatoire</span><input class="bx rose" id="nsuj" maxlength="120">' +
+    '<span class="lbl">Message · obligatoire</span><textarea class="bx rose" id="ntxt" rows="6" maxlength="4000"></textarea>' +
+    '<div class="bandeau" id="ne" style="display:none"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); retirerBoutonBas(); menu(); };
+  var g = function(i){ return document.getElementById(i); };
+  var dire = function(t){ var e = g("ne"); if(e){ e.style.display = "block"; e.textContent = t; } };
+  function maj(){ var v = g("nvers").value, s = g("nsuj").value, t = g("ntxt").value;
+    g("nvers").className = "bx"+(v ? "" : " rose"); g("nsuj").className = "bx"+(s.trim() ? "" : " rose"); g("ntxt").className = "bx"+(t.trim() ? "" : " rose");
+    boutonBas("Envoyer", !!(v && s.trim() && t.trim()), envoyer); }
+  function envoyer(){
+    var bt = g("btnbas"); bt.disabled = true; dire("\u25aa ENVOI\u2026");
+    appelService({action:"message_employe", session:sessionGardee(), vers:g("nvers").value, titre:g("nsuj").value.trim(), texte:g("ntxt").value.trim()}).then(function(r){
+      if(r && r.ok){ dire("\u25aa ENVOY\u00c9"); setTimeout(function(){ retirerBoutonBas(); messages(); }, 1200); }
+      else { bt.disabled = false; dire("\u25aa NON ENVOY\u00c9 \u00b7 "+String((r && r.erreur) || "R\u00c9ESSAYEZ").toUpperCase()); }
+    }).catch(function(){ bt.disabled = false; dire("\u25aa NON ENVOY\u00c9 \u00b7 R\u00c9SEAU"); });
+  }
+  ["nvers", "nsuj", "ntxt"].forEach(function(i){ g(i).oninput = maj; g(i).onchange = maj; }); maj();
+}
 function nouveau(onglet){
+  if(!peutEcrire()) return nouveauEmploye();
   onglet = onglet === "reunion" ? "reunion" : "message";
   app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Nouveau message</h1>' +
     '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton" id="ongM" style="margin:0;flex:1;'+(onglet === "message" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Message</button><button type="button" class="bouton" id="ongR" style="margin:0;flex:1;'+(onglet === "reunion" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Réunion</button></div>' +
@@ -1466,24 +1503,24 @@ function utilisationApp(){
 // Suivi de charge (responsables et direction): un employé à la fois, du premier au dernier, avec le bouton du bas.
 var SC_AGENDAS = null;
 function suiviCharge(){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi de charge</h1><div id="sc"></div></div>';
+  app.innerHTML = '<div class="page" id="tb" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi de charge</h1><div id="sc"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var liste = [], i = 0, etat = "", noteOn = false, planOn = false, msg = "", occupe = false;
   var dh = null;
   var ETATS = ["Tout va bien", "À surveiller", "Intervention requise"];
   function pc(x){ return x == null ? "—" : Math.round(x*100)+" %"; }
-  function tuile(v, lib, cible, max){
-    var ok = v != null && (max ? v <= cible : v >= cible), w = v == null ? 0 : Math.min(100, Math.round(v*100));
-    return '<div style="margin:10px 0 0"><div class="ligne" style="border:0;padding:0"><span>'+lib+'</span><span>'+pc(v)+'</span></div>' +
-      '<div style="position:relative;height:10px;background:#E9E4DA;margin-top:4px"><i style="display:block;height:100%;width:'+w+'%;background:#111"></i><u style="position:absolute;top:-3px;bottom:-3px;left:'+Math.round(cible*100)+'%;width:2px;background:#2fd04a"></u></div>' +
-      (v == null ? "" : '<span style="display:inline-block;margin-top:6px;padding:4px 8px;font-size:12px;font-weight:600;'+(ok ? "background:#8EFF60;color:#1D1D1B" : "border:1.5px solid #111")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>')+'</div>'; }
+  function tuile(v, lib, cible, max, cq){
+    var vide = v == null, val = vide ? 0 : Math.round(v*100), c = Math.round(cible*100), ok = !vide && (max ? val <= c : val >= c);
+    return '<div class="tcarte tk'+(vide ? ' sans' : '')+'"><div class="tct"><span><b class="tq" style="background:'+cq+'"></b>'+lib+'</span>'+(vide ? '' : '<span class="tind '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>')+'</div>' +
+      '<div class="tl">'+(vide ? '<div class="tgros">\u2014</div>' : '<div class="tgros">'+val+'<small>%</small></div>')+'<div class="tcib">Cible '+c+' % '+(max ? "et \u2212" : "et +")+'</div></div>' +
+      '<div class="tbarre"><i style="width:'+Math.min(100, val)+'%"></i><u style="left:'+Math.min(100, c)+'%"></u></div></div>'; }
   function dateCourte(d){ var p = String(d).split("-"); return +p[2]+" "+MOIS_LONGS[+p[1]-1].slice(0,4)+"."; }
   function bouton(txt, on, rose, id){ return '<button type="button" id="'+id+'" class="bouton" style="margin:0;flex:1;font-size:11px;padding:12px 2px;'+(on ? "" : "background:"+(rose ? "#f4b3c4" : "transparent")+";color:#111;")+'border:1.5px solid var(--tx)">'+txt+'</button>'; }
   function dessiner(){
     var el = document.getElementById("sc"); if(!el) return;
     var p = liste[i], d = p.dernier;
-    var h = '<div class="etq">'+(i+1)+' SUR '+liste.length+'</div><div style="font-size:22px;margin:2px 0 10px">'+esc(p.nom)+'</div>' +
-      '<div class="etq" style="margin-top:4px">RÉALISÉ VS CIBLE</div>'+tuile(p.effectuee, "Effectuée · cible 80 %", 0.8, false)+tuile(p.nonTerminee, "Non terminée · max 5 %", 0.05, true)+tuile(p.objectifs, "Objectifs · cible 80 %", 0.8, false) +
+    var h = '<div class="etiq">\u25aa '+(i+1)+' SUR '+liste.length+'</div><div style="font-size:22px;margin:2px 0 12px">'+esc(p.nom)+'</div>' +
+      ''+tuile(p.effectuee, "CHARGE EFFECTUÉE", 0.8, false, "#8D806A")+tuile(p.nonTerminee, "CHARGE NON TERMINÉE", 0.05, true, "#1D1D1B")+tuile(p.objectifs, "OBJECTIFS ATTEINTS", 0.8, false, "#8D806A") +
       '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente</b>'+(d ? '<div style="margin-bottom:4px">'+dateCourte(d.date)+' · État choisi : <span style="font-weight:600">'+esc(d.etat)+'</span></div>' : "")+(d && d.note ? esc(d.note) : '<span style="opacity:.7">'+(d ? "Aucune note." : "Aucun suivi précédent.")+'</span>')+'</div>' +
       '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, !etat, "se"+k); }).join("")+'</div>' +
       '<div class="etq" style="margin-top:14px">OPTIONNEL</div>' +
@@ -1568,18 +1605,12 @@ function gestionEmployes(){
     var el = document.getElementById("ge"); if(!el) return;
     if(!r || !r.ok) throw 0;
     el.innerHTML = '<div class="etq">CHOISIR UN EMPLOYÉ</div><select class="champ" id="gs">'+r.actifs.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
-      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gret" style="margin:0">Retirer</button></div>' +
+      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0;flex:1">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0;flex:1">Désactiver</button></div>' +
       '<div class="etiq">▪ INACTIFS</div>' +
       (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:6px 14px">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:6px 14px">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
-    document.getElementById("gret").onclick = function(){ var s = document.getElementById("gs"); if(!s.value) return; var id = s.value, nom = s.options[s.selectedIndex].text;
-      var f = document.createElement("div");
-      f.style.cssText = "position:fixed;inset:0;background:rgba(15,20,32,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50";
-      f.innerHTML = '<div style="background:#e3dfd3;color:#111;border:1.5px solid #111;padding:20px;width:100%;max-width:340px"><div style="font-size:15px;line-height:1.5;margin-bottom:16px">Retirer '+esc(nom)+' ?</div><div class="aeact" style="margin:0;flex-direction:column;gap:8px"><button type="button" class="bouton" id="rdes" style="margin:0">Désactiver</button><button type="button" class="bouton" id="rsup" style="margin:0;background:#a32d2d;color:#fff">Supprimer</button><button type="button" class="bouton" id="rann" style="margin:0">Annuler</button></div></div>';
-      document.body.appendChild(f);
-      document.getElementById("rann").onclick = function(){ f.remove(); };
-      document.getElementById("rdes").onclick = function(){ f.remove(); agir(id, nom, false); };
-      document.getElementById("rsup").onclick = function(){ f.remove(); supprimer(id, nom); };
-    };
+    function choisi(){ var s = document.getElementById("gs"); return s.value ? {id: s.value, nom: s.options[s.selectedIndex].text} : null; }
+    document.getElementById("gdes").onclick = function(){ var c = choisi(); if(c) agir(c.id, c.nom, false); };
+    document.getElementById("gsup").onclick = function(){ var c = choisi(); if(c) supprimer(c.id, c.nom); };
     Array.prototype.forEach.call(el.querySelectorAll("button[data-s]"), function(b){ b.onclick = function(){ var x = r.inactifs[+b.getAttribute("data-s")]; supprimer(x.id, x.nom); }; });
     Array.prototype.forEach.call(el.querySelectorAll("button[data-k]"), function(b){ b.onclick = function(){ var x = r.inactifs[+b.getAttribute("data-k")]; agir(x.id, x.nom, true); }; });
   }).catch(function(){ var el = document.getElementById("ge"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
