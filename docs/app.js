@@ -1241,7 +1241,7 @@ function nouvelEmploye(){
         var M = {nomFamille:"nom", codePostal:"cp", naissance:"naiss", experience:"exp", categorie:"cat", assurance:"assur", semainesVacances:"vac", joursFeries:"feries", joursMaladie:"maladie"};
         var w = {}; Object.keys(c.v || {}).forEach(function(k){ w[k] = c.v[k]; });
         Object.keys(v).forEach(function(k){ if(["salaire","position","echelleAnnee"].indexOf(k) >= 0) return; var x = v[k]; if(x === null || x === undefined || x === "") return; w[M[k] || k] = x; });
-        neFormulaire({id: c.id, v: w});
+        var et = null; try{ et = w.appEtat ? JSON.parse(w.appEtat) : null; }catch(x){ et = null; } delete w.appEtat; neFormulaire({id: c.id, v: w, etat: et});
       }).catch(function(){ if(sp) sp.textContent = t0; q.removeAttribute("data-b"); neFormulaire(c); }); }; });
   }).catch(vide);
 }
@@ -1266,6 +1266,16 @@ function neFormulaire(cand){
     S.v[CORR[k] || k] = String(v); });
   if(typeof S.v.horaire === "string" && S.v.horaire){ S.v.horaire.split(";").forEach(function(seg){ var m = seg.trim().match(/^(\S+)\s+(\d{2}:\d{2})-(\d{2}:\d{2})$/), i = m ? NE_JOURS.indexOf(m[1]) : -1; if(i >= 0) S.h[i] = {a:m[2], b:m[3]}; }); delete S.v.horaire; if(Object.keys(S.h).length && !(cand && cand.v && cand.v.heures)) S.v.heures = neHeures(S.h); }
   if(S.v.cat && !Object.keys(S.h).length){ var hh0 = S.v.cat === "Administratif" ? NE_HOR_ADM : NE_HOR_PROD; hh0.forEach(function(x, i){ S.h[i] = {a:x[0], b:x[1]}; }); if(!(cand && cand.v && cand.v.heures)) S.v.heures = neHeures(S.h); if(!S.v.arrivee) S.v.arrivee = "08:00"; }
+  if(cand && cand.etat && cand.etat.v){ Object.keys(cand.etat.v).forEach(function(k){ S.v[k] = String(cand.etat.v[k]); }); if(cand.etat.h) S.h = cand.etat.h; if(cand.etat.docs && cand.etat.docs.length) S.docs = cand.etat.docs; if(typeof cand.etat.e === "number" && cand.etat.e >= 0 && cand.etat.e <= 7) S.e = cand.etat.e; }
+  var sauvT = null, sauvJ = "";
+  function sauver(){
+    if(!/^[0-9a-f]{8}$/.test(S.id || "")) return;
+    var v = {}; Object.keys(S.v).forEach(function(k){ if(S.v[k] !== "" && S.v[k] !== undefined && S.v[k] !== null) v[k] = S.v[k]; });
+    var j = JSON.stringify({v: v, h: S.h, docs: S.docs, e: S.e}); if(j.length > 5900 || j === sauJ()) return; sauvJ = j;
+    appelService({action: "embauche_brouillon_maj", session: sessionGardee(), id: S.id, etape: Math.min(7, S.e), etat: j}).catch(function(){});
+  }
+  function sauJ(){ return sauvJ; }
+  function sauverVite(){ clearTimeout(sauvT); sauvT = setTimeout(sauver, 800); }
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="ne"></div></div>';
   function visible(c){ return !c.si || c.si(S.v); }
   function horaireOk(){
@@ -1306,15 +1316,15 @@ function neFormulaire(cand){
     h += '<div class="aeact tro">'+(S.e ? '<button type="button" class="bouton lg" id="nep">Précédent</button>' : "")+(S.e < 7 ? '<button type="button" class="bouton" id="nes"'+(etapeOk(S.e) ? "" : " disabled")+'>Suivant</button>' : '<button type="button" class="bouton" id="neok">Envoyer le contrat</button>')+'</div>';
     if(S.pop) h += '<div class="pop"><div class="popc"><div class="popt">Envoyer le contrat à '+esc((S.v.prenom || "")+" "+(S.v.nom || ""))+', '+esc(S.v.courriel || "")+', par DocuSign ?</div>'+(S.pop === 2 ? '<div class="bandeau">▪ ENVOI NON ACTIVÉ · À VENIR</div>' : "")+'<div class="aeact"><button type="button" class="bouton" id="neoui">Oui, envoyer</button><button type="button" class="bouton lg" id="nenon">Non</button></div></div></div>';
     el.innerHTML = h;
-    Array.prototype.forEach.call(el.querySelectorAll("[data-k]"), function(q){ q.oninput = q.onchange = function(){ S.v[q.getAttribute("data-k")] = q.value; majBtn(q); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-k]"), function(q){ q.oninput = q.onchange = function(){ S.v[q.getAttribute("data-k")] = q.value; majBtn(q); sauverVite(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-d]"), function(q){ q.oninput = function(){ S.docs[Number(q.getAttribute("data-d"))] = q.value; majBtn(q); }; });
-    Array.prototype.forEach.call(el.querySelectorAll("[data-h]"), function(q){ q.onchange = function(){ var m = q.getAttribute("data-h"), i = Number(m[0]); S.h[i] = S.h[i] || {}; S.h[i][m[1]] = q.value; S.v.heures = neHeures(S.h) || S.v.heures; dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-h]"), function(q){ q.onchange = function(){ var m = q.getAttribute("data-h"), i = Number(m[0]); S.h[i] = S.h[i] || {}; S.h[i][m[1]] = q.value; S.v.heures = neHeures(S.h) || S.v.heures; dessiner(); sauverVite(); }; });
     var dc = document.getElementById("nedoc"); if(dc) dc.onclick = function(){ S.docs.push(""); dessiner(); };
-    var n = document.getElementById("nes"); if(n) n.onclick = function(){ if(etapeOk(S.e)){ S.e++; window.scrollTo(0, 0); dessiner(); } };
+    var n = document.getElementById("nes"); if(n) n.onclick = function(){ if(etapeOk(S.e)){ S.e++; window.scrollTo(0, 0); dessiner(); sauver(); } };
     var ok = document.getElementById("neok"); if(ok) ok.onclick = function(){ S.pop = 1; dessiner(); };
     var oui = document.getElementById("neoui"); if(oui) oui.onclick = function(){ S.pop = 2; dessiner(); };
     var non = document.getElementById("nenon"); if(non) non.onclick = function(){ S.pop = 0; dessiner(); };
-    var p = document.getElementById("nep"); if(p) p.onclick = function(){ S.e--; window.scrollTo(0, 0); dessiner(); };
+    var p = document.getElementById("nep"); if(p) p.onclick = function(){ S.e--; window.scrollTo(0, 0); dessiner(); sauver(); };
   }
   function majBtn(q){
     var et = NE_ETAPES[S.e], k = q.getAttribute("data-k"), c = et.c.filter(function(x){ return x.k === k; })[0];
