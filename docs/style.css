@@ -842,3 +842,6 @@ body:has(.btnbas) .page{padding-bottom:90px}
 /* Accueil: jamais plus large que l'écran, pour que 0, 1 et 2 gardent la marge de droite */
 html,body{overflow-x:hidden;max-width:100vw}.menu{box-sizing:border-box;width:100%;max-width:100vw;overflow-x:hidden}
 .menu a .nc{right:0}
+/* Blocage horizontal: l'écran ne se déplace que de haut en bas, jamais à gauche ni à droite */
+html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;position:relative;width:100%}
+#app,.menu,.page,.connexion{touch-action:pan-y;overflow-x:hidden;max-width:100vw}
