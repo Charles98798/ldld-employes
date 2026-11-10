@@ -77,17 +77,26 @@ var ORDRE_MENU = [9, 0, 4, 6, 7, 2, 3, 1, 5, 8];
 
 function demarrage(){
   app.innerHTML = '<div class="demarrage"><div class="lgx" role="img" aria-label="Lafond Desjardins laboratoire dentaire">'+'<img class="p1" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p2" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p3" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'</div></div>';
+  MOI_PRE = null; var s0 = sessionGardee();
+  if(s0 && !lireMoi(s0)) MOI_PRE = appelService({action:"moi", session:s0});   // demandé pendant l'animation, pas après
   setTimeout(ouvrirSession, 2300);
 }
+var MOI_PRE = null;
+// Identité gardée sur l'appareil (nom, rôle): le menu s'ouvre à la fin de l'animation, la vérification se fait en silence. Effacée à la déconnexion (préfixe ldld-c-).
+function lireMoi(s){ if(VUE.on || vueComme()) return null; try { var v = JSON.parse(localStorage.getItem("ldld-c-moi")); return v && v.s === s && v.r && v.r.ok ? v.r : null; } catch(e){ return null; } }
+function garderMoi(s, r){ if(VUE.on || vueComme()) return; try { localStorage.setItem("ldld-c-moi", JSON.stringify({s: s, r: r})); } catch(e){} }
 // Service LDLD (Google Apps Script) : connexion par code envoyé au courriel LDLD; il ne répond qu'avec les données de l'employé connecté.
 var URL_SERVICE = "https://script.google.com/macros/s/AKfycbwq9SXysg5GHL6GsPFBSTmoKZzm9_wGr4E3W0e-RzXcHeknz5_DMBFIxBarHHczgpwnZw/exec";
 var MOI = null;   // {nom, poste, responsable} après connexion
-var FILE_APPELS = [], APPELS_EN_COURS = 0, APPELS_MAX = 4;   // au plus 4 appels au service en même temps (le service relit les classeurs à chaque appel)
+var FILE_APPELS = [], APPELS_EN_COURS = 0, APPELS_MAX = 5, ARRIERE = false;   // au plus 5 appels en même temps; les préchargements (arrière-plan) en occupent au plus 4: une place reste toujours libre pour un clic
+function enArriere(f){ var a = ARRIERE; ARRIERE = true; try { return f(); } finally { ARRIERE = a; } }
 function appelBrut(corps){
-  return new Promise(function(ok, ko){ FILE_APPELS.unshift({c: corps, ok: ok, ko: ko}); suiteAppels(); });   // le plus récent passe en premier: un clic passe avant les préchargements
+  var bg = ARRIERE;
+  return new Promise(function(ok, ko){ var x = {c: corps, ok: ok, ko: ko, bg: bg}; if(bg) FILE_APPELS.push(x); else FILE_APPELS.unshift(x); suiteAppels(); });   // un clic passe avant les préchargements
 }
 function suiteAppels(){
   while(APPELS_EN_COURS < APPELS_MAX && FILE_APPELS.length){
+    if(FILE_APPELS[0].bg && APPELS_EN_COURS >= APPELS_MAX - 1) break;
     var x = FILE_APPELS.shift(); APPELS_EN_COURS++;
     appelDirect(x.c).then(x.ok, x.ko).then(function(){ APPELS_EN_COURS--; suiteAppels(); });
   }
@@ -103,19 +112,35 @@ var RCACHE = {};
 var LECT = {production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
 var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
+// Copie gardée sur l'appareil (affichée tout de suite à l'ouverture, remplacée en silence par la version fraîche). JAMAIS de salaire ni de rémunération (Portrait, Échelle, Positionnement, Embauche, Employé actuel restent en mémoire seulement).
+// Données de l'employé lui-même: toutes les personnes. Données d'équipe: Direction seulement. Tout est effacé à la déconnexion (préfixe ldld-c-).
+var PERSO_PROPRE = {heures:1, agenda_mes:1, rencontre_liste:1, prefs_lire:1, entretien_lire:1, charges_jours:1, calendrier_labo:1};
+var PERSO_DIRECTION = {production_lire:1, charge_equipe:1, parking_lire:1, equipe_groupes:1, utilisation:1, agenda_liste:1};
+function persoOk(a){ return !VUE.on && !vueComme() && (PERSO_PROPRE[a] || (PERSO_DIRECTION[a] && MOI && MOI.role === "direction")); }
+function hachage(t){ var h = 5381; for(var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+function clePerso(k){ return "ldld-c-r-" + hachage(k); }
+function lirePerso(a, k){ if(!persoOk(a)) return null; try { var v = JSON.parse(localStorage.getItem(clePerso(k))); return v && v.r ? v : null; } catch(e){ return null; } }
+function ecrirePerso(a, k, r){ if(!persoOk(a)) return; try { localStorage.setItem(clePerso(k), JSON.stringify({t: Date.now(), r: r})); } catch(e){} }
+function viderPerso(){ try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-r-") === 0) localStorage.removeItem(k); }); } catch(e){} }
 // Vue « employé au hasard » (Direction seulement, lecture seule): pendant qu'elle est active, la session de l'employé tiré sert aux appels et rien n'est gardé en cache local.
 var VUE = {on:false, reel:null, session:null, nom:"", relancer:null};
 function cleLecture(c){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); if(VUE.on) o._v = VUE.session; return JSON.stringify(o); }
 function appelService(corps){
   var a = corps && corps.action;
-  if(!LECT[a]){ if(!NEUTRE[a] && !/_liste$|_fichier$/.test(a || "")) RCACHE = {}; return appelBrut(corps); }
+  if(!LECT[a]){ if(!NEUTRE[a] && !/_liste$|_fichier$/.test(a || "")){ RCACHE = {}; viderPerso(); } return appelBrut(corps); }
   var k = cleLecture(corps), e = RCACHE[k], t = Date.now();
   if(e && t - e.t < 1800000){
-    if(t - e.t > 20000 && !e.maj){ e.maj = 1; appelBrut(corps).then(function(r){ if(r && r.ok) RCACHE[k] = {t: Date.now(), p: Promise.resolve(r)}; }).catch(function(){}); }
+    if(t - e.t > 20000 && !e.maj){ e.maj = 1; enArriere(function(){ return appelBrut(corps); }).then(function(r){ if(r && r.ok){ RCACHE[k] = {t: Date.now(), p: Promise.resolve(r)}; ecrirePerso(a, k, r); } }).catch(function(){}); }
     return e.p.then(copie);
   }
+  var v = lirePerso(a, k);
+  if(v){   // copie gardée sur l'appareil: affichée tout de suite, version fraîche chargée en silence
+    RCACHE[k] = {t: t, p: Promise.resolve(v.r), maj: 1};
+    enArriere(function(){ return appelBrut(corps); }).then(function(r){ if(r && r.ok){ RCACHE[k] = {t: Date.now(), p: Promise.resolve(r)}; ecrirePerso(a, k, r); } }).catch(function(){});
+    return Promise.resolve(copie(v.r));
+  }
   var p = appelBrut(corps); RCACHE[k] = {t: t, p: p};
-  p.then(function(r){ if(!(r && r.ok) && RCACHE[k] && RCACHE[k].p === p) delete RCACHE[k]; }, function(){ if(RCACHE[k] && RCACHE[k].p === p) delete RCACHE[k]; });
+  p.then(function(r){ if(r && r.ok) ecrirePerso(a, k, r); if(!(r && r.ok) && RCACHE[k] && RCACHE[k].p === p) delete RCACHE[k]; }, function(){ if(RCACHE[k] && RCACHE[k].p === p) delete RCACHE[k]; });
   return p.then(copie);
 }
 function prechargerLectures(){
@@ -123,8 +148,8 @@ function prechargerLectures(){
   var l = [{action:"heures"}, {action:"agenda_mes"}, {action:"rencontre_liste"}, {action:"prefs_lire"}, {action:"entretien_lire"}];
   if(MOI.role === "direction" || MOI.role === "responsable") l = l.concat([{action:"charge_equipe"}, {action:"entretien_lire"}, {action:"parking_lire"}, {action:"equipe_groupes"}, {action:"utilisation"}, {action:"agenda_liste"}]);
   if(MOI.role === "direction") l = l.concat([{action:"production_lire"}, {action:"employes_etat"}, {action:"emp_donnees"}, {action:"ech_donnees"}, {action:"embauche_donnees"}, {action:"embauche_avantages"}, {action:"pos_donnees"}, {action:"portrait", id:""}]);
-  var i = 0; function suite(){ if(i >= l.length) return; var c = l[i++]; c.session = sessionGardee(); var e = RCACHE[cleLecture(c)]; ((e && Date.now() - e.t < 150000) ? Promise.resolve() : appelService(c).catch(function(){})).then(suite); }
-  suite(); setTimeout(suite, 300);
+  var i = 0; function suite(){ if(i >= l.length) return; var c = l[i++]; c.session = sessionGardee(); var e = RCACHE[cleLecture(c)]; ((e && Date.now() - e.t < 150000) ? Promise.resolve() : enArriere(function(){ return appelService(c); }).catch(function(){})).then(suite); }
+  suite(); setTimeout(suite, 300); setTimeout(suite, 600);
 }
 
 // Tout est préchargé avant l'arrivée sur la page : copie locale affichée tout de suite, vérification silencieuse ensuite.
@@ -134,7 +159,7 @@ function chercher(cle, corps){
   corps.session = sessionGardee();
   return appelService(corps).then(function(r){ if(r && r.ok && !VUE.on){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
 }
-function viderCache(){ CACHE = {}; RCACHE = {}; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
+function viderCache(){ CACHE = {}; RCACHE = {}; precharger.t = 0; MOI_PRE = null; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
 /** Affiche la copie locale (sans écran de chargement) puis remplace en silence si la version a changé. */
 function obtenir(cle, corps, afficher, erreur, majSilencieuse){
   var local = lireCache(cle);
@@ -190,6 +215,11 @@ function pastilleAuto(){
   if(reste){ p = document.createElement("span"); p.className = "pastille"; p.textContent = "Disponible"; a.appendChild(p); }
 }
 function precharger(){
+  if(precharger.t && Date.now() - precharger.t < 180000) return;   // au plus une fois par 3 minutes, même si on revient souvent au menu
+  precharger.t = Date.now();
+  enArriere(precharger2);
+}
+function precharger2(){
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
   chercher("tableau", {action:"tableau"}).catch(function(){});
   chercher("tableau_courant", {action:"tableau_courant"}).catch(function(){});
@@ -209,8 +239,17 @@ function garderSession(s){ if(!s) viderCache(); try { if(s) localStorage.setItem
 function ouvrirSession(){
   var s = sessionGardee();
   if(!s) return connexion();
-  appelService({action:"moi", session:s}).then(function(r){
-    if(r && r.ok){ MOI = r; menu(); } else { garderSession(null); connexion(); }
+  var local = lireMoi(s);
+  if(local){
+    MOI = local; menu();
+    appelService({action:"moi", session:s}).then(function(r){
+      if(r && r.ok){ garderMoi(s, r); if(JSON.stringify(r) !== JSON.stringify(local)){ MOI = r; if(app.querySelector(".menu.accueil")) menu(); } }
+      else if(r && r.ok === false){ garderSession(null); MOI = null; connexion(); }
+    }).catch(function(){});
+    return;
+  }
+  (MOI_PRE || appelService({action:"moi", session:s})).then(function(r){
+    if(r && r.ok){ garderMoi(s, r); MOI = r; menu(); } else { garderSession(null); connexion(); }
   }).catch(function(){ connexion("Pas de réseau. Réessayez."); });
 }
 // Vue « comme un employé » (Direction seulement, lecture seule, 2 h): le service donne une session lecture seule; la session de la direction reste de côté.
@@ -266,7 +305,7 @@ function saisieCode(c){
     if(code.length !== 6){ msg.textContent = "Entrez les 6 chiffres du code."; return; }
     msg.textContent = "Vérification…";
     appelService({action:"verifier", courriel:c, code:code}).then(function(r){
-      if(r && r.ok){ garderSession(r.session); MOI = r; menu(); } else { msg.textContent = "Code invalide ou expiré. Demandez-en un nouveau."; }
+      if(r && r.ok){ garderSession(r.session); MOI = r; garderMoi(r.session, r); menu(); } else { msg.textContent = "Code invalide ou expiré. Demandez-en un nouveau."; }
     }).catch(function(){ msg.textContent = "Connexion impossible. Réessayez."; });
   };
 }
