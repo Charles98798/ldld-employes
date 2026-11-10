@@ -2132,3 +2132,25 @@ if("serviceWorker" in navigator){
     setInterval(function(){ if(document.visibilityState === "visible") verif(); }, 30000);
   }).catch(function(){}); });
 }
+
+// Blocage gauche/droite robuste: l'écran ne bouge que verticalement. Un geste surtout horizontal est annulé, sauf dans une zone qui défile vraiment de côté (tableau, plan); tout décalage résiduel est remis à zéro.
+(function(){
+  var x0 = 0, y0 = 0, laterale = false;
+  function zoneLaterale(el){
+    for(; el && el !== document.body && el.nodeType === 1; el = el.parentNode){
+      var o = getComputedStyle(el).overflowX;
+      if((o === "auto" || o === "scroll") && el.scrollWidth > el.clientWidth + 1) return true;
+    }
+    return false;
+  }
+  document.addEventListener("touchstart", function(e){ var t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; laterale = zoneLaterale(e.target); }, {passive:true});
+  document.addEventListener("touchmove", function(e){
+    if(laterale || e.touches.length > 1) return;
+    var t = e.touches[0], dx = Math.abs(t.clientX - x0), dy = Math.abs(t.clientY - y0);
+    if(dx > dy && dx > 4 && e.cancelable) e.preventDefault();
+  }, {passive:false});
+  function recaler(){ if(window.scrollX){ window.scrollTo(0, window.scrollY); } if(document.documentElement.scrollLeft) document.documentElement.scrollLeft = 0; if(document.body.scrollLeft) document.body.scrollLeft = 0; }
+  window.addEventListener("scroll", recaler, {passive:true});
+  window.addEventListener("resize", recaler);
+  ["gesturestart","gesturechange"].forEach(function(n){ document.addEventListener(n, function(e){ e.preventDefault(); }); });
+})();
