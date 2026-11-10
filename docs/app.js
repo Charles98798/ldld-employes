@@ -1233,7 +1233,16 @@ function nouvelEmploye(){
     var l = (r && r.ok && r.r && r.r.length) ? r.r : [];
     if(!l.length){ vide(); return; }
     z.innerHTML = '<div class="etq">▪ CANDIDATS EN ATTENTE</div>'+l.map(function(c, i){ return '<a class="doc" href="#" data-i="'+i+'"><span>▪ '+esc(((c.v && c.v.prenom) || "")+" "+((c.v && c.v.nom) || ""))+'</span></a>'; }).join("");
-    Array.prototype.forEach.call(z.querySelectorAll("[data-i]"), function(q){ q.onclick = function(e){ e.preventDefault(); neFormulaire(l[Number(q.getAttribute("data-i"))]); }; });
+    Array.prototype.forEach.call(z.querySelectorAll("[data-i]"), function(q){ q.onclick = function(e){ e.preventDefault(); var c = l[Number(q.getAttribute("data-i"))]; if(q.getAttribute("data-b")) return; q.setAttribute("data-b", "1");
+      var sp = q.querySelector("span"), t0 = sp ? sp.textContent : ""; if(sp) sp.textContent = "▪ OUVERTURE EN COURS";
+      appelService({action: "embauche_brouillon", session: sessionGardee(), id: c.id}).then(function(rr){
+        var v = (rr && rr.ok && rr.r && rr.r.valeurs) || null;
+        if(!v){ if(sp) sp.textContent = t0; q.removeAttribute("data-b"); neFormulaire(c); return; }
+        var M = {nomFamille:"nom", codePostal:"cp", naissance:"naiss", experience:"exp", categorie:"cat", assurance:"assur", semainesVacances:"vac", joursFeries:"feries", joursMaladie:"maladie"};
+        var w = {}; Object.keys(c.v || {}).forEach(function(k){ w[k] = c.v[k]; });
+        Object.keys(v).forEach(function(k){ if(["salaire","horaire","position","echelleAnnee"].indexOf(k) >= 0) return; var x = v[k]; if(x === null || x === undefined || x === "") return; w[M[k] || k] = x; });
+        neFormulaire({id: c.id, v: w});
+      }).catch(function(){ if(sp) sp.textContent = t0; q.removeAttribute("data-b"); neFormulaire(c); }); }; });
   }).catch(vide);
 }
 function neFormulaire(cand){
