@@ -2142,7 +2142,7 @@ function rencontre(){
   (locR ? Promise.resolve(locR) : chercher("rencontre_liste", {action:"rencontre_liste"})).then(function(r){
     var el = document.getElementById("rc"); if(!el) return;
     if(!r || !r.ok) throw 0;
-    if(!r.responsables.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN RESPONSABLE</div>'; return; }
+    if(!r.responsables.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN RESPONSABLE ASSIGNÉ · CONTACTEZ LA DIRECTION</div>'; return; }
     var choix = {resp: r.responsables.length === 1 ? r.responsables[0].c : "", sujet: ""};
     function pastilles(id, liste, cle, valeur){
       return '<div class="chx" id="'+id+'">'+liste.map(function(x){ var v = valeur(x), t = typeof x === "string" ? x : x.nom; return '<button type="button" data-v="'+esc(v)+'" aria-pressed="'+(choix[cle] === v ? "true" : "false")+'">'+esc(t)+'</button>'; }).join("")+'</div>';
