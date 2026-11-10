@@ -1170,6 +1170,7 @@ function attributionPage(genre){
   }).catch(function(){ var el = document.getElementById("ap"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 // Fiche d'une machine: les tâches sont regroupées par fréquence (du plus fréquent au moins fréquent). La fréquence est lue à la fin de chaque tâche (« chaque jour », « aux 2 semaines »...); sans fréquence = « À préciser ». Les données de la feuille ne changent pas.
+var FREQS = ["Chaque matin", "Chaque jour", "Chaque soir", "Chaque lundi", "Chaque mardi", "Chaque mercredi", "Chaque jeudi", "Chaque vendredi", "Chaque semaine", "Aux 2 semaines", "Chaque mois", "Aux 3 mois", "Au besoin"];
 function groupesFrequence(taches){
   var RANG = {"chaque matin":0, "chaque jour":1, "chaque soir":2, "chaque lundi":3, "chaque mardi":3.1, "chaque mercredi":3.2, "chaque jeudi":3.3, "chaque vendredi":3.4, "chaque semaine":3.5, "aux 2 semaines":4, "chaque mois":5, "aux 3 mois":6, "au besoin":8, "à préciser":9};
   var G = {};
@@ -1254,21 +1255,31 @@ function entretien(){
     if(mode === "fiche"){
       h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><div class="ligne" style="display:block">'+nomHtml(m.machine)+'</div>' +
         (m.resp ? '<div class="etiq" style="margin-top:14px">▪ RESPONSABLE</div><div class="ligne">'+esc(m.resp)+'</div>' : "") +
-        groupesFrequence(m.taches).map(function(g){ return '<div class="etiq" style="margin-top:14px">▪ FRÉQUENCE</div><div class="ligne">'+esc(g.f)+'</div><div class="etiq" style="margin-top:14px">▪ ENTRETIEN À FAIRE</div>'+g.t.map(function(t){ return '<div class="ligne">▪ '+esc(t)+'</div>'; }).join(""); }).join("") +
+        '<div class="etiq" style="margin-top:14px">▪ FRÉQUENCE · ENTRETIEN À FAIRE</div>' + groupesFrequence(m.taches).map(function(g){ return g.t.map(function(t, i){ return '<div class="ligne tfl"><span class="tff">'+(i ? "" : esc(g.f))+'</span><span class="tft">▪ '+esc(t)+'</span></div>'; }).join(""); }).join("") +
         (tous ? '<div class="aeact"><button type="button" class="bouton" id="enm">Modifier</button></div>' : "");
     } else {
+      if(!m.rows){ m.rows = []; groupesFrequence(m.taches).forEach(function(g){ g.t.forEach(function(t){ m.rows.push({f: g.f === "À préciser" ? "" : g.f, t: t.replace(/\.$/, "")}); }); }); if(!m.rows.length) m.rows.push({f:"", t:""}); }
       h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><textarea class="champ" id="enn" rows="2" placeholder="Nom de la machine (une machine par ligne)">'+esc(nomsLignes(m.machine).join("\n"))+'</textarea>' +
-        '<div class="etiq">▪ ENTRETIEN À FAIRE · UNE TÂCHE PAR LIGNE</div><textarea class="champ" id="ent" rows="7">'+esc(m.taches.join("\n"))+'</textarea>' +
+        '<div class="etiq">▪ FRÉQUENCE · ENTRETIEN À FAIRE</div>' + m.rows.map(function(r, i){
+          return '<div class="tl"><select class="tf'+(r.f ? "" : " rose")+'" data-i="'+i+'"><option value="">Fréquence</option>'+FREQS.map(function(f){ return '<option value="'+f+'"'+(r.f === f ? " selected" : "")+'>'+f+'</option>'; }).join("")+'</select><button type="button" class="ib" data-x="'+i+'" aria-label="Enlever">−</button><input class="tt'+(r.t ? "" : " rose")+'" data-i="'+i+'" maxlength="200" placeholder="Entretien à faire" value="'+esc(r.t)+'"></div>'; }).join("") +
+        '<div class="aeact"><button type="button" class="bouton" id="enp">Ajouter une tâche</button></div>' +
         (msg ? '<div class="bandeau">'+esc(msg)+'</div>' : "") +
         '<div class="aeact"><button type="button" class="bouton" id="enok">Enregistrer</button><button type="button" class="bouton" id="enx">Annuler</button></div>';
     }
     el.innerHTML = h;
-    var b = document.getElementById("enm"); if(b) b.onclick = function(){ mode = "edition"; dessiner(); };
-    var x = document.getElementById("enx"); if(x) x.onclick = function(){ mode = m.ligne ? "fiche" : "liste"; msg = ""; dessiner(); };
+    Array.prototype.forEach.call(el.querySelectorAll("select.tf"), function(q){ q.onchange = function(){ m.rows[Number(q.getAttribute("data-i"))].f = q.value; q.classList.toggle("rose", !q.value); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("input.tt"), function(q){ q.oninput = function(){ m.rows[Number(q.getAttribute("data-i"))].t = q.value; q.classList.toggle("rose", !q.value.trim()); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-x]"), function(q){ q.onclick = function(){ m.rows.splice(Number(q.getAttribute("data-x")), 1); if(!m.rows.length) m.rows.push({f:"", t:""}); dessiner(); }; });
+    var pl = document.getElementById("enp"); if(pl) pl.onclick = function(){ var n = document.getElementById("enn"); if(n) m.machine = n.value; m.rows.push({f:"", t:""}); dessiner(); };
+    var b = document.getElementById("enm"); if(b) b.onclick = function(){ m.rows = null; mode = "edition"; dessiner(); };
+    var x = document.getElementById("enx"); if(x) x.onclick = function(){ m.rows = null; mode = m.ligne ? "fiche" : "liste"; msg = ""; dessiner(); };
     var ok = document.getElementById("enok"); if(ok) ok.onclick = function(){
+      var util = m.rows.filter(function(r){ return r.t.trim() || r.f; });
+      if(util.some(function(r){ return !r.t.trim() || !r.f; })){ msg = "▪ Choisissez une fréquence et écrivez la tâche pour chaque ligne."; dessiner(); return; }
       var corps = m.ligne ? {op:"modifier", ligne:m.ligne} : {op:"ajouter", zone:m.zone};
-      corps.machine = document.getElementById("enn").value; corps.taches = document.getElementById("ent").value;
-      ecrire(corps).then(function(bon){ if(bon){ mode = "liste"; dessiner(); } });
+      corps.machine = document.getElementById("enn").value;
+      corps.taches = util.map(function(r){ var t = r.t.trim().replace(/[\s.]+$/, ""); return r.f === "Au besoin" ? t + " si nécessaire." : t + " " + r.f.toLowerCase() + "."; }).join("\n");
+      ecrire(corps).then(function(bon){ if(bon){ m.rows = null; mode = "liste"; dessiner(); } });
     };
   }
   appelService({action:"entretien_lire", session:sessionGardee()}).then(function(r){

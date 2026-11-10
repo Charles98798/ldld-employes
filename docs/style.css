@@ -801,3 +801,7 @@ body:has(.btnbas) .page{padding-bottom:90px}
 .menu a[data-k] .pastille.pasnon{background:transparent;color:var(--tx);padding:3px 0;margin-left:auto}
 
 .menu.accueil a[data-k]{font-size:var(--ft,21px)}
+
+.tl{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;margin-bottom:22px}.tl input{grid-column:1 / -1}.tl select,.tl input{border:0;border-radius:0;border-bottom:1.5px solid var(--tx);background:transparent;color:var(--tx2);font-size:15px;padding:12px 8px;min-width:0;appearance:none;-webkit-appearance:none}.tl select{width:100%}.tl .rose{background:#f4b3c4;color:#111;border-bottom-color:#111}
+.tfl{gap:12px}.tff{flex:0 0 38%;min-width:0}.tft{flex:1;min-width:0}
+.tl .ib{width:44px;height:44px;line-height:44px;border:0;background:#0e131a;color:#f4f1ea;font-size:22px}
