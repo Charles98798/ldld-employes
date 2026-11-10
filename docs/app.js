@@ -159,7 +159,7 @@ function chercher(cle, corps){
   corps.session = sessionGardee();
   return appelService(corps).then(function(r){ if(r && r.ok && !VUE.on){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
 }
-function viderCache(){ CACHE = {}; RCACHE = {}; precharger.t = 0; MOI_PRE = null; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
+function viderCache(){ CACHE = {}; RCACHE = {}; precharger.t = 0; MOI_PRE = null; VUE_PRE = null; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
 /** Affiche la copie locale (sans écran de chargement) puis remplace en silence si la version a changé. */
 function obtenir(cle, corps, afficher, erreur, majSilencieuse){
   var local = lireCache(cle);
@@ -432,6 +432,7 @@ function menu(){
   var rcf = document.getElementById("rcommefin"); if(rcf) rcf.onclick = function(e){ e.preventDefault(); revenirDeComme(); };
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
   pastilleAuto(); pastilleMessages(); chargerAujourdhui();
+  vuePreparer(sessionGardee());
 }
 // Étape 2 : messages, lus et écrits par le service Google Apps Script (chaque employé ne reçoit que les siens).
 var MESSAGES = [];
@@ -1825,17 +1826,41 @@ function section(i){
   if(MOI && MOI.role === "direction" && !vueComme() && VUE_ONGLETS.indexOf(i) >= 0) return vueEmploye(i);
   sectionBase(i);
 }
+// Employé au hasard préparé d'avance (Direction): la session lecture seule est demandée au service en arrière-plan dès l'accueil, avec ses heures et son tableau de bord. Le toucher ouvre donc la page tout de suite.
+var VUE_PRE = null, VUE_DERNIER = "";
+function cleLectureVue(c, sess){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); o._v = sess; return JSON.stringify(o); }
+function vuePreparer(reelle){
+  if(!reelle || VUE_PRE || !MOI || MOI.role !== "direction" || vueComme()) return;
+  var pre = {reelle: reelle, t: Date.now()};
+  pre.p = enArriere(function(){ return appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:VUE_DERNIER}); }).then(function(r){
+    if(r && r.ok){
+      [{action:"heures"}, {action:"tableau_courant"}].forEach(function(c){
+        var k = cleLectureVue(c, r.session); c.session = r.session;
+        var p = enArriere(function(){ return appelBrut(c); });
+        RCACHE[k] = {t: Date.now(), p: p};
+        p.then(function(x){ if(!(x && x.ok) && RCACHE[k] && RCACHE[k].p === p) delete RCACHE[k]; }, function(){ if(RCACHE[k] && RCACHE[k].p === p) delete RCACHE[k]; });
+      });
+    } else if(VUE_PRE === pre) VUE_PRE = null;
+    return r;
+  }, function(e){ if(VUE_PRE === pre) VUE_PRE = null; throw e; });
+  pre.p.catch(function(){});
+  VUE_PRE = pre;
+}
 function vueEmploye(i){
   var reelle = VUE.on ? VUE.reel : sessionGardee(), ancien = VUE.on ? VUE.session : null, prec = VUE.nom;
   VUE.on = false;
   app.innerHTML = '<div class="page"><h1>'+esc(SECTIONS[i])+'</h1></div>';
   VUE.pend = true;
-  appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:prec}).then(function(r){
+  var pre = VUE_PRE; VUE_PRE = null;
+  var pr = (pre && pre.reelle === reelle && Date.now() - pre.t < 3000000) ? pre.p : appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:prec});
+  pr.then(function(r){
     VUE.pend = false;
     if(!r || !r.ok){ VUE.on = false; app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ EMPLOYÉ INTROUVABLE · RÉESSAYEZ</div></div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; return; }
     if(ancien) appelBrut({action:"sortie", session:ancien}).catch(function(){});
     VUE = {on:true, reel:reelle, session:r.session, nom:r.nom || "", relancer:function(){ vueEmploye(i); }};
+    VUE_DERNIER = r.nom || "";
     sectionBase(i);
+    vuePreparer(reelle);
   }).catch(function(){ VUE.pend = false; VUE.on = false; sectionBase(i); });
 }
 function vueFin(){
