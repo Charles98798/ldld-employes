@@ -389,7 +389,7 @@ var ENT = [
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
  {id:"contacts", g:"Équipe", l:"Contact", p:"Contacts", d:[0,1,1], f:function(){ contactsResp(); }},
  {id:"nouveau_message", g:"Équipe", l:"Envoyer message", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
- {id:"messages_envoyes", g:"Équipe", l:"Message envoyé", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
+ {id:"messages_envoyes", g:"Équipe", l:"Historique message", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
  {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
  {id:"positionnement_embauche", g:"Gestion des employés", l:"Positionnement embauche", p:"Positionnement embauche", d:[0,0,1], f:function(){ embauchePos(); }},
@@ -473,7 +473,7 @@ function peutEcrire(){ return MOI && (MOI.role === "direction" || MOI.role === "
 var FILTRE_MSG = "";
 function messages(filtre){
   if(typeof filtre === "string") FILTRE_MSG = filtre;
-  var titreMsg = FILTRE_MSG === "envoyes" ? "Message envoyé" : FILTRE_MSG === "rencontres" ? "Rencontre demandée" : "Message reçu";
+  var titreMsg = FILTRE_MSG === "envoyes" ? "Historique message" : FILTRE_MSG === "rencontres" ? "Rencontre demandée" : "Message reçu";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1><div id="liste"></div>' +
     (peutEcrire() && !FILTRE_MSG ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
