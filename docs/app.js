@@ -441,6 +441,7 @@ function menu(){
   if(notifPossible() && Notification.permission === "granted" && !menu.abonne){ menu.abonne = true; abonnerNotifs().catch(function(){}); }
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger(); setTimeout(prechargerLectures, 400);
+  if(MOI && MOI.role === "direction" && !menu.attPre){ menu.attPre = true; setTimeout(function(){ neAttCharger().catch(function(){ menu.attPre = false; }); }, 1500); }
   var animer = !menu.anime; menu.anime = true;
   if(!menu.onglets){ menu.onglets = true; chargerDroits(); }
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
@@ -1224,19 +1225,29 @@ function neValide(ty, v){
   return true;
 }
 // Règle de Charles: un employé s'ajoute toujours par « Position embauche ». Cet onglet ne reprend que les candidats de la liste d'attente (fiches préparées là-bas).
+var NE_ATT = null, NE_BRP = {};
+function neAttCharger(){
+  var p = appelService({action: "embauche_attente", session: sessionGardee()}).then(function(r){
+    var l = (r && r.ok && r.r && r.r.length) ? r.r : [];
+    NE_ATT = l; NE_BRP = {};
+    l.forEach(function(c){ NE_BRP[c.id] = appelService({action: "embauche_brouillon", session: sessionGardee(), id: c.id}).catch(function(){ return null; }); });
+    return l;
+  });
+  return p;
+}
 function nouvelEmploye(){
   var MSG = "Veuillez utiliser l’onglet Position embauche afin de créer une fiche nouvel employé.";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="nl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div class="bandeau">▪ '+esc(MSG.toUpperCase())+'</div>'; }
-  appelService({action: "embauche_attente", session: sessionGardee()}).then(function(r){
+  function montrer(l){
     var z = document.getElementById("nl"); if(!z) return;
-    var l = (r && r.ok && r.r && r.r.length) ? r.r : [];
     if(!l.length){ vide(); return; }
     z.innerHTML = '<div class="etq">▪ CANDIDATS EN ATTENTE</div>'+l.map(function(c, i){ return '<a class="doc" href="#" data-i="'+i+'"><span>▪ '+esc(((c.v && c.v.prenom) || "")+" "+((c.v && c.v.nom) || ""))+'</span></a>'; }).join("");
     Array.prototype.forEach.call(z.querySelectorAll("[data-i]"), function(q){ q.onclick = function(e){ e.preventDefault(); var c = l[Number(q.getAttribute("data-i"))]; if(q.getAttribute("data-b")) return; q.setAttribute("data-b", "1");
       var sp = q.querySelector("span"), t0 = sp ? sp.textContent : ""; if(sp) sp.textContent = "▪ OUVERTURE EN COURS";
-      appelService({action: "embauche_brouillon", session: sessionGardee(), id: c.id}).then(function(rr){
+      var pr = NE_BRP[c.id] || appelService({action: "embauche_brouillon", session: sessionGardee(), id: c.id});
+      pr.then(function(rr){
         var v = (rr && rr.ok && rr.r && rr.r.valeurs) || null;
         if(!v){ if(sp) sp.textContent = t0; q.removeAttribute("data-b"); neFormulaire(c); return; }
         var M = {nomFamille:"nom", codePostal:"cp", naissance:"naiss", experience:"exp", categorie:"cat", assurance:"assur", semainesVacances:"vac", joursFeries:"feries", joursMaladie:"maladie"};
@@ -1244,7 +1255,10 @@ function nouvelEmploye(){
         Object.keys(v).forEach(function(k){ if(["salaire","position","echelleAnnee"].indexOf(k) >= 0) return; var x = v[k]; if(x === null || x === undefined || x === "") return; w[M[k] || k] = x; });
         var et = null; try{ et = w.appEtat ? JSON.parse(w.appEtat) : null; }catch(x){ et = null; } delete w.appEtat; neFormulaire({id: c.id, v: w, etat: et});
       }).catch(function(){ if(sp) sp.textContent = t0; q.removeAttribute("data-b"); neFormulaire(c); }); }; });
-  }).catch(vide);
+  }
+  if(NE_ATT) montrer(NE_ATT);
+  else { var z0 = document.getElementById("nl"); if(z0) z0.innerHTML = '<div class="etq">▪ CANDIDATS EN ATTENTE</div>'; }
+  neAttCharger().then(function(l){ if(!NE_ATT || document.getElementById("nl")) montrer(l); }).catch(function(){ if(!NE_ATT) vide(); });
 }
 var NE_LISTE = null;
 function neBilanResp(S){
