@@ -78,8 +78,8 @@ function embPage1(z){
   for(i = 0; i <= 40; i++) ann.push([i, i+(i > 1 ? " ans" : " an")]);
   var exp = ann.map(function(o){ return [o[0], o[1]+" (+ "+o[0]+" %)"]; }), hors = ann.map(function(o){ return [o[0], o[1]+" (+ "+embHorsB(o[0])+" %)"]; }),
     dips = [[0, "Aucun (+ 0 %)"], [2, "DEC (+ 2 %)"], [4, "Baccalauréat (+ 4 %)"]], hres = (D.heures || []).map(function(v){ return [v, String(v).replace(".", ",")+" h"]; });
-  function inp(k, ph, max, type){ return '<input class="bx pk'+(String(S[k]).trim() ? "" : " rose")+'" data-k="'+k+'" placeholder="'+esc(ph)+'" maxlength="'+max+'" value="'+esc(S[k])+'" autocomplete="off"'+(type ? ' data-t="'+type+'"' : "")+'>'; }
-  function sel(k, ph, liste){ return '<select class="bx pk'+(String(S[k]) !== "" ? "" : " rose")+'" data-k="'+k+'">'+embOpts(liste, S[k], ph)+'</select>'; }
+  function inp(k, ph, max, type){ return '<span class="lbl">'+esc(ph)+'</span><input class="bx pk'+(String(S[k]).trim() ? "" : " rose")+'" data-k="'+k+'" placeholder="'+esc(ph)+'" maxlength="'+max+'" value="'+esc(S[k])+'" autocomplete="off"'+(type ? ' data-t="'+type+'"' : "")+'>'; }
+  function sel(k, ph, liste){ return '<span class="lbl">'+esc(ph)+'</span><select class="bx pk'+(String(S[k]) !== "" ? "" : " rose")+'" data-k="'+k+'">'+embOpts(liste, S[k], ph)+'</select>'; }
   z.innerHTML = '<h1>Position embauche</h1><div class="lab">01 · Le candidat</div>'+sel("annee", "Échelle · année", ans)+
     '<div style="display:flex;gap:8px"><div style="flex:1">'+inp("prenom", "Prénom", 40)+'</div><div style="flex:1">'+inp("famille", "Nom", 40)+'</div></div>'+inp("adresse", "Adresse", 80)+
     '<div style="display:flex;gap:8px"><div style="flex:1">'+inp("ville", "Ville", 40)+'</div><div style="flex:1">'+inp("cp", "Code postal", 7)+'</div></div>'+inp("naissance", "Date de naissance", 10, "date")+
@@ -148,7 +148,7 @@ function embFenetreCourriel(r, m){
   f.style.cssText = "position:fixed;inset:0;background:rgba(15,20,32,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50";
   f.innerHTML = '<div style="background:#e3dfd3;color:#111;border:1.5px solid #111;padding:20px;width:100%;max-width:340px"><div style="font-size:15px;letter-spacing:.14em;text-transform:uppercase">Envoyer par courriel</div>'+
     '<div class="etq" style="margin:4px 0 8px">'+esc(S.prenom.trim()+" "+S.famille.trim())+' · départ '+r.dep+' % · '+embFmt(r.td)+' $/h</div>'+
-    '<input class="bx rose" id="pcm" placeholder="Courriel du candidat" inputmode="email" autocomplete="off" spellcheck="false" maxlength="120"><div class="aeact" style="margin:12px 0 0"><button type="button" class="bouton" id="pcn" style="margin:0;background:transparent;color:#111;border:1.5px solid #111">Annuler</button><button type="button" class="bouton" id="pco" style="margin:0" disabled>Envoyer</button></div></div>';
+    '<span class="lbl">Courriel du candidat</span><input class="bx rose" id="pcm" placeholder="Courriel du candidat" inputmode="email" autocomplete="off" spellcheck="false" maxlength="120"><div class="aeact" style="margin:12px 0 0"><button type="button" class="bouton" id="pcn" style="margin:0;background:transparent;color:#111;border:1.5px solid #111">Annuler</button><button type="button" class="bouton" id="pco" style="margin:0" disabled>Envoyer</button></div></div>';
   document.body.appendChild(f);
   var c = document.getElementById("pcm"), ok = function(){ return /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/.test(c.value.trim()); };
   c.oninput = function(){ c.className = "bx"+(c.value.trim() ? "" : " rose"); document.getElementById("pco").disabled = !ok(); };

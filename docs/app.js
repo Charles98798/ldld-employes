@@ -1419,7 +1419,7 @@ function neFormulaire(cand){
   function champ(c){
     if(!visible(c)) return "";
     var v = S.v[c.k] || "", cl = "bx" + (c.r && !champOk(c) ? " rose" : (!c.r ? " beige" : ""));
-    if(c.auto) return '<div class="bx beige nauto"><span>'+c.l+'</span><b>'+esc(NE_PROG[S.v.cat] || "")+'</b></div>';
+    if(c.auto) return '<span class="lbl">'+c.l+'</span><div class="bx beige nauto"><b>'+esc(NE_PROG[S.v.cat] || "")+'</b></div>';
     if(c.ty === "horaire") return '<div class="etq">▪ HORAIRE · AU MOINS UNE JOURNÉE</div>' + NE_JOURS.map(function(j, i){ var d = S.h[i] || {}; return '<div class="nhr"><span>'+j+'</span><input class="bx '+(d.a ? "" : "beige")+'" type="time" data-h="'+i+'a" value="'+esc(d.a || "")+'"><input class="bx '+(d.b ? "" : "beige")+'" type="time" data-h="'+i+'b" value="'+esc(d.b || "")+'"></div>'; }).join("");
     if(c.ty === "liste") return '<div class="etq">▪ DOCUMENTS À APPORTER · 8 AU MAXIMUM</div>' + S.docs.map(function(x, i){ return '<input class="bx '+(x.trim() ? "" : (i ? "beige" : "rose"))+'" data-d="'+i+'" placeholder="Document '+(i + 1)+'" value="'+esc(x)+'">'; }).join("") + (S.docs.length < 8 ? '<div class="aeact"><button type="button" class="bouton lg" id="nedoc">Ajouter un document</button></div>' : "");
     if(c.ty === "bilan") return neBilanResp(S);
@@ -1431,12 +1431,12 @@ function neFormulaire(cand){
       h2 += g.items.map(function(it){ return it.section ? '<div class="nrs">'+esc(it.texte)+'</div>' : '<div class="nrr" data-rkk="'+it.k+'"><span>'+esc(it.texte)+'</span><i class="nrc'+(S.rc[it.k] ? " on" : "")+'"></i></div>'; }).join("");
       return h2 + '<div class="etq" style="margin-top:14px">▪ '+nb+' RESPONSABILITÉ'+(nb > 1 ? "S" : "")+' CHOISIE'+(nb > 1 ? "S" : "")+'</div>';
     }
-    if(c.ty === "long") return '<textarea class="bx beige" data-k="'+c.k+'" placeholder="'+c.l+'">'+esc(v)+'</textarea>';
-    if(c.o) return '<select class="'+cl+'" data-k="'+c.k+'"><option value="">'+c.l+'</option>'+c.o.map(function(o){ return '<option'+(o === v ? " selected" : "")+'>'+esc(o)+'</option>'; }).join("")+'</select>';
+    if(c.ty === "long") return '<span class="lbl">'+c.l+'</span>'+'<textarea class="bx beige" data-k="'+c.k+'" placeholder="'+c.l+'">'+esc(v)+'</textarea>';
+    if(c.o) return '<span class="lbl">'+c.l+'</span>'+'<select class="'+cl+'" data-k="'+c.k+'"><option value="">'+c.l+'</option>'+c.o.map(function(o){ return '<option'+(o === v ? " selected" : "")+'>'+esc(o)+'</option>'; }).join("")+'</select>';
     var im = c.ty === "tel" ? ' inputmode="tel"' : (c.ty === "nombre" ? ' inputmode="decimal"' : (c.ty === "courriel" ? ' inputmode="email"' : ""));
-    if(c.dyn){ var lo = (NE_LISTE ? (c.k === "resp" ? NE_LISTE.resp : NE_LISTE.accueil) : []).slice(); if(v && lo.indexOf(v) < 0) lo.unshift(v); return '<select class="'+cl+'" data-k="'+c.k+'"><option value="">'+c.l+(NE_LISTE ? "" : " · CHARGEMENT")+'</option>'+lo.map(function(o){ return '<option'+(o === v ? " selected" : "")+'>'+esc(o)+'</option>'; }).join("")+'</select>'; }
+    if(c.dyn){ var lo = (NE_LISTE ? (c.k === "resp" ? NE_LISTE.resp : NE_LISTE.accueil) : []).slice(); if(v && lo.indexOf(v) < 0) lo.unshift(v); return '<span class="lbl">'+c.l+'</span>'+'<select class="'+cl+'" data-k="'+c.k+'"><option value="">'+c.l+(NE_LISTE ? "" : " · CHARGEMENT")+'</option>'+lo.map(function(o){ return '<option'+(o === v ? " selected" : "")+'>'+esc(o)+'</option>'; }).join("")+'</select>'; }
     if(c.ty === "date") return '<span class="lbl">'+c.l+'</span><input type="date" class="'+cl+'" data-k="'+c.k+'" value="'+esc(v)+'">';
-    return '<input class="'+cl+'" data-k="'+c.k+'"'+im+' placeholder="'+c.l+'" value="'+esc(v)+'">';
+    return '<span class="lbl">'+c.l+'</span>'+'<input class="'+cl+'" data-k="'+c.k+'"'+im+' placeholder="'+c.l+'" value="'+esc(v)+'">';
   }
   function dessiner(){
     var el = document.getElementById("ne"), et = NE_ETAPES[S.e];
@@ -1577,8 +1577,8 @@ function entretien(){
         (m.resp ? '<div class="etiq" style="margin-top:14px">▪ RESPONSABLE</div><div class="ligne">'+esc(m.resp)+'</div>' : "") +
         '<div class="etiq tfh"><span class="tff">▪ Fréquence</span><span class="tft">▪ Entretien à faire</span></div>' + groupesFrequence(m.taches).map(function(g){ return g.t.map(function(t, i){ return '<div class="ligne tfl"><span class="tff">'+(i ? "" : esc(g.f))+'</span><span class="tft">▪ '+esc(t)+'</span></div>'; }).join(""); }).join("");
     } else {
-      h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><textarea class="champ'+(m.nomEd.trim() ? "" : " rose")+'" id="enn" rows="2" placeholder="Machine">'+esc(m.nomEd)+'</textarea>' +
-        '<select class="champ'+(m.respEd ? "" : " rose")+'" id="enr"><option value="">Responsable</option>'+(d.employes || []).map(function(x){ return '<option value="'+x.id+'"'+(String(x.id) === m.respEd ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
+      h = '<div class="etiq">▪ '+esc(m.zone.toUpperCase())+'</div><span class="lbl">Machine</span><textarea class="champ'+(m.nomEd.trim() ? "" : " rose")+'" id="enn" rows="2" placeholder="Machine">'+esc(m.nomEd)+'</textarea>' +
+        '<span class="lbl">Responsable</span><select class="champ'+(m.respEd ? "" : " rose")+'" id="enr"><option value="">Responsable</option>'+(d.employes || []).map(function(x){ return '<option value="'+x.id+'"'+(String(x.id) === m.respEd ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
         '<div class="etiq tfh"><span class="tff">▪ Fréquence</span><span class="tft">▪ Entretien à faire</span></div>' + m.rows.map(function(r, i){
           return '<div class="tl"><select class="tf'+(r.f ? "" : " rose")+'" data-i="'+i+'"><option value="">Fréquence</option>'+FREQS.map(function(f){ return '<option value="'+f+'"'+(r.f === f ? " selected" : "")+'>'+f+'</option>'; }).join("")+'</select><input class="tt'+(r.t.trim() ? "" : " rose")+'" data-i="'+i+'" maxlength="200" placeholder="Entretien à faire" value="'+esc(r.t)+'"></div>'; }).join("") +
         '<div class="aeact"><button type="button" class="bouton lg" id="enp">Ajouter une tâche</button></div>';
