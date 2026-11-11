@@ -291,6 +291,14 @@ var RD_SECTIONS = [
   ["cas", "02 Cas non complétés"],
   ["charge", "03 Charge de travail"]
 ];
+// RÈGLE UNIVERSELLE: une liste qui porte une date l'affiche en colonnes Date | Cas (description dessous) | Étape.
+function rdEstDate(t){ return /^\d{4}-\d{2}-\d{2}/.test(String(t || "")); }
+function rdListeDates(L){
+  var g = "display:grid;grid-template-columns:26% 44% 30%;gap:0 8px;";
+  return '<div class="rdp" style="'+g+'font-size:10px;letter-spacing:.14em;color:#8D806A;text-transform:uppercase"><span>Date</span><span>Cas</span><span>Étape</span></div>'+L.map(function(c){
+    var d = c[0], cas = c[1], etape = c.length > 3 ? c[3] : (c.length > 2 ? c[2] : ""), desc = c.length > 3 ? c[2] : "";
+    return '<div class="rdp" style="'+g+'font-size:13px"><span>'+rdE(String(d).slice(0, 10))+'</span><span>'+rdE(cas)+(desc ? '<div style="color:#8D806A">'+rdE(desc)+'</div>' : "")+'</span><span>'+rdE(etape)+'</span></div>'; }).join("");
+}
 function rdLigne(cols){ return '<div class="rdp" style="display:flex;gap:10px;flex-wrap:wrap"><span>'+cols.map(rdE).join('</span><span>')+'</span></div>'; }
 function rdCourbe(a, b){
   // Courbe SVG: trait noir = année en cours, pointillé = an passé. Valeurs en chiffres, jamais de noms. Un mois sans donnée (null) n'est pas dessiné: la courbe s'interrompt, jamais de zéro inventé.
@@ -337,14 +345,15 @@ function rdRendreSection(cle, r){
     var avecAn = eq.some(function(e){ return e.an_passe != null; });
     var jl = (r.etiquettes && r.etiquettes.length === 5) ? r.etiquettes.map(function(t){ return String(t).toLowerCase() === "aujourd’hui" || String(t).toLowerCase() === "aujourd'hui" ? "Aujourd’hui" : String(t).toLowerCase(); }) : (function(){ var o = [], d = new Date(); while(o.length < 5){ var w = d.getDay(); if(!o.length || (w !== 0 && w !== 6)) { try { o.push(o.length ? new Intl.DateTimeFormat("fr-CA", {timeZone: "America/Toronto", weekday: "long"}).format(d) : "Aujourd’hui"); } catch(x){ o.push("Jour "+(o.length + 1)); } } d = new Date(d.getTime() + 864e5); } return o; })();
     h += '<div class="rdp"><small>Pourcentage de charge · 5 prochains jours'+(avecAn ? ' · même mois de l’an passé' : '')+'</small></div>';
-    h += '<div class="rdp" style="display:flex;font-size:9px;letter-spacing:.04em;color:#8D806A">'+jl.map(function(t){ return '<span style="width:20%;text-align:center">'+rdE(t)+'</span>'; }).join("")+'</div>';
-    h += eq.map(function(e){ return '<div class="rdp"><div>'+rdE(e.equipe)+(e.an_passe != null ? ' · an passé '+rdE(e.an_passe)+' %' : '')+'</div><div style="display:flex;margin-top:4px">'+(e.vide ? ["—","—","—","—","—"] : (e.jours || [])).map(function(j){ var rouge = j > 95, vert = !rouge && j >= 65; return '<span style="width:20%;text-align:center;font-size:13px;padding:5px 0;box-sizing:border-box;'+(rouge ? "background:#B8473A;color:#fff" : (vert ? "background:#8EFF60;color:#1D1D1B" : "")) +'">'+rdE(j)+'</span>'; }).join("")+'</div></div>'; }).join("");
+    var cel = function(j){ if(j === "—" || j == null || j === "") return '<span style="flex:1;text-align:center;font-size:13px;padding:10px 0;box-sizing:border-box">—</span>'; var rouge = j > 95, vert = !rouge && j >= 65; return '<span style="flex:1;text-align:center;font-size:13px;padding:10px 0;box-sizing:border-box;white-space:nowrap;'+(rouge ? "background:#B8473A;color:#fff" : (vert ? "background:#8EFF60;color:#1D1D1B" : "")) +'">'+rdE(j)+' %</span>'; };
+    h += '<div class="rdp" style="display:flex;font-size:9px;letter-spacing:.04em;color:#8D806A"><span style="width:26%"></span><span style="flex:1;display:flex">'+jl.map(function(t){ return '<span style="flex:1;text-align:center">'+rdE(t)+'</span>'; }).join("")+'</span></div>';
+    h += eq.map(function(e){ var js = e.vide ? ["—","—","—","—","—"] : (e.jours || []); return '<div class="rdp" style="display:flex;align-items:center;padding-top:0;padding-bottom:0"><span style="width:26%;font-size:13px">'+rdE(e.equipe)+'</span><span style="flex:1;display:flex">'+[0,1,2,3,4].map(function(k){ return cel(js[k]); }).join("")+'</span></div>'; }).join("");
     h += '<div class="rdp"><small>Vert 65 à 95 % · Brique plus de 95 %</small></div>';
     return h;
   }
   h += rdSerie(cle === "cas" ? "Cas non complétés par mois" : (cle === "nc" ? "Non-conformités par mois" : "Nombre de crédits par mois"), r.serie, r.serie_an_passe);
   var L = r.lignes || [];
-  h += L.length ? L.map(function(l){ return rdLigne(l); }).join("") : (h ? "" : rdMsg("Aucune donnée pour cette période"));
+  h += L.length ? (L.every(function(l){ return l && l.length > 1 && rdEstDate(l[0]); }) ? rdListeDates(L) : L.map(function(l){ return rdLigne(l); }).join("")) : (h ? "" : rdMsg("Aucune donnée pour cette période"));
   return h;
 }
 function rdPresentation(){
