@@ -1758,7 +1758,7 @@ function dateHeure(opts, surChangement){
     for(var h2 = 7; h2 <= 18; h2++) [0,15,30,45].forEach(function(m){
       var conf = false; if(jd2){ var a1 = new Date(jd2.getFullYear(), jd2.getMonth(), jd2.getDate(), h2, m), a2 = new Date(a1.getTime()+minutes*60000);
         conf = S.evs.some(function(e){ return e.id !== ignorer && new Date(e.debut) < a2 && new Date(e.fin) > a1; }); }
-      if(conf){ masq++; return; } var v = h2+":"+m; r += '<option value="'+v+'"'+(v === sel ? " selected" : "")+'>'+heureTxt(h2, m)+'</option>'; });
+      var v = h2+":"+m; if(conf && v !== sel){ masq++; return; } r += '<option value="'+v+'"'+(v === sel ? " selected" : "")+'>'+heureTxt(h2, m)+(conf ? " · occupé" : "")+'</option>'; });
     return {html: r, masquees: masq}; }
   function panneau(e){
     var ed = S.ed, dur = Math.max(15, Math.round((new Date(e.fin) - new Date(e.debut))/60000)), hs = optHeures(ed.jour, ed.heure, dur, e.id);
