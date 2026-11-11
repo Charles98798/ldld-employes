@@ -8,11 +8,12 @@ var RD_DEMO = true;
 var RD_DEMO_PTS = [{n:1, texte:"Charge de travail du mois passé"}, {n:2, texte:"Répartition du travail entre les équipes"}, {n:3, texte:"Formation et accompagnement"}, {n:4, texte:"Questions de l’équipe"}];
 var RD_DEMO_CAPS = {titre:"Capsule du mois · Charge et fonctionnement", points:["Balancement de la charge deux fois par jour, à 8 h et à 13 h", "Consulter le tableau de charge avant de commencer", "Signaler tout écart à son responsable"]};
 function rdDemoSection(cle){
-  var mois = ["JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV."];
-  if(cle === "charge") return {ok:true, equipes:[{equipe:"Montage", moyenne:82, jours:[78,85,91,97,88]}, {equipe:"Injection", moyenne:74, jours:[70,72,80,76,69]}, {equipe:"Finition", moyenne:88, jours:[92,96,99,90,85]}]};
-  if(cle === "nc") return {ok:true, serie:mois.map(function(m, i){ return {m:m, v:[6,4,7,3,5,2][i]}; }), lignes:[["3 nov.","Dimension hors tolérance","Reprise"],["6 nov.","Défaut de surface","Rebut"]]};
-  if(cle === "escomptes") return {ok:true, serie:mois.map(function(m, i){ return {m:m, v:[2,1,3,0,2,1][i]}; }), serie_an_passe:mois.map(function(m, i){ return {m:m, v:[3,2,2,1,4,2][i]}; }), lignes:[["5 nov.","Dossier 24817","350 $"],["8 nov.","Dossier 24902","120 $"]]};
-  return {ok:true, serie:mois.map(function(m, i){ return {m:m, v:[9,7,11,6,8,5][i]}; }), lignes:[["Dossier 24790","Étape finition"],["Dossier 24855","Étape montage"]]};
+  var mois = ["DÉC.","JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV."];
+  function serie(v){ return mois.map(function(m, i){ return {m:m, v:v[i]}; }); }
+  if(cle === "charge") return {ok:true, equipes:[{equipe:"Montage", moyenne:82, an_passe:79, jours:[78,85,91,97,88]}, {equipe:"Injection", moyenne:74, an_passe:77, jours:[70,72,80,76,69]}, {equipe:"Finition", moyenne:88, an_passe:84, jours:[92,96,99,90,85]}]};
+  if(cle === "nc") return {ok:true, serie:serie([5,4,6,3,7,4,6,4,7,3,5,2]), serie_an_passe:serie([6,5,5,4,8,5,7,5,6,4,6,4]), lignes:[["3 nov.","Montage","24790","Assemblage","Dimension hors tolérance","Reprise sur place"],["6 nov.","Finition","24855","Polissage","Défaut de surface","Rebut, refait"]]};
+  if(cle === "escomptes") return {ok:true, serie:serie([1,2,0,3,1,2,2,1,3,0,2,1]), serie_an_passe:serie([2,2,1,2,3,2,3,2,2,1,4,2]), lignes:[["5 nov.","Dossier 24817","350 $"],["8 nov.","Dossier 24902","120 $"]]};
+  return {ok:true, serie:serie([7,8,6,9,7,10,9,7,11,6,8,5]), serie_an_passe:serie([8,9,7,8,9,9,10,8,10,8,9,7]), lignes:[["Dossier 24790","Étape finition"],["Dossier 24855","Étape montage"]]};
 }
 function rdDemoMarque(){ return RD_DEMO ? '<div class="rdp"><small>▪ Données fictives pour essai</small></div>' : ""; }
 // Menu unique (même composant sur Présentation, Planification discussion, Planification capsule): bouton taupe pâli + liste à 3 choix, choix actif en vert.
@@ -27,6 +28,14 @@ function rdMenuLier(actif){
   Array.prototype.forEach.call(lm.querySelectorAll("a"), function(a){ a.onclick = function(e){ e.preventDefault(); var c = a.getAttribute("data-c");
     if(c === actif){ lm.style.display = "none"; bm.setAttribute("aria-expanded", "false"); return; }
     if(c === "pres") rdPresentation(); else { RD.vue = c === "cap" ? "capsule" : "discussion"; rdPlanif(); } }; });
+}
+function rdPointsHtml(r){
+  var pts = (r && r.points) || [], fict = RD_DEMO && !pts.length; if(fict) pts = RD_DEMO_PTS;
+  var h = "";
+  if(r && r.date) h += '<div class="rddate">'+rdE(r.date)+'</div>'; else if(fict) h += '<div class="rddate">Mardi 17 novembre · 9 h 30</div>';
+  h += '<div class="rdt">01 <span>Points de discussion</span></div>';
+  h += pts.length ? pts.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+'</small><div>'+rdE(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun point publié pour le moment");
+  return h;
 }
 function rdPeutPlanifier(){ return !!(MOI && (MOI.role === "direction" || MOI.role === "responsable")); }
 function rdE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
@@ -50,6 +59,7 @@ function rdPoints(){
     if(!r || !r.ok){ app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion production</h1>'+rdErreur(r)+'</div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; return; }
     if(r.departement && RD_DEPS.indexOf(r.departement) >= 0) RD.dep = r.departement; else if(!RD.dep) RD.dep = RD_DEPS[0];
     var planif = r.planif !== undefined ? r.planif : rdPeutPlanifier(), choix = planif || !r.departement;
+    if(planif && rdPeutPlanifier()){ rdPresentation(); return; }   // Gestionnaire et Direction: la réunion complète (01 à 04)
     var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
     if(planif) h += rdMenuHtml("pres");
     if(choix) h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
@@ -167,11 +177,24 @@ var RD_SECTIONS = [
   ["charge", "03 Charge de travail"]
 ];
 function rdLigne(cols){ return '<div class="rdp" style="display:flex;gap:10px;flex-wrap:wrap"><span>'+cols.map(rdE).join('</span><span>')+'</span></div>'; }
+function rdCourbe(a, b){
+  // Courbe SVG: trait noir = année en cours, pointillé = an passé. Valeurs en chiffres, jamais de noms.
+  var W = 320, H = 110, px = 14, py = 14, n = a.length, max = 1, i;
+  a.forEach(function(x){ max = Math.max(max, +x.v || 0); }); (b || []).forEach(function(x){ max = Math.max(max, +x.v || 0); });
+  function pt(arr, k){ return (px + (n > 1 ? k*(W-2*px)/(n-1) : 0)).toFixed(1)+","+(H-py-((+arr[k].v || 0)/max)*(H-2*py)).toFixed(1); }
+  var la = a.map(function(x, k){ return pt(a, k); }).join(" "), lb = (b && b.length >= n) ? a.map(function(x, k){ return pt(b, k); }).join(" ") : "";
+  var lab = a.map(function(x, k){ return k % (n > 8 ? 2 : 1) === 0 ? '<text x="'+(px + (n > 1 ? k*(W-2*px)/(n-1) : 0)).toFixed(1)+'" y="'+(H-2)+'" font-size="8" text-anchor="middle" fill="#8D806A">'+rdE(x.m)+'</text>' : ""; }).join("");
+  var pts = a.map(function(x, k){ var p = pt(a, k).split(","); return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2" fill="#1D1D1B"/>'; }).join("");
+  var dern = pt(a, n-1).split(",");
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 10px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1"/>'
+    + (lb ? '<polyline points="'+lb+'" fill="none" stroke="#1D1D1B" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55"/>' : "")
+    + '<polyline points="'+la+'" fill="none" stroke="#1D1D1B" stroke-width="2"/>'+pts
+    + '<text x="'+dern[0]+'" y="'+(parseFloat(dern[1])-6)+'" font-size="9" text-anchor="end" fill="#1D1D1B">'+rdE(a[n-1].v)+'</text>'+lab+'</svg>'
+    + (lb ? '<div class="rdp"><small>Trait plein · cette année · pointillé · an passé</small></div>' : "");
+}
 function rdSerie(titre, a, b){
   if(!a || !a.length) return "";
-  var h = '<small>'+rdE(titre)+'</small>';
-  h += '<div class="rdp">'+a.map(function(x, i){ return '<div style="display:flex;justify-content:space-between"><span>'+rdE(x.m)+'</span><span>'+rdE(x.v)+(b && b[i] ? ' <small>(an passé '+rdE(b[i].v)+')</small>' : '')+'</span></div>'; }).join("")+'</div>';
-  return h;
+  return '<small>'+rdE(titre)+'</small>' + rdCourbe(a, b);
 }
 function rdRendreSection(cle, r){
   if(RD_DEMO && r && r.ok && (r.attente || (cle === "charge" && !(r.equipes || []).length))) r = rdDemoSection(cle);
@@ -181,8 +204,9 @@ function rdRendreSection(cle, r){
   if(cle === "charge"){
     var eq = r.equipes || [];
     if(!eq.length) return rdMsg("Données en attente de Trak");
-    h += '<div class="rdp"><small>Équipe · moyenne des 2 derniers mois · 5 prochains jours (%)</small></div>';
-    h += eq.map(function(e){ return '<div class="rdp" style="display:flex;gap:6px;align-items:center"><span style="width:24%">'+rdE(e.equipe)+'</span><span style="width:24%;text-align:center">'+rdE(e.moyenne)+'</span>'+(e.jours || []).map(function(j){ var rouge = j > 95; return '<span style="width:10.4%;text-align:center;font-size:11px;'+(rouge ? "background:#B8473A;color:#fff" : "")+'">'+rdE(j)+'</span>'; }).join("")+'</div>'; }).join("");
+    h += '<div class="rdp"><small>Pourcentage de charge · mois passé · même mois de l’an passé · 5 prochains jours</small></div>';
+    h += '<div class="rdp" style="display:flex;gap:6px;align-items:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#8D806A"><span style="width:20%">Équipe</span><span style="width:13%;text-align:center">Mois</span><span style="width:13%;text-align:center">An passé</span>'+[1,2,3,4,5].map(function(k){ return '<span style="width:10.2%;text-align:center">J+'+k+'</span>'; }).join("")+'</div>';
+    h += eq.map(function(e){ return '<div class="rdp" style="display:flex;gap:6px;align-items:center"><span style="width:20%">'+rdE(e.equipe)+'</span><span style="width:13%;text-align:center">'+rdE(e.moyenne)+'</span><span style="width:13%;text-align:center">'+rdE(e.an_passe == null ? "—" : e.an_passe)+'</span>'+(e.jours || []).map(function(j){ var rouge = j > 95; return '<span style="width:10.2%;text-align:center;font-size:11px;'+(rouge ? "background:#B8473A;color:#fff" : "")+'">'+rdE(j)+'</span>'; }).join("")+'</div>'; }).join("");
     return h;
   }
   h += rdSerie(cle === "cas" ? "Cas non complétés par mois" : (cle === "nc" ? "Non-conformités par mois" : "Nombre de crédits par mois"), r.serie, r.serie_an_passe);
@@ -196,14 +220,25 @@ function rdPresentation(){
   h += rdMenuHtml("pres");
   h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
   h += rdDemoMarque();
+  h += '<div class="rdp" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><small style="width:100%">Période des chiffres</small><select class="bx" id="rdper" style="flex:1;min-width:0"><option value="mois">Mois dernier complet</option><option value="an">Même mois de l’an passé</option><option value="dates">Dates au choix</option></select><span id="rddt" style="display:none;gap:8px;width:100%"><input class="bx" type="date" id="rddu" style="flex:1;min-width:0"><input class="bx" type="date" id="rdau" style="flex:1;min-width:0"></span></div>';
+  h += '<div id="rds-pts"></div>';
   h += RD_SECTIONS.map(function(s){ return '<div class="rdt">'+rdE(s[1])+'</div><div id="rds-'+s[0]+'">'+""+'</div>'; }).join("");
   h += '<div class="rdt">04 Capsule du mois</div><div id="rds-cap"></div></div>';
   app.innerHTML = h;
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); rdPoints(); };
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   rdMenuLier("pres");
   Array.prototype.forEach.call(app.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPresentation(); }; });
-  RD_SECTIONS.forEach(function(s){
-    appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep}).then(function(r){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdMsg("Réseau indisponible"); });
-  });
-  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){});
+  function chargerChiffres(){
+    var per = RD.periode || {t:"mois"};
+    RD_SECTIONS.forEach(function(s){
+      var z0 = document.getElementById("rds-"+s[0]); if(z0) z0.innerHTML = "";
+      appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdMsg("Réseau indisponible"); });
+    });
+  }
+  var sp = document.getElementById("rdper"), dt = document.getElementById("rddt"), d1 = document.getElementById("rddu"), d2 = document.getElementById("rdau");
+  if(sp){ var pp = RD.periode || {t:"mois"}; sp.value = pp.t; if(pp.t === "dates"){ dt.style.display = "flex"; d1.value = pp.du || ""; d2.value = pp.au || ""; }
+    var chg = function(){ RD.periode = {t: sp.value, du: d1.value, au: d2.value}; dt.style.display = sp.value === "dates" ? "flex" : "none"; if(sp.value !== "dates" || (d1.value && d2.value)) chargerChiffres(); };
+    sp.onchange = chg; d1.onchange = chg; d2.onchange = chg; }
+  chargerChiffres();
+  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var zp = document.getElementById("rds-pts"); if(zp) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){});
 }
