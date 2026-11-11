@@ -54,6 +54,7 @@ function rencontreDept(){
 // Vue des points publiés. Version finale: le département de l'employé vient du fichier Trak (réponse du service, champ « departement »).
 // Gestionnaire et Direction peuvent changer de département avec les pastilles; si le service ne donne pas de département, tout le monde choisit.
 function rdPoints(){
+  if(rdPeutPlanifier()){ if(!RD.dep) RD.dep = RD_DEPS[0]; rdPresentation(); return; }   // Gestionnaire et Direction: la page complète s'affiche tout de suite, chaque bloc arrive à son tour
   if(!document.querySelector("#rdz")){ app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(RD.dep ? rdTitreDep() : "Réunion production")+'</h1></div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; }   // la page s'ouvre tout de suite, même si le service est lent
   appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.choisi ? RD.dep : ""}).then(function(r){
     if(!r || !r.ok){ app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion production</h1>'+rdErreur(r)+'</div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; return; }
@@ -221,9 +222,9 @@ function rdPresentation(){
   h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
   h += rdDemoMarque();
   h += '<div class="rdp" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><small style="width:100%">Période des chiffres</small><select class="bx" id="rdper" style="flex:1;min-width:0"><option value="mois">Mois dernier complet</option><option value="an">Même mois de l’an passé</option><option value="dates">Dates au choix</option></select><span id="rddt" style="display:none;gap:8px;width:100%"><input class="bx" type="date" id="rddu" style="flex:1;min-width:0"><input class="bx" type="date" id="rdau" style="flex:1;min-width:0"></span></div>';
-  h += '<div id="rds-pts"></div>';
-  h += RD_SECTIONS.map(function(s){ return '<div class="rdt">'+rdE(s[1])+'</div><div id="rds-'+s[0]+'">'+""+'</div>'; }).join("");
-  h += '<div class="rdt">04 Capsule du mois</div><div id="rds-cap"></div></div>';
+  h += '<div id="rds-pts">'+rdMsg("Un instant")+'</div>';
+  h += RD_SECTIONS.map(function(s){ return '<div class="rdt">'+rdE(s[1])+'</div><div id="rds-'+s[0]+'">'+rdMsg("Un instant")+'</div>'; }).join("");
+  h += '<div class="rdt">04 Capsule du mois</div><div id="rds-cap">'+rdMsg("Un instant")+'</div></div>';
   app.innerHTML = h;
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   rdMenuLier("pres");
@@ -231,7 +232,7 @@ function rdPresentation(){
   function chargerChiffres(){
     var per = RD.periode || {t:"mois"};
     RD_SECTIONS.forEach(function(s){
-      var z0 = document.getElementById("rds-"+s[0]); if(z0) z0.innerHTML = "";
+      var z0 = document.getElementById("rds-"+s[0]); if(z0) z0.innerHTML = rdMsg("Un instant");
       appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdMsg("Réseau indisponible"); });
     });
   }
@@ -240,5 +241,5 @@ function rdPresentation(){
     var chg = function(){ RD.periode = {t: sp.value, du: d1.value, au: d2.value}; dt.style.display = sp.value === "dates" ? "flex" : "none"; if(sp.value !== "dates" || (d1.value && d2.value)) chargerChiffres(); };
     sp.onchange = chg; d1.onchange = chg; d2.onchange = chg; }
   chargerChiffres();
-  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var zp = document.getElementById("rds-pts"); if(zp) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){});
+  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var zp = document.getElementById("rds-pts"); if(zp) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc) zc.innerHTML = rdMsg("Réseau indisponible"); });
 }
