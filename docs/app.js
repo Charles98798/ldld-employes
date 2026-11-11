@@ -411,12 +411,12 @@ function dessinerAujourdhui(){
   var z = document.getElementById("auj"); if(!z) return; var t = new Date(), iso = isoJour(t);
   var l = (AUJ || []).filter(function(e){
     if(e.journee){ var d1 = String(e.debut).slice(0, 10), d2 = String(e.fin || e.debut).slice(0, 10); return d1 <= iso && (iso < d2 || d1 === d2 && d1 === iso); }
-    return isoJour(new Date(e.debut)) === iso; });
+    return isoJour(new Date(e.debut)) === iso && new Date(e.fin || e.debut) >= t; });
   if(!l.length){ z.innerHTML = ""; return; }
   z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+l.map(function(e){
     if(e.journee) return '<div>Journée · '+esc(e.titre || "")+'</div>';
     var d = new Date(e.debut), fait = new Date(e.fin || e.debut) < t;
-    return '<div'+(fait ? ' class="fait"' : "")+'>'+heureFr(d)+' · '+esc(e.titre || "")+'</div>'; }).join("")+'</div>';
+    return '<div'+(fait ? ' class="fait"' : "")+'>'+heureFr(d)+' · '+esc(String(e.titre || "").trim() || "Sans titre")+'</div>'; }).join("")+'</div>';
 }
 function auj_normalise(liste, jour){
   // Tous les événements du jour, une seule fois chacun: clé = uid Google s'il existe, sinon horaire + titre; on garde la ligne qui a un titre.
