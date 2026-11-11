@@ -2112,8 +2112,9 @@ function contactsResp(){
 var MOIS_COURTS = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
 var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 function calendrier(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"></div>'+(peutEcrire() ? '<div class="etq" style="margin-top:26px">▪ MODIFIER LE CALENDRIER</div><div id="calmod"></div>' : '')+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  if(peutEcrire()){ var dhc = dateHeure({}); dhc.monter(document.getElementById("calmod")); }
   obtenir("calendrier", {action:"calendrier"}, function(r){
     var el = document.getElementById("cal"); if(!el) return;
     if(!r || !r.jours) throw 0;
