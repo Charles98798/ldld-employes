@@ -55,6 +55,7 @@ function rdIcones(attrM, valM, attrX, valX){
   var pm='M16 1h6v6h-6zM10 7h6v6h-6zM4 13h6v6h-6zM2 20h20v3h-20z', px='M3 3h6v6h-6zM15 3h6v6h-6zM9 9h6v6h-6zM3 15h6v6h-6zM15 15h6v6h-6z';
   return '<div class="rdact"><a href="#" class="rdic" '+attrM+'="'+valM+'" aria-label="Modifier"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="'+pm+'"/></svg></a><a href="#" class="rdic" '+attrX+'="'+valX+'" aria-label="Retirer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+px+'"/></svg></a></div>';
 }
+function rdHeureEnreg(){ var d = new Date(); return "Enregistré à " + d.getHours() + " h " + ("0"+d.getMinutes()).slice(-2); }
 function rdE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function rdMsg(txt){ return '<div class="bandeau">▪ '+rdE(String(txt).toUpperCase())+'</div>'; }
 function rdErreur(r){ var e = r && r.erreur ? String(r.erreur) : ""; return rdMsg(e || "Indisponible · réessayez"); }
@@ -133,7 +134,7 @@ function rdDiscussion(donnees, edition){
   h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Chaque réunion repart des points de base. Vos modifications ci-dessus ne touchent que cette réunion.</small></div><div id="rdm"></div>';
   z.innerHTML = h;
   var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
-  function appliquer(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
+  function appliquer(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
   function ecrire(corps){ appelService(corps).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); }
   // Les points fictifs deviennent de vrais points écrits au service au premier enregistrement (modifier, retirer, ajouter ou publier).
   function materialiser(exclure, remplace, texteNouveau, apres){
@@ -179,7 +180,7 @@ function rdBase(donnees, edition){
   h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Ces points de base servent de départ à chaque nouvelle réunion. Ils ne changent pas la réunion en cours.</small></div><div id="rdm"></div>';
   z.innerHTML = h;
   var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
-  function appliquer(r){ if(r && r.ok){ rdBase(r); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
+  function appliquer(r){ if(r && r.ok){ rdBase(r); dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
   function materialiser(exclure, remplace, texteNouveau){
     if(RD.mat) return; RD.mat = true;
     var liste = RD_DEMO_PTS.filter(function(p){ return "demo-"+p.n !== exclure; }).map(function(p){ return "demo-"+p.n === remplace.id ? remplace.texte : p.texte; });
@@ -206,7 +207,7 @@ function rdHistorique(){
 }
 
 // Capsules communes aux trois départements: capsule du mois en haut, puis les prochaines.
-var RD_CAP = null;
+var RD_CAP = null, RD_CAP_MSG = {};
 function rdCapsules(donnees){
   var z = document.getElementById("rdz"); if(!z) return;
   if(!donnees){
@@ -234,6 +235,8 @@ function rdCapsuleEdit(n, zone){
   if(!cap) return;
   var pts = (cap.points || []).map(function(p){ return {t: p.t, statut: p.statut}; });
   var edit = -1;   // même mode de modification que Planification discussion: Modifier / Retirer à droite de chaque point, grille 2×2
+  function sauver(){ dire("Enregistrement en cours"); appelService({action: "rd_capsule_modifier", session: sessionGardee(), n: n, titre: cap.titre, points: pts.filter(function(p){ return String(p.t).trim(); })}).then(function(r){ if(r && r.ok){ RD_CAP = r; RD_CAP_MSG[n] = rdHeureEnreg(); dire(RD_CAP_MSG[n]); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); }
+  function dire(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); }
   function dessiner(){
     var h = '<div class="rdsm" style="margin-top:22px">Capsule '+rdE(n)+' sur 11 · '+rdE(cap.theme || "")+'</div><div class="rdcapt" style="margin-bottom:12px">'+rdE(cap.titre)+'</div>';
     h += pts.map(function(p, i){
@@ -242,18 +245,16 @@ function rdCapsuleEdit(n, zone){
         : '<div class="rdl2"><div class="rdtx">'+rdE(p.t)+'</div>'+rdIcones("data-m",i,"data-x",i)+'</div>' + (p.statut === "à valider" ? '<div class="rdact"><a href="#" data-v="'+i+'">Valider</a></div>' : '')) + '</div>';
     }).join("");
     if(edit === pts.length) h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="300" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
-    h += '<div class="rdgrid">' + (pts.length < 5 ? '<button type="button" class="rdsoft" id="rdca">Ajouter un point</button>' : '<span></span>') + '<button type="button" class="rdsoft" id="rdcs">Enregistrer la capsule</button></div><div id="rdm"></div>';
+    h += '<div class="rdgrid">' + (pts.length < 5 ? '<button type="button" class="rdsoft" id="rdca">Ajouter un point</button>' : '<span></span>') + '<span></span></div><div id="rdm"></div>';
     document.getElementById(zone || "rdz").innerHTML = h;
-    var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
     Array.prototype.forEach.call(document.querySelectorAll("#"+(zone || "rdz")+" [data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); edit = Number(a.getAttribute("data-m")); dessiner(); }; });
-    Array.prototype.forEach.call(document.querySelectorAll("#"+(zone || "rdz")+" [data-x]"), function(a){ a.onclick = function(e){ e.preventDefault(); confirmerOuiNon("Retirer ce point ?", function(){ pts.splice(Number(a.getAttribute("data-x")), 1); edit = -1; dessiner(); }, false); }; });
-    Array.prototype.forEach.call(document.querySelectorAll("#"+(zone || "rdz")+" [data-v]"), function(a){ a.onclick = function(e){ e.preventDefault(); pts[Number(a.getAttribute("data-v"))].statut = "valide"; dessiner(); }; });
+    Array.prototype.forEach.call(document.querySelectorAll("#"+(zone || "rdz")+" [data-x]"), function(a){ a.onclick = function(e){ e.preventDefault(); confirmerOuiNon("Retirer ce point ?", function(){ pts.splice(Number(a.getAttribute("data-x")), 1); edit = -1; dessiner(); sauver(); }, false); }; });
+    Array.prototype.forEach.call(document.querySelectorAll("#"+(zone || "rdz")+" [data-v]"), function(a){ a.onclick = function(e){ e.preventDefault(); pts[Number(a.getAttribute("data-v"))].statut = "valide"; dessiner(); sauver(); }; });
     var ok = document.getElementById("rdok"), no = document.getElementById("rdno");
     if(no) no.onclick = function(e){ e.preventDefault(); edit = -1; dessiner(); };
-    if(ok) ok.onclick = function(e){ e.preventDefault(); var t = document.getElementById("rdtx").value.trim(); if(!t){ dire("Écrivez le point"); return; } if(edit === pts.length) pts.push({t: t, statut: "valide"}); else pts[edit].t = t; edit = -1; dessiner(); };
+    if(ok) ok.onclick = function(e){ e.preventDefault(); var t = document.getElementById("rdtx").value.trim(); if(!t){ dire("Écrivez le point"); return; } if(edit === pts.length) pts.push({t: t, statut: "valide"}); else pts[edit].t = t; edit = -1; dessiner(); sauver(); };
     var ca = document.getElementById("rdca"); if(ca) ca.onclick = function(){ edit = pts.length; dessiner(); };
-    function fin(r, presente){ if(r && r.ok){ if(presente) rdCapPresNoter(n); RD_CAP = r; RD.vue = "capsule"; rdPlanif(); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
-    document.getElementById("rdcs").onclick = function(){ dire("Enregistrement en cours"); appelService({action: "rd_capsule_modifier", session: sessionGardee(), n: n, titre: cap.titre, points: pts.filter(function(p){ return String(p.t).trim(); })}).then(fin).catch(function(){ dire("Réseau indisponible"); }); };
+    if(RD_CAP_MSG[n]) dire(RD_CAP_MSG[n]);
   }
   if(!zone){
     app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>'+rdBarre()+'<div id="rdz"></div></div>';
