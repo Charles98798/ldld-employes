@@ -27,7 +27,7 @@ function rdPoints(){
     var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
     if(choix) h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
     h += '<div id="rdz">';
-    if(planif) h += '<div class="rdbtn"><button type="button" class="rdplan" id="rdplan">Planification</button><button type="button" class="rdplan" id="rdpres" style="margin-left:8px">Présentation</button></div>';
+    if(planif) h += '<div class="rdbtn"><button type="button" class="rdplan" id="rdmenu" aria-expanded="false">Présentation</button><div id="rdml" style="display:none;background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+[["pres","Présentation"],["disc","Planification discussion"],["cap","Planification capsule"]].map(function(c, i){ return '<a href="#" data-c="'+c[0]+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1D1D1B;text-decoration:none;'+(i === 0 ? "background:#8EFF60;" : "")+'">'+c[1]+'</a>'; }).join("")+'</div></div>';
     if(r.date) h += '<div class="rddate">'+rdE(r.date)+'</div>';
     h += '<div class="rdt">01 <span>Points de discussion</span></div>';
     var pts = r.points || [];
@@ -35,8 +35,10 @@ function rdPoints(){
     app.innerHTML = h;
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
     Array.prototype.forEach.call(app.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); RD.choisi = true; try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPoints(); }; });
-    var b = document.getElementById("rdplan"); if(b) b.onclick = function(){ RD.vue = "discussion"; rdPlanif(); };
-    var bp = document.getElementById("rdpres"); if(bp) bp.onclick = function(){ rdPresentation(); };
+    var bm = document.getElementById("rdmenu"), lm = document.getElementById("rdml");
+    if(bm && lm){ bm.onclick = function(){ var ouvert = lm.style.display !== "none"; lm.style.display = ouvert ? "none" : "block"; bm.setAttribute("aria-expanded", ouvert ? "false" : "true"); };
+      Array.prototype.forEach.call(lm.querySelectorAll("a"), function(a){ a.onclick = function(e){ e.preventDefault(); var c = a.getAttribute("data-c");
+        if(c === "pres") rdPresentation(); else { RD.vue = c === "cap" ? "capsule" : "discussion"; rdPlanif(); } }; }); }
   }).catch(function(){ app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion production</h1>'+rdMsg("Réseau indisponible")+'</div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; });
 }
 
