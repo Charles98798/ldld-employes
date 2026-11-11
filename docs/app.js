@@ -155,7 +155,7 @@ function appelDirect(corps, vu){
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
 var LECT = {rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
-var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
+var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 // Copie gardée sur l'appareil (affichée tout de suite à l'ouverture, remplacée en silence par la version fraîche). JAMAIS de salaire ni de rémunération (Portrait, Échelle, Positionnement, Embauche, Employé actuel restent en mémoire seulement).
 // Données de l'employé lui-même: toutes les personnes. Données d'équipe: Direction seulement. Tout est effacé à la déconnexion (préfixe ldld-c-).
