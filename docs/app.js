@@ -1910,7 +1910,7 @@ function chargerCaches(fin){
 // Nouveau message: onglets Message et Réunion, mêmes participants.
 // Nouveau message d'un employé: un seul écran, destinataire à choisir (Gestionnaire de production ou Direction), sujet, message.
 function nouveauEmploye(){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1>' +
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Envoyer notification</h1>' +
     '<span class="lbl">À · obligatoire</span><select class="bx rose" id="nvers"><option value="">Choisir</option><option value="gestionnaire">Gestionnaire de production</option><option value="direction">Direction</option></select>' +
     '<span class="lbl">Sujet · obligatoire</span><input class="bx rose" id="nsuj" maxlength="120">' +
     '<span class="lbl">Message · obligatoire</span><textarea class="bx rose" id="ntxt" rows="6" maxlength="4000"></textarea>' +
