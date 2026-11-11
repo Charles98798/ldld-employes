@@ -1479,9 +1479,9 @@ function neFormulaire(cand){
       h += lg("Position", (P.position !== undefined && P.position !== "" && !isNaN(Number(P.position))) ? fr(Number(P.position) <= 1 ? Number(P.position) * 100 : P.position, 0)+" %" : "—");
       h += lg("Salaire horaire", (P.salaire !== undefined && P.salaire !== "" && !isNaN(Number(P.salaire))) ? fr(P.salaire, 2)+" $" : "—");
       // Horaire, documents et responsabilités
-      var hj = NE_JOURS.map(function(j, i){ var d = S.h[i]; return d && d.a && d.b ? j.slice(0, 3)+" "+d.a+"-"+d.b : ""; }).filter(Boolean);
+      var hj = NE_JOURS.map(function(j, i){ var d = S.h[i]; return d && d.a && d.b ? [j, d.a+" – "+d.b] : null; }).filter(Boolean);
       h += '<div class="etq" style="margin-top:14px">▪ JOURS DE TRAVAIL, DOCUMENTS ET RESPONSABILITÉS</div>';
-      h += lg("Horaire", hj.length ? hj.join(" · ") : "—");
+      h += hj.length ? hj.map(function(x){ return lg(x[0], x[1]); }).join("") : lg("Horaire", "—");
       var dn = S.docs.filter(function(x){ return String(x).trim(); });
       h += lg("Documents à apporter", dn.length ? dn.length+" document"+(dn.length > 1 ? "s" : "") : "—");
       var nbr = Object.keys(S.rc || {}).length; h += lg("Responsabilités choisies", String(nbr));

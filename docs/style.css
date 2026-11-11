@@ -941,3 +941,5 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .rdact a.rdic{display:flex;align-items:center;justify-content:center;width:40px;height:40px;background:#B7B1A5;color:#1D1D1B}
 .rdact:has(.rdic){gap:8px}
 .rdic svg{width:20px;height:20px;fill:#1D1D1B}
+
+#ne .ligne{gap:16px}#ne .ligne span:last-child{text-align:right}
