@@ -421,10 +421,10 @@ function dessinerAujourdhui(){
 function auj_normalise(liste, jour){
   // Tous les événements du jour, une seule fois chacun: clé = uid Google s'il existe, sinon horaire + titre; on garde la ligne qui a un titre.
   var nomme = {}, vu = {}, r = [];
-  liste.forEach(function(e){ if(String(e.titre || "").trim()) nomme[e.debut+"|"+e.fin] = 1; });
+  liste.forEach(function(e){ if(String(e.titre || "").trim()) nomme[e.debut] = 1; });
   liste.slice().sort(function(x, y){ return new Date(x.debut) - new Date(y.debut); }).forEach(function(e){
-    var t = String(e.titre || "").trim(), h = e.debut+"|"+e.fin; if(!t && nomme[h]) return;
-    var k = e.uid ? "u|"+e.uid : t.toLowerCase()+"|"+h; if(vu[k]) return; vu[k] = 1; r.push(e); });
+    var t = String(e.titre || "").trim(), h = e.debut+"|"+e.fin; if(!t && nomme[e.debut]) return;
+    var k = e.uid ? "u|"+e.uid : t.toLowerCase()+"|"+e.debut; if(vu[k]) return; vu[k] = 1; r.push(e); });
   var jj = [], vj = {};
   (jour || []).forEach(function(e){ var t = String(e.titre || "").trim(); if(!t) return; var k = e.uid ? "u|"+e.uid : t.toLowerCase()+"|"+e.debut; if(vj[k]) return; vj[k] = 1; jj.push({titre: t, journee: true, debut: e.debut, fin: e.fin || e.debut}); });
   return jj.concat(r);
