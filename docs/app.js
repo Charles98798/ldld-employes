@@ -409,26 +409,32 @@ var AUJ = null;
 function heureFr(d){ var h = d.getHours(), m = d.getMinutes(); return h+" h"+(m ? " "+("0"+m).slice(-2) : ""); }
 function dessinerAujourdhui(){
   var z = document.getElementById("auj"); if(!z) return; var t = new Date(), iso = isoJour(t);
-  var l = (AUJ || []).filter(function(e){ return isoJour(new Date(e.debut)) === iso; });
+  var l = (AUJ || []).filter(function(e){
+    if(e.journee){ var d1 = String(e.debut).slice(0, 10), d2 = String(e.fin || e.debut).slice(0, 10); return d1 <= iso && (iso < d2 || d1 === d2 && d1 === iso); }
+    return isoJour(new Date(e.debut)) === iso; });
   if(!l.length){ z.innerHTML = ""; return; }
-  z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+l.map(function(e){ var d = new Date(e.debut), fait = new Date(e.fin || e.debut) < t;
+  z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+l.map(function(e){
+    if(e.journee) return '<div>Journée · '+esc(e.titre || "")+'</div>';
+    var d = new Date(e.debut), fait = new Date(e.fin || e.debut) < t;
     return '<div'+(fait ? ' class="fait"' : "")+'>'+heureFr(d)+' · '+esc(e.titre || "")+'</div>'; }).join("")+'</div>';
 }
-function auj_normalise(liste){
-  // Tous les événements du jour, sans doublons: même titre + mêmes heures = une seule ligne; un événement sans titre qui a le même horaire qu'un autre est ignoré.
+function auj_normalise(liste, jour){
+  // Tous les événements du jour, une seule fois chacun: clé = uid Google s'il existe, sinon horaire + titre; on garde la ligne qui a un titre.
   var nomme = {}, vu = {}, r = [];
   liste.forEach(function(e){ if(String(e.titre || "").trim()) nomme[e.debut+"|"+e.fin] = 1; });
   liste.slice().sort(function(x, y){ return new Date(x.debut) - new Date(y.debut); }).forEach(function(e){
     var t = String(e.titre || "").trim(), h = e.debut+"|"+e.fin; if(!t && nomme[h]) return;
-    var k = t.toLowerCase()+"|"+h; if(vu[k]) return; vu[k] = 1; r.push(e); });
-  return r;
+    var k = e.uid ? "u|"+e.uid : t.toLowerCase()+"|"+h; if(vu[k]) return; vu[k] = 1; r.push(e); });
+  var jj = [], vj = {};
+  (jour || []).forEach(function(e){ var t = String(e.titre || "").trim(); if(!t) return; var k = e.uid ? "u|"+e.uid : t.toLowerCase()+"|"+e.debut; if(vj[k]) return; vj[k] = 1; jj.push({titre: t, journee: true, debut: e.debut, fin: e.fin || e.debut}); });
+  return jj.concat(r);
 }
 function chargerAujourdhui(){
   var t = new Date(); t.setHours(0, 0, 0, 0); dessinerAujourdhui();
   var deb = isoJour(lundiDe(t)), plusieurs = roleIdx() >= 1;
-  var fin = function(liste){ AUJ = auj_normalise(liste); dessinerAujourdhui(); };
+  var fin = function(liste, jour){ AUJ = auj_normalise(liste, jour); dessinerAujourdhui(); };
   if(!plusieurs){
-    appelService({action:"agenda_semaine", session:sessionGardee(), debut:deb, agenda:"primary"}).then(function(r){ if(r && r.ok) fin(r.evenements || []); }).catch(function(){});
+    appelService({action:"agenda_semaine", session:sessionGardee(), debut:deb, agenda:"primary"}).then(function(r){ if(r && r.ok) fin(r.evenements || [], r.journee || []); }).catch(function(){});
     return;
   }
   var lu = DH_CACHE.agendas ? Promise.resolve() : appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.agendas) DH_CACHE.agendas = r.agendas.filter(function(a){ return a.ecriture; }); });
@@ -437,8 +443,8 @@ function chargerAujourdhui(){
     return appelService({action:"agenda_semaines", session:sessionGardee(), agendas:ids, debut:deb, nb:1});
   }).then(function(r){
     if(!(r && r.ok && r.semaines)) return;
-    var tous = []; r.semaines.forEach(function(w){ (w.evenements || []).forEach(function(e){ tous.push(e); }); });
-    fin(tous);
+    var tous = [], jj = []; r.semaines.forEach(function(w){ (w.evenements || []).forEach(function(e){ tous.push(e); }); (w.journee || []).forEach(function(e){ jj.push(e); }); });
+    fin(tous, jj);
   }).catch(function(){});
 }
 // Accueil unique: chaque entrée a un groupe, un pictogramme et des droits par défaut [employé, responsable, direction].
