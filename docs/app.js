@@ -1942,14 +1942,14 @@ function nouveau(onglet){
   function lireChamps(){ var t = document.getElementById("ntit"), x = document.getElementById("ntxt"), s = document.getElementById("nsuj"), r = document.getElementById("nrep");
     if(t) brouillon.titre = t.value; if(x) brouillon.texte = x.value; if(s) brouillon.sujet = s.value; if(r) brouillon.repeter = r.value; }
   function valide(){ lireChamps(); if(!part || !part.courriels().length) return false;
-    return onglet === "message" ? !!(brouillon.titre.trim() && brouillon.texte.trim()) : !!(brouillon.sujet.trim() && dh.lire()); }
+    return onglet === "message" ? !!(brouillon.titre.trim() && brouillon.texte.trim()) : !!(brouillon.titre.trim() && brouillon.texte.trim() && dh.lire()); }
   function majBouton(){ var ok = valide(); boutonBas(onglet === "message" ? "Envoyer" : "Planifier", ok, envoyer);
     [["ntit", brouillon.titre], ["ntxt", brouillon.texte], ["nsuj", brouillon.sujet]].forEach(function(c){ var el = document.getElementById(c[0]); if(el) el.className = "bx"+(c[1].trim() ? "" : " rose"); }); }
   function dessinerReste(){
     var h;
+    var champs = '<span class="lbl">Titre · obligatoire</span><input class="bx rose" id="ntit" maxlength="120" value="'+esc(brouillon.titre)+'"><span class="lbl">Message · obligatoire</span><textarea class="bx rose" id="ntxt" rows="5" maxlength="4000">'+esc(brouillon.texte)+'</textarea>';
     if(onglet === "message") h = '<span class="lbl">Titre · obligatoire</span><input class="bx rose" id="ntit" maxlength="120" value="'+esc(brouillon.titre)+'"><span class="lbl">Message · obligatoire</span><textarea class="bx rose" id="ntxt" rows="5" maxlength="4000">'+esc(brouillon.texte)+'</textarea>';
-    else h = '<div id="ndh"></div><span class="lbl">Répéter</span><select class="bx" id="nrep"><option value="aucune">Une seule fois</option><option value="jour">Chaque jour ouvrable</option><option value="semaine">Chaque semaine</option><option value="deux">Aux deux semaines</option><option value="mois">Chaque mois</option></select>' +
-      '<span class="lbl">Sujet · obligatoire</span><input class="bx rose" id="nsuj" maxlength="120" value="'+esc(brouillon.sujet)+'">' +
+    else h = champs + '<div id="ndh"></div><span class="lbl">Répéter</span><select class="bx" id="nrep"><option value="aucune">Une seule fois</option><option value="jour">Chaque jour ouvrable</option><option value="semaine">Chaque semaine</option><option value="deux">Aux deux semaines</option><option value="mois">Chaque mois</option></select>' +
       '<a class="doc" href="#" id="nmes" style="margin-top:14px"><span>▪ Mes événements</span></a>';
     document.getElementById("nreste").innerHTML = h;
     ["ntit", "ntxt", "nsuj"].forEach(function(id){ var el = document.getElementById(id); if(el) el.oninput = majBouton; });
@@ -1969,7 +1969,7 @@ function nouveau(onglet){
     } else {
       var q = dh.lire();
       if(q.conge && !dh.confirme()){ dh.confirme(true); bt.disabled = false; dire("▪ LE LABO EST FERMÉ CE JOUR · TOUCHEZ PLANIFIER POUR CONFIRMER"); return; }
-      appelService({action:"agenda_creer", session:sessionGardee(), agenda:q.agenda, titre:brouillon.sujet.trim(), texte:"", a:part.noms().join(", ").slice(0, 190),
+      appelService({action:"agenda_creer", session:sessionGardee(), agenda:q.agenda, titre:brouillon.titre.trim(), texte:brouillon.texte.trim(), a:part.noms().join(", ").slice(0, 190),
         debut:q.date+"T"+q.heure, minutes:30, repeter:brouillon.repeter}).then(function(r){
         if(r && r.ok){ dire("▪ RÉUNION PLANIFIÉE"); setTimeout(function(){ bt.disabled = false; }, 800); }
         else { bt.disabled = false; dire("▪ NON PLANIFIÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
