@@ -919,3 +919,6 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 /* Publication 213: congé/fermé plus foncé, colonne pleine */
 .gs .d.f,.gs .d.c{background:#A39E91;color:#1D1D1B}
 .gs .clf,.gs .clc{background:#B5B0A2}
+
+#dhcr:focus,#dhcr:focus-visible{outline:0;box-shadow:none}
+#dhcr,#dhagb,.dhagl{-webkit-tap-highlight-color:transparent}#dhagb:focus{outline:0}
