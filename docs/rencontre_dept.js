@@ -282,7 +282,7 @@ function rdRendreSection(cle, r){
   if(r.attente) return rdMsg("Données en attente de Trak");
   var h = "";
   if(cle === "charge"){
-    var eq = r.equipes || [];
+    var eq = (r.equipes || []).filter(function(e){ return !/informatique/i.test(String(e.equipe || "")); });   // l'équipe Informatique n'est jamais invitée à la Réunion production
     if(!eq.length) return rdMsg("Données en attente de Trak");
     h += '<div class="rdp"><small>Pourcentage de charge · mois passé · même mois de l’an passé · 5 prochains jours</small></div>';
     h += '<div class="rdp" style="display:flex;gap:6px;align-items:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#8D806A"><span style="width:20%">Équipe</span><span style="width:13%;text-align:center">Mois</span><span style="width:13%;text-align:center">An passé</span>'+[1,2,3,4,5].map(function(k){ return '<span style="width:10.2%;text-align:center">J+'+k+'</span>'; }).join("")+'</div>';
