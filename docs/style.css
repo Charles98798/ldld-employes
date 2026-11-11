@@ -943,3 +943,8 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .rdic svg{width:20px;height:20px;fill:#1D1D1B}
 
 #ne .ligne{gap:16px}#ne .ligne span:last-child{text-align:right}
+
+/* Règle universelle: liste avec date en colonnes Date | texte (description dessous) | état */
+.lcol{display:grid;grid-template-columns:26% 46% 28%;gap:0 8px;padding:12px 0;font-size:14px;line-height:1.35;border-top:1px solid var(--fil);color:inherit;text-decoration:none}
+.lcol small{display:block;font-size:12px;color:#6E6350;margin-top:2px}
+.lcol.lcolh{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#6E6350;border-top:0;padding:6px 0}

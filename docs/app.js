@@ -571,9 +571,9 @@ function messages(filtre){
     if(!document.getElementById("liste")) return;
     MESSAGES = r.messages; var l = lus();
     var vus = MESSAGES.filter(function(m){ return FILTRE_MSG === "envoyes" ? m.envoye : FILTRE_MSG === "rencontres" ? (!m.envoye && /^Demande de rencontre/.test(m.titre)) : true; });
-    document.getElementById("liste").innerHTML = vus.length ? vus.map(function(m){
-      return '<a class="rang" href="#" data-id="'+esc(m.id)+'"><span class="pl">+</span>'+esc(m.titre)+(!m.envoye && l.indexOf(m.id) < 0 ? '<span class="neuf">NOUVEAU</span>' : '')+
-        '<small>'+(m.envoye ? 'Envoyé à '+m.nb+' personne'+(m.nb > 1 ? 's' : '') : esc(m.de))+' · '+dateCourte(m.date)+'</small></a>'; }).join("") : '<div class="bandeau">▪ AUCUN MESSAGE</div>';
+    document.getElementById("liste").innerHTML = vus.length ? '<div class="lcol lcolh"><span>Date</span><span>Message</span><span>État</span></div>' + vus.map(function(m){
+      var neuf = !m.envoye && l.indexOf(m.id) < 0;
+      return '<a class="lcol" href="#" data-id="'+esc(m.id)+'"><span>'+dateCourte(m.date)+'</span><span>'+esc(m.titre)+'<small>'+(m.envoye ? 'Envoyé à '+m.nb+' personne'+(m.nb > 1 ? 's' : '') : esc(m.de))+'</small></span><span>'+(m.envoye ? "Envoyé" : (neuf ? "Nouveau" : "Lu"))+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN MESSAGE</div>';
     Array.prototype.forEach.call(app.querySelectorAll("a[data-id]"), function(a){
       a.onclick = function(e){ e.preventDefault(); detail(a.getAttribute("data-id")); };
     });
@@ -2085,8 +2085,8 @@ function mesEvenements(){
   var liste = [], choisi = null, msg = "", mode = "";
   function dessiner(){
     var el = document.getElementById("me"); if(!el) return;
-    var h = liste.length ? liste.map(function(e, i){ var d0 = new Date(e.debut);
-      return '<a href="#" class="ligne" data-i="'+i+'" style="color:inherit;text-decoration:none'+(choisi === i ? ';background:var(--tx);color:var(--noir)' : '')+'"><span>'+esc(e.titre)+'</span><span>'+d0.getDate()+" "+MOIS_LONGS[d0.getMonth()].slice(0,4)+". · "+heureTxt(d0.getHours(), d0.getMinutes())+(e.serie ? " · série" : "")+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE MOIS</div>';
+    var h = liste.length ? '<div class="lcol lcolh"><span>Date</span><span>Événement</span><span>Heure</span></div>' + liste.map(function(e, i){ var d0 = new Date(e.debut);
+      return '<a href="#" class="lcol" data-i="'+i+'" style="color:inherit;text-decoration:none'+(choisi === i ? ';background:var(--tx);color:var(--noir)' : '')+'"><span>'+d0.getDate()+" "+MOIS_LONGS[d0.getMonth()].slice(0,4)+".</span><span>"+esc(e.titre)+(e.serie ? "<small>Série</small>" : "")+"</span><span>"+heureTxt(d0.getHours(), d0.getMinutes())+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE MOIS</div>';
     if(choisi !== null && !mode) h += '<div class="aeact"><button type="button" class="bouton" id="mm">Modifier</button><button type="button" class="bouton" id="ms">Supprimer</button></div>';
     if(choisi !== null && mode){ h += '<div class="etq" style="margin-top:12px">SUPPRIMER</div><div class="aeact"><button type="button" class="bouton" id="m1">Cet événement</button>'+(liste[choisi].serie ? '<button type="button" class="bouton" id="m2">Toute la série</button>' : '')+'</div>'; }
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
