@@ -2442,7 +2442,7 @@ function vuePreparer(reelle){
   var pre = {reelle: reelle, t: Date.now()};
   pre.p = enArriere(function(){ return appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:VUE_DERNIER}); }).then(function(r){
     if(r && r.ok){
-      [{action:"heures"}, {action:"tableau_courant"}, {action:"tableau"}, {action:"messages"}, {action:"ae_lire"}].forEach(function(c){
+      [{action:"heures"}, {action:"tableau_courant"}].forEach(function(c){
         var k = cleLectureVue(c, r.session); c.session = r.session;
         var p = enArriere(function(){ return appelBrut(c); });
         RCACHE[k] = {t: Date.now(), p: p};
