@@ -112,6 +112,16 @@ new MutationObserver(function(){ decorerTitres(); majRetour(); }).observe(app, {
 window.addEventListener("scroll", majRetour, {passive: true});
 document.addEventListener("scroll", majRetour, {passive: true, capture: true});   // le défilement peut venir de body: il ne remonte pas à window
 setInterval(majRetour, 400);
+// Filet général: jamais une page avec seulement son titre. Si rien d'autre n'est affiché, « Un instant » apparaît; il disparaît dès qu'il y a du contenu.
+function filetVide(){
+  var pg = app.querySelector(".page"); if(!pg) return;
+  var c = pg.cloneNode(true); Array.prototype.forEach.call(c.querySelectorAll(".bl, a.retour, .auto-instant, h1, .vub, .pph, script, style"), function(x){ x.remove(); });
+  var plein = c.innerText.replace(/\s+/g, "").length > 0 || !!c.querySelector("input,select,textarea,button,img,svg,canvas,a");
+  var m = pg.querySelector(".auto-instant");
+  if(plein){ if(m) m.remove(); return; }
+  if(!m){ m = document.createElement("div"); m.className = "bandeau auto-instant"; m.textContent = "▪ UN INSTANT"; var r = pg.querySelector("a.retour"); pg.insertBefore(m, r || null); }
+}
+setInterval(filetVide, 300);
 window.addEventListener("resize", majRetour);
 
 // Ordre d'affichage de l'accueil (choisi par la direction) : numéros de SECTIONS. Messages 0, Manuel 1, Autoévaluation 2, Rémunération 3, Tableau de bord 4, Plan d'incendie 5, Calendrier 6, Rencontre 7, Mon profil 8.
@@ -1340,7 +1350,7 @@ function neEnvoyer(dem){
     run: function(){ return appelService({action: "docusign_envoyer", session: sessionGardee(), id: dem.id, courriel: dem.courriel, confirme: true}).then(function(r){ if(r && r.ok){ NE_ATT = null; NE_ATTP = null; menu.attPre = false; } return r; }); },
     suite: function(r){ return (r.r && r.r.ldld) || ""; }});
 }
-var NE_ATT = (function(){ try { var a = JSON.parse(localStorage.getItem("ldld-ne-att") || "null"); return Array.isArray(a) && a.length ? a : null; } catch(e){ return null; } })(), NE_BRP = {}, NE_ATTP = null, NE_ATTT = 0;
+var NE_ATT = (function(){ try { var a = JSON.parse(localStorage.getItem("ldld-ne-att") || "null"); return Array.isArray(a) ? a : null; } catch(e){ return null; } })(), NE_BRP = {}, NE_ATTP = null, NE_ATTT = 0;
 function neAttCharger(sansBrouillons){
   if(NE_ATTP) return NE_ATTP;
   var p = NE_ATTP = appelService({action: "embauche_attente", session: sessionGardee()}).then(function(r){
