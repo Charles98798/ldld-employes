@@ -16,7 +16,11 @@ function rdDemoSection(cle){
   return {ok:true, serie:serie([7,8,6,9,7,10,9,7,11,6,8,5]), serie_an_passe:serie([8,9,7,8,9,9,10,8,10,8,9,7]), lignes:[["Dossier 24790","Étape finition"],["Dossier 24855","Étape montage"]]};
 }
 function rdCapHtml(c){ return c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }
-function rdInit(cle){ return RD_DEMO ? rdRendreSection(cle, rdDemoSection(cle)) : rdMsg("Un instant"); }
+// Cache par appareil des dernières vraies données (département, section, période): jamais de fictif au départ.
+function rdCacheCle(cle){ var p = RD.periode || {t:"mois"}; return "ldld-rdc-"+RD.dep+"-"+cle+"-"+(p.t === "mois" ? "m" : (p.du || "")+(p.au || "")); }
+function rdCacheLire(k){ try { return JSON.parse(localStorage.getItem(k) || "null"); } catch(e){ return null; } }
+function rdCacheEcrire(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function rdInit(cle){ var c = rdCacheLire(rdCacheCle(cle)); return c && c.ok && !c.attente ? rdRendreSection(cle, c) : rdMsg("Un instant"); }
 function rdDemoMarque(){ return RD_DEMO ? '<div class="rdp"><small>▪ Données fictives pour essai</small></div>' : ""; }
 // Menu unique (même composant sur Présentation, Planification discussion, Planification capsule): bouton taupe pâli + liste à 3 choix, choix actif en vert.
 var RD_CHOIX = [["pres","Présentation"],["disc","Planification discussion"],["cap","Planification capsule"]];
@@ -321,7 +325,7 @@ function rdRendreSection(cle, r){
     var eq = (r.equipes || []).filter(function(e){ return !/informatique/i.test(String(e.equipe || "")); });   // l'équipe Informatique n'est jamais invitée à la Réunion production
     if(!eq.length) return rdMsg("Données en attente de Trak");
     var avecAn = eq.some(function(e){ return e.an_passe != null; });
-    var jl = [0,1,2,3,4].map(function(k){ if(!k) return "Aujourd’hui"; try { return new Intl.DateTimeFormat("fr-CA", {timeZone: "America/Toronto", weekday: "long"}).format(new Date(Date.now() + k*864e5)); } catch(x){ return "Jour "+(k + 1); } });
+    var jl = (r.etiquettes && r.etiquettes.length === 5) ? r.etiquettes.map(function(t){ return String(t).toLowerCase() === "aujourd’hui" || String(t).toLowerCase() === "aujourd'hui" ? "Aujourd’hui" : String(t).toLowerCase(); }) : (function(){ var o = [], d = new Date(); while(o.length < 5){ var w = d.getDay(); if(!o.length || (w !== 0 && w !== 6)) { try { o.push(o.length ? new Intl.DateTimeFormat("fr-CA", {timeZone: "America/Toronto", weekday: "long"}).format(d) : "Aujourd’hui"); } catch(x){ o.push("Jour "+(o.length + 1)); } } d = new Date(d.getTime() + 864e5); } return o; })();
     h += '<div class="rdp"><small>Pourcentage de charge · 5 prochains jours'+(avecAn ? ' · même mois de l’an passé' : '')+'</small></div>';
     h += '<div class="rdp" style="display:flex;font-size:9px;letter-spacing:.04em;color:#8D806A">'+jl.map(function(t){ return '<span style="width:20%;text-align:center">'+rdE(t)+'</span>'; }).join("")+'</div>';
     h += eq.map(function(e){ return '<div class="rdp"><div>'+rdE(e.equipe)+(e.an_passe != null ? ' · an passé '+rdE(e.an_passe)+' %' : '')+'</div><div style="display:flex;margin-top:4px">'+(e.jours || []).map(function(j){ var rouge = j > 95, vert = !rouge && j >= 65; return '<span style="width:20%;text-align:center;font-size:13px;padding:5px 0;box-sizing:border-box;'+(rouge ? "background:#B8473A;color:#fff" : (vert ? "background:#8EFF60;color:#1D1D1B" : "")) +'">'+rdE(j)+'</span>'; }).join("")+'</div></div>'; }).join("");
@@ -345,9 +349,9 @@ function rdPresentation(){
   h += '<div class="rdp"><small style="color:#6f6a5f">Période des chiffres</small><div class="rdbtn"><button type="button" class="rdplan" id="rdper" aria-expanded="false">'+rdE(moisLib)+'</button><div id="rdpl" style="display:none;background:#E3DFD3;border:2px solid #0d1117;margin-top:4px;max-height:280px;overflow-y:auto">'+mois18.map(function(m){ return '<a href="#" data-mo="'+m.cle+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1D1D1B;text-decoration:none;'+(m.cle === RD.moisSel ? "background:#8EFF60;" : "")+'">'+rdE(m.lib)+'</a>'; }).join("")+'</div></div></div>';
   var blk = 0;
   function bloc(inner){ return '<div class="rdblk">'+inner+'</div>'; }
-  h += bloc('<div id="rds-pts">'+(RD_DEMO ? rdPointsHtml(null) : rdMsg("Un instant"))+'</div>');
+  h += bloc('<div id="rds-pts">'+(rdCacheLire("ldld-rdp-"+RD.dep) ? rdPointsHtml(rdCacheLire("ldld-rdp-"+RD.dep)) : rdMsg("Un instant"))+'</div>');
   h += RD_SECTIONS.map(function(s){ return bloc('<div class="rdt">'+rdE(s[1].slice(0, 2))+' <span>'+rdE(s[1].slice(3))+'</span></div><div id="rds-'+s[0]+'">'+rdInit(s[0])+'</div>'); }).join("");
-  h += bloc('<div class="rdt">04 <span>Capsule du mois</span></div><div id="rds-cap">'+(RD_DEMO ? rdCapHtml(RD_DEMO_CAPS) : rdMsg("Un instant"))+'</div>') + '</div>';
+  h += bloc('<div class="rdt">04 <span>Capsule du mois</span></div><div id="rds-cap">'+(function(){ var c = rdCacheLire("ldld-rdp-"+RD.dep); return c && c.capsule ? rdCapHtml(c.capsule) : rdMsg("Un instant"); })()+'</div>') + '</div>';
   app.innerHTML = h;
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   rdMenuLier("pres");
@@ -356,7 +360,7 @@ function rdPresentation(){
     var per = RD.periode || {t:"mois"};
     RD_SECTIONS.forEach(function(s){
       var z0 = document.getElementById("rds-"+s[0]); if(z0) z0.innerHTML = rdInit(s[0]);
-      appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z && !RD_DEMO) z.innerHTML = rdMsg("Réseau indisponible"); });
+      appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]), ck = rdCacheCle(s[0]); if(r && r.ok && !r.attente && !(s[0] === "charge" && !(r.equipes || []).length)) rdCacheEcrire(ck, r); else { var c = rdCacheLire(ck); if(c && c.ok) r = c; } if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z && !RD_DEMO) z.innerHTML = rdMsg("Réseau indisponible"); });
     });
   }
   var sp = document.getElementById("rdper"), sl = document.getElementById("rdpl");
@@ -367,5 +371,5 @@ function rdPresentation(){
     mois18.forEach(function(m){ if(m.cle === RD.moisSel) RD.periode = {t: m === m0 ? "mois" : "dates", du: m.du, au: m.au}; });
   }
   chargerChiffres();
-  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var zp = document.getElementById("rds-pts"); if(zp) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
+  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok !== false && (r.points || r.capsule)) rdCacheEcrire("ldld-rdp-"+RD.dep, r); var zp = document.getElementById("rds-pts"); if(zp) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
 }
