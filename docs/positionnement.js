@@ -35,7 +35,7 @@ function options(e){var o=[{v:'C',p:e.conserver,t:'Conserver — '+posAuto(e.con
 function etatClasseur(e){if(e.propFormule)return 'C';if(e.prop==null)return '';var n=Math.round(e.prop*100);return Math.abs(e.prop*100-n)<1e-6?String(n):''}
 function salairePour(e,x){var mx=maxCat(e);if(!x||mx==null)return null;return x.v==='C'?arr(Math.max(e.sal,Math.min(e.sal*(1+D.taux),mx)),2):arr(x.p*mx,2)}
 function squelette(){
- $('app').innerHTML='<div class="pph"><h1>Positionnement employé</h1><span id="pp_nom" hidden></span><span id="pp_sous" hidden></span></div>'+
+ $('app').innerHTML='<div class="pph"><h1>Position employé</h1><span id="pp_nom" hidden></span><span id="pp_sous" hidden></span></div>'+
  '<div class="ppnav"><span class="compteur" id="pp_cpt" hidden></span><select class="emp" id="pp_liste"></select></div>'+
  '<div class="sect"><span class="num">01</span><span class="lab">Portrait '+D.anneeActuelle+'</span></div>'+
  '<div class="bas"><div><div class="sect"><span class="lab" id="pp_ptsLab">Contribution</span><span class="moy" id="pp_ptsTag"></span></div><div class="fx pts" id="pp_pts"></div></div>'+

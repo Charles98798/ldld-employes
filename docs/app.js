@@ -842,7 +842,7 @@ function salaireEcran(r, k){
 function salaireNotes(r, k){
   var n = r.annees[k].notes || {}, c = r.communes || {};
   var bloc = function(t, x){ return x ? '<div class="nb"><div class="etiq">'+t+'</div><p>'+esc(x)+'</p></div>' : ""; };
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Notes et conditions</h1>' +
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Autoévaluation</h1>' +
     bloc("VACANCES", n.vacances) + bloc("MALADIE", n.maladie) + bloc("BONI", [n.boni1, n.boni2].filter(Boolean).join(" ")) + bloc("HEURES DE TRAVAIL", c.heures) + bloc("AVIS", c.avis) + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); salaire(); };
 }
@@ -1046,7 +1046,7 @@ function profil(){
 // Centre de contrôle des notifications : chaque employé choisit ses propres alertes (enregistrées par le service, par courriel).
 var PREFS_NOTIFS = [["courriel", "Courriel"], ["reunion_veille", "Réunions : la veille à 16 h"], ["reunion_1h", "Réunions : 1 heure avant"], ["rencontres", "Rencontres planifiées"], ["autoeval", "Autoévaluation à remplir"]];
 function prefsNotifs(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrôle des notifications</h1><div id="notifs"></div><div id="prefs"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mon profil</h1><div id="notifs"></div><div id="prefs"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); profil(); };
   var zone = document.getElementById("notifs");
   if(!notifPossible()){ zone.innerHTML = '<p class="aide">Pour recevoir les notifications sur iPhone, ajoutez l\'application à l\'écran d\'accueil (Partager > Sur l\'écran d\'accueil).</p>'; }
@@ -1316,7 +1316,7 @@ function neAttCharger(sansBrouillons){
 }
 function nouvelEmploye(){
   var MSG = "Veuillez utiliser l’onglet Position embauche afin de créer une fiche nouvel employé.";
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="nl"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Ajouter un employé</h1><div id="nl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div style="margin:22vh 0 0;background:#8EFF60;color:#1D1D1B;padding:26px 20px;text-align:center;font-size:16px;line-height:1.45;letter-spacing:.06em;text-transform:uppercase;font-weight:500">'+esc(MSG)+'</div>'; }
   function montrer(l){
@@ -1395,7 +1395,7 @@ function neFormulaire(cand){
   }
   function sauJ(){ return sauvJ; }
   function sauverVite(){ clearTimeout(sauvT); sauvT = setTimeout(sauver, 800); }
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Nouvel employé</h1><div id="ne"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Ajouter un employé</h1><div id="ne"></div></div>';
   function visible(c){ return !c.si || c.si(S.v); }
   function horaireOk(){
     var n = 0; for(var i = 0; i < 7; i++){ var d = S.h[i] || {}; if(d.a || d.b){ if(!neValide("heure", d.a) || !neValide("heure", d.b) || d.b <= d.a) return false; n++; } }
@@ -1989,7 +1989,7 @@ function nouveau(onglet){
 }
 // Modifier une réunion créée dans l'application: même formulaire que « Nouveau message · Réunion », déjà rempli.
 function modifierReunion(e){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Modifier la réunion</h1><div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1><div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   var retour = function(){ retirerBoutonBas(); mesEvenements(); };
   document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); retour(); };
   var dire = function(t){ var x = document.getElementById("ne"); if(x){ x.style.display = "block"; x.textContent = t; } };
@@ -2028,7 +2028,7 @@ function modifierReunion(e){
   }).catch(function(){ document.getElementById("npart").innerHTML = '<div class="bandeau">▪ LISTE INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function mesEvenements(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes événements</h1><div id="me"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1><div id="me"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
   var liste = [], choisi = null, msg = "", mode = "";
   function dessiner(){
@@ -2061,7 +2061,7 @@ function confirmerOuiNon(question, oui, rouge){
   document.getElementById("coui").onclick = function(){ f.remove(); oui(); };
 }
 function utilisationApp(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Utilisation</h1><div id="ut"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Utilisation app</h1><div id="ut"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function pc(x){ return Math.round(x*100)+" %"; }
   function barre(x){ return '<div style="height:10px;border:1px solid var(--tx2);margin:4px 0 10px"><i style="display:block;height:100%;width:'+Math.round(x*100)+'%;background:var(--tx)"></i></div>'; }
@@ -2219,7 +2219,7 @@ function portrait(id){
     var p = r.portrait, liste = r.employes, i = liste.map(function(x){ return x.id; }).indexOf(p.id);
     var posNum = parseFloat(String(p.position).replace(",", ".")), ech = p.echelle || [];
     var lignes = [["Salaire de base", p.base], ["Vacances, fériés et maladie", p.conges], ["Boni", p.boni], ["Assurances collectives", p.assurances], ["Cotisation OTPADQ", p.otpadq]];
-    el.innerHTML = '<h1>'+esc(p.nom)+'</h1><div class="etiq">'+esc(String(p.categorie).toUpperCase())+' · PORTRAIT '+(new Date().getFullYear())+'</div>' +
+    el.innerHTML = '<h1>Portrait d’un employé</h1><div class="etiq">'+esc(p.nom)+'</div><div class="etiq">'+esc(String(p.categorie).toUpperCase())+' · PORTRAIT '+(new Date().getFullYear())+'</div>' +
       '<select class="champ" id="ps">'+liste.map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id === p.id ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
       '<div class="aeact" style="margin:0 0 14px"><button type="button" class="bouton" id="pp" style="margin:0"'+(i <= 0 ? " disabled" : "")+'>Précédent</button><button type="button" class="bouton" id="psv" style="margin:0"'+(i >= liste.length-1 ? " disabled" : "")+'>Suivant</button></div>' +
       '<div class="etiq">▪ 01 OÙ VOUS EN ÊTES</div>' +

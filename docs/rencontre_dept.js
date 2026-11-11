@@ -108,7 +108,7 @@ function rdDiscussion(donnees, edition){
 }
 function rdHistorique(){
   var h = RD_PLAN && RD_PLAN.historique || [];
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Historique</h1><div class="rddate">'+rdE("Département " + RD.dep)+'</div>' +
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion production</h1><div class="rddate">'+rdE("Département " + RD.dep)+'</div>' +
     (h.length ? h.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+' · '+rdE(p.etat || "")+(p.modifie ? ' · '+rdE(p.modifie) : '')+(p.par ? ' · '+rdE(p.par) : '')+'</small><div>'+rdE(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun ancien point")) + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); RD.vue = "discussion"; rdPlanif(); };
 }
