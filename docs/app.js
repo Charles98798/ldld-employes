@@ -399,7 +399,7 @@ function couperNotifs(){
 function ecranNotifs(){
   app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div class="nom">Notifications</div>' +
     '<p class="aide" style="padding:0 24px">Soyez avisé dès qu\'un message arrive ou qu\'un document est mis à jour. Aucun détail confidentiel n\'est affiché. Vous pouvez les couper à tout moment dans Mon profil.</p>' +
-    '<a href="#" id="notifOui">▪ Activer les notifications</a><a href="#" id="notifPlus" style="opacity:.6">Plus tard</a></div>';
+    '<a href="#" id="notifOui">▪ Activer les notifications</a><a href="#" id="notifPlus" style="opacity:.85">Plus tard</a></div>';
   function fini(){ try { localStorage.setItem("ldld-notif-demande", "1"); } catch(e){} menu(); }
   document.getElementById("notifOui").onclick = function(e){ e.preventDefault(); demanderNotifs().then(fini).catch(fini); };
   document.getElementById("notifPlus").onclick = function(e){ e.preventDefault(); fini(); };
@@ -2148,7 +2148,7 @@ function suiviCharge(){
     var p = liste[i], d = p.dernier;
     var h = '<div class="etiq">\u25aa '+(i+1)+' SUR '+liste.length+'</div><div style="font-size:22px;margin:2px 0 12px">'+esc(p.nom)+'</div>' +
       ''+tuile(p.effectuee, "CHARGE EFFECTUÉE", 0.8, false, "#8D806A")+tuile(p.nonTerminee, "CHARGE NON TERMINÉE", 0.05, true, "#1D1D1B")+tuile(p.objectifs, "OBJECTIFS ATTEINTS", 0.8, false, "#8D806A") +
-      '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente</b>'+(d ? '<div style="margin-bottom:4px">'+dateCourte(d.date)+' · État choisi : <span style="font-weight:600">'+esc(d.etat)+'</span></div>' : "")+(d && d.note ? esc(d.note) : '<span style="opacity:.7">'+(d ? "Aucune note." : "Aucun suivi précédent.")+'</span>')+'</div>' +
+      '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente</b>'+(d ? '<div style="margin-bottom:4px">'+dateCourte(d.date)+' · État choisi : <span style="font-weight:600">'+esc(d.etat)+'</span></div>' : "")+(d && d.note ? esc(d.note) : '<span>'+(d ? "Aucune note." : "Aucun suivi précédent.")+'</span>')+'</div>' +
       '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, !etat, "se"+k); }).join("")+'</div>' +
       '<div class="etq" style="margin-top:14px">OPTIONNEL</div>' +
       (noteOn ? '<div style="display:flex;gap:6px;margin-top:4px;align-items:flex-start"><textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="flex:1;margin:0">'+esc(sauvNote)+'</textarea><button type="button" id="snx" class="bouton" aria-label="Fermer la note" style="margin:0;width:40px;flex:none;padding:10px 0;font-size:16px">✕</button></div>'
