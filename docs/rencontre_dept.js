@@ -15,6 +15,19 @@ function rdDemoSection(cle){
   return {ok:true, serie:mois.map(function(m, i){ return {m:m, v:[9,7,11,6,8,5][i]}; }), lignes:[["Dossier 24790","Étape finition"],["Dossier 24855","Étape montage"]]};
 }
 function rdDemoMarque(){ return RD_DEMO ? '<div class="rdp"><small>▪ Données fictives pour essai</small></div>' : ""; }
+// Menu unique (même composant sur Présentation, Planification discussion, Planification capsule): bouton taupe pâli + liste à 3 choix, choix actif en vert.
+var RD_CHOIX = [["pres","Présentation"],["disc","Planification discussion"],["cap","Planification capsule"]];
+function rdMenuHtml(actif){
+  var lib = ""; RD_CHOIX.forEach(function(c){ if(c[0] === actif) lib = c[1]; });
+  return '<div class="rdbtn"><button type="button" class="rdplan" id="rdmenu" aria-expanded="false">'+rdE(lib)+'</button><div id="rdml" style="display:none;background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+RD_CHOIX.map(function(c){ return '<a href="#" data-c="'+c[0]+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1D1D1B;text-decoration:none;'+(c[0] === actif ? "background:#8EFF60;" : "")+'">'+rdE(c[1])+'</a>'; }).join("")+'</div></div>';
+}
+function rdMenuLier(actif){
+  var bm = document.getElementById("rdmenu"), lm = document.getElementById("rdml"); if(!bm || !lm) return;
+  bm.onclick = function(){ var ouvert = lm.style.display !== "none"; lm.style.display = ouvert ? "none" : "block"; bm.setAttribute("aria-expanded", ouvert ? "false" : "true"); };
+  Array.prototype.forEach.call(lm.querySelectorAll("a"), function(a){ a.onclick = function(e){ e.preventDefault(); var c = a.getAttribute("data-c");
+    if(c === actif){ lm.style.display = "none"; bm.setAttribute("aria-expanded", "false"); return; }
+    if(c === "pres") rdPresentation(); else { RD.vue = c === "cap" ? "capsule" : "discussion"; rdPlanif(); } }; });
+}
 function rdPeutPlanifier(){ return !!(MOI && (MOI.role === "direction" || MOI.role === "responsable")); }
 function rdE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function rdMsg(txt){ return '<div class="bandeau">▪ '+rdE(String(txt).toUpperCase())+'</div>'; }
@@ -38,9 +51,9 @@ function rdPoints(){
     if(r.departement && RD_DEPS.indexOf(r.departement) >= 0) RD.dep = r.departement; else if(!RD.dep) RD.dep = RD_DEPS[0];
     var planif = r.planif !== undefined ? r.planif : rdPeutPlanifier(), choix = planif || !r.departement;
     var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
+    if(planif) h += rdMenuHtml("pres");
     if(choix) h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
     h += '<div id="rdz">';
-    if(planif) h += '<div class="rdbtn"><button type="button" class="rdplan" id="rdmenu" aria-expanded="false">Présentation</button><div id="rdml" style="display:none;background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+[["pres","Présentation"],["disc","Planification discussion"],["cap","Planification capsule"]].map(function(c, i){ return '<a href="#" data-c="'+c[0]+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1D1D1B;text-decoration:none;'+(i === 0 ? "background:#8EFF60;" : "")+'">'+c[1]+'</a>'; }).join("")+'</div></div>';
     if(r.date) h += '<div class="rddate">'+rdE(r.date)+'</div>';
     h += '<div class="rdt">01 <span>Points de discussion</span></div>';
     if(fict) h += rdDemoMarque();
@@ -49,21 +62,16 @@ function rdPoints(){
     app.innerHTML = h;
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
     Array.prototype.forEach.call(app.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); RD.choisi = true; try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPoints(); }; });
-    var bm = document.getElementById("rdmenu"), lm = document.getElementById("rdml");
-    if(bm && lm){ bm.onclick = function(){ var ouvert = lm.style.display !== "none"; lm.style.display = ouvert ? "none" : "block"; bm.setAttribute("aria-expanded", ouvert ? "false" : "true"); };
-      Array.prototype.forEach.call(lm.querySelectorAll("a"), function(a){ a.onclick = function(e){ e.preventDefault(); var c = a.getAttribute("data-c");
-        if(c === "pres") rdPresentation(); else { RD.vue = c === "cap" ? "capsule" : "discussion"; rdPlanif(); } }; }); }
+    if(planif) rdMenuLier("pres");
   }).catch(function(){ app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion production</h1>'+rdMsg("Réseau indisponible")+'</div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; });
 }
 
 // Planification: barre noire avec liste déroulante Discussion / Capsule.
-function rdBarre(){
-  return '<div class="rdbar"><span>Planification</span><select id="rdsel" aria-label="Discussion ou capsule"><option value="discussion"'+(RD.vue === "discussion" ? " selected" : "")+'>Discussion</option><option value="capsule"'+(RD.vue === "capsule" ? " selected" : "")+'>Capsule</option></select></div>';
-}
+function rdBarre(){ return rdMenuHtml(RD.vue === "capsule" ? "cap" : "disc"); }
 function rdPlanif(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>'+rdBarre()+'<div id="rdz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); rdPoints(); };
-  document.getElementById("rdsel").onchange = function(){ RD.vue = this.value; if(RD.vue === "capsule") rdCapsules(); else rdPlanif(); };
+  rdMenuLier(RD.vue === "capsule" ? "cap" : "disc");
   if(RD.vue === "capsule") return rdCapsules();
   rdDiscussion();
 }
@@ -145,7 +153,7 @@ function rdCapsuleEdit(n){
   }
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>'+rdBarre()+'<div id="rdz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); RD.vue = "capsule"; rdPlanif(); };
-  document.getElementById("rdsel").onchange = function(){ RD.vue = this.value; rdPlanif(); };
+  rdMenuLier("cap");
   dessiner();
 }
 
@@ -185,12 +193,14 @@ function rdRendreSection(cle, r){
 function rdPresentation(){
   if(!rdPeutPlanifier()){ rdPoints(); return; }
   var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
+  h += rdMenuHtml("pres");
   h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
   h += rdDemoMarque();
   h += RD_SECTIONS.map(function(s){ return '<div class="rdt">'+rdE(s[1])+'</div><div id="rds-'+s[0]+'">'+""+'</div>'; }).join("");
   h += '<div class="rdt">04 Capsule du mois</div><div id="rds-cap"></div></div>';
   app.innerHTML = h;
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); rdPoints(); };
+  rdMenuLier("pres");
   Array.prototype.forEach.call(app.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPresentation(); }; });
   RD_SECTIONS.forEach(function(s){
     appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep}).then(function(r){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdMsg("Réseau indisponible"); });
