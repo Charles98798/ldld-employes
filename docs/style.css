@@ -937,3 +937,7 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .rdgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 0}
 .rdgrid button{height:64px;padding:0 10px;font-size:12px;line-height:1.25;letter-spacing:.14em;text-align:center;text-transform:uppercase;width:100%;display:flex;align-items:center;justify-content:center}
 .rdgrid .rdpubb{background:#8D806A!important;color:#fff!important}
+
+.rdact a.rdic{display:flex;align-items:center;justify-content:center;width:40px;height:40px;background:#B7B1A5;color:#1D1D1B}
+.rdact:has(.rdic){gap:8px}
+.rdic svg{width:20px;height:20px;fill:#1D1D1B}

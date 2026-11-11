@@ -1550,11 +1550,11 @@ function entretien(){
     Array.prototype.forEach.call(el.querySelectorAll("[data-v]"), function(b){ b.onclick = function(){ vue = b.getAttribute("data-v"); sel = "non"; pick = false; supprime = false; dessiner(); }; });
     var s = document.getElementById("ens"); if(s) s.onchange = function(){ sel = this.value; pick = false; supprime = false; dessiner(); };
     Array.prototype.forEach.call(el.querySelectorAll("[data-f]"), function(a){ a.onclick = function(e){ e.preventDefault(); fiche = d.machines.filter(function(m){ return String(m.ligne) === a.getAttribute("data-f"); })[0]; mode = "fiche"; dessiner(); }; });
-    Array.prototype.forEach.call(el.querySelectorAll("select.act"), function(q){ q.onchange = function(){ var l = Number(q.getAttribute("data-act")), v = q.value; if(v === "retirer") ecrire({op:"attribuer", ligne:l, employe:""}); else if(v){ pick = l; dessiner(); } }; });
+    Array.prototype.forEach.call(el.querySelectorAll("select.act"), function(q){ q.onchange = function(){ var l = Number(q.getAttribute("data-act")), v = q.value; if(v === "retirer"){ confirmerOuiNon("Retirer cette attribution ?", function(){ ecrire({op:"attribuer", ligne:l, employe:""}); }, false); q.value = ""; } else if(v){ pick = l; dessiner(); } }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-moins]"), function(b){ b.onclick = function(){ ecrire({op:"attribuer", ligne:Number(b.getAttribute("data-moins")), employe:""}); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-att]"), function(b){ b.onclick = function(){ pick = Number(b.getAttribute("data-att")); dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-emp]"), function(a){ a.onclick = function(e){ e.preventDefault(); var l = pick; pick = false; ecrire({op:"attribuer", ligne:l, employe:Number(a.getAttribute("data-emp"))}); }; });
-    Array.prototype.forEach.call(el.querySelectorAll("[data-del]"), function(b){ b.onclick = function(){ if(b.getAttribute("data-ok")){ ecrire({op:"supprimer", ligne:Number(b.getAttribute("data-del"))}); } else { b.setAttribute("data-ok","1"); b.textContent = "OUI ?"; b.style.width = "auto"; b.style.padding = "0 8px"; } }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-del]"), function(b){ b.onclick = function(){ confirmerOuiNon("Supprimer cette ligne ?", function(){ ecrire({op:"supprimer", ligne:Number(b.getAttribute("data-del"))}); }, false); }; });
     var a1 = document.getElementById("ena"); if(a1) a1.onclick = function(){ fiche = {ligne:0, zone:(vue === "secteur" && sel !== "non" ? sel : (secteurs()[0] || "")), machine:"", resp:"", taches:[]}; mode = "edition"; dessiner(); };
     
   }
@@ -2044,8 +2044,8 @@ function mesEvenements(){
     var bs = document.getElementById("ms"); if(bs) bs.onclick = function(){ mode = "sup"; dessiner(); };
     function sup(serie){ var e = liste[choisi]; msg = "▪ SUPPRESSION…"; dessiner();
       appelService({action:"agenda_supprimer", session:sessionGardee(), id:e.id, serie:serie}).then(function(r){ if(r && r.ok){ choisi = null; mode = ""; msg = ""; charger(); } else { msg = "▪ "+String((r && r.erreur) || "ÉCHEC").toUpperCase(); dessiner(); } }).catch(function(){ msg = "▪ ÉCHEC · RÉSEAU"; dessiner(); }); }
-    var b1 = document.getElementById("m1"); if(b1) b1.onclick = function(){ sup(false); };
-    var b2 = document.getElementById("m2"); if(b2) b2.onclick = function(){ sup(true); };
+    var b1 = document.getElementById("m1"); if(b1) b1.onclick = function(){ confirmerOuiNon("Supprimer cet événement ?", function(){ sup(false); }, false); };
+    var b2 = document.getElementById("m2"); if(b2) b2.onclick = function(){ confirmerOuiNon("Supprimer toute la série ?", function(){ sup(true); }, false); };
   }
   function charger(){ appelService({action:"agenda_mes", session:sessionGardee()}).then(function(r){ liste = (r && r.ok) ? r.evenements : []; dessiner(); }).catch(function(){ var el = document.getElementById("me"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }); }
   charger();
