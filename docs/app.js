@@ -1666,11 +1666,11 @@ function participants(personnes, groupes, surChangement, init){
 function dateHeure(opts, surChangement){
   opts = opts || {};
   var auj = new Date(); auj.setHours(0, 0, 0, 0);
-  var S = {lundi: lundiDe(auj), jour: "", heure: "", agenda: "primary", sel: null, agOuvert: false, evs: [], err: false, zone: null, confirme: false, ed: null};
+  var S = {lundi: lundiDe(auj), jour: "", heure: "", agenda: "primary", sel: null, agOuvert: false, vue: (function(){ try { return localStorage.getItem("ldld-cal-vue") === "mois" ? "mois" : "semaine"; } catch(e){ return "semaine"; } })(), mois: new Date(auj.getFullYear(), auj.getMonth(), 1), evm: [],  evs: [], err: false, zone: null, confirme: false, ed: null};
   if(opts.init && opts.init.jour){ var pi = opts.init.jour.split("-"); S.jour = opts.init.jour; S.heure = opts.init.heure || ""; S.lundi = lundiDe(new Date(+pi[0], +pi[1]-1, +pi[2])); }
   function isoDe(d){ return isoJour(d); }
   function depuis(iso){ var p = iso.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
-  var CPAL = [["charles","#3f5f78","#fff"],["direction","#0d1117","#fff"],["famille","#c8a24a","#0d1117"],["ldld","#9dbd86","#0d1117"],["prise","#7a2e2e","#fff"]], CRES = [["#6b8f8f","#fff"],["#a0705a","#fff"],["#8D806A","#fff"],["#7b6d9a","#fff"]];
+  var CPAL = [["charles","#1D1D1B","#fff"],["direction","#8D806A","#fff"],["famille","#5C5446","#fff"],["ldld","#8EFF60","#1D1D1B"],["prise","#BDC9B2","#1D1D1B"]], CRES = [["#B4AB9B","#1D1D1B"],["#CFC6B5","#1D1D1B"],["#C9F5B5","#1D1D1B"],["#3F3A30","#fff"]];
   function nomAg(a){ return a.principal ? "Mon agenda" : a.nom; }
   function idAg(a){ return a.principal ? "primary" : a.id; }
   function couleurAg(id){ var L = DH_CACHE.agendas || [], i = 0, a = null; for(; i < L.length; i++){ if(idAg(L[i]) === id){ a = L[i]; break; } }
@@ -1683,7 +1683,25 @@ function dateHeure(opts, surChangement){
     var L = DH_CACHE.agendas || []; if(L.length){ var ok = S.sel.filter(function(id){ return L.some(function(a){ return idAg(a) === id; }); }); S.sel = ok.length ? ok : [idAg(L[0])]; }
     S.agenda = S.sel[0]; return S.sel;
   }
+  function legende(){ return '<div class="glg"><span><i style="background:#8EFF60"></i>Réunion</span><span><i style="background:#cbc7bb;box-shadow:inset 0 0 0 1px #a6a29a"></i>Congé / fermé</span></div>'; }
+  function lierVue(){
+    var v1 = document.getElementById("dhv1"), v2 = document.getElementById("dhv2");
+    function vue(x){ S.vue = x; try { localStorage.setItem("ldld-cal-vue", x); } catch(e){} rendre(); charger(); }
+    if(v1) v1.onclick = function(){ vue("semaine"); }; if(v2) v2.onclick = function(){ vue("mois"); };
+  }
+  function lierAg(){
+    var agb = document.getElementById("dhagb"); if(agb) agb.onclick = function(){ S.agOuvert = !S.agOuvert; rendre(); };
+    var agt = document.getElementById("dhagt"); if(agt) agt.onclick = function(){ S.agOuvert = false; rendre(); charger(); };
+    Array.prototype.forEach.call(S.zone.querySelectorAll(".dhagl"), function(l){ l.onclick = function(){ var id = l.getAttribute("data-i"), cur = selAgendas().slice(), p = cur.indexOf(id);
+      if(p >= 0){ if(cur.length > 1) cur.splice(p, 1); } else cur.push(id); S.sel = cur; S.agenda = cur[0]; try { localStorage.setItem("ldld-agendas", JSON.stringify(cur)); } catch(e){} rendre(); }; });
+  }
+  function chargerMois(){
+    var ids = selAgendas(), d1 = new Date(S.mois), nb = 6, reste = ids.length * nb, tous = [], err = "", l0 = lundiDe(d1);
+    ids.forEach(function(id){ for(var w = 0; w < nb; w++){ var ld = new Date(l0); ld.setDate(ld.getDate()+7*w);
+      appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(ld), agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ var vu = {}; S.evm = tous.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.debut; if(vu[k]) return false; vu[k] = 1; return true; }); S.erreurSem = err; rendre(); } }); } });
+  }
   function charger(){
+    if(opts.mois && S.vue === "mois") return chargerMois();
     var ids = selAgendas(), reste = ids.length, tous = [], err = "";
     ids.forEach(function(id){
       appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(S.lundi), agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ S.evs = tous; S.erreurSem = err; rendre(); } });
@@ -1717,6 +1735,27 @@ function dateHeure(opts, surChangement){
           return '<div class="dhagl" data-i="'+esc(id)+'" style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;cursor:pointer"><span style="width:18px;height:18px;border:2px solid #0d1117;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:12px;'+(on ? "background:#0d1117;color:#E3DFD3" : "")+'">'+(on ? "✓" : "")+'</span><i style="width:12px;height:12px;border-radius:0;background:'+c.f+'"></i><span>'+esc(nomAg(a))+'</span></div>'; }).join("")+'<button type="button" class="bouton" id="dhagt" style="margin:8px;width:calc(100% - 16px);height:44px;padding:0">Terminé</button></div>';
       }
     }
+    if(opts.mois){
+      var vm = S.vue === "mois", st = "margin:10px 0 0;flex:1;height:44px;padding:0";
+      h += '<div class="aeact" style="margin:10px 0 0"><button type="button" class="bouton" id="dhv1" style="'+st+(vm ? ";opacity:.5" : "")+'">Semaine</button><button type="button" class="bouton" id="dhv2" style="'+st+(vm ? "" : ";opacity:.5")+'">Mois</button></div>';
+    }
+    if(opts.mois && S.vue === "mois"){
+      var m1 = new Date(S.mois), ml = lundiDe(m1), jm = "";
+      if(S.erreurSem) h += '<div class="bandeau">▪ '+esc(S.erreurSem.toUpperCase())+'</div>';
+      h += '<div class="moisbar" style="margin-top:10px"><button type="button" id="dmp">Précédent</button><b>'+MOIS_LONGS[m1.getMonth()].toUpperCase()+' '+m1.getFullYear()+'</b><button type="button" id="dms">Suivant</button></div>';
+      jm = '<div style="display:grid;grid-template-columns:repeat(7,1fr);border:1px solid #1D1D1B;border-bottom:0;margin-top:6px">'+JOURS_C.map(function(j){ return '<div style="background:#B4AB9B;font-size:11px;text-align:center;padding:4px 0">'+j+'</div>'; }).join("");
+      for(var wk = 0; wk < 6; wk++) for(var dk = 0; dk < 7; dk++){ var dd = new Date(ml); dd.setDate(dd.getDate()+wk*7+dk); var iso = isoJour(dd), hors = dd.getMonth() !== m1.getMonth();
+        var evj = S.evm.filter(function(e){ return isoJour(new Date(e.debut)) === iso; });
+        jm += '<div data-jm="'+iso+'" style="'+(conge(iso) ? "background:#cbc7bb;" : "")+'min-height:62px;border-right:1px solid #B4AB9B;border-bottom:1px solid #B4AB9B;padding:2px;box-sizing:border-box;font-size:11px;cursor:pointer;'+(hors ? "opacity:.4;" : "")+'"><span style="'+(iso === aujIso ? "background:#1D1D1B;color:#fff;padding:0 4px" : "")+'">'+dd.getDate()+'</span>'+evj.slice(0, 3).map(function(e){ var c = couleurAg(e.ag); return '<div style="background:'+c.f+';color:'+c.t+';font-size:8px;padding:1px 3px;margin-top:2px;white-space:nowrap;overflow:hidden">'+esc(e.titre)+'</div>'; }).join("")+(evj.length > 3 ? '<div style="font-size:8px">+'+(evj.length-3)+'</div>' : "")+'</div>'; }
+      h += jm+'</div>';
+      h += legende();
+      z.innerHTML = h; lierAg(); lierVue();
+      var mp = document.getElementById("dmp"), ms2 = document.getElementById("dms");
+      if(mp) mp.onclick = function(){ S.mois = new Date(S.mois.getFullYear(), S.mois.getMonth()-1, 1); S.evm = []; rendre(); charger(); };
+      if(ms2) ms2.onclick = function(){ S.mois = new Date(S.mois.getFullYear(), S.mois.getMonth()+1, 1); S.evm = []; rendre(); charger(); };
+      Array.prototype.forEach.call(z.querySelectorAll("[data-jm]"), function(c){ c.onclick = function(){ var p = c.getAttribute("data-jm").split("-"); S.lundi = lundiDe(new Date(+p[0], +p[1]-1, +p[2])); S.vue = "semaine"; try { localStorage.setItem("ldld-cal-vue", "semaine"); } catch(e){} S.evs = []; rendre(); charger(); }; });
+      return;
+    }
     if(S.erreurSem) h += '<div class="bandeau">▪ '+esc(S.erreurSem.toUpperCase())+'</div>';
     h += '<span class="lbl">Calendrier · semaine du '+S.lundi.getDate()+" "+MOIS_LONGS[S.lundi.getMonth()]+'</span><div class="moisbar" style="margin-top:0"><button type="button" id="dhp" aria-label="Semaine précédente">Précédente</button><b>'+S.lundi.getDate()+" "+MOIS[S.lundi.getMonth()]+" — "+fin.getDate()+" "+MOIS[fin.getMonth()]+'</b><button type="button" id="dhn" aria-label="Semaine suivante">Suivante</button></div>';
     var g = '<div class="gs"><div class="d"></div>';
@@ -1730,7 +1769,7 @@ function dateHeure(opts, surChangement){
         var choisi = ij === S.jour && S.heure && +S.heure.split(":")[0] === hh;
         g += '<div class="'+(choisi ? "n" : occ ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(occE && !choisi && opts.agenda !== false ? ' style="background:'+couleurAg(occE.ag).f+'"' : "")+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
     }
-    h += g + '</div><div class="glg">'+(opts.agenda !== false ? (DH_CACHE.agendas || []).filter(function(a){ return selAgendas().indexOf(idAg(a)) >= 0; }).map(function(a){ return '<span><i style="background:'+couleurAg(idAg(a)).f+'"></i>'+esc(nomAg(a))+'</span>'; }).join("") : "")+'<span><i style="background:#cbc7bb;box-shadow:inset 0 0 0 1px #a6a29a"></i>Congé / fermé</span></div>';
+    h += g + '</div>' + legende();
     if(S.jour){
       var d0j = depuis(S.jour), duJour = S.evs.filter(function(e){ return isoJour(new Date(e.debut)) === S.jour && e.id !== opts.exclure; });
       h += '<span class="lbl">'+jourTxt(d0j)+(conge(S.jour) ? " \u00b7 labo ferm\u00e9" : "")+'</span>' + (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut), mod = e.ldld && opts.modifier !== false;
@@ -1744,10 +1783,7 @@ function dateHeure(opts, surChangement){
     h += '<div style="display:flex;gap:8px"><div style="flex:1"><span class="lbl">Date · obligatoire</span><select class="'+cD+'" id="dhd"><option value="">Choisir une date</option>'+jours+'</select></div>' +
       '<div style="flex:1"><span class="lbl">Heure · obligatoire</span><select class="'+cH+'" id="dhh"><option value="">Choisir</option>'+heures+'</select>'+(hl.masquees ? '<div style="font-size:11px;margin-top:4px;color:var(--tx2)">'+hl.masquees+" heure"+(hl.masquees > 1 ? "s" : "")+" masqu\u00e9e"+(hl.masquees > 1 ? "s" : "")+'</div>' : "")+'</div></div>';
     z.innerHTML = h;
-    var agb = document.getElementById("dhagb"); if(agb) agb.onclick = function(){ S.agOuvert = !S.agOuvert; rendre(); };
-    var agt = document.getElementById("dhagt"); if(agt) agt.onclick = function(){ S.agOuvert = false; rendre(); charger(); };
-    Array.prototype.forEach.call(S.zone.querySelectorAll(".dhagl"), function(l){ l.onclick = function(){ var id = l.getAttribute("data-i"), cur = selAgendas().slice(), p = cur.indexOf(id);
-      if(p >= 0){ if(cur.length > 1) cur.splice(p, 1); } else cur.push(id); S.sel = cur; S.agenda = cur[0]; try { localStorage.setItem("ldld-agendas", JSON.stringify(cur)); } catch(e){} rendre(); }; });
+    lierAg(); lierVue();
     document.getElementById("dhp").onclick = function(){ S.lundi.setDate(S.lundi.getDate()-7); charger(); };
     document.getElementById("dhn").onclick = function(){ S.lundi.setDate(S.lundi.getDate()+7); charger(); };
     document.getElementById("dhd").onchange = function(){ S.jour = this.value; S.confirme = false; S.err = false; if(S.jour){ var l = lundiDe(depuis(S.jour)); if(isoJour(l) !== isoJour(S.lundi)){ S.lundi = l; changer(); charger(); return; } } changer(); };
@@ -2136,9 +2172,9 @@ function contactsResp(){
 var MOIS_COURTS = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
 var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 function calendrier(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"></div>'+(peutEcrire() ? '<div class="etq" style="margin-top:26px">▪ MODIFIER LE CALENDRIER</div><div id="calmod"></div>' : '')+'</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"'+(peutEcrire() ? ' style="display:none"' : '')+'></div>'+(peutEcrire() ? '<div id="calmod"></div>' : '')+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  if(peutEcrire()){ var dhc = dateHeure({}); dhc.monter(document.getElementById("calmod")); }
+  if(peutEcrire()){ var dhc = dateHeure({mois: true}); dhc.monter(document.getElementById("calmod")); }
   obtenir("calendrier", {action:"calendrier"}, function(r){
     var el = document.getElementById("cal"); if(!el) return;
     if(!r || !r.jours) throw 0;
