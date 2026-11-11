@@ -1784,11 +1784,19 @@ function dateHeure(opts, surChangement){
     var cD = "bx"+(S.jour ? "" : " rose")+(S.err && !S.jour ? " err" : ""), cH = "bx"+(S.heure ? "" : " rose")+(S.err && !S.heure ? " err" : "");
     h += '<div style="display:flex;gap:8px"><div style="flex:1"><span class="lbl">Date · obligatoire</span><select class="'+cD+'" id="dhd"><option value="">Choisir une date</option>'+jours+'</select></div>' +
       '<div style="flex:1"><span class="lbl">Heure · obligatoire</span><select class="'+cH+'" id="dhh"><option value="">Choisir</option>'+heures+'</select>'+(hl.masquees ? '<div style="font-size:11px;margin-top:4px;color:var(--tx2)">'+hl.masquees+" heure"+(hl.masquees > 1 ? "s" : "")+" masqu\u00e9e"+(hl.masquees > 1 ? "s" : "")+'</div>' : "")+'</div></div>';
+    if(opts.agenda !== false && !opts.mois){
+      var Lc = DH_CACHE.agendas || [];
+      if(!S.agCreer){ try { S.agCreer = localStorage.getItem("ldld-ag-creer") || ""; } catch(e){} }
+      if(!S.agCreer || !Lc.some(function(x){ return idAg(x) === S.agCreer; })){ var dl = Lc.filter(function(x){ return /ldld/i.test(nomAg(x)); })[0]; if(Lc.length) S.agCreer = dl ? idAg(dl) : idAg(Lc[0]); }
+      if(S.agCreer) S.agenda = S.agCreer;
+      h += '<span class="lbl">Créer dans l\'agenda · un seul</span><div style="display:flex;align-items:center;gap:10px;border:2px solid #0d1117;padding:0 12px;height:46px;box-sizing:border-box"><i style="width:12px;height:12px;flex:none;background:'+couleurAg(S.agCreer).f+'"></i><select id="dhcr" style="flex:1;border:0;background:transparent;font:inherit;height:42px;color:inherit">'+Lc.map(function(x){ return '<option value="'+esc(idAg(x))+'"'+(idAg(x) === S.agCreer ? " selected" : "")+'>'+esc(nomAg(x))+'</option>'; }).join("")+'</select></div><div style="font-size:11px;margin-top:6px">Le courriel d\'invitation est envoyé depuis cet agenda.</div>';
+    }
     z.innerHTML = h;
     lierAg(); lierVue();
     document.getElementById("dhp").onclick = function(){ S.lundi.setDate(S.lundi.getDate()-7); charger(); };
     document.getElementById("dhn").onclick = function(){ S.lundi.setDate(S.lundi.getDate()+7); charger(); };
     document.getElementById("dhd").onchange = function(){ S.jour = this.value; S.confirme = false; S.err = false; if(S.jour){ var l = lundiDe(depuis(S.jour)); if(isoJour(l) !== isoJour(S.lundi)){ S.lundi = l; changer(); charger(); return; } } changer(); };
+    var cr = document.getElementById("dhcr"); if(cr) cr.onchange = function(){ S.agCreer = this.value; S.agenda = this.value; try { localStorage.setItem("ldld-ag-creer", this.value); } catch(e){} rendre(); };
     document.getElementById("dhh").onchange = function(){ S.heure = this.value; S.err = false; changer(); };
     Array.prototype.forEach.call(z.querySelectorAll("[data-ed]"), function(c){ c.onclick = function(){ var id = c.getAttribute("data-ed"), e = S.evs.filter(function(x){ return x.id === id; })[0]; if(!e) return;
       if(S.ed && S.ed.id === id){ S.ed = null; } else { var d0 = new Date(e.debut); S.ed = {id: id, jour: isoJour(d0), heure: d0.getHours()+":"+d0.getMinutes(), confirm: false, msg: ""}; } rendre(); }; });
@@ -1818,7 +1826,7 @@ function dateHeure(opts, surChangement){
   function changer(){ rendre(); if(surChangement) surChangement(); }
   return {
     monter: function(zone){ S.zone = zone; rendre(); if(!DH_CACHE.agendas || !DH_CACHE.conges) chargerCaches(function(){ rendre(); }); charger(); },
-    lire: function(){ return S.jour && S.heure ? {date: S.jour, heure: pad2(S.heure.split(":")[0])+":"+pad2(S.heure.split(":")[1]), agenda: S.agenda, conge: !!conge(S.jour)} : null; },
+    lire: function(){ return S.jour && S.heure ? {date: S.jour, heure: pad2(S.heure.split(":")[0])+":"+pad2(S.heure.split(":")[1]), agenda: (S.agCreer || S.agenda), conge: !!conge(S.jour)} : null; },
     valider: function(){ if(S.jour && S.heure) return true; S.err = true; rendre(); return false; },
     confirme: function(v){ if(v === undefined) return S.confirme; S.confirme = v; }
   };
