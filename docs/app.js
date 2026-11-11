@@ -110,6 +110,8 @@ function majRetour(){
 }
 new MutationObserver(function(){ decorerTitres(); majRetour(); }).observe(app, {childList: true, subtree: true});
 window.addEventListener("scroll", majRetour, {passive: true});
+document.addEventListener("scroll", majRetour, {passive: true, capture: true});   // le défilement peut venir de body: il ne remonte pas à window
+setInterval(majRetour, 400);
 window.addEventListener("resize", majRetour);
 
 // Ordre d'affichage de l'accueil (choisi par la direction) : numéros de SECTIONS. Messages 0, Manuel 1, Autoévaluation 2, Rémunération 3, Tableau de bord 4, Plan d'incendie 5, Calendrier 6, Rencontre 7, Mon profil 8.
@@ -1989,7 +1991,7 @@ function nouveau(onglet){
   onglet = onglet === "reunion" ? "reunion" : "message";
   app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1>' +
     '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton" id="ongM" style="margin:0;flex:1;'+(onglet === "message" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Sans événement</button><button type="button" class="bouton" id="ongR" style="margin:0;flex:1;'+(onglet === "reunion" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Avec événement</button></div>' +
-    '<div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
+    '<div id="npart"><div class="bandeau">▪ UN INSTANT</div></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); retirerBoutonBas(); responsable(); };
   var dire = function(t){ var e = document.getElementById("ne"); if(e){ e.style.display = "block"; e.textContent = t; } };
   var part = null, dh = dateHeure({}, function(){ majBouton(); }), brouillon = {titre: "", texte: "", sujet: "", repeter: "aucune"};
