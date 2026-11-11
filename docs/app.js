@@ -1671,7 +1671,7 @@ function dateHeure(opts, surChangement){
   function isoDe(d){ return isoJour(d); }
   function depuis(iso){ var p = iso.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
   function charger(){
-    appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(S.lundi), agenda:S.agenda}).then(function(r){ S.evs = (r && r.ok) ? r.evenements : []; rendre(); }).catch(function(){ S.evs = []; rendre(); });
+    appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(S.lundi), agenda:S.agenda}).then(function(r){ S.evs = (r && r.ok) ? r.evenements : []; S.erreurSem = (r && r.ok) ? "" : String((r && r.erreur) || "Agenda indisponible"); rendre(); }).catch(function(){ S.evs = []; S.erreurSem = "Réseau indisponible"; rendre(); });
   }
   function conge(iso){ return DH_CACHE.conges && DH_CACHE.conges[iso]; }
   function optJours(sel){ var r = "", dd2 = new Date(auj), tr = false;
@@ -1697,6 +1697,7 @@ function dateHeure(opts, surChangement){
       var ag = (DH_CACHE.agendas || []).map(function(a){ var v = a.principal ? "primary" : a.id; return '<option value="'+esc(v)+'"'+(v === S.agenda ? " selected" : "")+'>'+esc(a.principal ? "Mon agenda" : a.nom)+'</option>'; }).join("") || '<option value="primary">Mon agenda</option>';
       h += '<span class="lbl">Agenda</span><select class="bx" id="dhag">'+ag+'</select>';
     }
+    if(S.erreurSem) h += '<div class="bandeau">▪ '+esc(S.erreurSem.toUpperCase())+'</div>';
     h += '<span class="lbl">Calendrier · semaine du '+S.lundi.getDate()+" "+MOIS_LONGS[S.lundi.getMonth()]+'</span><div class="moisbar" style="margin-top:0"><button type="button" id="dhp" aria-label="Semaine précédente">Précédente</button><b>'+S.lundi.getDate()+" "+MOIS[S.lundi.getMonth()]+" — "+fin.getDate()+" "+MOIS[fin.getMonth()]+'</b><button type="button" id="dhn" aria-label="Semaine suivante">Suivante</button></div>';
     var g = '<div class="gs"><div class="d"></div>';
     for(var k = 0; k < 7; k++){ var dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); var ij = isoJour(dj), passe = ij < aujIso;
