@@ -1729,7 +1729,7 @@ function dateHeure(opts, surChangement){
     var fin = new Date(S.lundi); fin.setDate(fin.getDate()+6), aujIso = isoJour(auj), h = "";
     if(opts.agenda !== false){
       var Ls = DH_CACHE.agendas || [], sl = selAgendas(), noms = Ls.filter(function(a){ return sl.indexOf(idAg(a)) >= 0; }).map(nomAg);
-      h += '<span class="lbl">Agendas affichés</span><button type="button" class="bx" id="dhagb" style="text-align:left;width:100%;border:2px solid #0d1117;display:flex;justify-content:space-between"><span>'+esc(noms.length ? noms.join(" · ")+" ("+noms.length+")" : "Mon agenda")+'</span><span>'+(S.agOuvert ? "⌃" : "⌄")+'</span></button>';
+      h += '<button type="button" class="bx" id="dhagb" style="text-align:left;width:100%;border:2px solid #0d1117;display:flex;justify-content:space-between;margin-top:8px"><span>Agendas affichés ('+(noms.length || 1)+')</span><span>'+(S.agOuvert ? "⌃" : "⌄")+'</span></button>';
       if(S.agOuvert){
         h += '<div style="background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+Ls.map(function(a){ var id = idAg(a), on = sl.indexOf(id) >= 0, c = couleurAg(id);
           return '<div class="dhagl" data-i="'+esc(id)+'" style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;cursor:pointer"><span style="width:18px;height:18px;border:2px solid #0d1117;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:12px;'+(on ? "background:#0d1117;color:#E3DFD3" : "")+'">'+(on ? "✓" : "")+'</span><i style="width:12px;height:12px;border-radius:0;background:'+c.f+'"></i><span>'+esc(nomAg(a))+'</span></div>'; }).join("")+'<button type="button" class="bouton" id="dhagt" style="margin:8px;width:calc(100% - 16px);height:44px;padding:0">Terminé</button></div>';
