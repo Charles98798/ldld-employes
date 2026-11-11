@@ -1694,8 +1694,9 @@ function dateHeure(opts, surChangement){
   function selAgendas(){
     if(opts.agenda === false) return [S.agenda];
     if(!S.sel){ var m = []; try { m = JSON.parse(localStorage.getItem("ldld-agendas") || "[]"); } catch(e){}
-      S.sel = Array.isArray(m) && m.length ? m : [S.agenda]; }
-    var L = DH_CACHE.agendas || []; if(L.length){ var ok = S.sel.filter(function(id){ return L.some(function(a){ return idAg(a) === id; }); }); S.sel = ok.length ? ok : [idAg(L[0])]; }
+      S.sel = Array.isArray(m) && m.length ? m : [S.agenda]; S.selAuto = !(Array.isArray(m) && m.length); }
+    var L = DH_CACHE.agendas || []; if(L.length && S.selAuto && S.sel.length <= 1){ S.sel = L.slice(0, 8).map(idAg); S.selAuto = false; }
+    if(L.length){ var ok = S.sel.filter(function(id){ return L.some(function(a){ return idAg(a) === id; }); }); S.sel = ok.length ? ok : [idAg(L[0])]; }
     S.agenda = S.sel[0]; return S.sel;
   }
   function placerBlocs(){
