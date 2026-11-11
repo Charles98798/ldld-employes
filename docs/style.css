@@ -877,3 +877,19 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .gs .d.f,.gs .d.c,.gs .d.p{background:#0d1117;color:#E3DFD3;opacity:1}
 .gs .d.r{background:#8EFF60;color:#1D1D1B}
 .glg{display:flex;gap:18px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:4px 0 8px}.glg i{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px}
+/* Rencontre de département */
+.rdl{margin-top:22px}.rdd{display:block;padding:16px 0;font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx);text-decoration:none}
+.rdbtn{margin:6px 0 18px}.rdplan{display:block;width:100%;background:var(--tx);color:var(--noir);border:0;padding:15px 0;font-size:13px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+.rddate{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8D806A;margin:6px 0 14px}
+.rdt{font-size:20px;margin:18px 0 10px;font-weight:300}.rdt span{font-size:12px;letter-spacing:.16em;text-transform:uppercase;margin-left:8px}
+.rdp{margin:0 0 20px}.rdp small,.rdlb{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8D806A;margin:8px 0 3px}.rdp>div,.rdtx{font-size:16px;line-height:1.35}
+.rdbar{display:flex;justify-content:space-between;align-items:center;background:#0d1117;color:#E3DFD3;padding:0 14px;margin:6px 0 16px;height:44px;font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+.rdbar select{background:transparent;border:0;color:#8EFF60;font:inherit;letter-spacing:.16em;text-transform:uppercase;text-align:right;appearance:none;-webkit-appearance:none;padding:10px 0 10px 12px}
+.rdl2{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.rdact{display:flex;gap:16px;flex:none}.rdact a{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx);text-decoration:none;padding:4px 0}
+.rdzone{display:block;width:100%;box-sizing:border-box;background:rgba(141,128,106,.14);border:0;padding:12px;font:inherit;font-size:16px;color:var(--tx);border-radius:0;margin:4px 0 6px}
+.rdstack{display:flex;flex-direction:column;gap:12px;margin:22px 0 10px;align-items:flex-start}
+.rdsoft{background:#d0e3c3;color:#1D1D1B;border:0;padding:15px 20px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.rdline{background:transparent;color:var(--tx);border:1.5px solid var(--tx);padding:13px 18px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.rdsm{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8D806A;margin:18px 0 10px}
+.rdcap{background:rgba(227,223,211,.55);padding:16px 14px;margin:0 0 8px}.rdcapt{font-size:24px;font-weight:300;margin:2px 0 10px}.rdcl{font-size:15px;line-height:1.35;margin:0 0 10px}.rdcl small{font-size:11px;letter-spacing:.1em;color:#8D806A;margin-right:6px}.rdcl em,.rdln em{font-style:normal;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#8D806A;margin-left:6px}
+.rdln{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;font-size:16px}.rdln small{font-size:11px;letter-spacing:.1em;color:#8D806A;margin-right:6px}.rdln a{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx);text-decoration:none;flex:none}

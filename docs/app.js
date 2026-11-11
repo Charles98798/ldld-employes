@@ -40,6 +40,7 @@ var PICTOS = {
  "Conseil d'administration": "M5 9h14v6h-14zM6 4h4v3h-4zM14 4h4v3h-4zM6 17h4v3h-4zM14 17h4v3h-4zM2 10h2v4h-2zM20 10h2v4h-2z",
  "Employés": "M3 4h6v6h-6zM15 4h6v6h-6zM3 13h18v8h-18z",
  "Employé actuel": "M8 2h8v8h-8zM4 12h16v10h-16zM10 15h4v4h-4z",
+ "Réunion production": "M2 3h20v4h-20zM2 9h9v12h-9zM13 9h9v5h-9zM13 16h9v5h-9z",
  "Retirer un employé": "M2 2h8v8h-8zM1 12h11v10h-11zM14 8.5h9v3h-9z",
  "Nouvel employé": "M2 2h8v8h-8zM1 12h11v10h-11zM17 5h3v3.5h-3zM17 11.5h3v3.5h-3zM14 8.5h9v3h-9z",
  "Envoi salarial": "M2 3h8v8h-8zM14 13h8v8h-8zM17 2h3v3h-3zM14 6h3v3h-3zM11 10h3v3h-3zM8 14h3v3h-3zM5 18h3v3h-3z",
@@ -153,7 +154,7 @@ function appelDirect(corps, vu){
 
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
-var LECT = {production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
+var LECT = {rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
 var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 // Copie gardée sur l'appareil (affichée tout de suite à l'ouverture, remplacée en silence par la version fraîche). JAMAIS de salaire ni de rémunération (Portrait, Échelle, Positionnement, Embauche, Employé actuel restent en mémoire seulement).
@@ -415,6 +416,7 @@ var ENT = [
  {id:"contacts", g:"Équipe", l:"Contact", p:"Contacts", d:[0,1,1], f:function(){ contactsResp(); }},
  {id:"nouveau_message", g:"Équipe", l:"Envoyer message", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
  {id:"messages_envoyes", g:"Équipe", l:"Historique message", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
+ {id:"reunion_production", g:"Équipe", l:"Réunion production", p:"Réunion production", d:[1,1,1], f:function(){ rencontreDept(); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
  {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
  {id:"positionnement_embauche", g:"Gestion des employés", l:"Position embauche", p:"Positionnement embauche", n:1, d:[0,0,1], f:function(){ embauchePos(); }},
