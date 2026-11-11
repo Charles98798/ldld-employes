@@ -1782,7 +1782,7 @@ function dateHeure(opts, surChangement){
       var avec = S.evs.some(function(e){ return isoJour(new Date(e.debut)) === ij; });
       g += '<div class="d'+(ij === S.jour ? " on" : "")+(passe ? " past" : "")+(ij === aujIso ? " auj" : "")+(conge(ij) ? " "+conge(ij) : "")+'"'+(passe ? "" : ' data-j="'+ij+'"')+'>'+JOURS_C[k]+" "+dj.getDate()+(avec ? " •" : "")+'</div>'; }
     if(S.jj.length){
-      g += '<div class="h">Jour</div>';
+      g += '<div class="h" style="height:auto;min-height:24px">Jour</div>';
       for(k = 0; k < 7; k++){ dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); var lj = jjDe(S.jj, isoJour(dj));
         g += '<div style="min-width:0;height:auto;min-height:24px;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:visible;gap:2px;padding:2px 1px">'+lj.map(function(e){ var c = couleurAg(e.ag); return '<span style="background:'+c.f+';color:'+c.t+';font-size:8px;padding:1px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">'+esc(e.titre)+'</span>'; }).join("")+'</div>'; }
     }
