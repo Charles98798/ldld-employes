@@ -414,10 +414,32 @@ function dessinerAujourdhui(){
   z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+l.map(function(e){ var d = new Date(e.debut), fait = new Date(e.fin || e.debut) < t;
     return '<div'+(fait ? ' class="fait"' : "")+'>'+heureFr(d)+' · '+esc(e.titre || "")+'</div>'; }).join("")+'</div>';
 }
+function auj_normalise(liste){
+  // Tous les événements du jour, sans doublons: même titre + mêmes heures = une seule ligne; un événement sans titre qui a le même horaire qu'un autre est ignoré.
+  var nomme = {}, vu = {}, r = [];
+  liste.forEach(function(e){ if(String(e.titre || "").trim()) nomme[e.debut+"|"+e.fin] = 1; });
+  liste.slice().sort(function(x, y){ return new Date(x.debut) - new Date(y.debut); }).forEach(function(e){
+    var t = String(e.titre || "").trim(), h = e.debut+"|"+e.fin; if(!t && nomme[h]) return;
+    var k = t.toLowerCase()+"|"+h; if(vu[k]) return; vu[k] = 1; r.push(e); });
+  return r;
+}
 function chargerAujourdhui(){
   var t = new Date(); t.setHours(0, 0, 0, 0); dessinerAujourdhui();
-  appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(lundiDe(t)), agenda:"primary"}).then(function(r){
-    if(r && r.ok){ AUJ = r.evenements; dessinerAujourdhui(); } }).catch(function(){});
+  var deb = isoJour(lundiDe(t)), plusieurs = roleIdx() >= 1;
+  var fin = function(liste){ AUJ = auj_normalise(liste); dessinerAujourdhui(); };
+  if(!plusieurs){
+    appelService({action:"agenda_semaine", session:sessionGardee(), debut:deb, agenda:"primary"}).then(function(r){ if(r && r.ok) fin(r.evenements || []); }).catch(function(){});
+    return;
+  }
+  var lu = DH_CACHE.agendas ? Promise.resolve() : appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.agendas) DH_CACHE.agendas = r.agendas.filter(function(a){ return a.ecriture; }); });
+  lu.then(function(){
+    var ids = (DH_CACHE.agendas || []).map(function(a){ return a.id; }).slice(0, 8); if(ids.indexOf("primary") < 0) ids.unshift("primary");
+    return appelService({action:"agenda_semaines", session:sessionGardee(), agendas:ids, debut:deb, nb:1});
+  }).then(function(r){
+    if(!(r && r.ok && r.semaines)) return;
+    var tous = []; r.semaines.forEach(function(w){ (w.evenements || []).forEach(function(e){ tous.push(e); }); });
+    fin(tous);
+  }).catch(function(){});
 }
 // Accueil unique: chaque entrée a un groupe, un pictogramme et des droits par défaut [employé, responsable, direction].
 // La page Contrôle (Direction) peut changer les droits des entrées non verrouillées; le service refuse aussi l'accès.
