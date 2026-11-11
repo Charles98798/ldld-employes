@@ -95,11 +95,15 @@ function rdDiscussion(donnees, edition){
     appelService({action: "rd_planif_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(!document.getElementById("rdz")) return; if(!r || !r.ok){ document.getElementById("rdz").innerHTML = rdErreur(r); return; } RD_PLAN = r; rdDiscussion(r); }).catch(function(){ var q = document.getElementById("rdz"); if(q) q.innerHTML = rdMsg("Réseau indisponible"); });
     return;
   }
-  var pts = donnees.points || [], h = "";
+  var pts = donnees.points || [], h = "", fictif = RD_DEMO && !pts.length;
+  if(fictif) pts = RD_DEMO_PTS.map(function(p){ return {id: "demo-"+p.n, n: p.n, texte: p.texte, etat: "brouillon", demo: true}; });
+  var estDemo = function(id){ return String(id).indexOf("demo-") === 0; };
+  if(fictif && !donnees.date) h += '<div class="rddate">Mardi 17 novembre · 9 h 30</div>';
+  if(fictif) h += rdDemoMarque();
   if(donnees.date) h += '<div class="rddate">'+rdE(donnees.date)+'</div>';
   h += pts.map(function(p){
     var enEdit = edition === p.id;
-    return '<div class="rdp">'+'<small>Point '+rdE(p.n)+(p.etat === "brouillon" ? ' · brouillon' : '')+'</small>' + (enEdit
+    return '<div class="rdp">'+'<small>Point '+rdE(p.n)+(p.etat === "brouillon" && !p.demo ? ' · brouillon' : '')+'</small>' + (enEdit
       ? '<textarea class="rdzone" id="rdtx" maxlength="400" rows="3">'+rdE(p.texte)+'</textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div>'
       : '<div class="rdl2"><div class="rdtx">'+rdE(p.texte)+'</div><div class="rdact"><a href="#" data-m="'+rdE(p.id)+'">Modifier</a><a href="#" data-r="'+rdE(p.id)+'">Retirer</a></div></div>') + '</div>';
   }).join("");
@@ -110,13 +114,21 @@ function rdDiscussion(donnees, edition){
   var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
   function appliquer(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
   function ecrire(corps){ appelService(corps).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); }
+  // Les points fictifs deviennent de vrais points écrits au service au premier enregistrement (modifier, retirer, ajouter ou publier).
+  function materialiser(exclure, remplace, texteNouveau, apres){
+    var liste = RD_DEMO_PTS.filter(function(p){ return "demo-"+p.n !== exclure; }).map(function(p){ return "demo-"+p.n === remplace.id ? remplace.texte : p.texte; });
+    if(texteNouveau) liste.push(texteNouveau);
+    var suite = Promise.resolve(null);
+    liste.forEach(function(t){ suite = suite.then(function(){ return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: "", texte: t}); }); });
+    suite.then(function(r){ if(apres && r && r.ok) return apres(r); appliquer(r); }).catch(function(){ dire("Réseau indisponible"); });
+  }
   Array.prototype.forEach.call(z.querySelectorAll("[data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); rdDiscussion(RD_PLAN, a.getAttribute("data-m")); }; });
-  Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); dire("Retrait en cours"); ecrire({action: "rd_point_retirer", session: sessionGardee(), departement: RD.dep, id: a.getAttribute("data-r")}); }; });
+  Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); dire("Retrait en cours"); if(fictif){ materialiser(a.getAttribute("data-r"), {}, ""); return; } ecrire({action: "rd_point_retirer", session: sessionGardee(), departement: RD.dep, id: a.getAttribute("data-r")}); }; });
   var ok = document.getElementById("rdok"), no = document.getElementById("rdno");
   if(no) no.onclick = function(e){ e.preventDefault(); rdDiscussion(RD_PLAN); };
-  if(ok) ok.onclick = function(e){ e.preventDefault(); var t = document.getElementById("rdtx").value.trim(); if(!t){ dire("Écrivez le point"); return; } dire("Enregistrement en cours"); ecrire({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: edition === "nouveau" ? "" : edition, texte: t}); };
+  if(ok) ok.onclick = function(e){ e.preventDefault(); var t = document.getElementById("rdtx").value.trim(); if(!t){ dire("Écrivez le point"); return; } dire("Enregistrement en cours"); if(fictif){ if(edition === "nouveau") materialiser("", {}, t); else materialiser("", {id: edition, texte: t}, ""); return; } ecrire({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: edition === "nouveau" ? "" : edition, texte: t}); };
   document.getElementById("rdadd").onclick = function(){ rdDiscussion(RD_PLAN, "nouveau"); };
-  document.getElementById("rdpub").onclick = function(){ dire("Publication en cours"); appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés"); } else dire((r && r.erreur) || "Non publié · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); };
+  document.getElementById("rdpub").onclick = function(){ dire("Publication en cours"); if(fictif){ materialiser("", {}, "", function(){ return appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés"); } else dire((r && r.erreur) || "Non publié · réessayez"); }); }); return; } appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés"); } else dire((r && r.erreur) || "Non publié · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); };
   document.getElementById("rdhist").onclick = function(){ rdHistorique(); };
 }
 function rdHistorique(){
@@ -135,15 +147,23 @@ function rdCapsules(donnees){
     return;
   }
   var c = donnees.courante, h = "";
-  if(c){
-    h += '<div class="rdsm">Réunion du mois · capsule '+rdE(c.n)+' sur 11 · '+rdE(c.theme || "")+'</div><div class="rdcap"><div class="rdcapt">'+rdE(c.titre)+'</div>' +
-      (c.points || []).map(function(p, i){ return '<div class="rdcl"><small>0'+(i + 1)+'</small> '+rdE(p.t)+(p.statut === "à valider" ? ' <em>à valider</em>' : '')+'</div>'; }).join("") +
-      '<div class="rdact"><a href="#" data-c="'+rdE(c.n)+'">Modifier</a></div></div>';
-  }
-  h += '<div class="rdsm">Prochaines capsules</div>' + (donnees.liste || []).filter(function(x){ return !c || x.n !== c.n; }).map(function(x){
-    return '<div class="rdln"><span><small>'+(x.n < 10 ? "0" : "")+rdE(x.n)+'</small> '+rdE(x.titre)+(x.pret === false ? ' <em>en préparation</em>' : '')+'</span><a href="#" data-c="'+rdE(x.n)+'">Modifier</a></div>';
+  // Liste complète des 11 capsules d'abord (la capsule du mois repérée), puis le détail de la capsule choisie (par défaut celle du mois).
+  var toutes = (donnees.liste || []).slice(); if(c && !toutes.some(function(x){ return x.n === c.n; })) toutes.push(c);
+  toutes.sort(function(x, y){ return x.n - y.n; });
+  var choisie = RD.capSel && toutes.some(function(x){ return x.n === RD.capSel; }) ? RD.capSel : (c ? c.n : (toutes[0] && toutes[0].n));
+  h += '<div class="rdsm">Les 11 capsules</div>' + toutes.map(function(x){
+    var surM = c && x.n === c.n, sel = x.n === choisie;
+    return '<a href="#" class="rdln" data-s="'+rdE(x.n)+'" style="text-decoration:none;color:inherit;'+(sel ? "background:#8EFF60;" : "")+'padding:10px 8px"><span><small>'+(x.n < 10 ? "0" : "")+rdE(x.n)+'</small> '+rdE(x.titre)+(surM ? ' <em>capsule du mois</em>' : '')+(x.pret === false ? ' <em>en préparation</em>' : '')+'</span></a>';
   }).join("");
+  var d = toutes.filter(function(x){ return x.n === choisie; })[0];
+  if(d){
+    var pointsD = (c && c.n === d.n && c.points) ? c.points : (d.points || []);
+    h += '<div class="rdsm" style="margin-top:22px">Capsule '+rdE(d.n)+' sur 11'+(d.theme ? ' · '+rdE(d.theme) : '')+(c && c.n === d.n ? ' · capsule du mois' : '')+'</div><div class="rdcap"><div class="rdcapt" style="margin-bottom:18px">'+rdE(d.titre)+'</div>' +
+      pointsD.map(function(p, i){ return '<div class="rdcl" style="margin-top:18px"><small>0'+(i + 1)+'</small> '+rdE(p.t)+(p.statut === "à valider" ? ' <em style="white-space:nowrap">à valider</em>' : '')+'</div>'; }).join("") +
+      '<div class="rdact" style="margin-top:18px"><a href="#" data-c="'+rdE(d.n)+'">Modifier</a></div></div>';
+  }
   z.innerHTML = h;
+  Array.prototype.forEach.call(z.querySelectorAll("[data-s]"), function(a){ a.onclick = function(e){ e.preventDefault(); RD.capSel = Number(a.getAttribute("data-s")); rdCapsules(donnees); }; });
   Array.prototype.forEach.call(z.querySelectorAll("[data-c]"), function(a){ a.onclick = function(e){ e.preventDefault(); rdCapsuleEdit(Number(a.getAttribute("data-c"))); }; });
 }
 function rdCapsuleEdit(n){
