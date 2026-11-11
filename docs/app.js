@@ -1,3 +1,6 @@
+// Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
+function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
+(function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
   function agir(id, nom, actif){
     confirmerOuiNon((actif ? "Réactiver " : "Désactiver ")+nom+"?", function(){
       neTache({nom: nom, duree: 8000, reste: true, fin: function(E){ if(E.etat === "ok") setTimeout(function(){ if(document.getElementById("ge")) gestionEmployes(); }, 1500); }, lib: actif ? {cours: "Réactivation en cours", ok: "Employé réactivé", non: "Employé non réactivé"} : {cours: "Désactivation en cours", ok: "Employé désactivé", non: "Employé non désactivé"},
@@ -64,28 +67,30 @@ var app = document.getElementById("app");
 var PICTO_TITRES = {"mes heures":"Mes heures","messages":"Messages","tableau de bord":"Tableau de bord","calendrier":"Calendrier","rencontre":"Rencontre","autoévaluation":"Autoévaluation","rémunération":"Rémunération","manuel d'employé":"Manuel","plan d'incendie":"Plan d'incendie","mon profil":"Mon profil","mes entretiens":"Entretien machinerie","direction":"Direction","gestionnaire":"Gestionnaire","suivi de charge":"Suivi de charge","stationnement":"Stationnement","casier":"Casier","finance":"Finance","états financiers":"États financiers","portrait d'un employé":"Portrait d’un employé","positionnement embauche":"Positionnement"};
 var dernierTitre = "";
 // Retour: on revient à la même place dans la page précédente (position mémorisée par page), pas en haut de l'écran.
-var POS_PAGE = {}, RETOUR_T = 0;
+var POS_PAGE = {}, RETOUR_T = 0, ARRET_POS = null;
 function clePos(){ return app.querySelector(".menu") ? "__menu" : dernierTitre; }
 function retourRecent(){ return Date.now() - RETOUR_T < 2000; }
 function reprendrePos(cle){
   var y = POS_PAGE[cle]; if(!retourRecent() || !y){ return false; }
   // Le contenu de la page précédente peut arriver après coup (listes, bandeaux): on réessaie jusqu'à 3 s, sauf si la personne fait défiler elle-même.
-  var stop = false, t0 = Date.now(), ar = function(){ stop = true; };
+  var stop = false, t0 = Date.now(), ar = function(){ stop = true; }; ARRET_POS = ar;
   window.addEventListener("touchstart", ar, {once:true, passive:true}); window.addEventListener("wheel", ar, {once:true, passive:true});
-  var f = function(){ if(stop) return; if(Math.abs(window.scrollY - y) > 2) window.scrollTo(0, y); if(Date.now() - t0 < 3000) setTimeout(f, 100); };
+  var f = function(){ if(stop) return; if(Math.abs(lireY() - y) > 2) window.scrollTo(0, y); if(Date.now() - t0 < 3000) setTimeout(f, 100); };
   f(); requestAnimationFrame(f);
   return true;
 }
 document.addEventListener("click", function(e){
   var t = e.target; if(!t || !t.closest) return;
+  if(ARRET_POS){ ARRET_POS(); ARRET_POS = null; }
   if(t.closest("a.retour, a.rt")){ RETOUR_T = Date.now(); return; }
-  if(t.closest("a, button") && !t.closest(".bl")){ POS_PAGE[clePos()] = window.scrollY; }
+  // Toute autre ouverture (onglet de l'accueil, bouton, lien) s'ouvre en haut: on annule le « retour récent ».
+  if(t.closest("a, button") && !t.closest(".bl")){ RETOUR_T = 0; POS_PAGE[clePos()] = lireY(); }
 }, true);
 function decorerTitres(){
   Array.prototype.forEach.call(app.querySelectorAll(".page:not(.vue) > h1:not([data-pt]), .page:not(.vue) > .pph > h1:not([data-pt]), .page:not(.vue) #pe > h1:not([data-pt]), .page:not(.vue) #ea_app > h1:not([data-pt]), .page:not(.vue) #pt > h1:not([data-pt])"), function(h){
     h.setAttribute("data-pt", "1");
     // Nouvelle page (titre différent): on repart en haut, sinon le titre reste caché sous l'heure du téléphone
-    if(h.textContent !== dernierTitre){ dernierTitre = h.textContent; if(!reprendrePos(dernierTitre)){ window.scrollTo(0, 0); requestAnimationFrame(function(){ window.scrollTo(0, 0); }); setTimeout(function(){ if(window.scrollY < 140) window.scrollTo(0, 0); }, 350); } }
+    if(h.textContent !== dernierTitre){ dernierTitre = h.textContent; if(!reprendrePos(dernierTitre)){ window.scrollTo(0, 0); requestAnimationFrame(function(){ window.scrollTo(0, 0); }); setTimeout(function(){ if(lireY() < 140) window.scrollTo(0, 0); }, 350); } }
     var page = h.closest(".page"), retour = page.querySelector("a.retour");
     var bl = document.createElement("div"); bl.className = "bl" + (h.parentNode === page ? "" : " sa");
     var fl = document.createElement("a"); fl.className = "rt"; fl.href = "#"; fl.textContent = "←"; fl.setAttribute("aria-label", "Retour");
@@ -493,6 +498,7 @@ function menu(){
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="envg"></div><div id="auj"></div>' + h +
     (vueComme() ? '<a href="#" id="rcommefin">Revenir à mon compte</a>' : '') +
     '<a class="sortie" href="#" id="sortie">Déconnexion</a></div>';
+  dernierTitre = "";
   if(!reprendrePos("__menu")) window.scrollTo(0, 0);   // l'accueil s'ouvre en haut, sauf au retour d'une page (même place qu'avant)
   if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ var dl = (0.7 + Math.min(k, 12) * 0.09) + "s"; a.style.animationDelay = dl; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = dl; });
   Array.prototype.forEach.call(app.querySelectorAll("a[data-k]"), function(a){
@@ -1446,14 +1452,14 @@ function neFormulaire(cand){
     Array.prototype.forEach.call(el.querySelectorAll("[data-k]"), function(q){ q.oninput = q.onchange = function(){ S.v[q.getAttribute("data-k")] = q.value; majBtn(q); sauverVite(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-d]"), function(q){ q.oninput = function(){ S.docs[Number(q.getAttribute("data-d"))] = q.value; majBtn(q); }; });
     Array.prototype.forEach.call(el.querySelectorAll("[data-h]"), function(q){ q.onchange = function(){ var m = q.getAttribute("data-h"), i = Number(m[0]); S.h[i] = S.h[i] || {}; S.h[i][m[1]] = q.value; S.v.heures = neHeures(S.h) || S.v.heures; dessiner(); sauverVite(); }; });
-    Array.prototype.forEach.call(el.querySelectorAll("[data-rx]"), function(q){ q.onclick = function(){ delete S.rc[q.getAttribute("data-rx")]; var y = window.scrollY; dessiner(); window.scrollTo(0, y); sauverVite(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-rx]"), function(q){ q.onclick = function(){ delete S.rc[q.getAttribute("data-rx")]; var y = lireY(); dessiner(); window.scrollTo(0, y); sauverVite(); }; });
     var rsel = document.getElementById("rsel"); if(rsel) rsel.onchange = function(){ S.rs = Number(rsel.value); window.scrollTo(0, 0); dessiner(); sauverVite(); };
     var rnx = document.getElementById("rnext"); if(rnx) rnx.onclick = function(){ S.rs = Math.min(NE_RESP.groupes.length - 1, S.rs + 1); window.scrollTo(0, 0); dessiner(); sauverVite(); };
     Array.prototype.forEach.call(el.querySelectorAll("[data-rkk]"), function(q){ q.onclick = function(){
       var k = q.getAttribute("data-rkk"), g = NE_RESP.groupes[S.rs], on = !S.rc[k];
       if(g.description && g.description.k === k){ g.items.forEach(function(it){ if(!it.section){ if(on) S.rc[it.k] = 1; else delete S.rc[it.k]; } }); }
       if(on) S.rc[k] = 1; else { delete S.rc[k]; if(g.description && g.description.k !== k) delete S.rc[g.description.k]; }
-      var y = window.scrollY; dessiner(); window.scrollTo(0, y); sauverVite(); }; });
+      var y = lireY(); dessiner(); window.scrollTo(0, y); sauverVite(); }; });
     var dc = document.getElementById("nedoc"); if(dc) dc.onclick = function(){ S.docs.push(""); dessiner(); };
     var n = document.getElementById("nes"); if(n) n.onclick = function(){ if(etapeOk(S.e)){ S.e++; window.scrollTo(0, 0); dessiner(); sauver(); } };
     var ok = document.getElementById("neok"); if(ok) ok.onclick = function(){ S.pop = 1; dessiner(); };
@@ -2454,7 +2460,7 @@ if("serviceWorker" in navigator){
     var t = e.touches[0], dx = Math.abs(t.clientX - x0), dy = Math.abs(t.clientY - y0);
     if(dx > dy && dx > 4 && e.cancelable) e.preventDefault();
   }, {passive:false});
-  function recaler(){ if(window.scrollX){ window.scrollTo(0, window.scrollY); } if(document.documentElement.scrollLeft) document.documentElement.scrollLeft = 0; if(document.body.scrollLeft) document.body.scrollLeft = 0; }
+  function recaler(){ if(window.scrollX){ window.scrollTo(0, lireY()); } if(document.documentElement.scrollLeft) document.documentElement.scrollLeft = 0; if(document.body.scrollLeft) document.body.scrollLeft = 0; }
   window.addEventListener("scroll", recaler, {passive:true});
   window.addEventListener("resize", recaler);
   ["gesturestart","gesturechange"].forEach(function(n){ document.addEventListener(n, function(e){ e.preventDefault(); }); });
