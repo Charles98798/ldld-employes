@@ -39,6 +39,14 @@ function rdPointsHtml(r){
   h += pts.length ? pts.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+'</small><div>'+rdE(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun point publié pour le moment");
   return h;
 }
+function rdPubCle(){ return "ldld-rd-pub-" + RD.dep; }
+function rdPubTexte(d){
+  try { var j = new Intl.DateTimeFormat("fr-CA", {weekday:"long", day:"numeric", month:"long", timeZone:"America/Toronto"}).format(d), p = new Intl.DateTimeFormat("fr-CA", {hour:"numeric", minute:"2-digit", hourCycle:"h23", timeZone:"America/Toronto"}).formatToParts(d), h = "", m = "";
+    p.forEach(function(x){ if(x.type === "hour") h = String(+x.value); if(x.type === "minute") m = x.value; });
+    return j + " à " + h + " h " + m; } catch(e){ return d.toLocaleString("fr-CA"); }
+}
+function rdPubNoter(){ try { localStorage.setItem(rdPubCle(), rdPubTexte(new Date())); } catch(e){} }
+function rdPubLue(){ try { return localStorage.getItem(rdPubCle()) || ""; } catch(e){ return ""; } }
 function rdPeutPlanifier(){ return !!(MOI && (MOI.role === "direction" || MOI.role === "responsable")); }
 function rdE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function rdMsg(txt){ return '<div class="bandeau">▪ '+rdE(String(txt).toUpperCase())+'</div>'; }
@@ -110,7 +118,7 @@ function rdDiscussion(donnees, edition){
   if(!pts.length && edition !== "nouveau") h += rdMsg("Aucun point pour la prochaine rencontre");
   if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
   h += '<div class="rdstack"><button type="button" class="rdsoft" id="rdadd">Ajouter un point</button><button type="button" class="rdsoft" id="rdpub">Publier aux employés</button></div>';
-  h += '<div class="rdp" style="margin-top:12px"><small>'+rdE(donnees.derniere_publication ? "Dernière publication : " + donnees.derniere_publication : "Jamais publié")+'</small></div>';
+  h += '<div class="rdp" style="margin-top:12px"><small>'+rdE("Dernière publication : " + (donnees.derniere_publication || rdPubLue() || "jamais"))+'</small></div>';
   if(MOI && MOI.role === "direction") h += '<div class="rdstack"><button type="button" class="rdsoft" id="rdbase">Modifier les points de base</button></div>';
   h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Chaque réunion repart des points de base. Vos modifications ci-dessus ne touchent que cette réunion.</small></div>';
   h += '<div class="rdstack"><button type="button" class="rdline" id="rdhist">Historique</button></div><div id="rdm"></div>';
@@ -132,7 +140,7 @@ function rdDiscussion(donnees, edition){
   if(no) no.onclick = function(e){ e.preventDefault(); rdDiscussion(RD_PLAN); };
   if(ok) ok.onclick = function(e){ e.preventDefault(); var t = document.getElementById("rdtx").value.trim(); if(!t){ dire("Écrivez le point"); return; } dire("Enregistrement en cours"); if(fictif){ if(edition === "nouveau") materialiser("", {}, t); else materialiser("", {id: edition, texte: t}, ""); return; } ecrire({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: edition === "nouveau" ? "" : edition, texte: t}); };
   document.getElementById("rdadd").onclick = function(){ rdDiscussion(RD_PLAN, "nouveau"); };
-  document.getElementById("rdpub").onclick = function(){ dire("Publication en cours"); if(fictif){ materialiser("", {}, "", function(){ return appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés"); } else dire((r && r.erreur) || "Non publié · réessayez"); }); }); return; } appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés"); } else dire((r && r.erreur) || "Non publié · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); };
+  document.getElementById("rdpub").onclick = function(){ dire("Publication en cours"); if(fictif){ materialiser("", {}, "", function(){ return appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }); }); return; } appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); };
   document.getElementById("rdhist").onclick = function(){ rdHistorique(); };
   var bb = document.getElementById("rdbase"); if(bb) bb.onclick = function(){ rdBase(); };
 }
