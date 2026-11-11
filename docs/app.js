@@ -1687,7 +1687,7 @@ function dateHeure(opts, surChangement){
   var CPAL = [["charles","#1D1D1B","#fff"],["direction","#8D806A","#fff"],["famille","#5C5446","#fff"],["ldld","#8EFF60","#1D1D1B"],["prise","#BDC9B2","#1D1D1B"]], CRES = [["#B4AB9B","#1D1D1B"],["#CFC6B5","#1D1D1B"],["#C9F5B5","#1D1D1B"],["#3F3A30","#fff"]];
   function nomAg(a){ return a.principal ? "Mon agenda" : a.nom; }
   function idAg(a){ return a.principal ? "primary" : a.id; }
-  function couleurAg(id){ var L = DH_CACHE.agendas || [], i = 0, a = null; for(; i < L.length; i++){ if(idAg(L[i]) === id){ a = L[i]; break; } }
+  function couleurAg(id){ var L = DH_CACHE.agendas || [], i = 0, a = null; for(; i < L.length; i++){ if(idAg(L[i]) === id || (id === "primary" && L[i].principal)){ a = L[i]; break; } }
     if(a && /^#[0-9a-fA-F]{6}$/.test(a.couleur || "")){ var hx = a.couleur, lum = (parseInt(hx.substr(1,2),16)*299 + parseInt(hx.substr(3,2),16)*587 + parseInt(hx.substr(5,2),16)*114)/1000; return {f: hx, t: lum > 150 ? "#1D1D1B" : "#fff"}; }
     var n = a ? (a.principal ? "charles" : String(nomAg(a)).toLowerCase()) : (id === "primary" ? "charles" : ""), k; for(k = 0; k < CPAL.length; k++){ if(n.indexOf(CPAL[k][0]) >= 0) return {f: CPAL[k][1], t: CPAL[k][2]}; }
     var r = CRES[(a ? i : String(id).length) % CRES.length]; return {f: r[0], t: r[1]}; }
