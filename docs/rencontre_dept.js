@@ -315,6 +315,15 @@ function rdSerie(titre, a, b){
   if(!a || !a.length) return "";
   return '<small>'+rdE(titre)+'</small>' + rdCourbe(a, b);
 }
+// Ordre fixe des équipes (règle permanente): communes d'abord; une équipe sans donnée garde sa ligne.
+var RD_ORDRE = {"Acrylique": ["Modèle", "Numérisation", "Montage", "Injection", "Finition"], "Fixe": ["Modèle", "Numérisation", "Modélisation", "Céramique"], "Pièce": ["Modèle", "Numérisation", "Analyse", "Modélisation", "Finition"]};
+function rdNorm(t){ return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); }
+function rdOrdreEquipes(eq){
+  var ordre = RD_ORDRE[RD.dep]; if(!ordre) return eq;
+  var out = ordre.map(function(n){ var f = null; eq.forEach(function(e){ if(!f && rdNorm(e.equipe) === rdNorm(n)) f = e; }); return f || {equipe: n, jours: [], vide: true}; });
+  eq.forEach(function(e){ if(!ordre.some(function(n){ return rdNorm(n) === rdNorm(e.equipe); })) out.push(e); });
+  return out;
+}
 function rdRendreSection(cle, r){
   if(RD_DEMO && r && r.ok && (r.attente || (cle === "charge" && !(r.equipes || []).length))) r = rdDemoSection(cle);
   if((!r || !r.ok) && RD_DEMO) r = rdDemoSection(cle);
@@ -324,11 +333,12 @@ function rdRendreSection(cle, r){
   if(cle === "charge"){
     var eq = (r.equipes || []).filter(function(e){ return !/informatique/i.test(String(e.equipe || "")); });   // l'équipe Informatique n'est jamais invitée à la Réunion production
     if(!eq.length) return rdMsg("Données en attente de Trak");
+    eq = rdOrdreEquipes(eq);
     var avecAn = eq.some(function(e){ return e.an_passe != null; });
     var jl = (r.etiquettes && r.etiquettes.length === 5) ? r.etiquettes.map(function(t){ return String(t).toLowerCase() === "aujourd’hui" || String(t).toLowerCase() === "aujourd'hui" ? "Aujourd’hui" : String(t).toLowerCase(); }) : (function(){ var o = [], d = new Date(); while(o.length < 5){ var w = d.getDay(); if(!o.length || (w !== 0 && w !== 6)) { try { o.push(o.length ? new Intl.DateTimeFormat("fr-CA", {timeZone: "America/Toronto", weekday: "long"}).format(d) : "Aujourd’hui"); } catch(x){ o.push("Jour "+(o.length + 1)); } } d = new Date(d.getTime() + 864e5); } return o; })();
     h += '<div class="rdp"><small>Pourcentage de charge · 5 prochains jours'+(avecAn ? ' · même mois de l’an passé' : '')+'</small></div>';
     h += '<div class="rdp" style="display:flex;font-size:9px;letter-spacing:.04em;color:#8D806A">'+jl.map(function(t){ return '<span style="width:20%;text-align:center">'+rdE(t)+'</span>'; }).join("")+'</div>';
-    h += eq.map(function(e){ return '<div class="rdp"><div>'+rdE(e.equipe)+(e.an_passe != null ? ' · an passé '+rdE(e.an_passe)+' %' : '')+'</div><div style="display:flex;margin-top:4px">'+(e.jours || []).map(function(j){ var rouge = j > 95, vert = !rouge && j >= 65; return '<span style="width:20%;text-align:center;font-size:13px;padding:5px 0;box-sizing:border-box;'+(rouge ? "background:#B8473A;color:#fff" : (vert ? "background:#8EFF60;color:#1D1D1B" : "")) +'">'+rdE(j)+'</span>'; }).join("")+'</div></div>'; }).join("");
+    h += eq.map(function(e){ return '<div class="rdp"><div>'+rdE(e.equipe)+(e.an_passe != null ? ' · an passé '+rdE(e.an_passe)+' %' : '')+'</div><div style="display:flex;margin-top:4px">'+(e.vide ? ["—","—","—","—","—"] : (e.jours || [])).map(function(j){ var rouge = j > 95, vert = !rouge && j >= 65; return '<span style="width:20%;text-align:center;font-size:13px;padding:5px 0;box-sizing:border-box;'+(rouge ? "background:#B8473A;color:#fff" : (vert ? "background:#8EFF60;color:#1D1D1B" : "")) +'">'+rdE(j)+'</span>'; }).join("")+'</div></div>'; }).join("");
     h += '<div class="rdp"><small>Vert 65 à 95 % · Brique plus de 95 %</small></div>';
     return h;
   }
