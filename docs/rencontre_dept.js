@@ -5,7 +5,7 @@ var RD = {dep: "", choisi: false, vue: "discussion"};
 var RD_DEPS = ["Acrylique", "Fixe", "Pièce"];
 // DONNÉES FICTIVES (à retirer dès les vraies données de Trak): mettre RD_DEMO à false pour tout enlever d'un geste. Les vraies données remplacent le fictif automatiquement.
 var RD_DEMO = true;
-var RD_DEMO_PTS = [{n:1, texte:"Charge de travail du mois passé"}, {n:2, texte:"Répartition du travail entre les équipes"}, {n:3, texte:"Formation et accompagnement"}, {n:4, texte:"Questions de l’équipe"}];
+var RD_DEMO_PTS = [{n:1, texte:"Charge de travail du mois passé et des 5 prochains jours"}, {n:2, texte:"Répartition du travail entre les équipes"}, {n:3, texte:"Formation du mois : horaire et inscriptions"}, {n:4, texte:"Questions de l’équipe"}];
 var RD_DEMO_CAPS = {titre:"Capsule du mois · Charge et fonctionnement", points:["Balancement de la charge deux fois par jour, à 8 h et à 13 h", "Consulter le tableau de charge avant de commencer", "Signaler tout écart à son responsable"]};
 function rdDemoSection(cle){
   var mois = ["DÉC.","JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV."];
@@ -128,11 +128,12 @@ function rdDiscussion(donnees, edition){
   function ecrire(corps){ appelService(corps).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); }
   // Les points fictifs deviennent de vrais points écrits au service au premier enregistrement (modifier, retirer, ajouter ou publier).
   function materialiser(exclure, remplace, texteNouveau, apres){
+    if(RD.mat) return; RD.mat = true;   // un seul enregistrement à la fois: jamais de points écrits en double
     var liste = RD_DEMO_PTS.filter(function(p){ return "demo-"+p.n !== exclure; }).map(function(p){ return "demo-"+p.n === remplace.id ? remplace.texte : p.texte; });
     if(texteNouveau) liste.push(texteNouveau);
     var suite = Promise.resolve(null);
     liste.forEach(function(t){ suite = suite.then(function(){ return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: "", texte: t}); }); });
-    suite.then(function(r){ if(apres && r && r.ok) return apres(r); appliquer(r); }).catch(function(){ dire("Réseau indisponible"); });
+    suite.then(function(r){ RD.mat = false; if(apres && r && r.ok) return apres(r); appliquer(r); }).catch(function(){ RD.mat = false; dire("Réseau indisponible"); });
   }
   Array.prototype.forEach.call(z.querySelectorAll("[data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); rdDiscussion(RD_PLAN, a.getAttribute("data-m")); }; });
   Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); dire("Retrait en cours"); if(fictif){ materialiser(a.getAttribute("data-r"), {}, ""); return; } ecrire({action: "rd_point_retirer", session: sessionGardee(), departement: RD.dep, id: a.getAttribute("data-r")}); }; });
@@ -171,11 +172,12 @@ function rdBase(donnees, edition){
   var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
   function appliquer(r){ if(r && r.ok){ rdBase(r); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
   function materialiser(exclure, remplace, texteNouveau){
+    if(RD.mat) return; RD.mat = true;
     var liste = RD_DEMO_PTS.filter(function(p){ return "demo-"+p.n !== exclure; }).map(function(p){ return "demo-"+p.n === remplace.id ? remplace.texte : p.texte; });
     if(texteNouveau) liste.push(texteNouveau);
     var suite = Promise.resolve(null);
     liste.forEach(function(t){ suite = suite.then(function(){ return appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: "", texte: t}); }); });
-    suite.then(appliquer).catch(function(){ dire("Réseau indisponible"); });
+    suite.then(function(r){ RD.mat = false; appliquer(r); }).catch(function(){ RD.mat = false; dire("Réseau indisponible"); });
   }
   Array.prototype.forEach.call(z.querySelectorAll("[data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); rdBase(donnees, a.getAttribute("data-m")); }; });
   Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); dire("Retrait en cours"); if(fictif){ materialiser(a.getAttribute("data-r"), {}, ""); return; } appelService({action: "rd_base_retirer", session: sessionGardee(), departement: RD.dep, id: a.getAttribute("data-r")}).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); }; });
