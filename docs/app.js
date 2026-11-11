@@ -2433,7 +2433,8 @@ function vuePreparer(reelle){
 function vueEmploye(i){
   var reelle = VUE.on ? VUE.reel : sessionGardee(), ancien = VUE.on ? VUE.session : null, prec = VUE.nom;
   VUE.on = false;
-  app.innerHTML = '<div class="page"><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ UN INSTANT</div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ UN INSTANT</div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); VUE.pend = false; VUE.on = false; menu(); };
   VUE.pend = true;
   var vueDel = setTimeout(function(){ if(VUE.pend){ VUE.pend = false; VUE.on = false; sectionBase(i); } }, 15000);
   var pre = VUE_PRE; VUE_PRE = null;
