@@ -289,19 +289,23 @@ var RD_SECTIONS = [
 ];
 function rdLigne(cols){ return '<div class="rdp" style="display:flex;gap:10px;flex-wrap:wrap"><span>'+cols.map(rdE).join('</span><span>')+'</span></div>'; }
 function rdCourbe(a, b){
-  // Courbe SVG: trait noir = année en cours, pointillé = an passé. Valeurs en chiffres, jamais de noms.
-  var W = 320, H = 110, px = 14, py = 14, n = a.length, max = 1, i;
+  // Courbe SVG: trait noir = année en cours, pointillé = an passé. Valeurs en chiffres, jamais de noms. Un mois sans donnée (null) n'est pas dessiné: la courbe s'interrompt, jamais de zéro inventé.
+  var W = 320, H = 110, px = 14, py = 14, n = a.length, max = 1;
+  var nul = function(x){ return x == null || x.v == null; };
   a.forEach(function(x){ max = Math.max(max, +x.v || 0); }); (b || []).forEach(function(x){ max = Math.max(max, +x.v || 0); });
-  function pt(arr, k){ return (px + (n > 1 ? k*(W-2*px)/(n-1) : 0)).toFixed(1)+","+(H-py-((+arr[k].v || 0)/max)*(H-2*py)).toFixed(1); }
-  var la = a.map(function(x, k){ return pt(a, k); }).join(" "), lb = (b && b.length >= n) ? a.map(function(x, k){ return pt(b, k); }).join(" ") : "";
+  function xy(arr, k){ return [(px + (n > 1 ? k*(W-2*px)/(n-1) : 0)).toFixed(1), (H-py-((+arr[k].v || 0)/max)*(H-2*py)).toFixed(1)]; }
+  function segments(arr){ var out = [], cur = []; for(var k = 0; k < n; k++){ if(!arr[k] || nul(arr[k])){ if(cur.length) out.push(cur); cur = []; } else cur.push(xy(arr, k).join(",")); } if(cur.length) out.push(cur); return out; }
+  function lignes(arr, attr){ return segments(arr).map(function(sg){ return sg.length > 1 ? '<polyline points="'+sg.join(" ")+'" fill="none" '+attr+'/>' : ""; }).join(""); }
+  var avecB = b && b.length >= n;
   var lab = a.map(function(x, k){ return k % (n > 8 ? 2 : 1) === 0 ? '<text x="'+(px + (n > 1 ? k*(W-2*px)/(n-1) : 0)).toFixed(1)+'" y="'+(H-2)+'" font-size="8" text-anchor="middle" fill="#8D806A">'+rdE(x.m)+'</text>' : ""; }).join("");
-  var pts = a.map(function(x, k){ var p = pt(a, k).split(","); return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2" fill="#1D1D1B"/>'; }).join("");
-  var dern = pt(a, n-1).split(",");
+  var pts = a.map(function(x, k){ if(nul(x)) return ""; var p = xy(a, k); return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2" fill="#1D1D1B"/>'; }).join("");
+  var kd = -1; for(var q = n - 1; q >= 0; q--){ if(!nul(a[q])){ kd = q; break; } }
+  var dern = kd >= 0 ? xy(a, kd) : null;
   return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 10px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1"/>'
-    + (lb ? '<polyline points="'+lb+'" fill="none" stroke="#1D1D1B" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55"/>' : "")
-    + '<polyline points="'+la+'" fill="none" stroke="#1D1D1B" stroke-width="2"/>'+pts
-    + '<text x="'+dern[0]+'" y="'+(parseFloat(dern[1])-6)+'" font-size="9" text-anchor="end" fill="#1D1D1B">'+rdE(a[n-1].v)+'</text>'+lab+'</svg>'
-    + (lb ? '<div class="rdp"><small>Trait plein · cette année · pointillé · an passé</small></div>' : "");
+    + (avecB ? lignes(b, 'stroke="#1D1D1B" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55"') : "")
+    + lignes(a, 'stroke="#1D1D1B" stroke-width="2"') + pts
+    + (dern ? '<text x="'+dern[0]+'" y="'+(parseFloat(dern[1])-6)+'" font-size="9" text-anchor="end" fill="#1D1D1B">'+rdE(a[kd].v)+'</text>' : "") + lab + '</svg>'
+    + (avecB ? '<div class="rdp"><small>Trait plein · cette année · pointillé · an passé</small></div>' : "");
 }
 function rdSerie(titre, a, b){
   if(!a || !a.length) return "";
