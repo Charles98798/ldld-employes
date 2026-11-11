@@ -2405,7 +2405,7 @@ function heures(){
   }
   obtenir("heures", {action:"heures"}, afficherH, function(){ var z = document.getElementById("hz"); if(z) z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
-var VUE_ONGLETS = [9, 0, 4, 2];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
+var VUE_ONGLETS = [0, 4, 2];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
 function section(i){
   if(MOI && MOI.role === "direction" && !vueComme() && VUE_ONGLETS.indexOf(i) >= 0) return vueEmploye(i);
   sectionBase(i);
