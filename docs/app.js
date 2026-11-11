@@ -2380,6 +2380,7 @@ function rencontre(){
     };
   }).catch(function(){ var el = document.getElementById("rc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
+function carreVert(t){ return '<div style="margin:18vh 0 0;background:#8EFF60;color:#1D1D1B;padding:56px 20px;text-align:center;font-size:17px;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;font-weight:500">'+esc(t)+'</div>'; }
 function heures(){
   // Vraies heures du logiciel de gestion (pointages de la borne, mises à jour aux 15 minutes). Tout tient sur un écran.
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes heures</h1><div id="hz"><div class="bandeau">▪ UN INSTANT</div></div></div>';
@@ -2390,10 +2391,10 @@ function heures(){
   function col(t, r){ var tot = 0, vu = false; r.forEach(function(x){ if(x.min !== null){ tot += x.min; vu = true; } }); return '<div><h2 class="h2">'+t+'</h2>'+r.map(function(x){ var l = ligne(x); return '<div class="hc"><span>'+l[0]+'</span><b>'+l[1]+'</b></div>'; }).join("")+'<div class="htot"><span>Total</span><b>'+(vu ? hm(tot) : "—")+'</b></div></div>'; }
   function afficherH(r){
     var z = document.getElementById("hz"); if(!z) return;
-    if(r && r.ok === false && /donn|num|paie|employ|introuv|inconnu/i.test(String(r.erreur || ""))){ z.innerHTML = '<div class="bandeau">▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES</div>'; return; }
+    if(r && r.ok === false && /donn|num|paie|employ|introuv|inconnu/i.test(String(r.erreur || ""))){ z.innerHTML = carreVert('Données non applicables'); return; }
     if(!r || !r.ok){ z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; return; }
     var vide = !(r.pointagesAuj || []).length && (r.minutesAuj === null || r.minutesAuj === undefined) && !(r.cette || []).some(function(x){ return x.min !== null && x.min !== undefined; }) && !(r.passee || []).some(function(x){ return x.min !== null && x.min !== undefined; });
-    if(vide){ z.innerHTML = '<div class="bandeau">▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES</div>'; return; }
+    if(vide){ z.innerHTML = carreVert('Données non applicables'); return; }
     var pts = (r.pointagesAuj || []).map(function(x, i, a){
       var lib = x.s === "entree" ? (i === 0 ? "Arrivée" : "Retour") : (i === a.length - 1 && r.etat === "parti" ? "Départ" : "Pause");
       return '<div class="hl"><span class="t">'+hm(Number(x.t.slice(0,2)) * 60 + Number(x.t.slice(3,5)))+'</span><span>'+lib+'</span></div>';
