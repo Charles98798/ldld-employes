@@ -1478,13 +1478,16 @@ function neFormulaire(cand){
       h += lg("Échelle salariale", P.echelleAnnee ? String(P.echelleAnnee) : "—");
       h += lg("Position", (P.position !== undefined && P.position !== "" && !isNaN(Number(P.position))) ? fr(Number(P.position) <= 1 ? Number(P.position) * 100 : P.position, 0)+" %" : "—");
       h += lg("Salaire horaire", (P.salaire !== undefined && P.salaire !== "" && !isNaN(Number(P.salaire))) ? fr(P.salaire, 2)+" $" : "—");
-      // Horaire, documents et responsabilités
+      // Horaire, documents et responsabilités: chaque section a son titre; les longues listes sont en pleine largeur, une ligne par élément
+      var sec = function(t){ return '<div class="etq" style="margin-top:14px">▪ '+esc(t)+'</div>'; };
+      var pl = function(t){ return '<div class="ligne" style="display:block"><span>'+esc(t)+'</span></div>'; };
       var hj = NE_JOURS.map(function(j, i){ var d = S.h[i]; return d && d.a && d.b ? [j, d.a+" – "+d.b] : null; }).filter(Boolean);
-      h += '<div class="etq" style="margin-top:14px">▪ JOURS DE TRAVAIL, DOCUMENTS ET RESPONSABILITÉS</div>';
-      h += hj.length ? hj.map(function(x){ return lg(x[0], x[1]); }).join("") : lg("Horaire", "—");
+      h += sec("HORAIRE") + (hj.length ? hj.map(function(x){ return lg(x[0], x[1]); }).join("") : lg("Horaire", "—"));
       var dn = S.docs.filter(function(x){ return String(x).trim(); });
-      h += lg("Documents à apporter", dn.length ? dn.length+" document"+(dn.length > 1 ? "s" : "") : "—");
-      var nbr = Object.keys(S.rc || {}).length; h += lg("Responsabilités choisies", String(nbr));
+      h += sec("DOCUMENTS À APPORTER · "+dn.length) + (dn.length ? dn.map(pl).join("") : lg("Documents", "—"));
+      var rt = []; if(NE_RESP) NE_RESP.groupes.forEach(function(g){ if(g.description && S.rc[g.description.k]) rt.push(g.description.texte); g.items.forEach(function(it){ if(!it.section && S.rc[it.k]) rt.push(it.texte); }); });
+      var nbr = Object.keys(S.rc || {}).length;
+      h += sec("RESPONSABILITÉS · "+nbr) + (rt.length ? rt.map(pl).join("") : lg("Responsabilités", "—"));
       h += et.c.map(champ).join("");
       h += '<div class="bandeau">▪ ENVOI PAR DOCUSIGN · À VENIR</div>';
     } else h += et.c.map(champ).join("");
