@@ -1337,12 +1337,13 @@ function neEnvoyer(dem){
     run: function(){ return appelService({action: "docusign_envoyer", session: sessionGardee(), id: dem.id, courriel: dem.courriel, confirme: true}).then(function(r){ if(r && r.ok){ NE_ATT = null; NE_ATTP = null; menu.attPre = false; } return r; }); },
     suite: function(r){ return (r.r && r.r.ldld) || ""; }});
 }
-var NE_ATT = null, NE_BRP = {}, NE_ATTP = null, NE_ATTT = 0;
+var NE_ATT = (function(){ try { var a = JSON.parse(localStorage.getItem("ldld-ne-att") || "null"); return Array.isArray(a) && a.length ? a : null; } catch(e){ return null; } })(), NE_BRP = {}, NE_ATTP = null, NE_ATTT = 0;
 function neAttCharger(sansBrouillons){
   if(NE_ATTP) return NE_ATTP;
   var p = NE_ATTP = appelService({action: "embauche_attente", session: sessionGardee()}).then(function(r){
-    var l = (r && r.ok && r.r && r.r.length) ? r.r : [];
-    NE_ATT = l; NE_ATTT = Date.now(); NE_ATTP = null; NE_BRP = {};
+    if(!(r && r.ok)){ NE_ATTP = null; return NE_ATT || []; }
+    var l = (r.r && r.r.length) ? r.r : [];
+    NE_ATT = l; NE_ATTT = Date.now(); NE_ATTP = null; NE_BRP = {}; try { localStorage.setItem("ldld-ne-att", JSON.stringify(l)); } catch(e){}
     if(!sansBrouillons) l.forEach(function(c){ NE_BRP[c.id] = appelService({action: "embauche_brouillon", session: sessionGardee(), id: c.id}).catch(function(){ return null; }); });
     return l;
   }, function(e){ NE_ATTP = null; throw e; });
