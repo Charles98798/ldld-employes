@@ -1,7 +1,7 @@
 // Rencontre de département, étape 1: points de discussion (lecture pour tous, planification pour Gestionnaire + Direction) et capsules communes.
 // Services: rd_points_lire (tous), rd_planif_lire / rd_point_ecrire / rd_point_retirer / rd_points_publier (Gestionnaire + Direction),
 // rd_capsules_lire / rd_capsule_modifier / rd_capsule_presenter (Gestionnaire + Direction). Le service refuse aussi l'accès (catégorie Gestionnaire ou Direction, jamais Expert technique).
-var RD = {dep: "", planif: false, vue: "discussion"};
+var RD = {dep: "", choisi: false, vue: "discussion"};
 var RD_DEPS = ["Acrylique", "Fixe", "Pièce"];
 function rdPeutPlanifier(){ return !!(MOI && (MOI.role === "direction" || MOI.role === "responsable")); }
 function rdE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
@@ -12,26 +12,31 @@ function rdTitreDep(){ return "Département " + RD.dep; }
 // Choix du département (pendant les tests: l'employé choisit, l'application mémorise). Une réunion séparée par département.
 function rencontreDept(){
   var m = ""; try { m = localStorage.getItem("ldld-rd-dep") || ""; } catch(e){}
-  RD.dep = RD_DEPS.indexOf(m) >= 0 ? m : RD_DEPS[0];
+  RD.dep = RD_DEPS.indexOf(m) >= 0 ? m : "";
+  RD.choisi = RD.dep !== "";
   rdPoints();
 }
-// Vue des points publiés (tous les employés connectés).
+
+// Vue des points publiés. Version finale: le département de l'employé vient du fichier Trak (réponse du service, champ « departement »).
+// Gestionnaire et Direction peuvent changer de département avec les pastilles; si le service ne donne pas de département, tout le monde choisit.
 function rdPoints(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1><div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div><div id="rdz"></div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  Array.prototype.forEach.call(app.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPoints(); }; });
-  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){
-    var z = document.getElementById("rdz"); if(!z) return;
-    if(!r || !r.ok){ z.innerHTML = rdErreur(r); return; }
-    var h = "";
-    if(r.planif !== undefined ? r.planif : rdPeutPlanifier()) h += '<div class="rdbtn"><button type="button" class="rdplan" id="rdplan">Planification</button></div>';
+  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.choisi ? RD.dep : ""}).then(function(r){
+    if(!r || !r.ok){ app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion production</h1>'+rdErreur(r)+'</div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; return; }
+    if(r.departement && RD_DEPS.indexOf(r.departement) >= 0) RD.dep = r.departement; else if(!RD.dep) RD.dep = RD_DEPS[0];
+    var planif = r.planif !== undefined ? r.planif : rdPeutPlanifier(), choix = planif || !r.departement;
+    var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
+    if(choix) h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
+    h += '<div id="rdz">';
+    if(planif) h += '<div class="rdbtn"><button type="button" class="rdplan" id="rdplan">Planification</button></div>';
     if(r.date) h += '<div class="rddate">'+rdE(r.date)+'</div>';
     h += '<div class="rdt">01 <span>Points de discussion</span></div>';
     var pts = r.points || [];
-    h += pts.length ? pts.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+'</small><div>'+rdE(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun point publié pour le moment");
-    z.innerHTML = h;
+    h += (pts.length ? pts.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+'</small><div>'+rdE(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun point publié pour le moment")) + '</div></div>';
+    app.innerHTML = h;
+    document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+    Array.prototype.forEach.call(app.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); RD.choisi = true; try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPoints(); }; });
     var b = document.getElementById("rdplan"); if(b) b.onclick = function(){ RD.vue = "discussion"; rdPlanif(); };
-  }).catch(function(){ var z = document.getElementById("rdz"); if(z) z.innerHTML = rdMsg("Réseau indisponible"); });
+  }).catch(function(){ app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion production</h1>'+rdMsg("Réseau indisponible")+'</div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; });
 }
 
 // Planification: barre noire avec liste déroulante Discussion / Capsule.
