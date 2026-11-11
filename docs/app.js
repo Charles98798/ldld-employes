@@ -175,9 +175,10 @@ function viderPerso(){ try { Object.keys(localStorage).forEach(function(k){ if(k
 // Vue « employé au hasard » (Direction seulement, lecture seule): pendant qu'elle est active, la session de l'employé tiré sert aux appels et rien n'est gardé en cache local.
 var VUE = {on:false, reel:null, session:null, nom:"", relancer:null};
 function cleLecture(c){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); if(VUE.on) o._v = VUE.session; return JSON.stringify(o); }
+var VUE_LECT = {tableau:1, messages:1, ae_lire:1};   // en vue « employé au hasard » seulement: lectures préparées d'avance et gardées 30 min
 function appelService(corps){
   var a = corps && corps.action;
-  if(!LECT[a]){ if(!NEUTRE[a] && !/_liste$|_fichier$/.test(a || "")){ RCACHE = {}; viderPerso(); } return appelBrut(corps); }
+  if(!LECT[a] && !(VUE.on && VUE_LECT[a])){ if(!NEUTRE[a] && !/_liste$|_fichier$/.test(a || "")){ RCACHE = {}; viderPerso(); } return appelBrut(corps); }
   var k = cleLecture(corps), e = RCACHE[k], t = Date.now();
   if(e && t - e.t < 1800000){
     if(t - e.t > 20000 && !e.maj){ e.maj = 1; enArriere(function(){ return appelBrut(corps); }).then(function(r){ if(r && r.ok){ RCACHE[k] = {t: Date.now(), p: Promise.resolve(r)}; ecrirePerso(a, k, r); } }).catch(function(){}); }
@@ -2429,7 +2430,7 @@ function vuePreparer(reelle){
   var pre = {reelle: reelle, t: Date.now()};
   pre.p = enArriere(function(){ return appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:VUE_DERNIER}); }).then(function(r){
     if(r && r.ok){
-      [{action:"heures"}, {action:"tableau_courant"}].forEach(function(c){
+      [{action:"heures"}, {action:"tableau_courant"}, {action:"tableau"}, {action:"messages"}, {action:"ae_lire"}].forEach(function(c){
         var k = cleLectureVue(c, r.session); c.session = r.session;
         var p = enArriere(function(){ return appelBrut(c); });
         RCACHE[k] = {t: Date.now(), p: p};
