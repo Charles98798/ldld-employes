@@ -915,3 +915,7 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .gs .d.f,.gs .d.c{background:#b3afa3}
 .gs .clf,.gs .clc{background:#cbc7bb}
 .glg{flex-wrap:wrap}
+
+/* Publication 213: congé/fermé plus foncé, colonne pleine */
+.gs .d.f,.gs .d.c{background:#A39E91;color:#1D1D1B}
+.gs .clf,.gs .clc{background:#B5B0A2}

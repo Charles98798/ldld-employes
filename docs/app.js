@@ -1674,6 +1674,7 @@ function dateHeure(opts, surChangement){
   function nomAg(a){ return a.principal ? "Mon agenda" : a.nom; }
   function idAg(a){ return a.principal ? "primary" : a.id; }
   function couleurAg(id){ var L = DH_CACHE.agendas || [], i = 0, a = null; for(; i < L.length; i++){ if(idAg(L[i]) === id){ a = L[i]; break; } }
+    if(a && /^#[0-9a-fA-F]{6}$/.test(a.couleur || "")){ var hx = a.couleur, lum = (parseInt(hx.substr(1,2),16)*299 + parseInt(hx.substr(3,2),16)*587 + parseInt(hx.substr(5,2),16)*114)/1000; return {f: hx, t: lum > 150 ? "#1D1D1B" : "#fff"}; }
     var n = a ? (a.principal ? "charles" : String(nomAg(a)).toLowerCase()) : "", k; for(k = 0; k < CPAL.length; k++){ if(n.indexOf(CPAL[k][0]) >= 0) return {f: CPAL[k][1], t: CPAL[k][2]}; }
     var r = CRES[(i < 0 ? 0 : i) % CRES.length]; return {f: r[0], t: r[1]}; }
   function selAgendas(){
@@ -1683,7 +1684,7 @@ function dateHeure(opts, surChangement){
     var L = DH_CACHE.agendas || []; if(L.length){ var ok = S.sel.filter(function(id){ return L.some(function(a){ return idAg(a) === id; }); }); S.sel = ok.length ? ok : [idAg(L[0])]; }
     S.agenda = S.sel[0]; return S.sel;
   }
-  function legende(){ return '<div class="glg"><span><i style="background:#8EFF60"></i>Réunion</span><span><i style="background:#cbc7bb;box-shadow:inset 0 0 0 1px #a6a29a"></i>Congé / fermé</span></div>'; }
+  function legende(){ return '<div class="glg"><span><i style="background:#B5B0A2"></i>Congé / fermé</span></div>'; }
   function lierVue(){
     var v1 = document.getElementById("dhv1"), v2 = document.getElementById("dhv2");
     function vue(x){ S.vue = x; try { localStorage.setItem("ldld-cal-vue", x); } catch(e){} rendre(); charger(); }
@@ -1746,7 +1747,7 @@ function dateHeure(opts, surChangement){
       jm = '<div style="display:grid;grid-template-columns:repeat(7,1fr);border:1px solid #1D1D1B;border-bottom:0;margin-top:6px">'+JOURS_C.map(function(j){ return '<div style="background:#B4AB9B;font-size:11px;text-align:center;padding:4px 0">'+j+'</div>'; }).join("");
       for(var wk = 0; wk < 6; wk++) for(var dk = 0; dk < 7; dk++){ var dd = new Date(ml); dd.setDate(dd.getDate()+wk*7+dk); var iso = isoJour(dd), hors = dd.getMonth() !== m1.getMonth();
         var evj = S.evm.filter(function(e){ return isoJour(new Date(e.debut)) === iso; });
-        jm += '<div data-jm="'+iso+'" style="'+(conge(iso) ? "background:#cbc7bb;" : "")+'min-height:62px;border-right:1px solid #B4AB9B;border-bottom:1px solid #B4AB9B;padding:2px;box-sizing:border-box;font-size:11px;cursor:pointer;'+(hors ? "opacity:.4;" : "")+'"><span style="'+(iso === aujIso ? "background:#1D1D1B;color:#fff;padding:0 4px" : "")+'">'+dd.getDate()+'</span>'+evj.slice(0, 3).map(function(e){ var c = couleurAg(e.ag); return '<div style="background:'+c.f+';color:'+c.t+';font-size:8px;padding:1px 3px;margin-top:2px;white-space:nowrap;overflow:hidden">'+esc(e.titre)+'</div>'; }).join("")+(evj.length > 3 ? '<div style="font-size:8px">+'+(evj.length-3)+'</div>' : "")+'</div>'; }
+        jm += '<div data-jm="'+iso+'" style="'+(conge(iso) ? "background:#B5B0A2;" : "")+'min-height:62px;border-right:1px solid #B4AB9B;border-bottom:1px solid #B4AB9B;padding:2px;box-sizing:border-box;font-size:11px;cursor:pointer;'+(hors ? "opacity:.4;" : "")+'"><span style="'+(iso === aujIso ? "background:#1D1D1B;color:#fff;padding:0 4px" : "")+'">'+dd.getDate()+'</span>'+evj.slice(0, 3).map(function(e){ var c = couleurAg(e.ag); return '<div style="background:'+c.f+';color:'+c.t+';font-size:8px;padding:1px 3px;margin-top:2px;white-space:nowrap;overflow:hidden">'+esc(e.titre)+'</div>'; }).join("")+(evj.length > 3 ? '<div style="font-size:8px">+'+(evj.length-3)+'</div>' : "")+'</div>'; }
       h += jm+'</div>';
       h += legende();
       z.innerHTML = h; lierAg(); lierVue();
