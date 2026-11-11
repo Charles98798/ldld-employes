@@ -39,6 +39,9 @@ function rdPointsHtml(r){
   h += pts.length ? pts.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+'</small><div>'+rdE(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun point publié pour le moment");
   return h;
 }
+function rdCapPresCle(n){ return "ldld-rd-cap-" + n; }
+function rdCapPresNoter(n){ try { localStorage.setItem(rdCapPresCle(n), rdPubTexte(new Date())); } catch(e){} }
+function rdCapPresLue(n){ try { return localStorage.getItem(rdCapPresCle(n)) || ""; } catch(e){ return ""; } }
 function rdPubCle(){ return "ldld-rd-pub-" + RD.dep; }
 function rdPubTexte(d){
   try { var j = new Intl.DateTimeFormat("fr-CA", {weekday:"long", day:"numeric", month:"long", timeZone:"America/Toronto"}).format(d), p = new Intl.DateTimeFormat("fr-CA", {hour:"numeric", minute:"2-digit", hourCycle:"h23", timeZone:"America/Toronto"}).formatToParts(d), h = "", m = "";
@@ -168,7 +171,7 @@ function rdBase(donnees, edition){
       ? '<textarea class="rdzone" id="rdtx" maxlength="400" rows="3">'+rdE(p.texte)+'</textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div>'
       : '<div class="rdl2"><div class="rdtx">'+rdE(p.texte)+'</div><div class="rdact"><a href="#" data-m="'+rdE(p.id)+'">Modifier</a><a href="#" data-r="'+rdE(p.id)+'">Retirer</a></div></div>')+'</div>'; }).join("");
   if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point de base</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
-  h += '<div class="rdstack"><button type="button" class="rdsoft" id="rdadd">Ajouter un point de base</button><button type="button" class="rdline" id="rdfin">Retour aux points de la réunion</button></div>';
+  h += '<div class="rdgrid"><button type="button" class="rdsoft" id="rdadd">Ajouter un point de base</button><button type="button" class="rdsoft" id="rdfin">Retour aux points de la réunion</button></div>';
   h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Ces points de base servent de départ à chaque nouvelle réunion. Ils ne changent pas la réunion en cours.</small></div><div id="rdm"></div>';
   z.innerHTML = h;
   var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
@@ -216,37 +219,44 @@ function rdCapsules(donnees){
     return '<a href="#" class="rdln" data-s="'+rdE(x.n)+'" style="text-decoration:none;color:inherit;'+(sel ? "background:#8EFF60;" : "")+'padding:10px 8px"><span><small>'+(x.n < 10 ? "0" : "")+rdE(x.n)+'</small> '+rdE(x.titre)+(surM ? ' <em>capsule du mois</em>' : '')+(x.pret === false ? ' <em>en préparation</em>' : '')+'</span></a>';
   }).join("");
   var d = toutes.filter(function(x){ return x.n === choisie; })[0];
-  if(d){
-    var pointsD = (c && c.n === d.n && c.points) ? c.points : (d.points || []);
-    h += '<div class="rdsm" style="margin-top:22px">Capsule '+rdE(d.n)+' sur 11'+(d.theme ? ' · '+rdE(d.theme) : '')+(c && c.n === d.n ? ' · capsule du mois' : '')+'</div><div class="rdcap"><div class="rdcapt" style="margin-bottom:18px">'+rdE(d.titre)+'</div>' +
-      pointsD.map(function(p, i){ return '<div class="rdcl" style="margin-top:18px"><small>0'+(i + 1)+'</small> '+rdE(p.t)+(p.statut === "à valider" ? ' <em style="white-space:nowrap">à valider</em>' : '')+'</div>'; }).join("") +
-      '<div class="rdact" style="margin-top:18px"><a href="#" data-c="'+rdE(d.n)+'">Modifier</a></div></div>';
-  }
+  h += '<div id="rdcd"></div>';
   z.innerHTML = h;
   Array.prototype.forEach.call(z.querySelectorAll("[data-s]"), function(a){ a.onclick = function(e){ e.preventDefault(); RD.capSel = Number(a.getAttribute("data-s")); rdCapsules(donnees); }; });
+  if(d) rdCapsuleEdit(d.n, "rdcd");
   Array.prototype.forEach.call(z.querySelectorAll("[data-c]"), function(a){ a.onclick = function(e){ e.preventDefault(); rdCapsuleEdit(Number(a.getAttribute("data-c"))); }; });
 }
-function rdCapsuleEdit(n){
+function rdCapsuleEdit(n, zone){
   var cap = (RD_CAP && RD_CAP.liste || []).filter(function(x){ return x.n === n; })[0] || (RD_CAP && RD_CAP.courante && RD_CAP.courante.n === n ? RD_CAP.courante : null);
   if(!cap) return;
   var pts = (cap.points || []).map(function(p){ return {t: p.t, statut: p.statut}; });
+  var edit = -1;   // même mode de modification que Planification discussion: Modifier / Retirer à droite de chaque point, grille 2×2
   function dessiner(){
-    var h = '<div class="rdsm">Capsule '+rdE(n)+' sur 11 · '+rdE(cap.theme || "")+'</div><div class="rdcapt" style="margin-bottom:12px">'+rdE(cap.titre)+'</div>' +
-      pts.map(function(p, i){ return '<small class="rdlb">Point '+(i + 1)+(p.statut === "à valider" ? ' · à valider' : '')+'</small><textarea class="rdzone" data-i="'+i+'" maxlength="300" rows="2">'+rdE(p.t)+'</textarea><div class="rdact"><a href="#" data-v="'+i+'">'+(p.statut === "à valider" ? "Valider" : "Marquer à valider")+'</a><a href="#" data-x="'+i+'">Retirer</a></div>'; }).join("");
-    h += '<div class="rdstack">' + (pts.length < 5 ? '<button type="button" class="rdsoft" id="rdca">Ajouter un point</button>' : '') + '<button type="button" class="rdline" id="rdcp">Présenter à la prochaine rencontre</button><button type="button" class="rdsoft" id="rdcs">Enregistrer</button></div><div id="rdm"></div>';
-    document.getElementById("rdz").innerHTML = h;
-    function lire(){ Array.prototype.forEach.call(document.querySelectorAll("#rdz textarea[data-i]"), function(t){ pts[Number(t.getAttribute("data-i"))].t = t.value; }); }
+    var h = '<div class="rdsm" style="margin-top:22px">Capsule '+rdE(n)+' sur 11 · '+rdE(cap.theme || "")+'</div><div class="rdcapt" style="margin-bottom:12px">'+rdE(cap.titre)+'</div>';
+    h += pts.map(function(p, i){
+      return '<div class="rdp"><small>Point '+(i + 1)+(p.statut === "à valider" ? ' · <span style="white-space:nowrap">à valider</span>' : '')+'</small>' + (edit === i
+        ? '<textarea class="rdzone" id="rdtx" maxlength="300" rows="3">'+rdE(p.t)+'</textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div>'
+        : '<div class="rdl2"><div class="rdtx">'+rdE(p.t)+'</div><div class="rdact"><a href="#" data-m="'+i+'">Modifier</a><a href="#" data-x="'+i+'">Retirer</a></div></div>' + (p.statut === "à valider" ? '<div class="rdact"><a href="#" data-v="'+i+'">Valider</a></div>' : '')) + '</div>';
+    }).join("");
+    if(edit === pts.length) h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="300" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
+    h += '<div class="rdgrid">' + (pts.length < 5 ? '<button type="button" class="rdsoft" id="rdca">Ajouter un point</button>' : '<span></span>') + '<button type="button" class="rdsoft" id="rdcs">Enregistrer la capsule</button><button type="button" class="rdsoft rdpubb" id="rdcp">Présenter à la prochaine rencontre</button><span></span></div><div class="rdp" style="margin-top:12px"><small>'+rdE("Dernière présentation : " + (rdCapPresLue(n) || "jamais"))+'</small></div><div id="rdm"></div>';
+    document.getElementById(zone || "rdz").innerHTML = h;
     var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
-    Array.prototype.forEach.call(document.querySelectorAll("#rdz [data-v]"), function(a){ a.onclick = function(e){ e.preventDefault(); lire(); var p = pts[Number(a.getAttribute("data-v"))]; p.statut = p.statut === "à valider" ? "valide" : "à valider"; dessiner(); }; });
-    Array.prototype.forEach.call(document.querySelectorAll("#rdz [data-x]"), function(a){ a.onclick = function(e){ e.preventDefault(); lire(); pts.splice(Number(a.getAttribute("data-x")), 1); dessiner(); }; });
-    var ca = document.getElementById("rdca"); if(ca) ca.onclick = function(){ lire(); pts.push({t: "", statut: "à valider"}); dessiner(); };
-    function fin(r){ if(r && r.ok){ RD_CAP = r; RD.vue = "capsule"; rdPlanif(); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
-    document.getElementById("rdcs").onclick = function(){ lire(); dire("Enregistrement en cours"); appelService({action: "rd_capsule_modifier", session: sessionGardee(), n: n, titre: cap.titre, points: pts.filter(function(p){ return String(p.t).trim(); })}).then(fin).catch(function(){ dire("Réseau indisponible"); }); };
-    document.getElementById("rdcp").onclick = function(){ dire("Un instant"); appelService({action: "rd_capsule_presenter", session: sessionGardee(), n: n}).then(fin).catch(function(){ dire("Réseau indisponible"); }); };
+    Array.prototype.forEach.call(document.querySelectorAll("#"+(zone || "rdz")+" [data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); edit = Number(a.getAttribute("data-m")); dessiner(); }; });
+    Array.prototype.forEach.call(document.querySelectorAll("#"+(zone || "rdz")+" [data-x]"), function(a){ a.onclick = function(e){ e.preventDefault(); pts.splice(Number(a.getAttribute("data-x")), 1); edit = -1; dessiner(); }; });
+    Array.prototype.forEach.call(document.querySelectorAll("#"+(zone || "rdz")+" [data-v]"), function(a){ a.onclick = function(e){ e.preventDefault(); pts[Number(a.getAttribute("data-v"))].statut = "valide"; dessiner(); }; });
+    var ok = document.getElementById("rdok"), no = document.getElementById("rdno");
+    if(no) no.onclick = function(e){ e.preventDefault(); edit = -1; dessiner(); };
+    if(ok) ok.onclick = function(e){ e.preventDefault(); var t = document.getElementById("rdtx").value.trim(); if(!t){ dire("Écrivez le point"); return; } if(edit === pts.length) pts.push({t: t, statut: "valide"}); else pts[edit].t = t; edit = -1; dessiner(); };
+    var ca = document.getElementById("rdca"); if(ca) ca.onclick = function(){ edit = pts.length; dessiner(); };
+    function fin(r, presente){ if(r && r.ok){ if(presente) rdCapPresNoter(n); RD_CAP = r; RD.vue = "capsule"; rdPlanif(); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
+    document.getElementById("rdcs").onclick = function(){ dire("Enregistrement en cours"); appelService({action: "rd_capsule_modifier", session: sessionGardee(), n: n, titre: cap.titre, points: pts.filter(function(p){ return String(p.t).trim(); })}).then(fin).catch(function(){ dire("Réseau indisponible"); }); };
+    document.getElementById("rdcp").onclick = function(){ dire("Un instant"); appelService({action: "rd_capsule_presenter", session: sessionGardee(), n: n}).then(function(r){ fin(r, true); }).catch(function(){ dire("Réseau indisponible"); }); };
   }
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>'+rdBarre()+'<div id="rdz"></div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); RD.vue = "capsule"; rdPlanif(); };
-  rdMenuLier("cap");
+  if(!zone){
+    app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>'+rdBarre()+'<div id="rdz"></div></div>';
+    document.getElementById("retour").onclick = function(e){ e.preventDefault(); RD.vue = "capsule"; rdPlanif(); };
+    rdMenuLier("cap");
+  }
   dessiner();
 }
 
