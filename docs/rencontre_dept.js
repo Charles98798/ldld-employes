@@ -27,7 +27,7 @@ function rdPoints(){
     var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
     if(choix) h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
     h += '<div id="rdz">';
-    if(planif) h += '<div class="rdbtn"><button type="button" class="rdplan" id="rdplan">Planification</button></div>';
+    if(planif) h += '<div class="rdbtn"><button type="button" class="rdplan" id="rdplan">Planification</button><button type="button" class="rdplan" id="rdpres" style="margin-left:8px">Présentation</button></div>';
     if(r.date) h += '<div class="rddate">'+rdE(r.date)+'</div>';
     h += '<div class="rdt">01 <span>Points de discussion</span></div>';
     var pts = r.points || [];
@@ -36,6 +36,7 @@ function rdPoints(){
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
     Array.prototype.forEach.call(app.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); RD.choisi = true; try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPoints(); }; });
     var b = document.getElementById("rdplan"); if(b) b.onclick = function(){ RD.vue = "discussion"; rdPlanif(); };
+    var bp = document.getElementById("rdpres"); if(bp) bp.onclick = function(){ rdPresentation(); };
   }).catch(function(){ app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion production</h1>'+rdMsg("Réseau indisponible")+'</div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; });
 }
 
@@ -130,4 +131,51 @@ function rdCapsuleEdit(n){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); RD.vue = "capsule"; rdPlanif(); };
   document.getElementById("rdsel").onchange = function(){ RD.vue = this.value; rdPlanif(); };
   dessiner();
+}
+
+
+// Étapes 2 à 4: mode Présentation (Gestionnaire + Direction), un département à la fois, chiffres sans noms.
+// Service: rd_chiffres {section: escomptes|nc|cas|charge, departement} -> {ok, attente:true} tant que les fichiers de Trak manquent (jamais de chiffres inventés).
+var RD_SECTIONS = [
+  ["escomptes", "02 Escomptes prévisibles"],
+  ["nc", "02 Non-conformités"],
+  ["cas", "02 Cas non complétés"],
+  ["charge", "03 Charge de travail"]
+];
+function rdLigne(cols){ return '<div class="rdp" style="display:flex;gap:10px;flex-wrap:wrap"><span>'+cols.map(rdE).join('</span><span>')+'</span></div>'; }
+function rdSerie(titre, a, b){
+  if(!a || !a.length) return "";
+  var h = '<small>'+rdE(titre)+'</small>';
+  h += '<div class="rdp">'+a.map(function(x, i){ return '<div style="display:flex;justify-content:space-between"><span>'+rdE(x.m)+'</span><span>'+rdE(x.v)+(b && b[i] ? ' <small>(an passé '+rdE(b[i].v)+')</small>' : '')+'</span></div>'; }).join("")+'</div>';
+  return h;
+}
+function rdRendreSection(cle, r){
+  if(!r || !r.ok) return rdErreur(r);
+  if(r.attente) return rdMsg("Données en attente de Trak");
+  var h = "";
+  if(cle === "charge"){
+    var eq = r.equipes || [];
+    if(!eq.length) return rdMsg("Données en attente de Trak");
+    h += '<div class="rdp"><small>Équipe · moyenne des 2 derniers mois · 5 prochains jours (%)</small></div>';
+    h += eq.map(function(e){ return '<div class="rdp" style="display:flex;gap:6px;align-items:center"><span style="width:24%">'+rdE(e.equipe)+'</span><span style="width:24%;text-align:center">'+rdE(e.moyenne)+'</span>'+(e.jours || []).map(function(j){ var rouge = j > 95; return '<span style="width:10.4%;text-align:center;font-size:11px;'+(rouge ? "background:#B8473A;color:#fff" : "")+'">'+rdE(j)+'</span>'; }).join("")+'</div>'; }).join("");
+    return h;
+  }
+  h += rdSerie(cle === "cas" ? "Cas non complétés par mois" : (cle === "nc" ? "Non-conformités par mois" : "Nombre de crédits par mois"), r.serie, r.serie_an_passe);
+  var L = r.lignes || [];
+  h += L.length ? L.map(function(l){ return rdLigne(l); }).join("") : (h ? "" : rdMsg("Aucune donnée pour cette période"));
+  return h;
+}
+function rdPresentation(){
+  if(!rdPeutPlanifier()){ rdPoints(); return; }
+  var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
+  h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
+  h += RD_SECTIONS.map(function(s){ return '<div class="rdt">'+rdE(s[1])+'</div><div id="rds-'+s[0]+'">'+""+'</div>'; }).join("");
+  h += '<div class="rdt">04 Capsule du mois</div><div id="rds-cap"></div></div>';
+  app.innerHTML = h;
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); rdPoints(); };
+  Array.prototype.forEach.call(app.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPresentation(); }; });
+  RD_SECTIONS.forEach(function(s){
+    appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep}).then(function(r){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdMsg("Réseau indisponible"); });
+  });
+  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var z = document.getElementById("rds-cap"); if(!z) return; var c = r && r.capsule; z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){});
 }

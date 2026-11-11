@@ -7,7 +7,7 @@ function echFr(v, d){ return v == null ? "" : echArr(v, d).toFixed(d).replace(".
 function echNum(t){ t = String(t == null ? "" : t).replace(/\s/g, "").replace("$", "").replace("%", "").replace(",", "."); if(t === "") return null; var n = Number(t); return isNaN(n) ? null : n; }
 function echCase(id, v, suf, large){ return '<div class="echc"><input id="' + id + '" inputmode="decimal" autocomplete="off" class="' + (v == null ? "vide" : "") + '" value="' + echEsc(echFr(v, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1")) + '"><u>' + suf + '</u></div>'; }
 function echOuvrir(){
-  app.innerHTML = '<div class="page ppx ech"><h1>Échelle salariale \u2191 taux</h1><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"></div></div>';
+  app.innerHTML = '<div class="page ppx ech"><h1>Échelle salariale \u2191\u00a0taux</h1><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   appelService({action: "ech_donnees", session: sessionGardee()}).then(function(r){
     if(r && r.ok){ ECH.d = r.r; echRendu(); }
