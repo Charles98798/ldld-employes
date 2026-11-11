@@ -1690,7 +1690,7 @@ function dateHeure(opts, surChangement){
     if(v1) v1.onclick = function(){ vue("semaine"); }; if(v2) v2.onclick = function(){ vue("mois"); };
   }
   function lierAg(){
-    var agb = document.getElementById("dhagb"); if(agb) agb.onclick = function(){ S.agOuvert = !S.agOuvert; rendre(); };
+    var agb = document.getElementById("dhagb"); if(agb) agb.onclick = function(){ S.agOuvert = !S.agOuvert; if(S.agOuvert && !(DH_CACHE.agendas || []).length){ DH_CACHE.agendas = null; chargerCaches(function(){ rendre(); }); } rendre(); };
     var agt = document.getElementById("dhagt"); if(agt) agt.onclick = function(){ S.agOuvert = false; rendre(); charger(); };
     Array.prototype.forEach.call(S.zone.querySelectorAll(".dhagl"), function(l){ l.onclick = function(){ var id = l.getAttribute("data-i"), cur = selAgendas().slice(), p = cur.indexOf(id);
       if(p >= 0){ if(cur.length > 1) cur.splice(p, 1); } else cur.push(id); S.sel = cur; S.agenda = cur[0]; try { localStorage.setItem("ldld-agendas", JSON.stringify(cur)); } catch(e){} rendre(); }; });
@@ -1731,7 +1731,7 @@ function dateHeure(opts, surChangement){
       var Ls = DH_CACHE.agendas || [], sl = selAgendas(), noms = Ls.filter(function(a){ return sl.indexOf(idAg(a)) >= 0; }).map(nomAg);
       h += '<button type="button" class="bx" id="dhagb" style="text-align:left;width:100%;border:2px solid #0d1117;display:flex;justify-content:space-between;margin-top:8px"><span>Agendas affichés ('+(noms.length || 1)+')</span><span>'+(S.agOuvert ? "⌃" : "⌄")+'</span></button>';
       if(S.agOuvert){
-        h += '<div style="background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+Ls.map(function(a){ var id = idAg(a), on = sl.indexOf(id) >= 0, c = couleurAg(id);
+        h += '<div style="background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+(Ls.length ? "" : '<div style="padding:12px;font-size:13px">▪ AGENDAS INDISPONIBLES · RÉESSAYEZ</div>')+Ls.map(function(a){ var id = idAg(a), on = sl.indexOf(id) >= 0, c = couleurAg(id);
           return '<div class="dhagl" data-i="'+esc(id)+'" style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;cursor:pointer"><span style="width:18px;height:18px;border:2px solid #0d1117;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:12px;'+(on ? "background:#0d1117;color:#E3DFD3" : "")+'">'+(on ? "✓" : "")+'</span><i style="width:12px;height:12px;border-radius:0;background:'+c.f+'"></i><span>'+esc(nomAg(a))+'</span></div>'; }).join("")+'<button type="button" class="bouton" id="dhagt" style="margin:8px;width:calc(100% - 16px);height:44px;padding:0">Terminé</button></div>';
       }
     }
