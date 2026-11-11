@@ -321,11 +321,10 @@ function rdRendreSection(cle, r){
     var eq = (r.equipes || []).filter(function(e){ return !/informatique/i.test(String(e.equipe || "")); });   // l'équipe Informatique n'est jamais invitée à la Réunion production
     if(!eq.length) return rdMsg("Données en attente de Trak");
     var avecAn = eq.some(function(e){ return e.an_passe != null; });
-    var larg = avecAn ? 10.2 : 12.4, lE = avecAn ? 20 : 26, lA = 13;
-    var jl = [0,1,2,3,4].map(function(k){ if(!k) return "Auj."; try { var d = new Date(Date.now() + k*864e5); return new Intl.DateTimeFormat("fr-CA", {timeZone: "America/Toronto", weekday: "short"}).format(d).replace(".", "").slice(0, 3); } catch(x){ return "J+"+k; } });
+    var jl = [0,1,2,3,4].map(function(k){ if(!k) return "Aujourd’hui"; try { return new Intl.DateTimeFormat("fr-CA", {timeZone: "America/Toronto", weekday: "long"}).format(new Date(Date.now() + k*864e5)); } catch(x){ return "Jour "+(k + 1); } });
     h += '<div class="rdp"><small>Pourcentage de charge · 5 prochains jours'+(avecAn ? ' · même mois de l’an passé' : '')+'</small></div>';
-    h += '<div class="rdp" style="display:flex;gap:6px;align-items:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#8D806A"><span style="width:'+lE+'%">Équipe</span>'+(avecAn ? '<span style="width:'+lA+'%;text-align:center">An passé</span>' : '')+jl.map(function(t){ return '<span style="width:'+larg+'%;text-align:center">'+rdE(t)+'</span>'; }).join("")+'</div>';
-    h += eq.map(function(e){ return '<div class="rdp" style="display:flex;gap:6px;align-items:center"><span style="width:'+lE+'%">'+rdE(e.equipe)+'</span>'+(avecAn ? '<span style="width:'+lA+'%;text-align:center">'+rdE(e.an_passe == null ? "—" : e.an_passe)+'</span>' : '')+(e.jours || []).map(function(j){ var rouge = j > 95, vert = !rouge && j >= 65; return '<span style="width:'+larg+'%;text-align:center;font-size:11px;padding:3px 0;'+(rouge ? "background:#B8473A;color:#fff" : (vert ? "background:#8EFF60;color:#1D1D1B" : "")) +'">'+rdE(j)+'</span>'; }).join("")+'</div>'; }).join("");
+    h += '<div class="rdp" style="display:flex;font-size:9px;letter-spacing:.04em;color:#8D806A">'+jl.map(function(t){ return '<span style="width:20%;text-align:center">'+rdE(t)+'</span>'; }).join("")+'</div>';
+    h += eq.map(function(e){ return '<div class="rdp"><div>'+rdE(e.equipe)+(e.an_passe != null ? ' · an passé '+rdE(e.an_passe)+' %' : '')+'</div><div style="display:flex;margin-top:4px">'+(e.jours || []).map(function(j){ var rouge = j > 95, vert = !rouge && j >= 65; return '<span style="width:20%;text-align:center;font-size:13px;padding:5px 0;box-sizing:border-box;'+(rouge ? "background:#B8473A;color:#fff" : (vert ? "background:#8EFF60;color:#1D1D1B" : "")) +'">'+rdE(j)+'</span>'; }).join("")+'</div></div>'; }).join("");
     h += '<div class="rdp"><small>Vert 65 à 95 % · Brique plus de 95 %</small></div>';
     return h;
   }
