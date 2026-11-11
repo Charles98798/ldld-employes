@@ -1666,12 +1666,28 @@ function participants(personnes, groupes, surChangement, init){
 function dateHeure(opts, surChangement){
   opts = opts || {};
   var auj = new Date(); auj.setHours(0, 0, 0, 0);
-  var S = {lundi: lundiDe(auj), jour: "", heure: "", agenda: "primary", evs: [], err: false, zone: null, confirme: false, ed: null};
+  var S = {lundi: lundiDe(auj), jour: "", heure: "", agenda: "primary", sel: null, agOuvert: false, evs: [], err: false, zone: null, confirme: false, ed: null};
   if(opts.init && opts.init.jour){ var pi = opts.init.jour.split("-"); S.jour = opts.init.jour; S.heure = opts.init.heure || ""; S.lundi = lundiDe(new Date(+pi[0], +pi[1]-1, +pi[2])); }
   function isoDe(d){ return isoJour(d); }
   function depuis(iso){ var p = iso.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  var CPAL = [["charles","#3f5f78","#fff"],["direction","#0d1117","#fff"],["famille","#c8a24a","#0d1117"],["ldld","#9dbd86","#0d1117"],["prise","#7a2e2e","#fff"]], CRES = [["#6b8f8f","#fff"],["#a0705a","#fff"],["#8D806A","#fff"],["#7b6d9a","#fff"]];
+  function nomAg(a){ return a.principal ? "Mon agenda" : a.nom; }
+  function idAg(a){ return a.principal ? "primary" : a.id; }
+  function couleurAg(id){ var L = DH_CACHE.agendas || [], i = 0, a = null; for(; i < L.length; i++){ if(idAg(L[i]) === id){ a = L[i]; break; } }
+    var n = a ? (a.principal ? "charles" : String(nomAg(a)).toLowerCase()) : "", k; for(k = 0; k < CPAL.length; k++){ if(n.indexOf(CPAL[k][0]) >= 0) return {f: CPAL[k][1], t: CPAL[k][2]}; }
+    var r = CRES[(i < 0 ? 0 : i) % CRES.length]; return {f: r[0], t: r[1]}; }
+  function selAgendas(){
+    if(opts.agenda === false) return [S.agenda];
+    if(!S.sel){ var m = []; try { m = JSON.parse(localStorage.getItem("ldld-agendas") || "[]"); } catch(e){}
+      S.sel = Array.isArray(m) && m.length ? m : [S.agenda]; }
+    var L = DH_CACHE.agendas || []; if(L.length){ var ok = S.sel.filter(function(id){ return L.some(function(a){ return idAg(a) === id; }); }); S.sel = ok.length ? ok : [idAg(L[0])]; }
+    S.agenda = S.sel[0]; return S.sel;
+  }
   function charger(){
-    appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(S.lundi), agenda:S.agenda}).then(function(r){ S.evs = (r && r.ok) ? r.evenements : []; S.erreurSem = (r && r.ok) ? "" : String((r && r.erreur) || "Agenda indisponible"); rendre(); }).catch(function(){ S.evs = []; S.erreurSem = "Réseau indisponible"; rendre(); });
+    var ids = selAgendas(), reste = ids.length, tous = [], err = "";
+    ids.forEach(function(id){
+      appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(S.lundi), agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ S.evs = tous; S.erreurSem = err; rendre(); } });
+    });
   }
   function conge(iso){ return DH_CACHE.conges && DH_CACHE.conges[iso]; }
   function optJours(sel){ var r = "", dd2 = new Date(auj), tr = false;
@@ -1694,8 +1710,12 @@ function dateHeure(opts, surChangement){
     var z = S.zone; if(!z) return;
     var fin = new Date(S.lundi); fin.setDate(fin.getDate()+6), aujIso = isoJour(auj), h = "";
     if(opts.agenda !== false){
-      var ag = (DH_CACHE.agendas || []).map(function(a){ var v = a.principal ? "primary" : a.id; return '<option value="'+esc(v)+'"'+(v === S.agenda ? " selected" : "")+'>'+esc(a.principal ? "Mon agenda" : a.nom)+'</option>'; }).join("") || '<option value="primary">Mon agenda</option>';
-      h += '<span class="lbl">Agenda</span><select class="bx" id="dhag">'+ag+'</select>';
+      var Ls = DH_CACHE.agendas || [], sl = selAgendas(), noms = Ls.filter(function(a){ return sl.indexOf(idAg(a)) >= 0; }).map(nomAg);
+      h += '<span class="lbl">Agendas affichés</span><button type="button" class="bx" id="dhagb" style="text-align:left;width:100%;border:2px solid #0d1117;display:flex;justify-content:space-between"><span>'+esc(noms.length ? noms.join(" · ")+" ("+noms.length+")" : "Mon agenda")+'</span><span>'+(S.agOuvert ? "⌃" : "⌄")+'</span></button>';
+      if(S.agOuvert){
+        h += '<div style="background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+Ls.map(function(a){ var id = idAg(a), on = sl.indexOf(id) >= 0, c = couleurAg(id);
+          return '<div class="dhagl" data-i="'+esc(id)+'" style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;cursor:pointer"><span style="width:18px;height:18px;border:2px solid #0d1117;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:12px;'+(on ? "background:#0d1117;color:#E3DFD3" : "")+'">'+(on ? "✓" : "")+'</span><i style="width:12px;height:12px;border-radius:0;background:'+c.f+'"></i><span>'+esc(nomAg(a))+'</span></div>'; }).join("")+'<button type="button" class="bouton" id="dhagt" style="margin:8px;width:calc(100% - 16px);height:44px;padding:0">Terminé</button></div>';
+      }
     }
     if(S.erreurSem) h += '<div class="bandeau">▪ '+esc(S.erreurSem.toUpperCase())+'</div>';
     h += '<span class="lbl">Calendrier · semaine du '+S.lundi.getDate()+" "+MOIS_LONGS[S.lundi.getMonth()]+'</span><div class="moisbar" style="margin-top:0"><button type="button" id="dhp" aria-label="Semaine précédente">Précédente</button><b>'+S.lundi.getDate()+" "+MOIS[S.lundi.getMonth()]+" — "+fin.getDate()+" "+MOIS[fin.getMonth()]+'</b><button type="button" id="dhn" aria-label="Semaine suivante">Suivante</button></div>';
@@ -1706,11 +1726,11 @@ function dateHeure(opts, surChangement){
     for(var hh = 7; hh <= 18; hh++){
       g += '<div class="h">'+hh+' h</div>';
       for(k = 0; k < 7; k++){ dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); ij = isoJour(dj); var pj = ij < aujIso;
-        var occ = S.evs.some(function(e){ var d0 = new Date(e.debut); return isoJour(d0) === ij && d0.getHours() <= hh && new Date(e.fin) > new Date(dj.getFullYear(), dj.getMonth(), dj.getDate(), hh, 0); });
+        var occE = S.evs.filter(function(e){ var d0 = new Date(e.debut); return isoJour(d0) === ij && d0.getHours() <= hh && new Date(e.fin) > new Date(dj.getFullYear(), dj.getMonth(), dj.getDate(), hh, 0); })[0], occ = !!occE;
         var choisi = ij === S.jour && S.heure && +S.heure.split(":")[0] === hh;
-        g += '<div class="'+(choisi ? "n" : occ ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
+        g += '<div class="'+(choisi ? "n" : occ ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(occE && !choisi && opts.agenda !== false ? ' style="background:'+couleurAg(occE.ag).f+'"' : "")+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
     }
-    h += g + '</div><div class="glg"><span><i style="background:#D9D6CC"></i>Congé / fermé</span></div>';
+    h += g + '</div><div class="glg">'+(opts.agenda !== false ? (DH_CACHE.agendas || []).filter(function(a){ return selAgendas().indexOf(idAg(a)) >= 0; }).map(function(a){ return '<span><i style="background:'+couleurAg(idAg(a)).f+'"></i>'+esc(nomAg(a))+'</span>'; }).join("") : "")+'<span><i style="background:#cbc7bb;box-shadow:inset 0 0 0 1px #a6a29a"></i>Congé / fermé</span></div>';
     if(S.jour){
       var d0j = depuis(S.jour), duJour = S.evs.filter(function(e){ return isoJour(new Date(e.debut)) === S.jour && e.id !== opts.exclure; });
       h += '<span class="lbl">'+jourTxt(d0j)+(conge(S.jour) ? " \u00b7 labo ferm\u00e9" : "")+'</span>' + (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut), mod = e.ldld && opts.modifier !== false;
@@ -1724,7 +1744,10 @@ function dateHeure(opts, surChangement){
     h += '<div style="display:flex;gap:8px"><div style="flex:1"><span class="lbl">Date · obligatoire</span><select class="'+cD+'" id="dhd"><option value="">Choisir une date</option>'+jours+'</select></div>' +
       '<div style="flex:1"><span class="lbl">Heure · obligatoire</span><select class="'+cH+'" id="dhh"><option value="">Choisir</option>'+heures+'</select>'+(hl.masquees ? '<div style="font-size:11px;margin-top:4px;color:var(--tx2)">'+hl.masquees+" heure"+(hl.masquees > 1 ? "s" : "")+" masqu\u00e9e"+(hl.masquees > 1 ? "s" : "")+'</div>' : "")+'</div></div>';
     z.innerHTML = h;
-    var ag2 = document.getElementById("dhag"); if(ag2) ag2.onchange = function(){ S.agenda = this.value; charger(); };
+    var agb = document.getElementById("dhagb"); if(agb) agb.onclick = function(){ S.agOuvert = !S.agOuvert; rendre(); };
+    var agt = document.getElementById("dhagt"); if(agt) agt.onclick = function(){ S.agOuvert = false; rendre(); charger(); };
+    Array.prototype.forEach.call(S.zone.querySelectorAll(".dhagl"), function(l){ l.onclick = function(){ var id = l.getAttribute("data-i"), cur = selAgendas().slice(), p = cur.indexOf(id);
+      if(p >= 0){ if(cur.length > 1) cur.splice(p, 1); } else cur.push(id); S.sel = cur; S.agenda = cur[0]; try { localStorage.setItem("ldld-agendas", JSON.stringify(cur)); } catch(e){} rendre(); }; });
     document.getElementById("dhp").onclick = function(){ S.lundi.setDate(S.lundi.getDate()-7); charger(); };
     document.getElementById("dhn").onclick = function(){ S.lundi.setDate(S.lundi.getDate()+7); charger(); };
     document.getElementById("dhd").onchange = function(){ S.jour = this.value; S.confirme = false; S.err = false; if(S.jour){ var l = lundiDe(depuis(S.jour)); if(isoJour(l) !== isoJour(S.lundi)){ S.lundi = l; changer(); charger(); return; } } changer(); };
@@ -1740,14 +1763,14 @@ function dateHeure(opts, surChangement){
         if(g1("edf")) g1("edf").onclick = function(){ S.ed = null; rendre(); };
         if(g1("edx")) g1("edx").onclick = function(){ S.ed.confirm = true; rendre(); };
         if(g1("edn")) g1("edn").onclick = function(){ S.ed.confirm = false; rendre(); };
-        if(g1("edo")) g1("edo").onclick = function(){ S.ed.msg = "\u25aa SUPPRESSION\u2026"; rendre(); appelService({action:"agenda_supprimer", session:sessionGardee(), agenda:S.agenda, id:e0.id, serie:false}).then(function(r){
+        if(g1("edo")) g1("edo").onclick = function(){ S.ed.msg = "\u25aa SUPPRESSION\u2026"; rendre(); appelService({action:"agenda_supprimer", session:sessionGardee(), agenda:(e0.ag || S.agenda), id:e0.id, serie:false}).then(function(r){
           if(r && r.ok){ S.ed = null; charger(); if(surChangement) surChangement(); } else { S.ed.confirm = false; S.ed.msg = "\u25aa "+String((r && r.erreur) || "\u00c9CHEC").toUpperCase(); rendre(); } }).catch(function(){ S.ed.confirm = false; S.ed.msg = "\u25aa \u00c9CHEC \u00b7 R\u00c9SEAU"; rendre(); }); };
         if(g1("ep1")) g1("ep1").onclick = function(){ S.ed.choix = false; sauver("un"); };
         if(g1("ep2")) g1("ep2").onclick = function(){ S.ed.choix = false; sauver("suivants"); };
         if(g1("eds")) g1("eds").onclick = function(){ var hv = g1("edh").value; if(!hv){ S.ed.msg = "\u25aa CHOISISSEZ UNE HEURE"; rendre(); return; } if(e0.serie){ S.ed.choix = true; rendre(); return; } sauver("un"); };
         function sauver(portee){ var hv = g1("edh").value, ph2 = hv.split(":"), dur = Math.max(15, Math.round((new Date(e0.fin) - new Date(e0.debut))/60000));
           S.ed.msg = "\u25aa ENREGISTREMENT\u2026"; rendre();
-          appelService({action:"agenda_modifier", session:sessionGardee(), agenda:S.agenda, id:e0.id, portee:portee, titre:e0.titre, texte:e0.texte || "", a:e0.a || "", debut:S.ed.jour+"T"+pad2(ph2[0])+":"+pad2(ph2[1]), minutes:dur}).then(function(r){
+          appelService({action:"agenda_modifier", session:sessionGardee(), agenda:(e0.ag || S.agenda), id:e0.id, portee:portee, titre:e0.titre, texte:e0.texte || "", a:e0.a || "", debut:S.ed.jour+"T"+pad2(ph2[0])+":"+pad2(ph2[1]), minutes:dur}).then(function(r){
             if(r && r.ok){ S.jour = S.ed.jour; S.lundi = lundiDe(depuis(S.jour)); S.ed = null; charger(); if(surChangement) surChangement(); } else { S.ed.msg = "\u25aa "+String((r && r.erreur) || "\u00c9CHEC").toUpperCase(); rendre(); } }).catch(function(){ S.ed.msg = "\u25aa \u00c9CHEC \u00b7 R\u00c9SEAU"; rendre(); }); };
       }
     }

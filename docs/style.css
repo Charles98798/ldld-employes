@@ -910,3 +910,8 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 /* Publication 208: congé/fermé = colonne entière en gris pâle, sans légende */
 .gs .d.f,.gs .d.c{background:#D9D6CC;color:#1D1D1B;opacity:1}
 .gs .clf,.gs .clc{background:#D9D6CC}
+
+/* Publication 209: congé/fermé = colonne gris pâle #cbc7bb, en-tête #b3afa3 */
+.gs .d.f,.gs .d.c{background:#b3afa3}
+.gs .clf,.gs .clc{background:#cbc7bb}
+.glg{flex-wrap:wrap}
