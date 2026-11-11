@@ -893,3 +893,6 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .rdsm{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8D806A;margin:18px 0 10px}
 .rdcap{background:rgba(227,223,211,.55);padding:16px 14px;margin:0 0 8px}.rdcapt{font-size:24px;font-weight:300;margin:2px 0 10px}.rdcl{font-size:15px;line-height:1.35;margin:0 0 10px}.rdcl small{font-size:11px;letter-spacing:.1em;color:#8D806A;margin-right:6px}.rdcl em,.rdln em{font-style:normal;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#8D806A;margin-left:6px}
 .rdln{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;font-size:16px}.rdln small{font-size:11px;letter-spacing:.1em;color:#8D806A;margin-right:6px}.rdln a{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx);text-decoration:none;flex:none}
+.rdplan{background:#B7B1A5;color:#1D1D1B}
+.rdbar{background:#B7B1A5;color:#1D1D1B}.rdbar select{color:#1D1D1B;font-weight:500}
+.rdsoft{background:#B7B1A5;color:#1D1D1B}
