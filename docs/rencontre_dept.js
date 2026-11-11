@@ -25,7 +25,7 @@ function rdPoints(){
     var z = document.getElementById("rdz"); if(!z) return;
     if(!r || !r.ok){ z.innerHTML = rdErreur(r); return; }
     var h = "";
-    if(rdPeutPlanifier()) h += '<div class="rdbtn"><button type="button" class="rdplan" id="rdplan">Planification</button></div>';
+    if(r.planif !== undefined ? r.planif : rdPeutPlanifier()) h += '<div class="rdbtn"><button type="button" class="rdplan" id="rdplan">Planification</button></div>';
     if(r.date) h += '<div class="rddate">'+rdE(r.date)+'</div>';
     h += '<div class="rdt">01 <span>Points de discussion</span></div>';
     var pts = r.points || [];
