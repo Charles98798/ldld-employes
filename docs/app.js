@@ -1873,7 +1873,10 @@ function dateHeure(opts, surChangement){
       }
     }
     Array.prototype.forEach.call(z.querySelectorAll(".gs [data-j]"), function(c){ c.onclick = function(){
-      S.jour = c.getAttribute("data-j"); S.confirme = false; S.err = false; var hv = c.getAttribute("data-h"); if(hv) S.heure = hv+":0"; changer(); }; });
+      S.jour = c.getAttribute("data-j"); S.confirme = false; S.err = false; var hv = c.getAttribute("data-h"); if(hv) S.heure = hv+":0";
+      if(hv && opts.agenda !== false){ var dj2 = depuis(S.jour), t0 = new Date(dj2.getFullYear(), dj2.getMonth(), dj2.getDate(), +hv, 0), t1 = new Date(t0.getTime()+3600000);
+        var ev2 = S.evs.filter(function(e){ return new Date(e.debut) < t1 && new Date(e.fin) > t0; })[0]; if(ev2 && ev2.ag) S.agCreer = ev2.ag; }
+      changer(); }; });
   }
   function changer(){ rendre(); if(surChangement) surChangement(); }
   return {
