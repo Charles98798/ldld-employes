@@ -34,7 +34,6 @@ function rdMenuLier(actif){
 function rdPointsHtml(r){
   var pts = (r && r.points) || [], fict = RD_DEMO && !pts.length; if(fict) pts = RD_DEMO_PTS;
   var h = "";
-  if(r && r.date) h += '<div class="rddate">'+rdE(r.date)+'</div>'; else if(fict) h += '<div class="rddate">Mardi 17 novembre · 9 h 30</div>';
   h += '<div class="rdt">01 <span>Points de discussion</span></div>';
   h += pts.length ? pts.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+'</small><div>'+rdE(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun point publié pour le moment");
   return h;
@@ -62,6 +61,7 @@ function rdMois18(){
     r.push({cle: y+"-"+p2(m+1), lib: N[m]+" "+y, du: y+"-"+p2(m+1)+"-01", au: y+"-"+p2(m+1)+"-"+p2(der)}); }
   return r;
 }
+function rdAujourdhui(){ try { return new Intl.DateTimeFormat("fr-CA", {timeZone: "America/Toronto", weekday: "long", day: "numeric", month: "long", year: "numeric"}).format(new Date()).replace(/^(\S+) 1 /, "$1 1er ").toUpperCase(); } catch(e){ return ""; } }
 function rdE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function rdMsg(txt){ return '<div class="bandeau">▪ '+rdE(String(txt).toUpperCase())+'</div>'; }
 function rdErreur(r){ var e = r && r.erreur ? String(r.erreur) : ""; return rdMsg(e || "Indisponible · réessayez"); }
@@ -332,6 +332,7 @@ function rdPresentation(){
   var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
   h += rdMenuHtml("pres");
   h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
+  h += '<div class="rddate">'+rdE(rdAujourdhui())+'</div>';
   h += rdDemoMarque();
   var mois18 = rdMois18(); if(!RD.moisSel) RD.moisSel = mois18[0].cle;
   var moisLib = ""; mois18.forEach(function(m){ if(m.cle === RD.moisSel) moisLib = m.lib; });
