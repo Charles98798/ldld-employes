@@ -1619,7 +1619,7 @@ function lundiDe(d){ var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()
 function isoJour(d){ return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
 function heureTxt(h, m){ return h+" h"+(m ? " "+("0"+m).slice(-2) : ""); }
 // ---- Composants communs: participants (groupes et employés) et agenda · calendrier · date · heure ----
-var DH_CACHE = {agendas: null, conges: null};
+var DH_CACHE = {agendas: (function(){ try { var a = JSON.parse(localStorage.getItem("ldld-c-agendas") || "null"); return Array.isArray(a) && a.length ? a : null; } catch(e){ return null; } })(), agendasFrais: false, conges: null};
 var JOURS_ABR = ["dim.","lun.","mar.","mer.","jeu.","ven.","sam."];
 function nomTitre(n){ n = String(n || ""); return n === n.toUpperCase() ? n.toLowerCase().replace(/(^|[\s\-'’])([a-zàâäçéèêëîïôöùûüÿœ])/g, function(m, a, b){ return a+b.toUpperCase(); }) : n; }
 function jourTxt(d){ var j = JOURS_ABR[d.getDay()]; return j.charAt(0).toUpperCase()+j.slice(1)+" "+d.getDate()+" "+MOIS_LONGS[d.getMonth()]; }
@@ -1742,8 +1742,12 @@ function dateHeure(opts, surChangement){
   function jjNorm(r, id){ return ((r && r.journee) || []).map(function(e){ return {ag: id, id: e.id, titre: e.titre, d1: e.debut, d2: e.fin || e.debut}; }); }
   function chargerMois(){
     var ids = selAgendas(), d1 = new Date(S.mois), nb = 7, reste = ids.length * nb, tous = [], jjm = [], err = "", dim0 = new Date(d1.getFullYear(), d1.getMonth(), 1 - d1.getDay()), l0 = lundiDe(dim0);
-    ids.forEach(function(id){ for(var w = 0; w < nb; w++){ var ld = new Date(l0); ld.setDate(ld.getDate()+7*w);
-      appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(ld), agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); jjm = jjm.concat(jjNorm(r, id)); } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ var vu = {}; S.evm = sansDoublon(tous.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.debut; if(vu[k]) return false; vu[k] = 1; return true; }), function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); var vj = {}; S.jm = sansDoublon(jjm.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.d1; if(vj[k]) return false; vj[k] = 1; return true; }), function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); S.erreurSem = err; rendre(); } }); } });
+    var cE = [], cJ = [];
+    ids.forEach(function(id){ for(var w2 = 0; w2 < nb; w2++){ var l2 = new Date(l0); l2.setDate(l2.getDate()+7*w2), k2 = isoJour(l2);
+      try { var a1 = JSON.parse(localStorage.getItem("ldld-cs-"+id+"-"+k2) || "null"); if(a1) a1.forEach(function(e){ e.ag = id; cE.push(e); }); var a2 = JSON.parse(localStorage.getItem("ldld-cj-"+id+"-"+k2) || "null"); if(a2) a2.forEach(function(e){ cJ.push(e); }); } catch(e){} } });
+    if(cE.length || cJ.length){ S.evm = sansDoublon(cE, function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); S.jm = sansDoublon(cJ, function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); rendre(); }
+    ids.forEach(function(id){ for(var w = 0; w < nb; w++){ let ldd = new Date(l0); ldd.setDate(ldd.getDate()+7*w); let kw = isoJour(ldd);
+      appelService({action:"agenda_semaine", session:sessionGardee(), debut:kw, agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); var jn2 = jjNorm(r, id); jjm = jjm.concat(jn2); try { localStorage.setItem("ldld-cs-"+id+"-"+kw, JSON.stringify(r.evenements || [])); localStorage.setItem("ldld-cj-"+id+"-"+kw, JSON.stringify(jn2)); } catch(e){} } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ var vu = {}; S.evm = sansDoublon(tous.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.debut; if(vu[k]) return false; vu[k] = 1; return true; }), function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); var vj = {}; S.jm = sansDoublon(jjm.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.d1; if(vj[k]) return false; vj[k] = 1; return true; }), function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); S.erreurSem = err; rendre(); } }); } });
   }
   function charger(){
     if(opts.mois && S.vue === "mois") return chargerMois();
@@ -1888,7 +1892,7 @@ function dateHeure(opts, surChangement){
 }
 function chargerCaches(fin){
   var reste = 2; function un(){ if(--reste === 0 && fin) fin(); }
-  if(DH_CACHE.agendas) un(); else appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ DH_CACHE.agendas = (r && r.ok && r.agendas) ? r.agendas.filter(function(a, i, t){ return a.ecriture && t.findIndex(function(b){ return b.id === a.id; }) === i; }) : []; un(); }).catch(function(){ DH_CACHE.agendas = []; un(); });
+  if(DH_CACHE.agendas && (DH_CACHE.agendasFrais || true)){ un(); if(!DH_CACHE.agendasFrais){ DH_CACHE.agendasFrais = true; appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.agendas){ var l = r.agendas.filter(function(a, i, t){ return a.ecriture && t.findIndex(function(b){ return b.id === a.id; }) === i; }); if(l.length){ DH_CACHE.agendas = l; try { localStorage.setItem("ldld-c-agendas", JSON.stringify(l)); } catch(e){} } } }).catch(function(){}); } } else appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ DH_CACHE.agendas = (r && r.ok && r.agendas) ? r.agendas.filter(function(a, i, t){ return a.ecriture && t.findIndex(function(b){ return b.id === a.id; }) === i; }) : []; if(DH_CACHE.agendas.length){ try { localStorage.setItem("ldld-c-agendas", JSON.stringify(DH_CACHE.agendas)); } catch(e){} } un(); }).catch(function(){ DH_CACHE.agendas = []; un(); });
   if(DH_CACHE.conges) un(); else obtenir("calendrier", {action:"calendrier"}, function(r){ var c = {}; (r.jours || []).forEach(function(x){ if(x.t === "f") c[x.d] = "f"; else if(x.t === "c" && !c[x.d]) c[x.d] = "c"; }); DH_CACHE.conges = c; un(); }, function(){ DH_CACHE.conges = {}; un(); }, true);
 }
 // Nouveau message: onglets Message et Réunion, mêmes participants.
