@@ -15,6 +15,8 @@ function rdDemoSection(cle){
   if(cle === "escomptes") return {ok:true, serie:serie([1,2,0,3,1,2,2,1,3,0,2,1]), serie_an_passe:serie([2,2,1,2,3,2,3,2,2,1,4,2]), lignes:[["5 nov.","Dossier 24817","350 $"],["8 nov.","Dossier 24902","120 $"]]};
   return {ok:true, serie:serie([7,8,6,9,7,10,9,7,11,6,8,5]), serie_an_passe:serie([8,9,7,8,9,9,10,8,10,8,9,7]), lignes:[["Dossier 24790","Étape finition"],["Dossier 24855","Étape montage"]]};
 }
+function rdCapHtml(c){ return c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }
+function rdInit(cle){ return RD_DEMO ? rdRendreSection(cle, rdDemoSection(cle)) : rdMsg("Un instant"); }
 function rdDemoMarque(){ return RD_DEMO ? '<div class="rdp"><small>▪ Données fictives pour essai</small></div>' : ""; }
 // Menu unique (même composant sur Présentation, Planification discussion, Planification capsule): bouton taupe pâli + liste à 3 choix, choix actif en vert.
 var RD_CHOIX = [["pres","Présentation"],["disc","Planification discussion"],["cap","Planification capsule"]];
@@ -199,6 +201,7 @@ function rdSerie(titre, a, b){
 }
 function rdRendreSection(cle, r){
   if(RD_DEMO && r && r.ok && (r.attente || (cle === "charge" && !(r.equipes || []).length))) r = rdDemoSection(cle);
+  if((!r || !r.ok) && RD_DEMO) r = rdDemoSection(cle);
   if(!r || !r.ok) return rdErreur(r);
   if(r.attente) return rdMsg("Données en attente de Trak");
   var h = "";
@@ -222,9 +225,9 @@ function rdPresentation(){
   h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
   h += rdDemoMarque();
   h += '<div class="rdp" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><small style="width:100%">Période des chiffres</small><select class="bx" id="rdper" style="flex:1;min-width:0"><option value="mois">Mois dernier complet</option><option value="an">Même mois de l’an passé</option><option value="dates">Dates au choix</option></select><span id="rddt" style="display:none;gap:8px;width:100%"><input class="bx" type="date" id="rddu" style="flex:1;min-width:0"><input class="bx" type="date" id="rdau" style="flex:1;min-width:0"></span></div>';
-  h += '<div id="rds-pts">'+rdMsg("Un instant")+'</div>';
-  h += RD_SECTIONS.map(function(s){ return '<div class="rdt">'+rdE(s[1])+'</div><div id="rds-'+s[0]+'">'+rdMsg("Un instant")+'</div>'; }).join("");
-  h += '<div class="rdt">04 Capsule du mois</div><div id="rds-cap">'+rdMsg("Un instant")+'</div></div>';
+  h += '<div id="rds-pts">'+(RD_DEMO ? rdPointsHtml(null) : rdMsg("Un instant"))+'</div>';
+  h += RD_SECTIONS.map(function(s){ return '<div class="rdt">'+rdE(s[1])+'</div><div id="rds-'+s[0]+'">'+rdInit(s[0])+'</div>'; }).join("");
+  h += '<div class="rdt">04 Capsule du mois</div><div id="rds-cap">'+(RD_DEMO ? rdCapHtml(RD_DEMO_CAPS) : rdMsg("Un instant"))+'</div></div>';
   app.innerHTML = h;
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   rdMenuLier("pres");
@@ -232,8 +235,8 @@ function rdPresentation(){
   function chargerChiffres(){
     var per = RD.periode || {t:"mois"};
     RD_SECTIONS.forEach(function(s){
-      var z0 = document.getElementById("rds-"+s[0]); if(z0) z0.innerHTML = rdMsg("Un instant");
-      appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdMsg("Réseau indisponible"); });
+      var z0 = document.getElementById("rds-"+s[0]); if(z0) z0.innerHTML = rdInit(s[0]);
+      appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z && !RD_DEMO) z.innerHTML = rdMsg("Réseau indisponible"); });
     });
   }
   var sp = document.getElementById("rdper"), dt = document.getElementById("rddt"), d1 = document.getElementById("rddu"), d2 = document.getElementById("rdau");
@@ -241,5 +244,5 @@ function rdPresentation(){
     var chg = function(){ RD.periode = {t: sp.value, du: d1.value, au: d2.value}; dt.style.display = sp.value === "dates" ? "flex" : "none"; if(sp.value !== "dates" || (d1.value && d2.value)) chargerChiffres(); };
     sp.onchange = chg; d1.onchange = chg; d2.onchange = chg; }
   chargerChiffres();
-  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var zp = document.getElementById("rds-pts"); if(zp) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc) zc.innerHTML = rdMsg("Réseau indisponible"); });
+  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var zp = document.getElementById("rds-pts"); if(zp) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
 }
