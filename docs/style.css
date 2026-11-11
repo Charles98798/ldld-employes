@@ -906,3 +906,7 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .ib.vide{background:transparent!important}
 .tnav button,.moisbar button{background:#B7B1A5!important;color:#1D1D1B!important;border:0!important;border-radius:0!important}
 .tnav button:disabled,.moisbar button:disabled{opacity:.5}
+
+/* Publication 208: congé/fermé = colonne entière en gris pâle, sans légende */
+.gs .d.f,.gs .d.c{background:#D9D6CC;color:#1D1D1B;opacity:1}
+.gs .clf,.gs .clc{background:#D9D6CC}

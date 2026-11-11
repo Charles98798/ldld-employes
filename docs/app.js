@@ -1710,7 +1710,7 @@ function dateHeure(opts, surChangement){
         var choisi = ij === S.jour && S.heure && +S.heure.split(":")[0] === hh;
         g += '<div class="'+(choisi ? "n" : occ ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
     }
-    h += g + '</div><div class="glg"><span><i style="background:#0d1117"></i>Congé / fermé</span><span><i style="background:#8EFF60"></i>Réunion</span></div>';
+    h += g + '</div>';
     if(S.jour){
       var d0j = depuis(S.jour), duJour = S.evs.filter(function(e){ return isoJour(new Date(e.debut)) === S.jour && e.id !== opts.exclure; });
       h += '<span class="lbl">'+jourTxt(d0j)+(conge(S.jour) ? " \u00b7 labo ferm\u00e9" : "")+'</span>' + (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut), mod = e.ldld && opts.modifier !== false;
