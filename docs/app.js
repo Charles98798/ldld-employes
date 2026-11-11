@@ -2381,9 +2381,10 @@ function rencontre(){
   }).catch(function(){ var el = document.getElementById("rc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function carreVert(t){ return '<div style="margin:18vh 0 0;background:#8EFF60;color:#1D1D1B;padding:56px 20px;text-align:center;font-size:17px;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;font-weight:500">'+esc(t)+'</div>'; }
+var VUE_ESSAIS_H = 0;
 function heures(){
   // Vraies heures du logiciel de gestion (pointages de la borne, mises à jour aux 15 minutes). Tout tient sur un écran.
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes heures</h1><div id="hz"><div class="bandeau">'+(MOI && MOI.role === "direction" ? "▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES" : "▪ UN INSTANT")+'</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes heures</h1><div id="hz"><div class="bandeau">'+(MOI && MOI.role === "direction" && !VUE.on ? "▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES" : "▪ UN INSTANT")+'</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   function hm(m){ if(m === null || m === undefined) return "—"; var h = Math.floor(m / 60), n = m % 60; return h + " h " + (n < 10 ? "0" : "") + n; }
   var JOURS = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
@@ -2394,7 +2395,11 @@ function heures(){
     if(r && r.ok === false && /donn|num|paie|employ|introuv|inconnu/i.test(String(r.erreur || ""))){ z.innerHTML = '<div class="bandeau">▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES</div>'; return; }
     if(!r || !r.ok){ z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; return; }
     var vide = !(r.pointagesAuj || []).length && (r.minutesAuj === null || r.minutesAuj === undefined) && !(r.cette || []).some(function(x){ return x.min !== null && x.min !== undefined; }) && !(r.passee || []).some(function(x){ return x.min !== null && x.min !== undefined; });
-    if(vide){ z.innerHTML = '<div class="bandeau">▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES</div>'; return; }
+    if(vide){
+      if(VUE.on && VUE.relancer && (++VUE_ESSAIS_H) <= 4){ VUE.relancer(); return; }
+      z.innerHTML = '<div class="bandeau">▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES</div>'; return;
+    }
+    VUE_ESSAIS_H = 0;
     var pts = (r.pointagesAuj || []).map(function(x, i, a){
       var lib = x.s === "entree" ? (i === 0 ? "Arrivée" : "Retour") : (i === a.length - 1 && r.etat === "parti" ? "Départ" : "Pause");
       return '<div class="hl"><span class="t">'+hm(Number(x.t.slice(0,2)) * 60 + Number(x.t.slice(3,5)))+'</span><span>'+lib+'</span></div>';
@@ -2405,7 +2410,7 @@ function heures(){
   }
   obtenir("heures", {action:"heures"}, afficherH, function(){ var z = document.getElementById("hz"); if(z) z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
-var VUE_ONGLETS = [0, 4, 2];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
+var VUE_ONGLETS = [9, 0, 4, 2];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
 function section(i){
   if(MOI && MOI.role === "direction" && !vueComme() && VUE_ONGLETS.indexOf(i) >= 0) return vueEmploye(i);
   sectionBase(i);
