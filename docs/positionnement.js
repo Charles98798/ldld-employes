@@ -218,7 +218,7 @@ function majFrais(){var b=$('enr');if(!b)return;var c=!!(frais&&D&&D.employes&&c
 if(PRE.err&&!D){demarrer()}
 else{
 if(D){demarrer();majFrais()}
-else $('app').innerHTML='<div class="msg"><div><img src="'+LOGO+'" style="height:70px;display:block;margin:0 auto 26px" alt=""><div style="letter-spacing:.22em;text-transform:uppercase;font-size:13px;color:#8D806A"></div></div></div>';
+else $('app').innerHTML='<div class="msg"><div><img src="'+LOGO+'" style="height:70px;display:block;margin:0 auto 26px" alt=""><div style="letter-spacing:.22em;text-transform:uppercase;font-size:13px;color:#6E6350"></div></div></div>';
 lireFrais();
 }
 
