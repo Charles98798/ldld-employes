@@ -2101,8 +2101,8 @@ function contactsResp(){
     var v = liste.filter(function(c){ return !q || (c.nom+" "+c.groupes).toLowerCase().indexOf(q) >= 0; });
     el.innerHTML = v.map(function(c){ var t = chiffresTel(c.tel);
       return '<div class="cr"><div class="cn">'+esc(c.nom)+'<small>'+esc(c.groupes)+(c.groupes && c.tel ? ' · ' : '')+esc(c.tel)+'</small></div>' +
-        (t ? '<a class="ib" href="tel:'+t+'">TÉL</a><a class="ib" href="sms:'+t+'">SMS</a>' : '<span class="ib vide"></span><span class="ib vide"></span>') +
-        '<a class="ib" href="mailto:'+esc(c.courriel)+'">@</a></div>'; }).join("") || '<div class="bandeau">▪ AUCUN RÉSULTAT</div>';
+        (t ? '<a class="ib" aria-label="Téléphone" href="tel:'+t+'"><svg viewBox="0 0 24 24" fill="#1D1D1B"><path fill-rule="evenodd" d="M3 2h7v6h-3v8h3v6h-7z M12 8h9v8h-9z"/></svg></a><a class="ib" aria-label="SMS" href="sms:'+t+'"><svg viewBox="0 0 24 24" fill="#1D1D1B"><path d="M2 3h20v3h-20zM2 6h3v9h-3zM19 6h3v9h-3zM2 15h20v3h-20zM5 18h4v4h-4zM8 8h8v2h-8zM8 11h5v2h-5z"/></svg></a>' : '<span class="ib vide"></span><span class="ib vide"></span>') +
+        '<a class="ib" aria-label="Courriel" href="mailto:'+esc(c.courriel)+'"><svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1B" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M21 14V3H3v18h13"/><path d="M8 8h7v7H8z"/><path d="M15 15h6v-1"/></svg></a></div>'; }).join("") || '<div class="bandeau">▪ AUCUN RÉSULTAT</div>';
   }
   document.getElementById("cq").oninput = dessiner;
   obtenir("contacts", {action:"contacts"}, function(r){ liste = r.contacts || []; dessiner(); },

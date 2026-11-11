@@ -896,3 +896,13 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .rdplan{background:#B7B1A5;color:#1D1D1B}
 .rdbar{background:#B7B1A5;color:#1D1D1B}.rdbar select{color:#1D1D1B;font-weight:500}
 .rdsoft{background:#B7B1A5;color:#1D1D1B}
+/* Publication 204: règle des boutons — tous pareils en taupe pâli (sauf Supprimer et Retour) */
+.bouton:not([style*="a32d2d"]),.btnbas,.rdplan,.rdsoft,.rdline,.rdbar,#ne .nrnext,.vubb,.ib,.lib,.btn,.cb,.aeb,.chx button{background:#B7B1A5!important;color:#1D1D1B!important;border:0!important;border-radius:0!important}
+.bouton[style*="a32d2d"]{background:#B8473A!important;color:#fff!important;border:0!important;border-radius:0!important}
+.chx button[aria-pressed="false"]{opacity:.5}
+.rdbar select{color:#1D1D1B!important}
+.cr .ib{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0!important;line-height:1}
+.cr .ib svg{width:22px;height:22px;display:block}
+.ib.vide{background:transparent!important}
+.tnav button,.moisbar button{background:#B7B1A5!important;color:#1D1D1B!important;border:0!important;border-radius:0!important}
+.tnav button:disabled,.moisbar button:disabled{opacity:.5}
