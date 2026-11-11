@@ -922,3 +922,7 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 
 #dhcr:focus,#dhcr:focus-visible{outline:0;box-shadow:none}
 #dhcr,#dhagb,.dhagl{-webkit-tap-highlight-color:transparent}#dhagb:focus{outline:0}
+
+/* Réunion production: pastilles en majuscules espacées, bouton du menu aligné à gauche (même gabarit que les autres boutons) */
+#rdch button{text-transform:uppercase;letter-spacing:.12em;font-size:12px}
+.rdbtn .rdplan{text-align:left;padding:0 14px;height:46px;font-size:12px;letter-spacing:.16em}

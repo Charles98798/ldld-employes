@@ -32,7 +32,7 @@ function rdPeutPlanifier(){ return !!(MOI && (MOI.role === "direction" || MOI.ro
 function rdE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function rdMsg(txt){ return '<div class="bandeau">▪ '+rdE(String(txt).toUpperCase())+'</div>'; }
 function rdErreur(r){ var e = r && r.erreur ? String(r.erreur) : ""; return rdMsg(e || "Indisponible · réessayez"); }
-function rdTitreDep(){ return "Département " + RD.dep; }
+function rdTitreDep(){ return "Réunion production"; }   // le département est indiqué par les pastilles
 
 // Choix du département (pendant les tests: l'employé choisit, l'application mémorise). Une réunion séparée par département.
 function rencontreDept(){
@@ -54,10 +54,10 @@ function rdPoints(){
     if(planif) h += rdMenuHtml("pres");
     if(choix) h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
     h += '<div id="rdz">';
-    if(r.date) h += '<div class="rddate">'+rdE(r.date)+'</div>';
+    var pts = r.points || [], fict = RD_DEMO && !pts.length; if(fict) pts = RD_DEMO_PTS;
+    if(r.date) h += '<div class="rddate">'+rdE(r.date)+'</div>'; else if(fict) h += '<div class="rddate">Mardi 17 novembre · 9 h 30</div>';
     h += '<div class="rdt">01 <span>Points de discussion</span></div>';
     if(fict) h += rdDemoMarque();
-    var pts = r.points || [], fict = RD_DEMO && !pts.length; if(fict){ pts = RD_DEMO_PTS; if(!r.date) h += '<div class="rddate">Mardi 17 novembre · 9 h 30</div>'; }
     h += (pts.length ? pts.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+'</small><div>'+rdE(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun point publié pour le moment")) + '</div></div>';
     app.innerHTML = h;
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
@@ -108,7 +108,7 @@ function rdDiscussion(donnees, edition){
 }
 function rdHistorique(){
   var h = RD_PLAN && RD_PLAN.historique || [];
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Historique</h1><div class="rddate">'+rdE(rdTitreDep())+'</div>' +
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Historique</h1><div class="rddate">'+rdE("Département " + RD.dep)+'</div>' +
     (h.length ? h.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+' · '+rdE(p.etat || "")+(p.modifie ? ' · '+rdE(p.modifie) : '')+(p.par ? ' · '+rdE(p.par) : '')+'</small><div>'+rdE(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun ancien point")) + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); RD.vue = "discussion"; rdPlanif(); };
 }
