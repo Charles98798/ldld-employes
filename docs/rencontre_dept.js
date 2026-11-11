@@ -56,6 +56,12 @@ function rdIcones(attrM, valM, attrX, valX){
   return '<div class="rdact"><a href="#" class="rdic" '+attrM+'="'+valM+'" aria-label="Modifier"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="'+pm+'"/></svg></a><a href="#" class="rdic" '+attrX+'="'+valX+'" aria-label="Retirer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+px+'"/></svg></a></div>';
 }
 function rdHeureEnreg(){ var d = new Date(); return "Enregistré à " + d.getHours() + " h " + ("0"+d.getMinutes()).slice(-2); }
+function rdMois18(){
+  var N = ["JANVIER","FÉVRIER","MARS","AVRIL","MAI","JUIN","JUILLET","AOÛT","SEPTEMBRE","OCTOBRE","NOVEMBRE","DÉCEMBRE"], p2 = function(n){ return ("0"+n).slice(-2); }, t = new Date(), r = [];
+  for(var k = 1; k <= 18; k++){ var d = new Date(t.getFullYear(), t.getMonth() - k, 1), y = d.getFullYear(), m = d.getMonth(), der = new Date(y, m + 1, 0).getDate();
+    r.push({cle: y+"-"+p2(m+1), lib: N[m]+" "+y, du: y+"-"+p2(m+1)+"-01", au: y+"-"+p2(m+1)+"-"+p2(der)}); }
+  return r;
+}
 function rdE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function rdMsg(txt){ return '<div class="bandeau">▪ '+rdE(String(txt).toUpperCase())+'</div>'; }
 function rdErreur(r){ var e = r && r.erreur ? String(r.erreur) : ""; return rdMsg(e || "Indisponible · réessayez"); }
@@ -327,7 +333,9 @@ function rdPresentation(){
   h += rdMenuHtml("pres");
   h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
   h += rdDemoMarque();
-  h += '<div class="rdp" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><small style="width:100%">Période des chiffres</small><select class="bx" id="rdper" style="flex:1;min-width:0"><option value="mois">Mois dernier complet</option><option value="an">Même mois de l’an passé</option><option value="dates">Dates au choix</option></select><span id="rddt" style="display:none;gap:8px;width:100%"><input class="bx" type="date" id="rddu" style="flex:1;min-width:0"><input class="bx" type="date" id="rdau" style="flex:1;min-width:0"></span></div>';
+  var mois18 = rdMois18(); if(!RD.moisSel) RD.moisSel = mois18[0].cle;
+  var moisLib = ""; mois18.forEach(function(m){ if(m.cle === RD.moisSel) moisLib = m.lib; });
+  h += '<div class="rdp"><small style="color:#6f6a5f">Période des chiffres</small><div class="rdbtn"><button type="button" class="rdplan" id="rdper" aria-expanded="false">'+rdE(moisLib)+'</button><div id="rdpl" style="display:none;background:#E3DFD3;border:2px solid #0d1117;margin-top:4px;max-height:280px;overflow-y:auto">'+mois18.map(function(m){ return '<a href="#" data-mo="'+m.cle+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1D1D1B;text-decoration:none;'+(m.cle === RD.moisSel ? "background:#8EFF60;" : "")+'">'+rdE(m.lib)+'</a>'; }).join("")+'</div></div></div>';
   var blk = 0;
   function bloc(inner){ return '<div class="rdblk">'+inner+'</div>'; }
   h += bloc('<div id="rds-pts">'+(RD_DEMO ? rdPointsHtml(null) : rdMsg("Un instant"))+'</div>');
@@ -344,10 +352,13 @@ function rdPresentation(){
       appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z && !RD_DEMO) z.innerHTML = rdMsg("Réseau indisponible"); });
     });
   }
-  var sp = document.getElementById("rdper"), dt = document.getElementById("rddt"), d1 = document.getElementById("rddu"), d2 = document.getElementById("rdau");
-  if(sp){ var pp = RD.periode || {t:"mois"}; sp.value = pp.t; if(pp.t === "dates"){ dt.style.display = "flex"; d1.value = pp.du || ""; d2.value = pp.au || ""; }
-    var chg = function(){ RD.periode = {t: sp.value, du: d1.value, au: d2.value}; dt.style.display = sp.value === "dates" ? "flex" : "none"; if(sp.value !== "dates" || (d1.value && d2.value)) chargerChiffres(); };
-    sp.onchange = chg; d1.onchange = chg; d2.onchange = chg; }
+  var sp = document.getElementById("rdper"), sl = document.getElementById("rdpl");
+  if(sp && sl){
+    sp.onclick = function(){ var ouv = sl.style.display !== "none"; sl.style.display = ouv ? "none" : "block"; sp.setAttribute("aria-expanded", ouv ? "false" : "true"); };
+    Array.prototype.forEach.call(sl.querySelectorAll("a"), function(x){ x.onclick = function(e){ e.preventDefault(); var c = x.getAttribute("data-mo"); sl.style.display = "none"; sp.setAttribute("aria-expanded", "false"); if(c === RD.moisSel) return; RD.moisSel = c; mois18.forEach(function(m){ if(m.cle === c){ sp.textContent = m.lib; RD.periode = {t: m === mois18[0] ? "mois" : "dates", du: m.du, au: m.au}; } }); Array.prototype.forEach.call(sl.querySelectorAll("a"), function(y){ y.style.background = y.getAttribute("data-mo") === c ? "#8EFF60" : ""; }); chargerChiffres(); }; });
+    var m0 = mois18[0]; if(!RD.periode || RD.periode.t === "an") RD.periode = {t: "mois", du: m0.du, au: m0.au};
+    mois18.forEach(function(m){ if(m.cle === RD.moisSel) RD.periode = {t: m === m0 ? "mois" : "dates", du: m.du, au: m.au}; });
+  }
   chargerChiffres();
   appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var zp = document.getElementById("rds-pts"); if(zp) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
 }
