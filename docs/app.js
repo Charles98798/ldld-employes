@@ -208,6 +208,8 @@ function appelService(corps){
 }
 function prechargerLectures(){
   if(!MOI) return;
+  if(prechargerLectures.t && Date.now() - prechargerLectures.t < 600000) return;   // au plus une fois par 10 minutes: le service garde ces lectures 1 h, inutile de les redemander à chaque retour à l'accueil
+  prechargerLectures.t = Date.now();
   var l = [{action:"heures"}, {action:"agenda_mes"}, {action:"rencontre_liste"}, {action:"prefs_lire"}, {action:"entretien_lire"}];
   if(MOI.role === "direction" || MOI.role === "responsable") l = l.concat([{action:"charge_equipe"}, {action:"entretien_lire"}, {action:"parking_lire"}, {action:"equipe_groupes"}, {action:"utilisation"}, {action:"agenda_liste"}]);
   if(MOI.role === "direction") l = l.concat([{action:"production_lire"}, {action:"employes_etat"}, {action:"emp_donnees"}, {action:"ech_donnees"}, {action:"embauche_donnees"}, {action:"embauche_avantages"}, {action:"pos_donnees"}, {action:"portrait", id:""}]);
