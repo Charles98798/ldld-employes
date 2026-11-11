@@ -1764,7 +1764,7 @@ function dateHeure(opts, surChangement){
       jm = '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid #1D1D1B;border-bottom:0;margin-top:6px">'+["D","L","M","M","J","V","S"].map(function(j){ return '<div style="background:#B4AB9B;font-size:11px;text-align:center;padding:4px 0">'+j+'</div>'; }).join("");
       var nbL = Math.ceil((m1.getDay() + new Date(m1.getFullYear(), m1.getMonth()+1, 0).getDate())/7); for(var wk = 0; wk < nbL; wk++) for(var dk = 0; dk < 7; dk++){ var dd = new Date(ml); dd.setDate(dd.getDate()+wk*7+dk); var iso = isoJour(dd), hors = dd.getMonth() !== m1.getMonth();
         var evj = S.evm.filter(function(e){ return isoJour(new Date(e.debut)) === iso; });
-        var jjv = jjDe(S.jm, iso);
+        var jjv = jjDe(S.jm, iso); evj.sort(function(a, b){ return new Date(a.debut) - new Date(b.debut); });
         jm += '<div data-jm="'+iso+'" style="'+(conge(iso) ? "background:#B5B0A2;" : "")+'min-height:104px;border-right:1px solid #B4AB9B;border-bottom:1px solid #B4AB9B;padding:2px 1px;box-sizing:border-box;font-size:11px;cursor:pointer;'+(hors ? "opacity:.4;" : "")+'"><span style="'+(iso === aujIso ? "background:#1D1D1B;color:#fff;padding:0 4px" : "")+'">'+dd.getDate()+'</span>'+jjv.concat(evj).slice(0, 4).map(function(e){ var c = couleurAg(e.ag); return '<div style="background:'+c.f+';color:'+c.t+';font-size:10px;line-height:14px;padding:0 3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:clip">'+esc(e.titre)+'</div>'; }).join("")+(jjv.length+evj.length > 4 ? '<div style="font-size:10px">+'+(jjv.length+evj.length-4)+'</div>' : "")+'</div>'; }
       h += jm+'</div>';
       h += legende();
@@ -1784,14 +1784,14 @@ function dateHeure(opts, surChangement){
     if(S.jj.length){
       g += '<div class="h" style="height:auto;min-height:24px">Jour</div>';
       for(k = 0; k < 7; k++){ dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); var lj = jjDe(S.jj, isoJour(dj));
-        g += '<div style="min-width:0;height:auto;min-height:24px;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:visible;gap:2px;padding:2px 1px">'+lj.map(function(e){ var c = couleurAg(e.ag); return '<span style="background:'+c.f+';color:'+c.t+';font-size:8px;padding:1px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">'+esc(e.titre)+'</span>'; }).join("")+'</div>'; }
+        g += '<div style="min-width:0;height:auto;min-height:24px;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:visible;gap:2px;padding:2px 1px">'+lj.map(function(e){ var c = couleurAg(e.ag); return '<span style="background:'+c.f+';color:'+c.t+';font-size:8px;line-height:10px;padding:1px 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;text-align:left">'+esc(e.titre)+'</span>'; }).join("")+'</div>'; }
     }
     for(var hh = 7; hh <= 18; hh++){
       g += '<div class="h">'+hh+' h</div>';
       for(k = 0; k < 7; k++){ dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); ij = isoJour(dj); var pj = ij < aujIso;
         var occE = S.evs.filter(function(e){ var d0 = new Date(e.debut); return isoJour(d0) === ij && d0.getHours() <= hh && new Date(e.fin) > new Date(dj.getFullYear(), dj.getMonth(), dj.getDate(), hh, 0); })[0], occ = !!occE;
         var choisi = ij === S.jour && S.heure && +S.heure.split(":")[0] === hh;
-        g += '<div class="'+(choisi ? "n" : occ ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(occE && !choisi && opts.agenda !== false ? ' style="background:'+couleurAg(occE.ag).f+'"' : "")+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
+        g += '<div class="'+(choisi ? "n" : occ ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(occE && !choisi && opts.agenda !== false ? ' style="background:'+couleurAg(occE.ag).f+';color:'+couleurAg(occE.ag).t+';justify-content:flex-start;padding:0 2px;font-size:9px;text-align:left"' : "")+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'>'+(occE && !choisi && opts.agenda !== false && new Date(occE.debut).getHours() === hh ? '<span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;width:100%;line-height:10px;font-size:8px;word-break:break-word">'+heureTxt(new Date(occE.debut).getHours(), new Date(occE.debut).getMinutes())+" "+esc(occE.titre)+'</span>' : "")+'</div>'; }
     }
     h += g + '</div>' + legende();
     if(S.jour){
