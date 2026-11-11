@@ -1697,6 +1697,30 @@ function dateHeure(opts, surChangement){
     var L = DH_CACHE.agendas || []; if(L.length){ var ok = S.sel.filter(function(id){ return L.some(function(a){ return idAg(a) === id; }); }); S.sel = ok.length ? ok : [idAg(L[0])]; }
     S.agenda = S.sel[0]; return S.sel;
   }
+  function placerBlocs(){
+    if(opts.agenda === false || !S.zone) return;
+    var gs = S.zone.querySelector(".gs"); if(!gs) return;
+    gs.style.position = "relative";
+    Array.prototype.forEach.call(gs.querySelectorAll(".blc"), function(b){ b.parentNode.removeChild(b); });
+    var h7 = null, hs = gs.querySelectorAll(".h"); for(var q = 0; q < hs.length; q++){ if(!hs[q].getAttribute("style")){ h7 = hs[q]; break; } }
+    var ent = gs.querySelectorAll(".d"); if(!h7 || ent.length < 8) return;
+    var y0 = h7.offsetTop, rh = h7.offsetHeight || 24;
+    for(var k = 0; k < 7; k++){
+      var dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); var iso = isoJour(dj);
+      var L = S.evs.filter(function(e){ return isoJour(new Date(e.debut)) === iso; }).map(function(e){ var a = new Date(e.debut), f = new Date(e.fin); return {e: e, a: a.getHours()+a.getMinutes()/60, f: Math.max(a.getHours()+a.getMinutes()/60+0.5, f.getHours()+f.getMinutes()/60 || a.getHours()+1)}; }).sort(function(p, r){ return p.a - r.a; });
+      var lanes = [];
+      L.forEach(function(x){ var n = 0; while(lanes[n] !== undefined && lanes[n] > x.a) n++; lanes[n] = x.f; x.lane = n; });
+      var nl = Math.max(1, lanes.length), col = ent[k+1];
+      L.forEach(function(x){
+        var a0 = Math.max(7, x.a), f0 = Math.min(19, x.f); if(f0 <= a0) return;
+        var c = couleurAg(x.e.ag), d = document.createElement("div"); d.className = "blc";
+        var w = col.offsetWidth/nl;
+        d.style.cssText = "display:block;height:auto;position:absolute;pointer-events:none;box-sizing:border-box;overflow:hidden;z-index:2;border:1px solid #cecdc5;padding:1px 2px;font-size:9px;line-height:11px;text-align:left;word-break:break-word;left:"+(col.offsetLeft+w*x.lane)+"px;width:"+w+"px;top:"+(y0+(a0-7)*rh)+"px;height:"+((f0-a0)*rh)+"px;background:"+c.f+";color:"+c.t;
+        d.innerHTML = '<div style="font-weight:600">'+esc(x.e.titre)+'</div><div>'+heureTxt(new Date(x.e.debut).getHours(), new Date(x.e.debut).getMinutes())+'</div>';
+        gs.appendChild(d);
+      });
+    }
+  }
   function legende(){ return '<div class="glg"><span><i style="background:#B5B0A2"></i>Congé / fermé</span></div>'; }
   function lierVue(){
     var v1 = document.getElementById("dhv1"), v2 = document.getElementById("dhv2");
@@ -1791,7 +1815,7 @@ function dateHeure(opts, surChangement){
       for(k = 0; k < 7; k++){ dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); ij = isoJour(dj); var pj = ij < aujIso;
         var occE = S.evs.filter(function(e){ var d0 = new Date(e.debut); return isoJour(d0) === ij && d0.getHours() <= hh && new Date(e.fin) > new Date(dj.getFullYear(), dj.getMonth(), dj.getDate(), hh, 0); })[0], occ = !!occE;
         var choisi = ij === S.jour && S.heure && +S.heure.split(":")[0] === hh;
-        g += '<div class="'+(choisi ? "n" : occ ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(occE && !choisi && opts.agenda !== false ? ' style="background:'+couleurAg(occE.ag).f+';color:'+couleurAg(occE.ag).t+';justify-content:flex-start;padding:0 2px;font-size:9px;text-align:left"' : "")+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'>'+(occE && !choisi && opts.agenda !== false && new Date(occE.debut).getHours() === hh ? '<span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;width:100%;line-height:10px;font-size:8px;word-break:break-word">'+heureTxt(new Date(occE.debut).getHours(), new Date(occE.debut).getMinutes())+" "+esc(occE.titre)+'</span>' : "")+'</div>'; }
+        g += '<div class="'+(choisi ? "n" : occ && opts.agenda === false ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
     }
     h += g + '</div>' + legende();
     if(S.jour){
@@ -1815,7 +1839,7 @@ function dateHeure(opts, surChangement){
       h += '<span class="lbl">Créer dans l\'agenda · un seul</span><div style="display:flex;align-items:center;gap:10px;border:2px solid #0d1117;padding:0 12px;height:46px;box-sizing:border-box"><i style="width:12px;height:12px;flex:none;background:'+couleurAg(S.agCreer).f+'"></i><select id="dhcr" style="flex:1;border:0;outline:0;-webkit-appearance:none;appearance:none;border-radius:0;background:transparent;font:inherit;height:42px;color:inherit">'+Lc.map(function(x){ return '<option value="'+esc(idAg(x))+'"'+(idAg(x) === S.agCreer ? " selected" : "")+'>'+esc(nomAg(x))+'</option>'; }).join("")+'</select><span style="pointer-events:none">⌄</span></div><div style="font-size:11px;margin-top:6px">Le courriel d\'invitation est envoyé depuis cet agenda.</div>';
     }
     z.innerHTML = h;
-    lierAg(); lierVue();
+    lierAg(); lierVue(); placerBlocs();
     document.getElementById("dhp").onclick = function(){ S.lundi.setDate(S.lundi.getDate()-7); charger(); };
     document.getElementById("dhn").onclick = function(){ S.lundi.setDate(S.lundi.getDate()+7); charger(); };
     document.getElementById("dhd").onchange = function(){ S.jour = this.value; S.confirme = false; S.err = false; if(S.jour){ var l = lundiDe(depuis(S.jour)); if(isoJour(l) !== isoJour(S.lundi)){ S.lundi = l; changer(); charger(); return; } } changer(); };
