@@ -1668,6 +1668,7 @@ function dateHeure(opts, surChangement){
   var auj = new Date(); auj.setHours(0, 0, 0, 0);
   var S = {lundi: lundiDe(auj), jour: "", heure: "", agenda: "primary", sel: null, agOuvert: false, vue: (function(){ try { return localStorage.getItem("ldld-cal-vue") === "mois" ? "mois" : "semaine"; } catch(e){ return "semaine"; } })(), mois: new Date(auj.getFullYear(), auj.getMonth(), 1), evm: [],  evs: [], err: false, zone: null, confirme: false, ed: null};
   if(opts.init && opts.init.jour){ var pi = opts.init.jour.split("-"); S.jour = opts.init.jour; S.heure = opts.init.heure || ""; S.lundi = lundiDe(new Date(+pi[0], +pi[1]-1, +pi[2])); }
+  if(opts.mois && !S.jour){ S.jour = isoJour(auj); }
   function isoDe(d){ return isoJour(d); }
   function depuis(iso){ var p = iso.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
   var CPAL = [["charles","#1D1D1B","#fff"],["direction","#8D806A","#fff"],["famille","#5C5446","#fff"],["ldld","#8EFF60","#1D1D1B"],["prise","#BDC9B2","#1D1D1B"]], CRES = [["#B4AB9B","#1D1D1B"],["#CFC6B5","#1D1D1B"],["#C9F5B5","#1D1D1B"],["#3F3A30","#fff"]];
@@ -1754,7 +1755,7 @@ function dateHeure(opts, surChangement){
       var mp = document.getElementById("dmp"), ms2 = document.getElementById("dms");
       if(mp) mp.onclick = function(){ S.mois = new Date(S.mois.getFullYear(), S.mois.getMonth()-1, 1); S.evm = []; rendre(); charger(); };
       if(ms2) ms2.onclick = function(){ S.mois = new Date(S.mois.getFullYear(), S.mois.getMonth()+1, 1); S.evm = []; rendre(); charger(); };
-      Array.prototype.forEach.call(z.querySelectorAll("[data-jm]"), function(c){ c.onclick = function(){ var p = c.getAttribute("data-jm").split("-"); S.lundi = lundiDe(new Date(+p[0], +p[1]-1, +p[2])); S.vue = "semaine"; try { localStorage.setItem("ldld-cal-vue", "semaine"); } catch(e){} S.evs = []; rendre(); charger(); }; });
+      Array.prototype.forEach.call(z.querySelectorAll("[data-jm]"), function(c){ c.onclick = function(){ var p = c.getAttribute("data-jm").split("-"); S.lundi = lundiDe(new Date(+p[0], +p[1]-1, +p[2])); S.jour = c.getAttribute("data-jm"); S.heure = ""; S.vue = "semaine"; try { localStorage.setItem("ldld-cal-vue", "semaine"); } catch(e){} S.evs = []; rendre(); charger(); }; });
       return;
     }
     if(S.erreurSem) h += '<div class="bandeau">▪ '+esc(S.erreurSem.toUpperCase())+'</div>';
