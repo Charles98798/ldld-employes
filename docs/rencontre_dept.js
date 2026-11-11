@@ -109,11 +109,15 @@ function rdDiscussion(donnees, edition){
   if(fictif && !donnees.date) h += '<div class="rddate">Mardi 17 novembre · 9 h 30</div>';
   if(fictif) h += rdDemoMarque();
   if(donnees.date) h += '<div class="rddate">'+rdE(donnees.date)+'</div>';
+  var separe = pts.some(function(p){ return p.prochaine === true; }) && pts.some(function(p){ return p.prochaine === false; }), lastG = null;
   h += pts.map(function(p){
-    var enEdit = edition === p.id;
+    var enEdit = edition === p.id, ent = "";
+    if(separe && lastG !== !!p.prochaine){ lastG = !!p.prochaine; ent = '<div class="rdsm">'+(lastG ? "Prochaine réunion · brouillon" : "Réunion en cours · publiée")+'</div>'; }
+    return ent + (function(){
     return '<div class="rdp">'+'<small>Point '+rdE(p.n)+(p.etat === "brouillon" && !p.demo ? ' · brouillon' : '')+'</small>' + (enEdit
       ? '<textarea class="rdzone" id="rdtx" maxlength="400" rows="3">'+rdE(p.texte)+'</textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div>'
       : '<div class="rdl2"><div class="rdtx">'+rdE(p.texte)+'</div><div class="rdact"><a href="#" data-m="'+rdE(p.id)+'">Modifier</a><a href="#" data-r="'+rdE(p.id)+'">Retirer</a></div></div>') + '</div>';
+    })();
   }).join("");
   if(!pts.length && edition !== "nouveau") h += rdMsg("Aucun point pour la prochaine rencontre");
   if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
