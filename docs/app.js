@@ -426,7 +426,7 @@ var ENT = [
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
  {id:"contacts", g:"Équipe", l:"Contact", p:"Contacts", d:[0,1,1], f:function(){ contactsResp(); }},
- {id:"nouveau_message", g:"Équipe", l:"Envoyer message", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
+ {id:"nouveau_message", g:"Équipe", l:"Envoyer notification", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
  {id:"messages_envoyes", g:"Équipe", l:"Historique message", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
  {id:"reunion_production", g:"Équipe", l:"Réunion production", p:"Réunion production", d:[1,1,1], f:function(){ rencontreDept(); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
@@ -1688,8 +1688,8 @@ function dateHeure(opts, surChangement){
   function idAg(a){ return a.principal ? "primary" : a.id; }
   function couleurAg(id){ var L = DH_CACHE.agendas || [], i = 0, a = null; for(; i < L.length; i++){ if(idAg(L[i]) === id){ a = L[i]; break; } }
     if(a && /^#[0-9a-fA-F]{6}$/.test(a.couleur || "")){ var hx = a.couleur, lum = (parseInt(hx.substr(1,2),16)*299 + parseInt(hx.substr(3,2),16)*587 + parseInt(hx.substr(5,2),16)*114)/1000; return {f: hx, t: lum > 150 ? "#1D1D1B" : "#fff"}; }
-    var n = a ? (a.principal ? "charles" : String(nomAg(a)).toLowerCase()) : "", k; for(k = 0; k < CPAL.length; k++){ if(n.indexOf(CPAL[k][0]) >= 0) return {f: CPAL[k][1], t: CPAL[k][2]}; }
-    var r = CRES[(i < 0 ? 0 : i) % CRES.length]; return {f: r[0], t: r[1]}; }
+    var n = a ? (a.principal ? "charles" : String(nomAg(a)).toLowerCase()) : (id === "primary" ? "charles" : ""), k; for(k = 0; k < CPAL.length; k++){ if(n.indexOf(CPAL[k][0]) >= 0) return {f: CPAL[k][1], t: CPAL[k][2]}; }
+    var r = CRES[(a ? i : String(id).length) % CRES.length]; return {f: r[0], t: r[1]}; }
   function selAgendas(){
     if(opts.agenda === false) return [S.agenda];
     if(!S.sel){ var m = []; try { m = JSON.parse(localStorage.getItem("ldld-agendas") || "[]"); } catch(e){}
@@ -1715,8 +1715,8 @@ function dateHeure(opts, surChangement){
         var a0 = Math.max(7, x.a), f0 = Math.min(19, x.f); if(f0 <= a0) return;
         var c = couleurAg(x.e.ag), d = document.createElement("div"); d.className = "blc";
         var nl = x.cl.lanes.length, w = col.offsetWidth/nl;
-        d.style.cssText = "display:block;height:auto;position:absolute;pointer-events:none;box-sizing:border-box;overflow:hidden;z-index:2;border:1px solid #cecdc5;padding:1px 2px;font-size:9px;line-height:11px;text-align:left;word-break:break-word;left:"+(col.offsetLeft+w*x.lane)+"px;width:"+w+"px;top:"+(y0+(a0-7)*rh)+"px;height:"+((f0-a0)*rh)+"px;background:"+c.f+";color:"+c.t;
-        d.innerHTML = '<div style="font-weight:600">'+esc(x.e.titre)+'</div><div>'+heureTxt(new Date(x.e.debut).getHours(), new Date(x.e.debut).getMinutes())+'</div>';
+        d.style.cssText = "display:block;height:auto;position:absolute;pointer-events:none;box-sizing:border-box;overflow:hidden;z-index:2;border:1px solid #cecdc5;padding:1px 2px;font-size:8px;line-height:10px;letter-spacing:0;text-align:left;overflow-wrap:anywhere;left:"+(col.offsetLeft+w*x.lane)+"px;width:"+w+"px;top:"+(y0+(a0-7)*rh)+"px;height:"+((f0-a0)*rh)+"px;background:"+c.f+";color:"+c.t;
+        d.innerHTML = '<div style="font-weight:600">'+esc(x.e.titre || "(Sans titre)")+'</div><div>'+heureTxt(new Date(x.e.debut).getHours(), new Date(x.e.debut).getMinutes())+'</div>';
         gs.appendChild(d);
       });
     }
@@ -1898,7 +1898,7 @@ function chargerCaches(fin){
 // Nouveau message: onglets Message et Réunion, mêmes participants.
 // Nouveau message d'un employé: un seul écran, destinataire à choisir (Gestionnaire de production ou Direction), sujet, message.
 function nouveauEmploye(){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Envoyer message</h1>' +
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Envoyer notification</h1>' +
     '<span class="lbl">À · obligatoire</span><select class="bx rose" id="nvers"><option value="">Choisir</option><option value="gestionnaire">Gestionnaire de production</option><option value="direction">Direction</option></select>' +
     '<span class="lbl">Sujet · obligatoire</span><input class="bx rose" id="nsuj" maxlength="120">' +
     '<span class="lbl">Message · obligatoire</span><textarea class="bx rose" id="ntxt" rows="6" maxlength="4000"></textarea>' +
@@ -1921,7 +1921,7 @@ function nouveauEmploye(){
 function nouveau(onglet){
   if(!peutEcrire()) return nouveauEmploye();
   onglet = onglet === "reunion" ? "reunion" : "message";
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Envoyer message</h1>' +
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Envoyer notification</h1>' +
     '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton" id="ongM" style="margin:0;flex:1;'+(onglet === "message" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Message</button><button type="button" class="bouton" id="ongR" style="margin:0;flex:1;'+(onglet === "reunion" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Réunion</button></div>' +
     '<div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); retirerBoutonBas(); responsable(); };
