@@ -3,6 +3,18 @@
 // rd_capsules_lire / rd_capsule_modifier / rd_capsule_presenter (Gestionnaire + Direction). Le service refuse aussi l'accès (catégorie Gestionnaire ou Direction, jamais Expert technique).
 var RD = {dep: "", choisi: false, vue: "discussion"};
 var RD_DEPS = ["Acrylique", "Fixe", "Pièce"];
+// DONNÉES FICTIVES (à retirer dès les vraies données de Trak): mettre RD_DEMO à false pour tout enlever d'un geste. Les vraies données remplacent le fictif automatiquement.
+var RD_DEMO = true;
+var RD_DEMO_PTS = [{n:1, texte:"Charge de travail du mois passé"}, {n:2, texte:"Répartition du travail entre les équipes"}, {n:3, texte:"Formation et accompagnement"}, {n:4, texte:"Questions de l’équipe"}];
+var RD_DEMO_CAPS = {titre:"Capsule du mois · Charge et fonctionnement", points:["Balancement de la charge deux fois par jour, à 8 h et à 13 h", "Consulter le tableau de charge avant de commencer", "Signaler tout écart à son responsable"]};
+function rdDemoSection(cle){
+  var mois = ["JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV."];
+  if(cle === "charge") return {ok:true, equipes:[{equipe:"Montage", moyenne:82, jours:[78,85,91,97,88]}, {equipe:"Injection", moyenne:74, jours:[70,72,80,76,69]}, {equipe:"Finition", moyenne:88, jours:[92,96,99,90,85]}]};
+  if(cle === "nc") return {ok:true, serie:mois.map(function(m, i){ return {m:m, v:[6,4,7,3,5,2][i]}; }), lignes:[["3 nov.","Dimension hors tolérance","Reprise"],["6 nov.","Défaut de surface","Rebut"]]};
+  if(cle === "escomptes") return {ok:true, serie:mois.map(function(m, i){ return {m:m, v:[2,1,3,0,2,1][i]}; }), serie_an_passe:mois.map(function(m, i){ return {m:m, v:[3,2,2,1,4,2][i]}; }), lignes:[["5 nov.","Dossier 24817","350 $"],["8 nov.","Dossier 24902","120 $"]]};
+  return {ok:true, serie:mois.map(function(m, i){ return {m:m, v:[9,7,11,6,8,5][i]}; }), lignes:[["Dossier 24790","Étape finition"],["Dossier 24855","Étape montage"]]};
+}
+function rdDemoMarque(){ return RD_DEMO ? '<div class="rdp"><small>▪ Données fictives pour essai</small></div>' : ""; }
 function rdPeutPlanifier(){ return !!(MOI && (MOI.role === "direction" || MOI.role === "responsable")); }
 function rdE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function rdMsg(txt){ return '<div class="bandeau">▪ '+rdE(String(txt).toUpperCase())+'</div>'; }
@@ -31,7 +43,8 @@ function rdPoints(){
     if(planif) h += '<div class="rdbtn"><button type="button" class="rdplan" id="rdmenu" aria-expanded="false">Présentation</button><div id="rdml" style="display:none;background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+[["pres","Présentation"],["disc","Planification discussion"],["cap","Planification capsule"]].map(function(c, i){ return '<a href="#" data-c="'+c[0]+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1D1D1B;text-decoration:none;'+(i === 0 ? "background:#8EFF60;" : "")+'">'+c[1]+'</a>'; }).join("")+'</div></div>';
     if(r.date) h += '<div class="rddate">'+rdE(r.date)+'</div>';
     h += '<div class="rdt">01 <span>Points de discussion</span></div>';
-    var pts = r.points || [];
+    if(fict) h += rdDemoMarque();
+    var pts = r.points || [], fict = RD_DEMO && !pts.length; if(fict){ pts = RD_DEMO_PTS; if(!r.date) h += '<div class="rddate">Mardi 17 novembre · 9 h 30</div>'; }
     h += (pts.length ? pts.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+'</small><div>'+rdE(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun point publié pour le moment")) + '</div></div>';
     app.innerHTML = h;
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
@@ -153,6 +166,7 @@ function rdSerie(titre, a, b){
   return h;
 }
 function rdRendreSection(cle, r){
+  if(RD_DEMO && r && r.ok && (r.attente || (cle === "charge" && !(r.equipes || []).length))) r = rdDemoSection(cle);
   if(!r || !r.ok) return rdErreur(r);
   if(r.attente) return rdMsg("Données en attente de Trak");
   var h = "";
@@ -172,6 +186,7 @@ function rdPresentation(){
   if(!rdPeutPlanifier()){ rdPoints(); return; }
   var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
   h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
+  h += rdDemoMarque();
   h += RD_SECTIONS.map(function(s){ return '<div class="rdt">'+rdE(s[1])+'</div><div id="rds-'+s[0]+'">'+""+'</div>'; }).join("");
   h += '<div class="rdt">04 Capsule du mois</div><div id="rds-cap"></div></div>';
   app.innerHTML = h;
@@ -180,5 +195,5 @@ function rdPresentation(){
   RD_SECTIONS.forEach(function(s){
     appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep}).then(function(r){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z) z.innerHTML = rdMsg("Réseau indisponible"); });
   });
-  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var z = document.getElementById("rds-cap"); if(!z) return; var c = r && r.capsule; z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){});
+  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return '<div>'+rdE(p)+'</div>'; }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){});
 }
