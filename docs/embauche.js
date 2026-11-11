@@ -156,28 +156,21 @@ function embFenetreCourriel(r, m){
   document.getElementById("pco").onclick = function(){ if(!ok()) return; var a = c.value.trim().toLowerCase(); f.remove(); embLancer(r, m, a); };
   c.focus();
 }
-// Enregistrement / envoi en arrière-plan: l'écran réagit tout de suite; barre de progression; message clair si le classeur refuse.
+// Enregistrement / envoi en arrière-plan: même bandeau que l'envoi du contrat (neTache); Retour reste actif et ramène à l'accueil sans interrompre la tâche.
 function embLancer(r, m, courriel){
   var S = EMB.S, envoi = !!courriel, z = document.getElementById("pmsg"), bts = document.getElementById("pbts"); if(!z || !m) return;
-  var etapes = envoi ? ["Vérification du calcul", "Préparation de la fiche « Nouvel employé »", "Courriel inscrit dans la fiche", "Envoi du courriel"] : ["Vérification du calcul", "Préparation de la fiche « Nouvel employé »"];
-  retirerBoutonBas(); bts.style.display = "none"; var t0 = Date.now(), fin = false;
-  // Tant que ce n'est pas à 100 %, on ne peut pas quitter la page: Retour est grisé et ne fait rien.
-  var rt = document.getElementById("retour"); if(rt){ rt.style.opacity = ".35"; rt.style.pointerEvents = "none"; rt.onclick = function(e){ e.preventDefault(); }; }
-  function libererRetour(){ var q = document.getElementById("retour"); if(q){ q.style.opacity = ""; q.style.pointerEvents = ""; q.onclick = function(e){ e.preventDefault(); S.page = 2; embDessiner(); }; } }
-  function dess(p, termine, msg, rouge){ var cur = termine ? etapes.length : Math.min(etapes.length - 1, Math.floor(p / (100 / etapes.length)));
-    z.innerHTML = '<div style="margin:16px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(p)+'%;background:var(--tx)"></i></div>'+
-      '<div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(p)+' %</div>'+etapes.map(function(e, i){ return '<div style="font-size:13px;opacity:'+(i <= cur ? 1 : .45)+'">▪ '+esc(e)+(i < cur ? " ✓" : "")+'</div>'; }).join("")+'</div>'+
-      (msg ? '<div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "")+'">'+esc(msg)+'</div>' : ""); }
-  dess(0, false);
-  var tick = setInterval(function(){ if(!fin && document.getElementById("pmsg")) dess(92 * (1 - Math.exp(-(Date.now() - t0) / 12000)), false); }, 250);
-  var h = m.h, champs = embChamps(S, r, h, m);
-  appelService(envoi ? {action: "embauche_envoyer", session: sessionGardee(), f: champs, courrielCandidat: courriel} : {action: "embauche_enregistrer", session: sessionGardee(), f: champs}).then(function(res){
-    fin = true; clearInterval(tick); var zz = document.getElementById("pmsg"); if(!zz) return;
-    if(res && res.ok){ var o = res.r || {};
-      dess(100, true, "▪ "+(envoi ? "FICHE « NOUVEL EMPLOYÉ » PRÉPARÉE ET COURRIEL ENVOYÉ À "+(o.courriel || courriel)+(o.copie ? ". COPIE À "+o.copie : "") : "BROUILLON DE LA FICHE « NOUVEL EMPLOYÉ » PRÉPARÉ")+" · DÉPART "+o.dep+" % · "+embFmt(o.taux)+" $/H"+(o.entente ? " · POSITION DÉCIDÉE EN RENCONTRE (BARÈME "+o.bareme+" %)" : ""), false);
-      setTimeout(function(){ if(EMB.page){ EMB.S = null; embSortir(); } }, 2200);
-    } else { dess(0, false, "▪ NON ENREGISTRÉ · "+String((res && res.erreur) || "RÉESSAYEZ").toUpperCase()+(envoi ? " · RIEN N'A ÉTÉ ENVOYÉ" : ""), true); libererRetour(); embRetablir(r, m); }
-  }).catch(function(){ fin = true; clearInterval(tick); if(document.getElementById("pmsg")){ dess(0, false, "▪ NON ENREGISTRÉ · RÉSEAU · RIEN N'A ÉTÉ ENVOYÉ", true); libererRetour(); embRetablir(r, m); } });
+  retirerBoutonBas(); bts.style.display = "none"; z.innerHTML = '<div id="gebar"></div>';
+  var rt = document.getElementById("retour"); if(rt){ rt.style.opacity = ""; rt.style.pointerEvents = ""; rt.onclick = function(e){ e.preventDefault(); embSortir(); }; }
+  var h = m.h, champs = embChamps(S, r, h, m), nom = (S.prenom.trim()+" "+S.famille.trim()).trim();
+  neTache({nom: nom, duree: 12000, reste: true,
+    lib: envoi ? {cours: "Enregistrement et envoi en cours", ok: "Fiche préparée et courriel envoyé", non: "Non enregistré · rien n’a été envoyé"} : {cours: "Enregistrement en cours", ok: "Brouillon préparé", non: "Non enregistré"},
+    reseau: envoi ? "Réponse non reçue, vérifiez avant de réessayer" : "Réseau, réessayez",
+    run: function(){ return appelService(envoi ? {action: "embauche_envoyer", session: sessionGardee(), f: champs, courrielCandidat: courriel} : {action: "embauche_enregistrer", session: sessionGardee(), f: champs}); },
+    suite: function(res){ var o = (res && res.r) || {}; return o.dep ? "départ "+o.dep+" % · "+embFmt(o.taux)+" $/h" : ""; },
+    fin: function(E){
+      if(E.etat === "ok"){ setTimeout(function(){ if(EMB.page && document.getElementById("gebar")){ EMB.S = null; embSortir(); } }, 2200); }
+      else if(document.getElementById("pbts")) embRetablir(r, m);
+    }});
 }
 function embRetablir(r, m){
   var bts = document.getElementById("pbts"); if(bts) bts.style.display = "";
