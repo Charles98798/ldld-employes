@@ -9,18 +9,17 @@ function rdMsg(txt){ return '<div class="bandeau">▪ '+rdE(String(txt).toUpperC
 function rdErreur(r){ var e = r && r.erreur ? String(r.erreur) : ""; return rdMsg(e || "Indisponible · réessayez"); }
 function rdTitreDep(){ return "Département " + RD.dep; }
 
-// Choix du département (une réunion séparée par département).
+// Choix du département (pendant les tests: l'employé choisit, l'application mémorise). Une réunion séparée par département.
 function rencontreDept(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre de département</h1><div class="rdl">' +
-    RD_DEPS.map(function(d){ return '<a href="#" class="rdd" data-d="'+rdE(d)+'">'+rdE(d)+'</a>'; }).join("") + '</div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  Array.prototype.forEach.call(app.querySelectorAll(".rdd"), function(a){ a.onclick = function(e){ e.preventDefault(); RD.dep = a.getAttribute("data-d"); rdPoints(); }; });
+  var m = ""; try { m = localStorage.getItem("ldld-rd-dep") || ""; } catch(e){}
+  RD.dep = RD_DEPS.indexOf(m) >= 0 ? m : RD_DEPS[0];
+  rdPoints();
 }
-
 // Vue des points publiés (tous les employés connectés).
 function rdPoints(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1><div id="rdz"></div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); rencontreDept(); };
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1><div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div><div id="rdz"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  Array.prototype.forEach.call(app.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPoints(); }; });
   appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){
     var z = document.getElementById("rdz"); if(!z) return;
     if(!r || !r.ok){ z.innerHTML = rdErreur(r); return; }
