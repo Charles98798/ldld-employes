@@ -1733,20 +1733,25 @@ function dateHeure(opts, surChangement){
     Array.prototype.forEach.call(S.zone.querySelectorAll(".dhagl"), function(l){ l.onclick = function(){ var id = l.getAttribute("data-i"), cur = selAgendas().slice(), p = cur.indexOf(id);
       if(p >= 0){ if(cur.length > 1) cur.splice(p, 1); } else cur.push(id); S.sel = cur; S.agenda = cur[0]; try { localStorage.setItem("ldld-agendas", JSON.stringify(cur)); } catch(e){} rendre(); }; });
   }
+  function sansDoublon(liste, cle){
+    var ordre = selAgendas(), pri = function(e){ return e.ag === "primary" ? -1 : ordre.indexOf(e.ag); };
+    var tri = liste.slice().sort(function(a, b){ return pri(a) - pri(b); }), vu = {};
+    return tri.filter(function(e){ var k = cle(e); if(vu[k]) return false; vu[k] = 1; return true; });
+  }
   function jjDe(liste, iso){ return liste.filter(function(e){ return e.d1 <= iso && iso < e.d2; }); }
   function jjNorm(r, id){ return ((r && r.journee) || []).map(function(e){ return {ag: id, id: e.id, titre: e.titre, d1: e.debut, d2: e.fin || e.debut}; }); }
   function chargerMois(){
     var ids = selAgendas(), d1 = new Date(S.mois), nb = 7, reste = ids.length * nb, tous = [], jjm = [], err = "", dim0 = new Date(d1.getFullYear(), d1.getMonth(), 1 - d1.getDay()), l0 = lundiDe(dim0);
     ids.forEach(function(id){ for(var w = 0; w < nb; w++){ var ld = new Date(l0); ld.setDate(ld.getDate()+7*w);
-      appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(ld), agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); jjm = jjm.concat(jjNorm(r, id)); } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ var vu = {}; S.evm = tous.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.debut; if(vu[k]) return false; vu[k] = 1; return true; }); var vj = {}; S.jm = jjm.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.d1; if(vj[k]) return false; vj[k] = 1; return true; }); S.erreurSem = err; rendre(); } }); } });
+      appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(ld), agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); jjm = jjm.concat(jjNorm(r, id)); } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ var vu = {}; S.evm = sansDoublon(tous.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.debut; if(vu[k]) return false; vu[k] = 1; return true; }), function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); var vj = {}; S.jm = sansDoublon(jjm.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.d1; if(vj[k]) return false; vj[k] = 1; return true; }), function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); S.erreurSem = err; rendre(); } }); } });
   }
   function charger(){
     if(opts.mois && S.vue === "mois") return chargerMois();
     var ids = selAgendas(), reste = ids.length, tous = [], jjw = [], err = "", deb = isoJour(S.lundi), vus = [], vusJ = [];
     ids.forEach(function(id){ try { var c = JSON.parse(localStorage.getItem("ldld-cs-"+id+"-"+deb) || "null"); if(c) c.forEach(function(e){ e.ag = id; vus.push(e); }); var cj = JSON.parse(localStorage.getItem("ldld-cj-"+id+"-"+deb) || "null"); if(cj) cj.forEach(function(e){ vusJ.push(e); }); } catch(e){} });
-    if(vus.length || vusJ.length){ S.evs = vus; S.jj = vusJ; rendre(); }
+    if(vus.length || vusJ.length){ S.evs = sansDoublon(vus, function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); S.jj = sansDoublon(vusJ, function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); rendre(); }
     ids.forEach(function(id){
-      appelService({action:"agenda_semaine", session:sessionGardee(), debut:deb, agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); var jn = jjNorm(r, id); jjw = jjw.concat(jn); try { localStorage.setItem("ldld-cs-"+id+"-"+deb, JSON.stringify(r.evenements || [])); localStorage.setItem("ldld-cj-"+id+"-"+deb, JSON.stringify(jn)); } catch(e){} } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ S.evs = tous; S.jj = jjw; S.erreurSem = err; rendre(); } });
+      appelService({action:"agenda_semaine", session:sessionGardee(), debut:deb, agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); var jn = jjNorm(r, id); jjw = jjw.concat(jn); try { localStorage.setItem("ldld-cs-"+id+"-"+deb, JSON.stringify(r.evenements || [])); localStorage.setItem("ldld-cj-"+id+"-"+deb, JSON.stringify(jn)); } catch(e){} } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ S.evs = sansDoublon(tous, function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); S.jj = sansDoublon(jjw, function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); S.erreurSem = err; rendre(); } });
     });
   }
   function conge(iso){ return DH_CACHE.conges && DH_CACHE.conges[iso]; }
@@ -1880,7 +1885,7 @@ function dateHeure(opts, surChangement){
 }
 function chargerCaches(fin){
   var reste = 2; function un(){ if(--reste === 0 && fin) fin(); }
-  if(DH_CACHE.agendas) un(); else appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ DH_CACHE.agendas = (r && r.ok && r.agendas) ? r.agendas.filter(function(a){ return a.ecriture; }) : []; un(); }).catch(function(){ DH_CACHE.agendas = []; un(); });
+  if(DH_CACHE.agendas) un(); else appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ DH_CACHE.agendas = (r && r.ok && r.agendas) ? r.agendas.filter(function(a, i, t){ return a.ecriture && t.findIndex(function(b){ return b.id === a.id; }) === i; }) : []; un(); }).catch(function(){ DH_CACHE.agendas = []; un(); });
   if(DH_CACHE.conges) un(); else obtenir("calendrier", {action:"calendrier"}, function(r){ var c = {}; (r.jours || []).forEach(function(x){ if(x.t === "f") c[x.d] = "f"; else if(x.t === "c" && !c[x.d]) c[x.d] = "c"; }); DH_CACHE.conges = c; un(); }, function(){ DH_CACHE.conges = {}; un(); }, true);
 }
 // Nouveau message: onglets Message et Réunion, mêmes participants.
