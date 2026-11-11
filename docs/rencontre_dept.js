@@ -121,11 +121,9 @@ function rdDiscussion(donnees, edition){
   }).join("");
   if(!pts.length && edition !== "nouveau") h += rdMsg("Aucun point pour la prochaine rencontre");
   if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
-  h += '<div class="rdstack"><button type="button" class="rdsoft" id="rdadd">Ajouter un point</button><button type="button" class="rdsoft" id="rdpub">Publier aux employés</button></div>';
+  h += '<div class="rdgrid"><button type="button" class="rdsoft" id="rdadd">Ajouter un point</button>'+((MOI && MOI.role === "direction") ? '<button type="button" class="rdsoft" id="rdbase">Modifier les points de base</button>' : '<span></span>')+'<button type="button" class="rdsoft rdpubb" id="rdpub">Publier aux employés</button><button type="button" class="rdsoft" id="rdhist">Historique</button></div>';
   h += '<div class="rdp" style="margin-top:12px"><small>'+rdE("Dernière publication : " + (donnees.derniere_publication || rdPubLue() || "jamais"))+'</small></div>';
-  if(MOI && MOI.role === "direction") h += '<div class="rdstack"><button type="button" class="rdsoft" id="rdbase">Modifier les points de base</button></div>';
-  h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Chaque réunion repart des points de base. Vos modifications ci-dessus ne touchent que cette réunion.</small></div>';
-  h += '<div class="rdstack"><button type="button" class="rdline" id="rdhist">Historique</button></div><div id="rdm"></div>';
+  h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Chaque réunion repart des points de base. Vos modifications ci-dessus ne touchent que cette réunion.</small></div><div id="rdm"></div>';
   z.innerHTML = h;
   var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
   function appliquer(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }

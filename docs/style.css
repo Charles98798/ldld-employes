@@ -932,3 +932,8 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .rdblk .rdt{background:#B7B1A5;color:#8D806A;margin:34px -26px 14px;padding:12px 26px;font-size:14px;font-weight:400;letter-spacing:.16em;text-transform:uppercase}
 .rdblk .rdt span{color:#1D1D1B;font-size:inherit;margin-left:6px}
 #rds-cap .rdp b{display:block;margin-bottom:18px}#rds-cap .rdp>div{margin-top:18px}
+
+/* Planification discussion: grille 2×2 de boutons de même taille; Publier en taupe foncé (exception à la règle des boutons) */
+.rdgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 0}
+.rdgrid button{height:64px;padding:0 10px;font-size:12px;line-height:1.25;letter-spacing:.14em;text-align:center;text-transform:uppercase;width:100%;display:flex;align-items:center;justify-content:center}
+.rdgrid .rdpubb{background:#8D806A!important;color:#fff!important}
