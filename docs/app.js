@@ -1364,9 +1364,9 @@ function nouvelEmploye(){
         var v = (rr && rr.ok && rr.r && rr.r.valeurs) || null;
         if(!v){ if(sp) sp.textContent = t0; q.removeAttribute("data-b"); neFormulaire(c); return; }
         var M = {nomFamille:"nom", codePostal:"cp", naissance:"naiss", experience:"exp", categorie:"cat", assurance:"assur", semainesVacances:"vac", joursFeries:"feries", joursMaladie:"maladie"};
-        var w = {}; Object.keys(c.v || {}).forEach(function(k){ w[k] = c.v[k]; });
-        Object.keys(v).forEach(function(k){ if(["salaire","position","echelleAnnee"].indexOf(k) >= 0) return; var x = v[k]; if(x === null || x === undefined || x === "") return; w[M[k] || k] = x; });
-        var et = null; try{ et = w.appEtat ? JSON.parse(w.appEtat) : null; }catch(x){ et = null; } delete w.appEtat; neFormulaire({id: c.id, v: w, etat: et});
+        var w = {}, pos = {}; Object.keys(c.v || {}).forEach(function(k){ w[k] = c.v[k]; });
+        Object.keys(v).forEach(function(k){ if(["salaire","position","echelleAnnee"].indexOf(k) >= 0){ pos[k] = v[k]; return; } var x = v[k]; if(x === null || x === undefined || x === "") return; w[M[k] || k] = x; });
+        var et = null; try{ et = w.appEtat ? JSON.parse(w.appEtat) : null; }catch(x){ et = null; } delete w.appEtat; neFormulaire({id: c.id, v: w, etat: et, pos: pos});
       }).catch(function(){ if(sp) sp.textContent = t0; q.removeAttribute("data-b"); neFormulaire(c); }); }; });
   }
   if(NE_ATT) montrer(NE_ATT);
@@ -1407,7 +1407,7 @@ function neChoix(rafraichir){
 }
 function neFormulaire(cand){
   if(!NE_LISTE) neChoix(function(){ if(document.getElementById("ne") && window.__neDess) window.__neDess(); });
-  var S = {e:0, v:{}, h:{}, docs:NE_DOCS.slice(), id:(cand && cand.id) || ""};
+  var S = {e:0, v:{}, h:{}, docs:NE_DOCS.slice(), id:(cand && cand.id) || "", pos:(cand && cand.pos) || {}};
   window.__neDess = function(){ dessiner(); };
   NE_ETAPES.forEach(function(et){ et.c.forEach(function(c){ if(c.d) S.v[c.k] = c.d; }); });
   var CORR = {responsable:"resp", assurance:"assur", vacances:"vac", appartement:"appt", province:"prov", permisExp:"permis", commentaires:"comm", prenomUsuel:"usuel", naissance:"naiss"};
@@ -1470,7 +1470,21 @@ function neFormulaire(cand){
     var el = document.getElementById("ne"), et = NE_ETAPES[S.e];
     var h = '<div class="etq">▪ ÉTAPE '+(S.e + 1)+' SUR '+NE_ETAPES.length+' · '+et.t.toUpperCase()+'</div><div class="nbar">'+NE_ETAPES.map(function(x, i){ return '<i class="'+(i <= S.e ? "on" : "")+'"></i>'; }).join("")+'</div>';
     if(S.e === 8){
-      h += NE_ETAPES.slice(0, 6).map(function(x){ return x.c.filter(function(c){ return visible(c) && S.v[c.k] && !c.ty || visible(c) && S.v[c.k] && c.ty !== "horaire" && c.ty !== "liste"; }).map(function(c){ return '<div class="ligne"><span>'+esc(c.l)+'</span><span>'+esc(neAff(c, S.v[c.k]))+'</span></div>'; }).join(""); }).join("");
+      var lg = function(a, b){ return '<div class="ligne"><span>'+esc(a)+'</span><span>'+esc(b)+'</span></div>'; };
+      h += NE_ETAPES.slice(0, 6).map(function(x){ var ls = x.c.filter(function(c){ return visible(c) && c.ty !== "horaire" && c.ty !== "liste" && c.ty !== "resp" && c.ty !== "bilan"; }).map(function(c){ return lg(c.l, c.auto ? (NE_PROG[S.v.cat] || "—") : (S.v[c.k] ? neAff(c, S.v[c.k]) : "—")); }).join(""); return ls ? '<div class="etq" style="margin-top:14px">▪ '+esc(x.t.toUpperCase())+'</div>'+ls : ""; }).join("");
+      // Positionnement (calculé dans Position embauche)
+      var P = S.pos || {}, fr = function(n, d){ return Number(n).toLocaleString("fr-CA", {minimumFractionDigits: d, maximumFractionDigits: d}); };
+      h += '<div class="etq" style="margin-top:14px">▪ POSITIONNEMENT</div>';
+      h += lg("Échelle salariale", P.echelleAnnee ? String(P.echelleAnnee) : "—");
+      h += lg("Position", (P.position !== undefined && P.position !== "" && !isNaN(Number(P.position))) ? fr(Number(P.position) <= 1 ? Number(P.position) * 100 : P.position, 0)+" %" : "—");
+      h += lg("Salaire horaire", (P.salaire !== undefined && P.salaire !== "" && !isNaN(Number(P.salaire))) ? fr(P.salaire, 2)+" $" : "—");
+      // Horaire, documents et responsabilités
+      var hj = NE_JOURS.map(function(j, i){ var d = S.h[i]; return d && d.a && d.b ? j.slice(0, 3)+" "+d.a+"-"+d.b : ""; }).filter(Boolean);
+      h += '<div class="etq" style="margin-top:14px">▪ JOURS DE TRAVAIL, DOCUMENTS ET RESPONSABILITÉS</div>';
+      h += lg("Horaire", hj.length ? hj.join(" · ") : "—");
+      var dn = S.docs.filter(function(x){ return String(x).trim(); });
+      h += lg("Documents à apporter", dn.length ? dn.length+" document"+(dn.length > 1 ? "s" : "") : "—");
+      var nbr = Object.keys(S.rc || {}).length; h += lg("Responsabilités choisies", String(nbr));
       h += et.c.map(champ).join("");
       h += '<div class="bandeau">▪ ENVOI PAR DOCUSIGN · À VENIR</div>';
     } else h += et.c.map(champ).join("");
