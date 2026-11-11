@@ -10,7 +10,7 @@ var RD_DEMO_CAPS = {titre:"Capsule du mois · Charge et fonctionnement", points:
 function rdDemoSection(cle){
   var mois = ["DÉC.","JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV."];
   function serie(v){ return mois.map(function(m, i){ return {m:m, v:v[i]}; }); }
-  if(cle === "charge") return {ok:true, equipes:[{equipe:"Montage", moyenne:82, an_passe:79, jours:[78,85,91,97,88]}, {equipe:"Injection", moyenne:74, an_passe:77, jours:[70,72,80,76,69]}, {equipe:"Finition", moyenne:88, an_passe:84, jours:[92,96,99,90,85]}]};
+  if(cle === "charge") return {ok:true, equipes:[{equipe:"Montage", moyenne:82, an_passe:79, jours:[58,72,85,97,64]}, {equipe:"Injection", moyenne:74, an_passe:77, jours:[45,66,78,92,60]}, {equipe:"Finition", moyenne:88, an_passe:84, jours:[92,96,99,70,55]}]};
   if(cle === "nc") return {ok:true, serie:serie([5,4,6,3,7,4,6,4,7,3,5,2]), serie_an_passe:serie([6,5,5,4,8,5,7,5,6,4,6,4]), lignes:[["3 nov.","Montage","24790","Assemblage","Dimension hors tolérance","Reprise sur place"],["6 nov.","Finition","24855","Polissage","Défaut de surface","Rebut, refait"]]};
   if(cle === "escomptes") return {ok:true, serie:serie([1,2,0,3,1,2,2,1,3,0,2,1]), serie_an_passe:serie([2,2,1,2,3,2,3,2,2,1,4,2]), lignes:[["5 nov.","Dossier 24817","350 $"],["8 nov.","Dossier 24902","120 $"]]};
   return {ok:true, serie:serie([7,8,6,9,7,10,9,7,11,6,8,5]), serie_an_passe:serie([8,9,7,8,9,9,10,8,10,8,9,7]), lignes:[["Dossier 24790","Étape finition"],["Dossier 24855","Étape montage"]]};
@@ -210,7 +210,8 @@ function rdRendreSection(cle, r){
     if(!eq.length) return rdMsg("Données en attente de Trak");
     h += '<div class="rdp"><small>Pourcentage de charge · mois passé · même mois de l’an passé · 5 prochains jours</small></div>';
     h += '<div class="rdp" style="display:flex;gap:6px;align-items:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#8D806A"><span style="width:20%">Équipe</span><span style="width:13%;text-align:center">Mois</span><span style="width:13%;text-align:center">An passé</span>'+[1,2,3,4,5].map(function(k){ return '<span style="width:10.2%;text-align:center">J+'+k+'</span>'; }).join("")+'</div>';
-    h += eq.map(function(e){ return '<div class="rdp" style="display:flex;gap:6px;align-items:center"><span style="width:20%">'+rdE(e.equipe)+'</span><span style="width:13%;text-align:center">'+rdE(e.moyenne)+'</span><span style="width:13%;text-align:center">'+rdE(e.an_passe == null ? "—" : e.an_passe)+'</span>'+(e.jours || []).map(function(j){ var rouge = j > 95; return '<span style="width:10.2%;text-align:center;font-size:11px;'+(rouge ? "background:#B8473A;color:#fff" : "")+'">'+rdE(j)+'</span>'; }).join("")+'</div>'; }).join("");
+    h += eq.map(function(e){ return '<div class="rdp" style="display:flex;gap:6px;align-items:center"><span style="width:20%">'+rdE(e.equipe)+'</span><span style="width:13%;text-align:center">'+rdE(e.moyenne)+'</span><span style="width:13%;text-align:center">'+rdE(e.an_passe == null ? "—" : e.an_passe)+'</span>'+(e.jours || []).map(function(j){ var rouge = j > 95, vert = !rouge && j >= 65; return '<span style="width:10.2%;text-align:center;font-size:11px;padding:3px 0;'+(rouge ? "background:#B8473A;color:#fff" : (vert ? "background:#8EFF60;color:#1D1D1B" : "")) +'">'+rdE(j)+'</span>'; }).join("")+'</div>'; }).join("");
+    h += '<div class="rdp"><small>Vert 65 à 95 % · Brique plus de 95 %</small></div>';
     return h;
   }
   h += rdSerie(cle === "cas" ? "Cas non complétés par mois" : (cle === "nc" ? "Non-conformités par mois" : "Nombre de crédits par mois"), r.serie, r.serie_an_passe);
@@ -225,9 +226,11 @@ function rdPresentation(){
   h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
   h += rdDemoMarque();
   h += '<div class="rdp" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><small style="width:100%">Période des chiffres</small><select class="bx" id="rdper" style="flex:1;min-width:0"><option value="mois">Mois dernier complet</option><option value="an">Même mois de l’an passé</option><option value="dates">Dates au choix</option></select><span id="rddt" style="display:none;gap:8px;width:100%"><input class="bx" type="date" id="rddu" style="flex:1;min-width:0"><input class="bx" type="date" id="rdau" style="flex:1;min-width:0"></span></div>';
-  h += '<div id="rds-pts">'+(RD_DEMO ? rdPointsHtml(null) : rdMsg("Un instant"))+'</div>';
-  h += RD_SECTIONS.map(function(s){ return '<div class="rdt">'+rdE(s[1])+'</div><div id="rds-'+s[0]+'">'+rdInit(s[0])+'</div>'; }).join("");
-  h += '<div class="rdt">04 Capsule du mois</div><div id="rds-cap">'+(RD_DEMO ? rdCapHtml(RD_DEMO_CAPS) : rdMsg("Un instant"))+'</div></div>';
+  var blk = 0;
+  function bloc(inner){ return '<div class="rdblk">'+inner+'</div>'; }
+  h += bloc('<div id="rds-pts">'+(RD_DEMO ? rdPointsHtml(null) : rdMsg("Un instant"))+'</div>');
+  h += RD_SECTIONS.map(function(s){ return bloc('<div class="rdt">'+rdE(s[1].slice(0, 2))+' <span>'+rdE(s[1].slice(3))+'</span></div><div id="rds-'+s[0]+'">'+rdInit(s[0])+'</div>'); }).join("");
+  h += bloc('<div class="rdt">04 <span>Capsule du mois</span></div><div id="rds-cap">'+(RD_DEMO ? rdCapHtml(RD_DEMO_CAPS) : rdMsg("Un instant"))+'</div>') + '</div>';
   app.innerHTML = h;
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   rdMenuLier("pres");
