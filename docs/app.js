@@ -1712,7 +1712,7 @@ function dateHeure(opts, surChangement){
   function jjDe(liste, iso){ return liste.filter(function(e){ return e.d1 <= iso && iso < e.d2; }); }
   function jjNorm(r, id){ return ((r && r.journee) || []).map(function(e){ return {ag: id, id: e.id, titre: e.titre, d1: e.debut, d2: e.fin || e.debut}; }); }
   function chargerMois(){
-    var ids = selAgendas(), d1 = new Date(S.mois), nb = 6, reste = ids.length * nb, tous = [], jjm = [], err = "", l0 = lundiDe(d1);
+    var ids = selAgendas(), d1 = new Date(S.mois), nb = 7, reste = ids.length * nb, tous = [], jjm = [], err = "", dim0 = new Date(d1.getFullYear(), d1.getMonth(), 1 - d1.getDay()), l0 = lundiDe(dim0);
     ids.forEach(function(id){ for(var w = 0; w < nb; w++){ var ld = new Date(l0); ld.setDate(ld.getDate()+7*w);
       appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(ld), agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); jjm = jjm.concat(jjNorm(r, id)); } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ var vu = {}; S.evm = tous.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.debut; if(vu[k]) return false; vu[k] = 1; return true; }); var vj = {}; S.jm = jjm.filter(function(e){ var k = e.ag+"|"+e.id+"|"+e.d1; if(vj[k]) return false; vj[k] = 1; return true; }); S.erreurSem = err; rendre(); } }); } });
   }
@@ -1758,11 +1758,11 @@ function dateHeure(opts, surChangement){
       h += '<div class="aeact" style="margin:10px 0 0"><button type="button" class="bouton" id="dhv1" style="'+st+(vm ? ";opacity:.5" : "")+'">Semaine</button><button type="button" class="bouton" id="dhv2" style="'+st+(vm ? "" : ";opacity:.5")+'">Mois</button></div>';
     }
     if(opts.mois && S.vue === "mois"){
-      var m1 = new Date(S.mois), ml = lundiDe(m1), jm = "";
+      var m1 = new Date(S.mois), ml = new Date(m1.getFullYear(), m1.getMonth(), 1 - m1.getDay()), jm = "";
       if(S.erreurSem) h += '<div class="bandeau">▪ '+esc(S.erreurSem.toUpperCase())+'</div>';
       h += '<div class="moisbar" style="margin-top:10px"><button type="button" id="dmp">Précédent</button><b>'+MOIS_LONGS[m1.getMonth()].toUpperCase()+' '+m1.getFullYear()+'</b><button type="button" id="dms">Suivant</button></div>';
-      jm = '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid #1D1D1B;border-bottom:0;margin-top:6px">'+JOURS_C.map(function(j){ return '<div style="background:#B4AB9B;font-size:11px;text-align:center;padding:4px 0">'+j+'</div>'; }).join("");
-      for(var wk = 0; wk < 6; wk++) for(var dk = 0; dk < 7; dk++){ var dd = new Date(ml); dd.setDate(dd.getDate()+wk*7+dk); var iso = isoJour(dd), hors = dd.getMonth() !== m1.getMonth();
+      jm = '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid #1D1D1B;border-bottom:0;margin-top:6px">'+["D","L","M","M","J","V","S"].map(function(j){ return '<div style="background:#B4AB9B;font-size:11px;text-align:center;padding:4px 0">'+j+'</div>'; }).join("");
+      var nbL = Math.ceil((m1.getDay() + new Date(m1.getFullYear(), m1.getMonth()+1, 0).getDate())/7); for(var wk = 0; wk < nbL; wk++) for(var dk = 0; dk < 7; dk++){ var dd = new Date(ml); dd.setDate(dd.getDate()+wk*7+dk); var iso = isoJour(dd), hors = dd.getMonth() !== m1.getMonth();
         var evj = S.evm.filter(function(e){ return isoJour(new Date(e.debut)) === iso; });
         var jjv = jjDe(S.jm, iso);
         jm += '<div data-jm="'+iso+'" style="'+(conge(iso) ? "background:#B5B0A2;" : "")+'min-height:104px;border-right:1px solid #B4AB9B;border-bottom:1px solid #B4AB9B;padding:2px 1px;box-sizing:border-box;font-size:11px;cursor:pointer;'+(hors ? "opacity:.4;" : "")+'"><span style="'+(iso === aujIso ? "background:#1D1D1B;color:#fff;padding:0 4px" : "")+'">'+dd.getDate()+'</span>'+jjv.concat(evj).slice(0, 4).map(function(e){ var c = couleurAg(e.ag); return '<div style="background:'+c.f+';color:'+c.t+';font-size:10px;line-height:14px;padding:0 3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:clip">'+esc(e.titre)+'</div>'; }).join("")+(jjv.length+evj.length > 4 ? '<div style="font-size:10px">+'+(jjv.length+evj.length-4)+'</div>' : "")+'</div>'; }
