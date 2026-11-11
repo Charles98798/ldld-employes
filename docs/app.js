@@ -459,7 +459,7 @@ var ENT = [
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
  {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
  {id:"positionnement_embauche", g:"Gestion des employés", l:"Position embauche", p:"Positionnement embauche", n:1, d:[0,0,1], f:function(){ embauchePos(); }},
- {id:"nouvel_employe", g:"Gestion des employés", l:"Contrat embauche", p:"Nouvel employé", n:2, d:[0,0,1], v:1, f:function(){ nouvelEmploye(); }},
+ {id:"nouvel_employe", g:"Gestion des employés", l:"Contrat d’embauche", p:"Nouvel employé", n:2, d:[0,0,1], v:1, f:function(){ nouvelEmploye(); }},
  {id:"retirer_employe", g:"Gestion des employés", l:"Retirer un employé", p:"Retirer un employé", d:[0,0,1], f:function(){ gestionEmployes(); }},
  {id:"portrait", g:"Gestion des employés", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portrait(); }},
  {id:"suivi_charge", g:"Gestion des employés", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
@@ -1344,7 +1344,7 @@ function neAttCharger(sansBrouillons){
 }
 function nouvelEmploye(){
   var MSG = "Veuillez utiliser l’onglet Position embauche afin de créer une fiche nouvel employé.";
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrat embauche</h1><div id="nl"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrat d’embauche</h1><div id="nl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div style="margin:22vh 0 0;background:#8EFF60;color:#1D1D1B;padding:26px 20px;text-align:center;font-size:16px;line-height:1.45;letter-spacing:.06em;text-transform:uppercase;font-weight:500">'+esc(MSG)+'</div>'; }
   function montrer(l){
@@ -1423,7 +1423,7 @@ function neFormulaire(cand){
   }
   function sauJ(){ return sauvJ; }
   function sauverVite(){ clearTimeout(sauvT); sauvT = setTimeout(sauver, 800); }
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrat embauche</h1><div id="ne"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrat d’embauche</h1><div id="ne"></div></div>';
   function visible(c){ return !c.si || c.si(S.v); }
   function horaireOk(){
     var n = 0; for(var i = 0; i < 7; i++){ var d = S.h[i] || {}; if(d.a || d.b){ if(!neValide("heure", d.a) || !neValide("heure", d.b) || d.b <= d.a) return false; n++; } }
