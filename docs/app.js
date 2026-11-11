@@ -1708,13 +1708,13 @@ function dateHeure(opts, surChangement){
     for(var k = 0; k < 7; k++){
       var dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); var iso = isoJour(dj);
       var L = S.evs.filter(function(e){ return isoJour(new Date(e.debut)) === iso; }).map(function(e){ var a = new Date(e.debut), f = new Date(e.fin); return {e: e, a: a.getHours()+a.getMinutes()/60, f: Math.max(a.getHours()+a.getMinutes()/60+0.5, f.getHours()+f.getMinutes()/60 || a.getHours()+1)}; }).sort(function(p, r){ return p.a - r.a; });
-      var lanes = [];
-      L.forEach(function(x){ var n = 0; while(lanes[n] !== undefined && lanes[n] > x.a) n++; lanes[n] = x.f; x.lane = n; });
-      var nl = Math.max(1, lanes.length), col = ent[k+1];
+      var cl = [], cur = null;
+      L.forEach(function(x){ if(!cur || x.a >= cur.fin){ cur = {fin: x.f, lanes: [], evs: []}; cl.push(cur); } var n = 0; while(cur.lanes[n] !== undefined && cur.lanes[n] > x.a) n++; cur.lanes[n] = x.f; x.lane = n; x.cl = cur; cur.evs.push(x); cur.fin = Math.max(cur.fin, x.f); });
+      var col = ent[k+1];
       L.forEach(function(x){
         var a0 = Math.max(7, x.a), f0 = Math.min(19, x.f); if(f0 <= a0) return;
         var c = couleurAg(x.e.ag), d = document.createElement("div"); d.className = "blc";
-        var w = col.offsetWidth/nl;
+        var nl = x.cl.lanes.length, w = col.offsetWidth/nl;
         d.style.cssText = "display:block;height:auto;position:absolute;pointer-events:none;box-sizing:border-box;overflow:hidden;z-index:2;border:1px solid #cecdc5;padding:1px 2px;font-size:9px;line-height:11px;text-align:left;word-break:break-word;left:"+(col.offsetLeft+w*x.lane)+"px;width:"+w+"px;top:"+(y0+(a0-7)*rh)+"px;height:"+((f0-a0)*rh)+"px;background:"+c.f+";color:"+c.t;
         d.innerHTML = '<div style="font-weight:600">'+esc(x.e.titre)+'</div><div>'+heureTxt(new Date(x.e.debut).getHours(), new Date(x.e.debut).getMinutes())+'</div>';
         gs.appendChild(d);
