@@ -109,7 +109,11 @@ function rdDiscussion(donnees, edition){
   }).join("");
   if(!pts.length && edition !== "nouveau") h += rdMsg("Aucun point pour la prochaine rencontre");
   if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
-  h += '<div class="rdstack"><button type="button" class="rdsoft" id="rdadd">Ajouter un point</button><button type="button" class="rdsoft" id="rdpub">Publier aux employés</button><button type="button" class="rdline" id="rdhist">Historique</button></div><div id="rdm"></div>';
+  h += '<div class="rdstack"><button type="button" class="rdsoft" id="rdadd">Ajouter un point</button><button type="button" class="rdsoft" id="rdpub">Publier aux employés</button></div>';
+  h += '<div class="rdp" style="margin-top:12px"><small>'+rdE(donnees.derniere_publication ? "Dernière publication : " + donnees.derniere_publication : "Jamais publié")+'</small></div>';
+  if(MOI && MOI.role === "direction") h += '<div class="rdstack"><button type="button" class="rdsoft" id="rdbase">Modifier les points de base</button></div>';
+  h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Chaque réunion repart des points de base. Vos modifications ci-dessus ne touchent que cette réunion.</small></div>';
+  h += '<div class="rdstack"><button type="button" class="rdline" id="rdhist">Historique</button></div><div id="rdm"></div>';
   z.innerHTML = h;
   var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
   function appliquer(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
@@ -130,6 +134,50 @@ function rdDiscussion(donnees, edition){
   document.getElementById("rdadd").onclick = function(){ rdDiscussion(RD_PLAN, "nouveau"); };
   document.getElementById("rdpub").onclick = function(){ dire("Publication en cours"); if(fictif){ materialiser("", {}, "", function(){ return appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés"); } else dire((r && r.erreur) || "Non publié · réessayez"); }); }); return; } appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés"); } else dire((r && r.erreur) || "Non publié · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); };
   document.getElementById("rdhist").onclick = function(){ rdHistorique(); };
+  var bb = document.getElementById("rdbase"); if(bb) bb.onclick = function(){ rdBase(); };
+}
+
+// Points de base du département (Direction seulement): chaque nouvelle réunion repart d'une copie. Modifier ici ne change que les réunions futures.
+function rdBase(donnees, edition){
+  if(!(MOI && MOI.role === "direction")){ rdPlanif(); return; }
+  if(!donnees){
+    app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>'+rdMenuHtml("disc")+'<div id="rdz"></div></div>';
+    document.getElementById("retour").onclick = function(e){ e.preventDefault(); RD.vue = "discussion"; rdPlanif(); };
+    rdMenuLier("disc");
+    appelService({action: "rd_base_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(!document.getElementById("rdz")) return; rdBase((r && r.ok) ? r : {ok: true, points: []}); }).catch(function(){ if(document.getElementById("rdz")) rdBase({ok: true, points: []}); });
+    return;
+  }
+  var z = document.getElementById("rdz"); if(!z) return;
+  var pts = donnees.points || [], fictif = RD_DEMO && !pts.length;
+  if(fictif) pts = RD_DEMO_PTS.map(function(p){ return {id: "demo-"+p.n, n: p.n, texte: p.texte, demo: true}; });
+  var h = '<div class="rdsm">Points de base · '+rdE(RD.dep)+'</div>';
+  if(fictif) h += rdDemoMarque();
+  h += pts.map(function(p, i){ var enEdit = edition === p.id;
+    return '<div class="rdp"><small>Point '+(i + 1)+'</small>'+(enEdit
+      ? '<textarea class="rdzone" id="rdtx" maxlength="400" rows="3">'+rdE(p.texte)+'</textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div>'
+      : '<div class="rdl2"><div class="rdtx">'+rdE(p.texte)+'</div><div class="rdact"><a href="#" data-m="'+rdE(p.id)+'">Modifier</a><a href="#" data-r="'+rdE(p.id)+'">Retirer</a></div></div>')+'</div>'; }).join("");
+  if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point de base</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
+  h += '<div class="rdstack"><button type="button" class="rdsoft" id="rdadd">Ajouter un point de base</button><button type="button" class="rdline" id="rdfin">Retour aux points de la réunion</button></div>';
+  h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Ces points de base servent de départ à chaque nouvelle réunion. Ils ne changent pas la réunion en cours.</small></div><div id="rdm"></div>';
+  z.innerHTML = h;
+  var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
+  function appliquer(r){ if(r && r.ok){ rdBase(r); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
+  function materialiser(exclure, remplace, texteNouveau){
+    var liste = RD_DEMO_PTS.filter(function(p){ return "demo-"+p.n !== exclure; }).map(function(p){ return "demo-"+p.n === remplace.id ? remplace.texte : p.texte; });
+    if(texteNouveau) liste.push(texteNouveau);
+    var suite = Promise.resolve(null);
+    liste.forEach(function(t){ suite = suite.then(function(){ return appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: "", texte: t}); }); });
+    suite.then(appliquer).catch(function(){ dire("Réseau indisponible"); });
+  }
+  Array.prototype.forEach.call(z.querySelectorAll("[data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); rdBase(donnees, a.getAttribute("data-m")); }; });
+  Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); dire("Retrait en cours"); if(fictif){ materialiser(a.getAttribute("data-r"), {}, ""); return; } appelService({action: "rd_base_retirer", session: sessionGardee(), departement: RD.dep, id: a.getAttribute("data-r")}).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); }; });
+  var ok = document.getElementById("rdok"), no = document.getElementById("rdno");
+  if(no) no.onclick = function(e){ e.preventDefault(); rdBase(donnees); };
+  if(ok) ok.onclick = function(e){ e.preventDefault(); var t = document.getElementById("rdtx").value.trim(); if(!t){ dire("Écrivez le point"); return; } dire("Enregistrement en cours");
+    if(fictif){ if(edition === "nouveau") materialiser("", {}, t); else materialiser("", {id: edition, texte: t}, ""); return; }
+    appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: edition === "nouveau" ? "" : edition, texte: t}).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); };
+  document.getElementById("rdadd").onclick = function(){ rdBase(donnees, "nouveau"); };
+  document.getElementById("rdfin").onclick = function(){ RD.vue = "discussion"; rdPlanif(); };
 }
 function rdHistorique(){
   var h = RD_PLAN && RD_PLAN.historique || [];
