@@ -1704,9 +1704,11 @@ function dateHeure(opts, surChangement){
   }
   function charger(){
     if(opts.mois && S.vue === "mois") return chargerMois();
-    var ids = selAgendas(), reste = ids.length, tous = [], err = "";
+    var ids = selAgendas(), reste = ids.length, tous = [], err = "", deb = isoJour(S.lundi), vus = [];
+    ids.forEach(function(id){ try { var c = JSON.parse(localStorage.getItem("ldld-cs-"+id+"-"+deb) || "null"); if(c) c.forEach(function(e){ e.ag = id; vus.push(e); }); } catch(e){} });
+    if(vus.length){ S.evs = vus; rendre(); }
     ids.forEach(function(id){
-      appelService({action:"agenda_semaine", session:sessionGardee(), debut:isoJour(S.lundi), agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ S.evs = tous; S.erreurSem = err; rendre(); } });
+      appelService({action:"agenda_semaine", session:sessionGardee(), debut:deb, agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); try { localStorage.setItem("ldld-cs-"+id+"-"+deb, JSON.stringify(r.evenements || [])); } catch(e){} } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ S.evs = tous; S.erreurSem = err; rendre(); } });
     });
   }
   function conge(iso){ return DH_CACHE.conges && DH_CACHE.conges[iso]; }
