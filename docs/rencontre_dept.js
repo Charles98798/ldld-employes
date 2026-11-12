@@ -342,7 +342,7 @@ function rdSerie(titre, a, b){
   return '<small>'+rdE(titre)+'</small>' + rdCourbe(a, b);
 }
 // Ordre fixe des équipes (règle permanente): communes d'abord; une équipe sans donnée garde sa ligne.
-var RD_ORDRE = {"Acrylique": ["Modèle", "Numérisation", "Montage", "Injection", "Finition"], "Fixe": ["Modèle", "Numérisation", "Modélisation", "Céramique"], "Pièce": ["Modèle", "Numérisation", "Analyse", "Modélisation", "Finition"]};
+var RD_ORDRE = {"Acrylique": ["Modèle", "Numérisation", "Montage", "Injection", "Finition"], "Fixe": ["Modèle", "Numérisation", "Modélisation", "Céramique"], "Pièce": ["Modèle", "Analyse", "Numérisation", "Modélisation", "Finition"]};
 function rdNorm(t){ return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); }
 function rdOrdreEquipes(eq){
   var ordre = RD_ORDRE[RD.dep]; if(!ordre) return eq;
