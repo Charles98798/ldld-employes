@@ -2002,7 +2002,7 @@ function nouveau(onglet){
   if(!peutEcrire()) return nouveauEmploye();
   onglet = onglet === "reunion" ? "reunion" : "message";
   app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1>' +
-    '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton" id="ongM" style="margin:0;flex:1;'+(onglet === "message" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Sans événement</button><button type="button" class="bouton" id="ongR" style="margin:0;flex:1;'+(onglet === "reunion" ? "" : "background:transparent;color:var(--tx);border:1.5px solid var(--tx)")+'">Avec événement</button></div>' +
+    '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton choixc" id="ongM" aria-pressed="'+(onglet === "message" ? "true" : "false")+'" style="margin:0;flex:1">Sans événement</button><button type="button" class="bouton choixc" id="ongR" aria-pressed="'+(onglet === "reunion" ? "true" : "false")+'" style="margin:0;flex:1">Avec événement</button></div>' +
     '<div id="npart"><div class="bandeau">▪ UN INSTANT</div></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); retirerBoutonBas(); responsable(); };
   var dire = function(t){ var e = document.getElementById("ne"); if(e){ e.style.display = "block"; e.textContent = t; } };
