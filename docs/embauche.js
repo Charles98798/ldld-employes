@@ -67,7 +67,7 @@ function embauchePos(){
 function embSortir(){ EMB.page = false; EMB.surD = null; retirerBoutonBas(); responsable(); }
 function embDessiner(){
   var z = document.getElementById("pe"); if(!z) return; var S = EMB.S;
-  if(!EMB.D){ retirerBoutonBas(); z.innerHTML = '<h1>Position embauche</h1><div class="bandeau">'+(EMB.erreur ? "▪ "+esc(EMB.erreur.toUpperCase())+" · TOUCHEZ POUR RÉESSAYER" : "▪ UN INSTANT")+'</div>';
+  if(!EMB.D){ retirerBoutonBas(); z.innerHTML = '<h1>Position d’embauche</h1><div class="bandeau">'+(EMB.erreur ? "▪ "+esc(EMB.erreur.toUpperCase())+" · TOUCHEZ POUR RÉESSAYER" : "▪ UN INSTANT")+'</div>';
     if(EMB.erreur) z.querySelector(".bandeau").onclick = function(){ EMB.erreur = ""; EMB.D = null; embPrecharger(); embDessiner(); }; return; }
   if(S.page === 1) embPage1(z); else if(S.page === 2) embPage2(z); else embPage3(z);
 }
@@ -80,7 +80,7 @@ function embPage1(z){
     dips = [[0, "Aucun (+ 0 %)"], [2, "DEC (+ 2 %)"], [4, "Baccalauréat (+ 4 %)"]], hres = (D.heures || []).map(function(v){ return [v, String(v).replace(".", ",")+" h"]; });
   function inp(k, ph, max, type){ return '<span class="lbl">'+esc(ph)+'</span><input class="bx pk'+(String(S[k]).trim() ? "" : " rose")+'" data-k="'+k+'" placeholder="'+esc(ph)+'" maxlength="'+max+'" value="'+esc(S[k])+'" autocomplete="off"'+(type ? ' data-t="'+type+'"' : "")+'>'; }
   function sel(k, ph, liste){ return '<span class="lbl">'+esc(ph)+'</span><select class="bx pk'+(String(S[k]) !== "" ? "" : " rose")+'" data-k="'+k+'">'+embOpts(liste, S[k], ph)+'</select>'; }
-  z.innerHTML = '<h1>Position embauche</h1><div class="lab">01 · Le candidat</div>'+sel("annee", "Échelle · année", ans)+
+  z.innerHTML = '<h1>Position d’embauche</h1><div class="lab">01 · Le candidat</div>'+sel("annee", "Échelle · année", ans)+
     '<div style="display:flex;gap:8px"><div style="flex:1">'+inp("prenom", "Prénom", 40)+'</div><div style="flex:1">'+inp("famille", "Nom", 40)+'</div></div>'+inp("adresse", "Adresse", 80)+
     '<div style="display:flex;gap:8px"><div style="flex:1">'+inp("ville", "Ville", 40)+'</div><div style="flex:1">'+inp("cp", "Code postal", 7)+'</div></div>'+inp("naissance", "Date de naissance", 10, "date")+
     '<div class="lab">02 · Le poste</div>'+sel("poste", "Poste", postes)+sel("exp", "Expérience dans le métier", exp)+sel("dip", "Diplôme relié", dips)+sel("hors", "Expérience hors poste", hors)+sel("heures", "Heures par semaine", hres);
@@ -102,7 +102,7 @@ function embPage2(z){
   EMB_ELEM.forEach(function(n, i){ var v = i < 3 ? (sans ? [18, 20] : [13, 15]) : (sans ? [14, 15] : [13, 15]); rows.push([n, v[0]+" / "+v[1]]); });
   if(!sans) rows.push(["Objectifs (tableau de bord)", "16 / 20"]);
   var tot = r.base + r.plaf;
-  z.innerHTML = '<h1>Position embauche</h1><div class="etiq">'+esc(S.prenom.trim()+" "+S.famille.trim())+'</div><div class="rc">'+
+  z.innerHTML = '<h1>Position d’embauche</h1><div class="etiq">'+esc(S.prenom.trim()+" "+S.famille.trim())+'</div><div class="rc">'+
     '<div><span class="lbl" style="margin:0">'+(r.ent ? "Position décidée en rencontre" : "Position de départ")+'</span><div class="pev"><select id="ppos" aria-label="Position de départ">'+opts+'</select><small>%</small></div>'+
       '<div class="rp">'+(r.ent ? '<span class="ent">Entente en rencontre</span> barème : '+r.bareme+' % <a href="#" id="rb">remettre le barème</a>' : (tot < 76 ? "relevé au plancher de "+E.echelons[0]+" %" : "échelle de "+E.echelons[0]+" % à "+E.echelons[8]+" %"))+'</div></div>'+
     '<div><span class="lbl" style="margin:0">Taux horaire départ</span><div class="pev">'+embFmt(r.td)+' <small>$ / h</small></div><div class="rp">'+esc(r.poste)+' · échelle '+esc(E.annee)+(r.ent ? " · calculé d’après la position" : "")+'</div></div>'+
@@ -134,7 +134,7 @@ function embPage3(z){
       (a.assurance > 0 || b.assurance > 0 ? '<tr><td>Assurances 50 % de la prime (montant approximatif - à déterminer)</td><td>'+embMoney(a.assurance)+'</td><td>'+embMoney(b.assurance)+'</td></tr>' : "")+
       '<tr class="t"><td>Total de la rémunération globale</td><td>'+embMoney(a.total)+'</td><td>'+embMoney(b.total)+'</td></tr>'; }
   var note = !m ? (EMB.AV ? (av ? "" : "Aucun employé actif dans ce poste : avantages introuvables, rémunération globale non calculée.") : "Lecture des avantages du poste en cours…") : "";
-  z.innerHTML = '<h1>Position embauche</h1><div class="etiq">'+esc(S.prenom.trim()+" "+S.famille.trim())+'</div><div class="lab">03 · Position dans l’échelle</div>'+ech+'<div class="lab">04 · Rémunération globale</div>'+
+  z.innerHTML = '<h1>Position d’embauche</h1><div class="etiq">'+esc(S.prenom.trim()+" "+S.famille.trim())+'</div><div class="lab">03 · Position dans l’échelle</div>'+ech+'<div class="lab">04 · Rémunération globale</div>'+
     '<table class="tb"><colgroup><col style="width:40%"><col style="width:30%"><col style="width:30%"></colgroup><tr class="th"><td></td><td style="text-align:right">Départ '+r.dep+' %</td><td style="text-align:right">Avancement '+(r.mx > r.dep ? r.mx : r.dep)+' %</td></tr>'+tab+'</table>'+(note ? '<div class="bandeau">▪ '+esc(note.toUpperCase())+'</div>' : "")+
     '<div id="pmsg"></div><div class="pbts" id="pbts"><button type="button" class="bouton" id="peev" style="margin:0"'+(m ? "" : " disabled")+'>Enregistrer et envoyer</button><button type="button" class="bouton" id="penr" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)"'+(m ? "" : " disabled")+'>Enregistrer</button></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); S.page = 2; embDessiner(); };
