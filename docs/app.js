@@ -490,7 +490,7 @@ var ENT = [
  {id:"stationnement", g:"Installations", l:"Stationnement", p:"Stationnement", d:[0,1,1], f:function(){ attributionPage("place"); }},
  {id:"casier", g:"Installations", l:"Casier", p:"Casier", d:[0,1,1], f:function(){ attributionPage("casier"); }},
  {id:"entretien_machinerie", g:"Installations", l:"Entretien machinerie", p:"Entretien machinerie", d:[1,1,1], f:function(){ entretien(); }},
- {id:"conseil", g:"Finances", l:"Conseil d'admin.", p:"Conseil d'administration", d:[0,0,1], f:function(){ financeMenu(); }},
+ {id:"conseil", g:"Finances", l:"Conseil d’admin.", p:"Conseil d'administration", d:[0,0,1], f:function(){ financeMenu(); }},
  {id:"finances", g:"Finances", l:"Finances", p:"Finances", d:[0,0,1], v:1, f:function(){ financesMenu(); }},
  {id:"conseil_production", g:"Finances", l:"Conseil · Production", p:"Production", d:[0,0,1], s:1},
  {id:"conseil_indicateurs", g:"Finances", l:"Conseil · Indicateurs", p:"Indicateurs", d:[0,0,1], s:1},
@@ -501,8 +501,8 @@ var ENT = [
  {id:"finances_tresorerie", g:"Finances", l:"Finances · Trésorerie", p:"Trésorerie", d:[0,0,1], v:1, s:1},
  {id:"finances_clients", g:"Finances", l:"Finances · Comptes clients", p:"Comptes clients", d:[0,0,1], v:1, s:1},
  {id:"finances_etats", g:"Finances", l:"Finances · États financiers", p:"États financiers", d:[0,0,1], v:1, s:1},
- {id:"manuel", g:"Documents", l:"Manuel d'employé", p:"Manuel", d:[1,1,1], i:1, f:function(){ section(1); }},
- {id:"plan_incendie", g:"Documents", l:"Plan d'incendie", p:"Plan d'incendie", d:[1,1,1], i:5, f:function(){ section(5); }},
+ {id:"manuel", g:"Documents", l:"Manuel d’employé", p:"Manuel", d:[1,1,1], i:1, f:function(){ section(1); }},
+ {id:"plan_incendie", g:"Documents", l:"Plan d’incendie", p:"Plan d'incendie", d:[1,1,1], i:5, f:function(){ section(5); }},
  {id:"utilisation", g:"Contrôle", l:"Utilisation app", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
  {id:"controle", g:"Contrôle", l:"Contrôle", p:"Contrôle", d:[0,0,1], v:1, f:function(){ controleOuvrir(); }}
 ];
