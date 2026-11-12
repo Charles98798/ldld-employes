@@ -88,7 +88,7 @@ function rdAutoVider(){ RD_AUTO_VIDER = RD_AUTO_VIDER.filter(function(x){ return
 document.addEventListener("visibilitychange", function(){ if(document.hidden) rdAutoVider(); });
 window.addEventListener("pagehide", rdAutoVider);
 // Écran immuable une fois affiché: une zone n'est redessinée que si son contenu change réellement. Petit journal local (version, département, source, résultat) pour voir ce qui change.
-var RD_V = "325";
+var RD_V = "326";
 // Lecture monotone: un texte écrit depuis cet appareil il y a moins de 2 minutes ne peut pas être remplacé à l'écran par une lecture plus ancienne (dernière écriture gagne).
 var RD_ECRIT = {}, RD_SUPPR = {};
 function rdNoterEcrit(dep, id, texte, n){ if(!id) return; (RD_ECRIT[dep] = RD_ECRIT[dep] || {})[id] = {texte: texte, t: Date.now(), n: n || 0}; }
@@ -265,7 +265,7 @@ function rdDiscussion(donnees, edition){
       liste.forEach(function(x){ suite = suite.then(function(){ return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: "", texte: x}); }); });
       return suite.then(function(r){ if(r && r.ok){ var L = r.points || []; if(L[L.length - liste.length + idx]) idA = L[L.length - liste.length + idx].id; rdNoterEcrit(RD.dep, idA, t); reel = true; RD_PLAN = r; rdCacheEcrire("ldld-rdd-"+RD.dep, r); dire(rdHeureEnreg()); } else { dire((r && r.erreur) || "Non enregistré · réessayez"); throw 0; } });
     }
-    rdAuto(ta, function(t){ dire("Enregistrement en cours"); if(!reel) return matSilencieux(t).catch(function(){ dire("Non enregistré · réessayez"); throw 0; }); return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
+rdAuto(ta, function(t){ dire("Enregistrement en cours"); if(!reel) return matSilencieux(t).catch(function(){ dire("Non enregistré · réessayez"); throw 0; }); return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
       if(r && r.ok){ if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; if(String(edition).indexOf("tmp-") === 0 && idA){ RD_TMPMAP[edition] = idA; if(RD_TMPSUPPR[edition]){ appelService({action: "rd_point_retirer", session: sessionGardee(), departement: RD.dep, id: idA}); } } } rdNoterEcrit(RD.dep, idA, t, (function(){ var q = (r.points || []).filter(function(p){ return p.id === idA; })[0]; return q ? q.n : 0; })()); var gardes = ((RD_PLAN && RD_PLAN.points) || []).filter(function(p){ return p.tmp && p.id !== edition; }); rdCacheEcrire("ldld-rdd-"+RD.dep, r); RD_PLAN = r; RD_PLAN.points = (r.points || []).concat(gardes); dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
   })();
   document.getElementById("rdadd").onclick = function(){
@@ -282,6 +282,8 @@ function rdDiscussion(donnees, edition){
 }
 
 // Points de base du département (Direction seulement): chaque nouvelle réunion repart d'une copie. Modifier ici ne change que les réunions futures.
+var RD_LOC = {}, RD_BDON = null;
+function rdFusion(r){ if(r && r.points) r.points.forEach(function(p){ if(RD_LOC[p.id] !== undefined) p.texte = RD_LOC[p.id]; }); return r; }
 function rdBase(donnees, edition){
   if(!(MOI && MOI.role === "direction")){ rdPlanif(); return; }
   if(!donnees){
@@ -292,6 +294,7 @@ function rdBase(donnees, edition){
     return;
   }
   var z = document.getElementById("rdz"); if(!z) return;
+  rdFusion(donnees); RD_BDON = donnees;
   var pts = donnees.points || [], fictif = RD_DEMO && !pts.length;
   if(fictif) pts = RD_DEMO_PTS.map(function(p){ return {id: "demo-"+p.n, n: p.n, texte: p.texte, demo: true}; });
   var h = '<div class="rdsm">Points de base · '+rdE(RD.dep)+'</div>';
@@ -320,18 +323,18 @@ function rdBase(donnees, edition){
     liste.forEach(function(t){ suite = suite.then(function(){ return appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: "", texte: t}); }); });
     suite.then(function(r){ RD.mat = false; appliquer(r); }).catch(function(){ RD.mat = false; dire("Réseau indisponible"); });
   }
-  Array.prototype.forEach.call(z.querySelectorAll("[data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); rdBase(donnees, a.getAttribute("data-m")); }; });
+  Array.prototype.forEach.call(z.querySelectorAll("[data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); var cible = a.getAttribute("data-m"); try { document.activeElement.blur(); } catch(x){} rdFusion(RD_BDON); rdBase(RD_BDON, cible); }; });
   Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); confirmerOuiNon("Retirer ce point ?", function(){
     var id = a.getAttribute("data-r"); if(fictif){ dire("Retrait en cours"); materialiser(id, {}, ""); return; }
     // Retrait immédiat à l'écran, puis écriture au Service; retour en arrière si l'écriture échoue.
-    var avant = donnees; donnees = {ok: true, points: (avant.points || []).filter(function(p){ return p.id !== id; })}; rdBase(donnees); dire("Retrait en cours");
+    var avant = RD_BDON || donnees; donnees = RD_BDON = {ok: true, points: (avant.points || []).filter(function(p){ return p.id !== id; })}; rdBase(donnees); dire("Retrait en cours");
     appelService({action: "rd_base_retirer", session: sessionGardee(), departement: RD.dep, id: id}).then(function(r){
-      if(r && r.ok){ donnees = r; if(document.getElementById("rdz") && !document.getElementById("rdtx")) rdBase(r); dire(rdHeureEnreg()); }
+      if(r && r.ok){ donnees = RD_BDON = rdFusion(r); if(document.getElementById("rdz") && !document.getElementById("rdtx")) rdBase(r); dire(rdHeureEnreg()); }
       else { rdBase(avant); dire((r && r.erreur) || "Non retiré · réessayez"); }
     }).catch(function(){ rdBase(avant); dire("Non retiré · réseau indisponible"); });
   }, false); }; });
   var ok = document.getElementById("rdok"), no = document.getElementById("rdno");
-  if(no) no.onclick = function(e){ e.preventDefault(); rdBase(donnees); };
+  if(no) no.onclick = function(e){ e.preventDefault(); rdBase(RD_BDON || donnees); };
   (function(){
     var ta = document.getElementById("rdtx"); if(!ta) return;
     var idA = edition === "nouveau" ? "" : edition;
@@ -346,12 +349,13 @@ function rdBase(donnees, edition){
       var idx = edition === "nouveau" ? liste.length - 1 : RD_DEMO_PTS.map(function(p){ return "demo-"+p.n; }).indexOf(edition);
       var suite = Promise.resolve(null);
       liste.forEach(function(x){ suite = suite.then(function(){ return appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: "", texte: x}); }); });
-      return suite.then(function(r){ if(r && r.ok){ var L = r.points || []; if(L[L.length - liste.length + idx]) idA = L[L.length - liste.length + idx].id; reel = true; donnees = r; dire(rdHeureEnreg()); } else { dire((r && r.erreur) || "Non enregistré · réessayez"); throw 0; } });
+      return suite.then(function(r){ if(r && r.ok){ var L = r.points || []; if(L[L.length - liste.length + idx]) idA = L[L.length - liste.length + idx].id; reel = true; donnees = RD_BDON = r; dire(rdHeureEnreg()); } else { dire((r && r.erreur) || "Non enregistré · réessayez"); throw 0; } });
     }
+ta.addEventListener("input", function(){ if(idA) RD_LOC[idA] = ta.value; });
 rdAuto(ta, function(t){ dire("Enregistrement en cours"); if(!reel) return matSilencieux(t).catch(function(){ dire("Non enregistré · réessayez"); throw 0; }); return appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
-      if(r && r.ok){ donnees = r; if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; } dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
+      if(r && r.ok){ var idAvant = idA; if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; if(idA && ta.value !== t) RD_LOC[idA] = ta.value; } else if(RD_LOC[idA] === t) delete RD_LOC[idA]; donnees = RD_BDON = rdFusion(r); dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
   })();
-  document.getElementById("rdadd").onclick = function(){ try { document.activeElement.blur(); } catch(e){} rdApresEcritures(function(){ rdBase(donnees, "nouveau"); }); };
+  document.getElementById("rdadd").onclick = function(){ try { document.activeElement.blur(); } catch(e){} rdApresEcritures(function(){ rdBase(RD_BDON || donnees, "nouveau"); }); };
   document.getElementById("rdfin").onclick = function(){ RD.vue = "discussion"; rdPlanif(); };
 }
 function rdHistorique(){
