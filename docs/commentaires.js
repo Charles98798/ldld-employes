@@ -133,7 +133,7 @@ function ccFormulaire(existant){
   h += '<div class="rdp"><small>Type</small><div class="chx" id="cctype">'+CC_TYPES.map(function(t){ return '<button type="button" data-t="'+t[0]+'" aria-pressed="'+(t[0] === F.type ? "true" : "false")+'">'+rdE(t[1])+'</button>'; }).join("")+'</div></div>';
   h += '<div class="rdp"><small>Département</small><div class="chx" id="ccdep">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === F.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div></div>';
   h += '<div class="rdp"><small>Commentaire</small><textarea class="rdzone" id="cctexte" rows="6" maxlength="4000" placeholder="Écrire le commentaire">'+rdE(F.texte)+'</textarea></div>';
-  h += '<div class="rdp"><small>Photos (facultatif, 5 maximum)</small><div id="ccphotos"></div><input type="file" id="ccfichier" accept="image/*" multiple style="display:none"><div class="rdgrid" style="margin-top:8px"><button type="button" class="rdsoft" id="ccajout">Ajouter des photos</button></div></div>';
+  h += '<div class="rdp"><small>Photos (facultatif, 5 maximum)</small><div id="ccphotos"></div><input type="file" id="ccfichier" accept="image/*" multiple style="display:none"></div>';
   h += '<div id="ccm"></div></div>';
   app.innerHTML = h;
   var dire = function(t){ var m = document.getElementById("ccm"); if(m) m.innerHTML = '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px">'+rdE(t)+'</small></div>'; };
@@ -146,13 +146,14 @@ function ccFormulaire(existant){
   function dessinerPhotos(){
     var z = document.getElementById("ccphotos"); if(!z) return;
     var w = "width:min(180px,calc((100% - 32px)/5));aspect-ratio:1/1";
-    z.innerHTML = tous().length ? '<div style="display:flex;flex-wrap:wrap;gap:8px">'+tous().map(function(p, i){
+    var tuile = tous().length < 5 ? '<a href="#" id="cctuile" aria-label="Ajouter des photos" style="'+w+';display:flex;align-items:center;justify-content:center;background:#B7B1A5;color:#1D1D1B;font-size:28px;text-decoration:none">+</a>' : "";
+    z.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:8px">'+tous().map(function(p, i){
       var src = p.miniUrl || ccImgLire(p.m);
-      return '<div style="position:relative;'+w+'"><img alt="Photo '+(i + 1)+'" data-ph="'+rdE(p.m || "")+'" style="width:100%;height:100%;object-fit:cover;background:#B7B1A5;display:block" src="'+rdE(src)+'"><a href="#" class="rdic" data-px="'+i+'" aria-label="Retirer la photo" style="position:absolute;right:4px;top:4px;background:#B7B1A5;padding:4px;display:block;width:20px;height:20px"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px"><path d="M3 3h6v6h-6zM15 3h6v6h-6zM9 9h6v6h-6zM3 15h6v6h-6zM15 15h6v6h-6z" fill="#1D1D1B"/></svg></a></div>'; }).join("")+'</div>' : "";
+      return '<div style="position:relative;'+w+'"><img alt="Photo '+(i + 1)+'" data-ph="'+rdE(p.m || "")+'" style="width:100%;height:100%;object-fit:cover;background:#B7B1A5;display:block" src="'+rdE(src)+'"><a href="#" class="rdic" data-px="'+i+'" aria-label="Retirer la photo" style="position:absolute;right:4px;top:4px;background:#B7B1A5;padding:4px;display:block;width:20px;height:20px"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px"><path d="M3 3h6v6h-6zM15 3h6v6h-6zM9 9h6v6h-6zM3 15h6v6h-6zM15 15h6v6h-6z" fill="#1D1D1B"/></svg></a></div>'; }).join("")+tuile+'</div>';
+    var tl = document.getElementById("cctuile"); if(tl) tl.onclick = function(e){ e.preventDefault(); document.getElementById("ccfichier").click(); };
     Array.prototype.forEach.call(z.querySelectorAll("[data-px]"), function(a){ a.onclick = function(e){ e.preventDefault(); var i = Number(a.getAttribute("data-px"));
       confirmerOuiNon("Retirer cette photo ?", function(){ if(i < F.photos.length) F.photos.splice(i, 1); else F.nouvelles.splice(i - F.photos.length, 1); dessinerPhotos(); planifier(); }, false); }; });
     ccPhotos(F.photos.map(function(p){ return p.m; }), true, function(){ var zz = document.getElementById("ccphotos"); if(zz) ccRemplirImgs(zz); });
-    var b = document.getElementById("ccajout"); if(b) b.style.display = tous().length >= 5 ? "none" : "";
   }
   function valide(){ return !!(F.texte.trim() && /^\d{4}-\d{2}-\d{2}$/.test(F.date) && F.type && F.dep); }
   function planifier(){ F.sale = true; clearTimeout(F.t); F.t = setTimeout(enregistrer, 700); if(!valide()) dire(F.texte.trim() ? "Date invalide" : "Écrivez le commentaire pour l'enregistrer"); }
@@ -186,7 +187,7 @@ function ccFormulaire(existant){
   Array.prototype.forEach.call(document.querySelectorAll("#cctype button"), function(b){ b.onclick = function(){ F.type = b.getAttribute("data-t"); Array.prototype.forEach.call(document.querySelectorAll("#cctype button"), function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); }); planifier(); }; });
   Array.prototype.forEach.call(document.querySelectorAll("#ccdep button"), function(b){ b.onclick = function(){ F.dep = b.getAttribute("data-d"); Array.prototype.forEach.call(document.querySelectorAll("#ccdep button"), function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); }); planifier(); }; });
   var fi = document.getElementById("ccfichier");
-  document.getElementById("ccajout").onclick = function(){ fi.click(); };
+  
   fi.onchange = function(){
     var fs = Array.prototype.slice.call(fi.files || [], 0, Math.max(0, 5 - tous().length)); fi.value = "";
     if(!fs.length) return;
