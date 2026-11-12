@@ -74,9 +74,16 @@ function rdAuto(ta, sauve, plein){
     occ = true; de = t;
     sauve(t).then(function(){ occ = false; }).catch(function(){ occ = false; de = ""; });
   }
+  function vider(){ clearTimeout(tm); lancer(); }
   ta.addEventListener("input", function(){ clearTimeout(tm); tm = setTimeout(lancer, 700); });
-  if(plein) ta.addEventListener("blur", function(){ clearTimeout(tm); lancer(); });
+  ta.addEventListener("blur", vider);
+  RD_AUTO_VIDER.push({ta: ta, f: vider});
 }
+// À la fermeture ou à la mise en arrière-plan de la page: envoyer tout texte en attente.
+var RD_AUTO_VIDER = [];
+function rdAutoVider(){ RD_AUTO_VIDER = RD_AUTO_VIDER.filter(function(x){ return document.body.contains(x.ta); }); RD_AUTO_VIDER.forEach(function(x){ try { x.f(); } catch(e){} }); }
+document.addEventListener("visibilitychange", function(){ if(document.hidden) rdAutoVider(); });
+window.addEventListener("pagehide", rdAutoVider);
 function rdHeureEnreg(){ var d = new Date(); return "Enregistré à " + d.getHours() + " h " + ("0"+d.getMinutes()).slice(-2); }
 function rdMois18(){
   var N = ["JANVIER","FÉVRIER","MARS","AVRIL","MAI","JUIN","JUILLET","AOÛT","SEPTEMBRE","OCTOBRE","NOVEMBRE","DÉCEMBRE"], p2 = function(n){ return ("0"+n).slice(-2); }, t = new Date(), r = [];
@@ -194,8 +201,16 @@ function rdDiscussion(donnees, edition){
   (function(){
     var ta = document.getElementById("rdtx"); if(!ta) return;
     var idA = edition === "nouveau" ? "" : edition;
-    if(fictif){ ta.addEventListener("blur", function(){ var t = ta.value.trim(); if(!t) return; dire("Enregistrement en cours"); if(edition === "nouveau") materialiser("", {}, t); else materialiser("", {id: edition, texte: t}, ""); }); return; }
-    rdAuto(ta, function(t){ dire("Enregistrement en cours"); return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
+    var reel = !fictif;
+    // Exemples fictifs: au premier enregistrement ils deviennent de vrais points (sans quitter le champ), puis la modification continue sur le vrai point.
+    function matSilencieux(t){
+      var liste = RD_DEMO_PTS.map(function(p){ return ("demo-"+p.n) === edition ? t : p.texte; }); if(edition === "nouveau") liste.push(t);
+      var idx = edition === "nouveau" ? liste.length - 1 : RD_DEMO_PTS.map(function(p){ return "demo-"+p.n; }).indexOf(edition);
+      var suite = Promise.resolve(null);
+      liste.forEach(function(x){ suite = suite.then(function(){ return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: "", texte: x}); }); });
+      return suite.then(function(r){ if(r && r.ok){ var L = r.points || []; if(L[L.length - liste.length + idx]) idA = L[L.length - liste.length + idx].id; reel = true; RD_PLAN = r; rdCacheEcrire("ldld-rdd-"+RD.dep, r); dire(rdHeureEnreg()); } else { dire((r && r.erreur) || "Non enregistré · réessayez"); throw 0; } });
+    }
+    rdAuto(ta, function(t){ dire("Enregistrement en cours"); if(!reel) return matSilencieux(t).catch(function(){ dire("Non enregistré · réessayez"); throw 0; }); return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
       if(r && r.ok){ RD_PLAN = r; rdCacheEcrire("ldld-rdd-"+RD.dep, r); if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; } dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
   })();
   document.getElementById("rdadd").onclick = function(){ rdDiscussion(RD_PLAN, "nouveau"); };
@@ -244,8 +259,15 @@ function rdBase(donnees, edition){
   (function(){
     var ta = document.getElementById("rdtx"); if(!ta) return;
     var idA = edition === "nouveau" ? "" : edition;
-    if(fictif){ ta.addEventListener("blur", function(){ var t = ta.value.trim(); if(!t) return; dire("Enregistrement en cours"); if(edition === "nouveau") materialiser("", {}, t); else materialiser("", {id: edition, texte: t}, ""); }); return; }
-    rdAuto(ta, function(t){ dire("Enregistrement en cours"); return appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
+    var reel = !fictif;
+    function matSilencieux(t){
+      var liste = RD_DEMO_PTS.map(function(p){ return ("demo-"+p.n) === edition ? t : p.texte; }); if(edition === "nouveau") liste.push(t);
+      var idx = edition === "nouveau" ? liste.length - 1 : RD_DEMO_PTS.map(function(p){ return "demo-"+p.n; }).indexOf(edition);
+      var suite = Promise.resolve(null);
+      liste.forEach(function(x){ suite = suite.then(function(){ return appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: "", texte: x}); }); });
+      return suite.then(function(r){ if(r && r.ok){ var L = r.points || []; if(L[L.length - liste.length + idx]) idA = L[L.length - liste.length + idx].id; reel = true; donnees = r; dire(rdHeureEnreg()); } else { dire((r && r.erreur) || "Non enregistré · réessayez"); throw 0; } });
+    }
+rdAuto(ta, function(t){ dire("Enregistrement en cours"); if(!reel) return matSilencieux(t).catch(function(){ dire("Non enregistré · réessayez"); throw 0; }); return appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
       if(r && r.ok){ donnees = r; if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; } dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
   })();
   document.getElementById("rdadd").onclick = function(){ rdBase(donnees, "nouveau"); };
