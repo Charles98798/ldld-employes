@@ -88,7 +88,7 @@ function rdAutoVider(){ RD_AUTO_VIDER = RD_AUTO_VIDER.filter(function(x){ return
 document.addEventListener("visibilitychange", function(){ if(document.hidden) rdAutoVider(); });
 window.addEventListener("pagehide", rdAutoVider);
 // Écran immuable une fois affiché: une zone n'est redessinée que si son contenu change réellement. Petit journal local (version, département, source, résultat) pour voir ce qui change.
-var RD_V = "326";
+var RD_V = "327";
 // Lecture monotone: un texte écrit depuis cet appareil il y a moins de 2 minutes ne peut pas être remplacé à l'écran par une lecture plus ancienne (dernière écriture gagne).
 var RD_ECRIT = {}, RD_SUPPR = {};
 function rdNoterEcrit(dep, id, texte, n){ if(!id) return; (RD_ECRIT[dep] = RD_ECRIT[dep] || {})[id] = {texte: texte, t: Date.now(), n: n || 0}; }
@@ -380,7 +380,7 @@ function rdCapsules(donnees){
   var choisie = RD.capSel && toutes.some(function(x){ return x.n === RD.capSel; }) ? RD.capSel : (c ? c.n : (toutes[0] && toutes[0].n));
   h += '<div class="rdsm">Les 11 capsules</div>' + toutes.map(function(x){
     var surM = c && x.n === c.n, sel = x.n === choisie;
-    return '<a href="#" class="rdln" data-s="'+rdE(x.n)+'" style="text-decoration:none;color:inherit;'+(sel ? "background:#8EFF60;" : "")+'padding:10px 8px"><span><small>'+(x.n < 10 ? "0" : "")+rdE(x.n)+'</small> '+rdE(x.titre)+(surM ? ' <em>capsule du mois</em>' : '')+(x.pret === false ? ' <em>en préparation</em>' : '')+'</span></a>';
+    return '<a href="#" class="rdln" data-s="'+rdE(x.n)+'" style="text-decoration:none;color:inherit;'+(sel ? "background:#8EFF60;" : "")+'padding:10px 8px"><span><small>'+(x.n < 10 ? "0" : "")+rdE(x.n)+'</small> '+(x.theme ? '<span style="opacity:.65">'+rdE(x.theme)+' · </span>' : '')+rdE(x.titre)+(surM ? ' <em>capsule du mois</em>' : '')+(x.pret === false ? ' <em>en préparation</em>' : '')+'</span></a>';
   }).join("");
   var d = toutes.filter(function(x){ return x.n === choisie; })[0];
   h += '<div id="rdcd"></div>';
