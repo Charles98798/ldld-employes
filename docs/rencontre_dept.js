@@ -71,8 +71,9 @@ function rdAuto(ta, sauve, plein){
   function lancer(){
     var t = ta.value.trim(); if(!t || t === de) return;
     if(occ){ tm = setTimeout(lancer, 400); return; }
-    occ = true; de = t;
-    sauve(t).then(function(){ occ = false; }).catch(function(){ occ = false; de = ""; });
+    occ = true; de = t; RD_PEND++;
+    function fini(){ RD_PEND--; try { RCACHE = {}; viderPerso(); } catch(e){} }   // une lecture partie pendant l'écriture ne doit pas laisser de copie périmée
+    sauve(t).then(function(){ occ = false; fini(); }).catch(function(){ occ = false; de = ""; fini(); });
   }
   function vider(){ clearTimeout(tm); lancer(); }
   ta.addEventListener("input", function(){ clearTimeout(tm); tm = setTimeout(lancer, 700); });
@@ -80,7 +81,9 @@ function rdAuto(ta, sauve, plein){
   RD_AUTO_VIDER.push({ta: ta, f: vider});
 }
 // À la fermeture ou à la mise en arrière-plan de la page: envoyer tout texte en attente.
-var RD_AUTO_VIDER = [];
+var RD_AUTO_VIDER = [], RD_PEND = 0;
+// Exécute f quand aucune sauvegarde automatique n'est en cours (jusqu'à 8 s), pour que la lecture voie l'écriture.
+function rdApresEcritures(f){ var n = 0; (function essai(){ if(RD_PEND <= 0 || ++n > 80) f(); else setTimeout(essai, 100); })(); }
 function rdAutoVider(){ RD_AUTO_VIDER = RD_AUTO_VIDER.filter(function(x){ return document.body.contains(x.ta); }); RD_AUTO_VIDER.forEach(function(x){ try { x.f(); } catch(e){} }); }
 document.addEventListener("visibilitychange", function(){ if(document.hidden) rdAutoVider(); });
 window.addEventListener("pagehide", rdAutoVider);
@@ -464,9 +467,9 @@ function rdPresentation(){
     var m0 = mois18[0]; if(!RD.periode || RD.periode.t === "an") RD.periode = {t: "mois", du: m0.du, au: m0.au};
     mois18.forEach(function(m){ if(m.cle === RD.moisSel) RD.periode = {t: m === m0 ? "mois" : "dates", du: m.du, au: m.au}; });
   }
-  (function(){ var dep0 = RD.dep; appelService({action: "rd_planif_lire", session: sessionGardee(), departement: dep0}).then(function(r){
+  rdApresEcritures(function(){ var dep0 = RD.dep; appelService({action: "rd_planif_lire", session: sessionGardee(), departement: dep0}).then(function(r){
     if(!r || !r.ok || RD.dep !== dep0) return; rdCacheEcrire("ldld-rdd-"+dep0, r);
-    var h = rdPointsPlanifHtml(r), zp = document.getElementById("rds-pts"); if(zp && h){ zp.setAttribute("data-brouillon", "1"); zp.innerHTML = h; } }).catch(function(){}); })();
+    var h = rdPointsPlanifHtml(r), zp = document.getElementById("rds-pts"); if(zp && h){ zp.setAttribute("data-brouillon", "1"); zp.innerHTML = h; } }).catch(function(){}); });
   chargerChiffres();
   appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok !== false && (r.points || r.capsule)) rdCacheEcrire("ldld-rdp-"+RD.dep, r); var zp = document.getElementById("rds-pts"); if(zp && !zp.getAttribute("data-brouillon")) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return rdPuces(p); }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
 }
