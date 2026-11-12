@@ -960,3 +960,4 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 /* Entretien machinerie: colonnes Machine et Responsable alignees sur toutes les lignes */
 .lgm,.tcol{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px}.lgm.un,.tcol.un{grid-template-columns:minmax(0,1fr)}.lgm>span:nth-child(2){text-align:left}
 .etiq.tcol{padding-left:0!important;padding-right:0;text-indent:0}
+.ligne.lgm:has(.actw){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px;justify-content:normal}.ligne.lgm:has(.actw)>span:nth-child(2){text-align:left}
