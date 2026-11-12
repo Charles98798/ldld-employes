@@ -956,3 +956,7 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 /* Retrait suspendu des puces: la suite d'une ligne s'aligne sous la première lettre, jamais sous la puce */
 .pu{display:flex;gap:.55em;align-items:flex-start}.pu span:first-child{flex:none}.pu span:last-child{flex:1;min-width:0}
 .bandeau,.etq,.etiq{padding-left:1em!important;text-indent:-1em}
+
+/* Entretien machinerie: colonnes Machine et Responsable alignees sur toutes les lignes */
+.lgm,.tcol{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px}.lgm.un,.tcol.un{grid-template-columns:minmax(0,1fr)}.lgm>span:nth-child(2){text-align:left}
+.etiq.tcol{padding-left:0!important;padding-right:0;text-indent:0}
