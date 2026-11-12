@@ -42,6 +42,12 @@ function rdPointsHtml(r){
   h += pts.length ? pts.map(function(p){ return '<div class="rdp"><small>Point '+rdE(p.n)+'</small><div>'+rdPuces(p.texte)+'</div></div>'; }).join("") : rdMsg("Aucun point publié pour le moment");
   return h;
 }
+// Présentation (Gestionnaire et Direction): montre le brouillon à jour des points (rd_planif_lire); les employés ne voient que le publié.
+function rdPointsPlanifHtml(r){
+  var pts = ((r && r.points) || []).filter(function(p){ return p && String(p.texte || "").trim(); });
+  if(!pts.length) return null;
+  return '<div class="rdt">01 <span>Points de discussion</span></div>' + pts.map(function(p, i){ return '<div class="rdp"><small>Point '+rdE(p.n || (i + 1))+(p.etat === "brouillon" ? ' · brouillon' : '')+'</small><div>'+rdPuces(p.texte)+'</div></div>'; }).join("");
+}
 function rdCapPresCle(n){ return "ldld-rd-cap-" + n; }
 function rdCapPresNoter(n){ try { localStorage.setItem(rdCapPresCle(n), rdPubTexte(new Date())); } catch(e){} }
 function rdCapPresLue(n){ try { return localStorage.getItem(rdCapPresCle(n)) || ""; } catch(e){ return ""; } }
@@ -170,7 +176,7 @@ function rdDiscussion(donnees, edition){
   h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Chaque réunion repart des points de base. Vos modifications ci-dessus ne touchent que cette réunion.</small></div><div id="rdm"></div>';
   z.innerHTML = h;
   var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
-  function appliquer(r){ if(r && r.ok){ RD_PLAN = r; rdDiscussion(r); dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
+  function appliquer(r){ if(r && r.ok){ RD_PLAN = r; rdCacheEcrire("ldld-rdd-"+RD.dep, r); rdDiscussion(r); dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
   function ecrire(corps){ appelService(corps).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); }
   // Les points fictifs deviennent de vrais points écrits au service au premier enregistrement (modifier, retirer, ajouter ou publier).
   function materialiser(exclure, remplace, texteNouveau, apres){
@@ -190,7 +196,7 @@ function rdDiscussion(donnees, edition){
     var idA = edition === "nouveau" ? "" : edition;
     if(fictif){ ta.addEventListener("blur", function(){ var t = ta.value.trim(); if(!t) return; dire("Enregistrement en cours"); if(edition === "nouveau") materialiser("", {}, t); else materialiser("", {id: edition, texte: t}, ""); }); return; }
     rdAuto(ta, function(t){ dire("Enregistrement en cours"); return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
-      if(r && r.ok){ RD_PLAN = r; if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; } dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
+      if(r && r.ok){ RD_PLAN = r; rdCacheEcrire("ldld-rdd-"+RD.dep, r); if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; } dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
   })();
   document.getElementById("rdadd").onclick = function(){ rdDiscussion(RD_PLAN, "nouveau"); };
   document.getElementById("rdpub").onclick = function(){ dire("Publication en cours"); if(fictif){ materialiser("", {}, "", function(){ return appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }); }); return; } appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); };
@@ -414,7 +420,7 @@ function rdPresentation(){
   h += '<div class="rdp"><small style="color:#6f6a5f">Période des chiffres</small><div class="rdbtn"><button type="button" class="rdplan" id="rdper" aria-expanded="false">'+rdE(moisLib)+'</button><div id="rdpl" style="display:none;background:#E3DFD3;border:2px solid #0d1117;margin-top:4px;max-height:280px;overflow-y:auto">'+mois18.map(function(m){ return '<a href="#" data-mo="'+m.cle+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1D1D1B;text-decoration:none;'+(m.cle === RD.moisSel ? "background:#8EFF60;" : "")+'">'+rdE(m.lib)+'</a>'; }).join("")+'</div></div></div>';
   var blk = 0;
   function bloc(inner){ return '<div class="rdblk">'+inner+'</div>'; }
-  h += bloc('<div id="rds-pts">'+(rdCacheLire("ldld-rdp-"+RD.dep) ? rdPointsHtml(rdCacheLire("ldld-rdp-"+RD.dep)) : rdMsg("Un instant"))+'</div>');
+  h += bloc('<div id="rds-pts">'+(rdPointsPlanifHtml(rdCacheLire("ldld-rdd-"+RD.dep)) || (rdCacheLire("ldld-rdp-"+RD.dep) ? rdPointsHtml(rdCacheLire("ldld-rdp-"+RD.dep)) : rdMsg("Un instant")))+'</div>');
   h += RD_SECTIONS.map(function(s){ return bloc('<div class="rdt">'+rdE(s[1].slice(0, 2))+' <span>'+rdE(s[1].slice(3))+'</span></div><div id="rds-'+s[0]+'">'+rdInit(s[0])+'</div>') + (s[0] === "cas" && typeof ccBlocPresentation === "function" ? ccBlocPresentation() : ""); }).join("");
   h += bloc('<div class="rdt">04 <span>Capsule du mois</span></div><div id="rds-cap">'+(function(){ var c = rdCacheLire("ldld-rdp-"+RD.dep); return c && c.capsule ? rdCapHtml(c.capsule) : rdMsg("Un instant"); })()+'</div>') + '</div>';
   app.innerHTML = h;
@@ -436,6 +442,9 @@ function rdPresentation(){
     var m0 = mois18[0]; if(!RD.periode || RD.periode.t === "an") RD.periode = {t: "mois", du: m0.du, au: m0.au};
     mois18.forEach(function(m){ if(m.cle === RD.moisSel) RD.periode = {t: m === m0 ? "mois" : "dates", du: m.du, au: m.au}; });
   }
+  (function(){ var dep0 = RD.dep; appelService({action: "rd_planif_lire", session: sessionGardee(), departement: dep0}).then(function(r){
+    if(!r || !r.ok || RD.dep !== dep0) return; rdCacheEcrire("ldld-rdd-"+dep0, r);
+    var h = rdPointsPlanifHtml(r), zp = document.getElementById("rds-pts"); if(zp && h){ zp.setAttribute("data-brouillon", "1"); zp.innerHTML = h; } }).catch(function(){}); })();
   chargerChiffres();
-  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok !== false && (r.points || r.capsule)) rdCacheEcrire("ldld-rdp-"+RD.dep, r); var zp = document.getElementById("rds-pts"); if(zp) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return rdPuces(p); }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
+  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok !== false && (r.points || r.capsule)) rdCacheEcrire("ldld-rdp-"+RD.dep, r); var zp = document.getElementById("rds-pts"); if(zp && !zp.getAttribute("data-brouillon")) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return rdPuces(p); }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
 }
