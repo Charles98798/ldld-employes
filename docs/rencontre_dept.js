@@ -140,6 +140,7 @@ function rdDiscussion(donnees, edition){
   if(!pts.length && edition !== "nouveau") h += rdMsg("Aucun point pour la prochaine rencontre");
   if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
   h += '<div class="rdgrid"><button type="button" class="rdsoft" id="rdadd">Ajouter un point</button>'+((MOI && MOI.role === "direction") ? '<button type="button" class="rdsoft" id="rdbase">Modifier les points de base</button>' : '<span></span>')+'<button type="button" class="rdsoft rdpubb" id="rdpub">Publier aux employés</button><button type="button" class="rdsoft" id="rdhist">Historique</button></div>';
+  if(typeof ccFormulaire === "function") h += '<div class="rdgrid" style="margin-top:12px"><button type="button" class="rdsoft" id="ccadd">Ajouter un commentaire client</button></div><div id="cclist"></div>';
   h += '<div class="rdp" style="margin-top:12px"><small>'+rdE("Dernière publication : " + (donnees.derniere_publication || rdPubLue() || "jamais"))+'</small></div>';
   h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Chaque réunion repart des points de base. Vos modifications ci-dessus ne touchent que cette réunion.</small></div><div id="rdm"></div>';
   z.innerHTML = h;
@@ -164,6 +165,7 @@ function rdDiscussion(donnees, edition){
   document.getElementById("rdpub").onclick = function(){ dire("Publication en cours"); if(fictif){ materialiser("", {}, "", function(){ return appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }); }); return; } appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); };
   document.getElementById("rdhist").onclick = function(){ rdHistorique(); };
   var bb = document.getElementById("rdbase"); if(bb) bb.onclick = function(){ rdBase(); };
+  var ca = document.getElementById("ccadd"); if(ca){ ca.onclick = function(){ ccFormulaire(); }; ccListePlanif(); }
 }
 
 // Points de base du département (Direction seulement): chaque nouvelle réunion repart d'une copie. Modifier ici ne change que les réunions futures.
@@ -369,12 +371,13 @@ function rdPresentation(){
   var blk = 0;
   function bloc(inner){ return '<div class="rdblk">'+inner+'</div>'; }
   h += bloc('<div id="rds-pts">'+(rdCacheLire("ldld-rdp-"+RD.dep) ? rdPointsHtml(rdCacheLire("ldld-rdp-"+RD.dep)) : rdMsg("Un instant"))+'</div>');
-  h += RD_SECTIONS.map(function(s){ return bloc('<div class="rdt">'+rdE(s[1].slice(0, 2))+' <span>'+rdE(s[1].slice(3))+'</span></div><div id="rds-'+s[0]+'">'+rdInit(s[0])+'</div>'); }).join("");
+  h += RD_SECTIONS.map(function(s){ return bloc('<div class="rdt">'+rdE(s[1].slice(0, 2))+' <span>'+rdE(s[1].slice(3))+'</span></div><div id="rds-'+s[0]+'">'+rdInit(s[0])+'</div>') + (s[0] === "cas" && typeof ccBlocPresentation === "function" ? ccBlocPresentation() : ""); }).join("");
   h += bloc('<div class="rdt">04 <span>Capsule du mois</span></div><div id="rds-cap">'+(function(){ var c = rdCacheLire("ldld-rdp-"+RD.dep); return c && c.capsule ? rdCapHtml(c.capsule) : rdMsg("Un instant"); })()+'</div>') + '</div>';
   app.innerHTML = h;
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   rdMenuLier("pres");
   Array.prototype.forEach.call(app.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPresentation(); }; });
+  if(typeof ccPresentation === "function") ccPresentation();
   function chargerChiffres(){
     var per = RD.periode || {t:"mois"};
     RD_SECTIONS.forEach(function(s){
