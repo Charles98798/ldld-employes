@@ -1606,7 +1606,7 @@ function entretien(){
     if(tous && sel !== "non" && vue === "employe") h += '';
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
     el.innerHTML = h;
-    Array.prototype.forEach.call(el.querySelectorAll("[data-v]"), function(b){ b.onclick = function(){ vue = b.getAttribute("data-v"); sel = "non"; pick = false; supprime = false; dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll("[data-v]"), function(b){ b.onclick = function(){ vue = b.getAttribute("data-v"); sel = "non"; if(!d.machines.some(function(m){ return !m.resp; })){ if(vue === "secteur") sel = secteurs()[0] || "non"; else { var e1 = (d.employes || []).filter(function(x){ return d.machines.some(function(m){ return m.resp === x.nom; }); })[0]; sel = e1 ? String(e1.id) : "non"; } } pick = false; supprime = false; dessiner(); }; });
     var s = document.getElementById("ens"); if(s) s.onchange = function(){ sel = this.value; pick = false; supprime = false; dessiner(); };
     Array.prototype.forEach.call(el.querySelectorAll("[data-f]"), function(a){ a.onclick = function(e){ e.preventDefault(); fiche = d.machines.filter(function(m){ return String(m.ligne) === a.getAttribute("data-f"); })[0]; mode = "fiche"; dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll("select.act"), function(q){ q.onchange = function(){ var l = Number(q.getAttribute("data-act")), v = q.value; if(v === "retirer"){ confirmerOuiNon("Retirer cette attribution ?", function(){ ecrire({op:"attribuer", ligne:l, employe:""}); }, false); q.value = ""; } else if(v){ pick = l; dessiner(); } }; });
