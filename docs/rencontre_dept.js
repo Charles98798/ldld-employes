@@ -58,6 +58,19 @@ function rdIcones(attrM, valM, attrX, valX){
   var pm='M16 1h6v6h-6zM10 7h6v6h-6zM4 13h6v6h-6zM2 20h20v3h-20z', px='M3 3h6v6h-6zM15 3h6v6h-6zM9 9h6v6h-6zM3 15h6v6h-6zM15 15h6v6h-6z';
   return '<div class="rdact"><a href="#" class="rdic" '+attrM+'="'+valM+'" aria-label="Modifier"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="'+pm+'"/></svg></a><a href="#" class="rdic" '+attrX+'="'+valX+'" aria-label="Retirer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+px+'"/></svg></a></div>';
 }
+// Sauvegarde automatique à la pause d'écriture (aucun bouton Enregistrer): sauve(texte) renvoie une promesse; un seul envoi à la fois, le dernier texte gagne.
+function rdAuto(ta, sauve, plein){
+  if(!ta) return;
+  var tm = null, occ = false, de = ta.value.trim();
+  function lancer(){
+    var t = ta.value.trim(); if(!t || t === de) return;
+    if(occ){ tm = setTimeout(lancer, 400); return; }
+    occ = true; de = t;
+    sauve(t).then(function(){ occ = false; }).catch(function(){ occ = false; de = ""; });
+  }
+  ta.addEventListener("input", function(){ clearTimeout(tm); tm = setTimeout(lancer, 700); });
+  if(plein) ta.addEventListener("blur", function(){ clearTimeout(tm); lancer(); });
+}
 function rdHeureEnreg(){ var d = new Date(); return "Enregistré à " + d.getHours() + " h " + ("0"+d.getMinutes()).slice(-2); }
 function rdMois18(){
   var N = ["JANVIER","FÉVRIER","MARS","AVRIL","MAI","JUIN","JUILLET","AOÛT","SEPTEMBRE","OCTOBRE","NOVEMBRE","DÉCEMBRE"], p2 = function(n){ return ("0"+n).slice(-2); }, t = new Date(), r = [];
@@ -146,12 +159,12 @@ function rdDiscussion(donnees, edition){
     if(separe && lastG !== !!p.prochaine){ lastG = !!p.prochaine; ent = '<div class="rdsm">'+(lastG ? "Prochaine réunion · brouillon" : "Réunion en cours · publiée")+'</div>'; }
     return ent + (function(){
     return '<div class="rdp">'+'<small>Point '+rdE(p.n)+(p.etat === "brouillon" && !p.demo ? ' · brouillon' : '')+'</small>' + (enEdit
-      ? '<textarea class="rdzone" id="rdtx" maxlength="400" rows="3">'+rdE(p.texte)+'</textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div>'
+      ? '<textarea class="rdzone" id="rdtx" maxlength="400" rows="3">'+rdE(p.texte)+'</textarea>'
       : '<div class="rdl2"><div class="rdtx">'+rdPuces(p.texte)+'</div>'+rdIcones("data-m",rdE(p.id),"data-r",rdE(p.id))+'</div>') + '</div>';
     })();
   }).join("");
   if(!pts.length && edition !== "nouveau") h += rdMsg("Aucun point pour la prochaine rencontre");
-  if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
+  if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea></div>';
   h += '<div class="rdgrid"><button type="button" class="rdsoft" id="rdadd">Ajouter un point</button>'+((MOI && MOI.role === "direction") ? '<button type="button" class="rdsoft" id="rdbase">Modifier les points de base</button>' : '<span></span>')+'<button type="button" class="rdsoft rdpubb" id="rdpub">Publier aux employés</button><button type="button" class="rdsoft" id="rdhist">Historique</button></div>';
   h += '<div class="rdp" style="margin-top:12px"><small>'+rdE("Dernière publication : " + (donnees.derniere_publication || rdPubLue() || "jamais"))+'</small></div>';
   h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Chaque réunion repart des points de base. Vos modifications ci-dessus ne touchent que cette réunion.</small></div><div id="rdm"></div>';
@@ -172,7 +185,13 @@ function rdDiscussion(donnees, edition){
   Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); confirmerOuiNon("Retirer ce point ?", function(){ dire("Retrait en cours"); if(fictif){ materialiser(a.getAttribute("data-r"), {}, ""); return; } ecrire({action: "rd_point_retirer", session: sessionGardee(), departement: RD.dep, id: a.getAttribute("data-r")}); }, false); }; });
   var ok = document.getElementById("rdok"), no = document.getElementById("rdno");
   if(no) no.onclick = function(e){ e.preventDefault(); rdDiscussion(RD_PLAN); };
-  if(ok) ok.onclick = function(e){ e.preventDefault(); var t = document.getElementById("rdtx").value.trim(); if(!t){ dire("Écrivez le point"); return; } dire("Enregistrement en cours"); if(fictif){ if(edition === "nouveau") materialiser("", {}, t); else materialiser("", {id: edition, texte: t}, ""); return; } ecrire({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: edition === "nouveau" ? "" : edition, texte: t}); };
+  (function(){
+    var ta = document.getElementById("rdtx"); if(!ta) return;
+    var idA = edition === "nouveau" ? "" : edition;
+    if(fictif){ ta.addEventListener("blur", function(){ var t = ta.value.trim(); if(!t) return; dire("Enregistrement en cours"); if(edition === "nouveau") materialiser("", {}, t); else materialiser("", {id: edition, texte: t}, ""); }); return; }
+    rdAuto(ta, function(t){ dire("Enregistrement en cours"); return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
+      if(r && r.ok){ RD_PLAN = r; if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; } dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
+  })();
   document.getElementById("rdadd").onclick = function(){ rdDiscussion(RD_PLAN, "nouveau"); };
   document.getElementById("rdpub").onclick = function(){ dire("Publication en cours"); if(fictif){ materialiser("", {}, "", function(){ return appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }); }); return; } appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); };
   document.getElementById("rdhist").onclick = function(){ rdHistorique(); };
@@ -196,9 +215,9 @@ function rdBase(donnees, edition){
   if(fictif) h += rdDemoMarque();
   h += pts.map(function(p, i){ var enEdit = edition === p.id;
     return '<div class="rdp"><small>Point '+(i + 1)+'</small>'+(enEdit
-      ? '<textarea class="rdzone" id="rdtx" maxlength="400" rows="3">'+rdE(p.texte)+'</textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div>'
+      ? '<textarea class="rdzone" id="rdtx" maxlength="400" rows="3">'+rdE(p.texte)+'</textarea>'
       : '<div class="rdl2"><div class="rdtx">'+rdPuces(p.texte)+'</div>'+rdIcones("data-m",rdE(p.id),"data-r",rdE(p.id))+'</div>')+'</div>'; }).join("");
-  if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point de base</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
+  if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point de base</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea></div>';
   h += '<div class="rdgrid"><button type="button" class="rdsoft" id="rdadd">Ajouter un point de base</button><button type="button" class="rdsoft" id="rdfin">Retour aux points de la réunion</button></div>';
   h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Ces points de base servent de départ à chaque nouvelle réunion du département '+rdE(RD.dep)+' seulement. Ils ne changent ni les autres départements ni la réunion en cours.</small></div><div id="rdm"></div>';
   z.innerHTML = h;
@@ -216,9 +235,13 @@ function rdBase(donnees, edition){
   Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); confirmerOuiNon("Retirer ce point ?", function(){ dire("Retrait en cours"); if(fictif){ materialiser(a.getAttribute("data-r"), {}, ""); return; } appelService({action: "rd_base_retirer", session: sessionGardee(), departement: RD.dep, id: a.getAttribute("data-r")}).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); }, false); }; });
   var ok = document.getElementById("rdok"), no = document.getElementById("rdno");
   if(no) no.onclick = function(e){ e.preventDefault(); rdBase(donnees); };
-  if(ok) ok.onclick = function(e){ e.preventDefault(); var t = document.getElementById("rdtx").value.trim(); if(!t){ dire("Écrivez le point"); return; } dire("Enregistrement en cours");
-    if(fictif){ if(edition === "nouveau") materialiser("", {}, t); else materialiser("", {id: edition, texte: t}, ""); return; }
-    appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: edition === "nouveau" ? "" : edition, texte: t}).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); };
+  (function(){
+    var ta = document.getElementById("rdtx"); if(!ta) return;
+    var idA = edition === "nouveau" ? "" : edition;
+    if(fictif){ ta.addEventListener("blur", function(){ var t = ta.value.trim(); if(!t) return; dire("Enregistrement en cours"); if(edition === "nouveau") materialiser("", {}, t); else materialiser("", {id: edition, texte: t}, ""); }); return; }
+    rdAuto(ta, function(t){ dire("Enregistrement en cours"); return appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
+      if(r && r.ok){ donnees = r; if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; } dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
+  })();
   document.getElementById("rdadd").onclick = function(){ rdBase(donnees, "nouveau"); };
   document.getElementById("rdfin").onclick = function(){ RD.vue = "discussion"; rdPlanif(); };
 }
@@ -259,19 +282,19 @@ function rdCapsuleEdit(n, zone){
   var pts = (cap.points || []).map(function(p){ return {t: p.t, statut: p.statut}; });
   var editT = "";
   var edit = -1;   // même mode de modification que Planification discussion: Modifier / Retirer à droite de chaque point, grille 2×2
-  function sauver(){ dire("Enregistrement en cours"); appelService({action: "rd_capsule_modifier", session: sessionGardee(), n: n, titre: cap.titre, theme: cap.theme, points: pts.filter(function(p){ return String(p.t).trim(); })}).then(function(r){ if(r && r.ok){ RD_CAP = r; RD_CAP_MSG[n] = rdHeureEnreg(); dire(RD_CAP_MSG[n]); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); }
+  function sauver(){ dire("Enregistrement en cours"); return appelService({action: "rd_capsule_modifier", session: sessionGardee(), n: n, titre: cap.titre, theme: cap.theme, points: pts.filter(function(p){ return String(p.t).trim(); })}).then(function(r){ if(r && r.ok){ RD_CAP = r; RD_CAP_MSG[n] = rdHeureEnreg(); dire(RD_CAP_MSG[n]); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); }
   function dire(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); }
   function dessiner(){
     function entete(champ, cls, st){ var v = cap[champ] || "";
-      if(editT === champ) return '<div class="rdp"><textarea class="rdzone" id="rdtt" maxlength="120" rows="2">'+rdE(v)+'</textarea><div class="rdact"><a href="#" id="rdtok">Enregistrer</a><a href="#" id="rdtno">Annuler</a></div></div>';
+      if(editT === champ) return '<div class="rdp"><textarea class="rdzone" id="rdtt" maxlength="120" rows="2">'+rdE(v)+'</textarea></div>';
       return '<div class="rdl2" style="'+st+'"><div class="'+cls+'">'+(champ === "theme" ? 'Capsule '+rdE(n)+' sur 11 · ' : '')+rdE(v)+'</div><div class="rdact"><a href="#" class="rdic" data-t="'+champ+'" aria-label="Modifier"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M16 1h6v6h-6zM10 7h6v6h-6zM4 13h6v6h-6zM2 20h20v3h-20z"/></svg></a></div></div>'; }
     var h = '<div style="margin-top:22px"></div>' + entete("theme", "rdsm", "margin-bottom:6px") + entete("titre", "rdcapt", "margin-bottom:12px");
     h += pts.map(function(p, i){
       return '<div class="rdp"><small>Point '+(i + 1)+(p.statut === "à valider" ? ' · <span style="white-space:nowrap">à valider</span>' : '')+'</small>' + (edit === i
-        ? '<textarea class="rdzone" id="rdtx" maxlength="300" rows="3">'+rdE(p.t)+'</textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div>'
+        ? '<textarea class="rdzone" id="rdtx" maxlength="300" rows="3">'+rdE(p.t)+'</textarea>'
         : '<div class="rdl2"><div class="rdtx">'+rdPuces(p.t)+'</div>'+rdIcones("data-m",i,"data-x",i)+'</div>' + (p.statut === "à valider" ? '<div class="rdact"><a href="#" data-v="'+i+'">Valider</a></div>' : '')) + '</div>';
     }).join("");
-    if(edit === pts.length) h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="300" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
+    if(edit === pts.length) h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="300" rows="3" placeholder="Écrire le point"></textarea></div>';
     h += '<div class="rdgrid">' + (pts.length < 5 ? '<button type="button" class="rdsoft" id="rdca">Ajouter un point</button>' : '<span></span>') + '<span></span></div><div id="rdm"></div>';
     document.getElementById(zone || "rdz").innerHTML = h;
     Array.prototype.forEach.call(document.querySelectorAll("#"+(zone || "rdz")+" [data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); edit = Number(a.getAttribute("data-m")); dessiner(); }; });
@@ -280,10 +303,10 @@ function rdCapsuleEdit(n, zone){
     Array.prototype.forEach.call(document.querySelectorAll("#"+(zone || "rdz")+" [data-t]"), function(a){ a.onclick = function(e){ e.preventDefault(); editT = a.getAttribute("data-t"); edit = -1; dessiner(); }; });
     var tok = document.getElementById("rdtok"), tno = document.getElementById("rdtno");
     if(tno) tno.onclick = function(e){ e.preventDefault(); editT = ""; dessiner(); };
-    if(tok) tok.onclick = function(e){ e.preventDefault(); var v = document.getElementById("rdtt").value.trim(); if(!v){ dire("Écrivez le titre"); return; } cap[editT] = v; editT = ""; dessiner(); sauver(); };
+    var tt = document.getElementById("rdtt"); if(tt){ var cle = editT; rdAuto(tt, function(v){ cap[cle] = v; return sauver(); }, false); }
     var ok = document.getElementById("rdok"), no = document.getElementById("rdno");
     if(no) no.onclick = function(e){ e.preventDefault(); edit = -1; dessiner(); };
-    if(ok) ok.onclick = function(e){ e.preventDefault(); var t = document.getElementById("rdtx").value.trim(); if(!t){ dire("Écrivez le point"); return; } if(edit === pts.length) pts.push({t: t, statut: "valide"}); else pts[edit].t = t; edit = -1; dessiner(); sauver(); };
+    var tx = document.getElementById("rdtx"); if(tx){ rdAuto(tx, function(t){ if(edit === pts.length){ pts.push({t: t, statut: "valide"}); edit = pts.length - 1; } else pts[edit].t = t; return sauver(); }, false); }
     var ca = document.getElementById("rdca"); if(ca) ca.onclick = function(){ edit = pts.length; dessiner(); };
     if(RD_CAP_MSG[n]) dire(RD_CAP_MSG[n]);
   }
