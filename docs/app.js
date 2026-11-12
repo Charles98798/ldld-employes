@@ -1131,7 +1131,7 @@ function controleOuvrir(){
   ENT.forEach(function(x){ t[x.id] = [!!x.d[0], !!x.d[1], !!x.d[2]]; });
   function dessiner(){
     var el = document.getElementById("ctl"); if(!el) return;
-    var noms = ["Employé", "Responsable", "Direction"];
+    var noms = ["Employé", "Gestionnaire", "Direction"];
     var h = '<div class="ctg"><span></span>' + noms.map(function(n, k){ return '<b>'+n+'<i style="background:'+CTL_COULEURS[k]+'"></i></b>'; }).join("");
     var g = "";
     ENT.forEach(function(x){
@@ -1146,7 +1146,7 @@ function controleOuvrir(){
     Array.prototype.forEach.call(el.querySelectorAll("button.ctc:not(.bq)"), function(b){
       b.onclick = function(){
         var id = b.getAttribute("data-id"), k = +b.getAttribute("data-k"), v = !t[id][k];
-        var x = ENT_PAR_ID[id], role = ["Employé", "Responsable", "Direction"][k];
+        var x = ENT_PAR_ID[id], role = ["Employé", "Gestionnaire", "Direction"][k];
         confirmerOuiNon((v ? "Donner" : "Retirer")+" l'accès à « "+(x ? x.l : id)+" » pour : "+role+" ?", function(){ appliquer(id, k, v); });
       };
     });
