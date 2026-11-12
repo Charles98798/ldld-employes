@@ -87,6 +87,17 @@ function rdApresEcritures(f){ var n = 0; (function essai(){ if(RD_PEND <= 0 || +
 function rdAutoVider(){ RD_AUTO_VIDER = RD_AUTO_VIDER.filter(function(x){ return document.body.contains(x.ta); }); RD_AUTO_VIDER.forEach(function(x){ try { x.f(); } catch(e){} }); }
 document.addEventListener("visibilitychange", function(){ if(document.hidden) rdAutoVider(); });
 window.addEventListener("pagehide", rdAutoVider);
+// Écran immuable une fois affiché: une zone n'est redessinée que si son contenu change réellement. Petit journal local (version, département, source, résultat) pour voir ce qui change.
+var RD_V = "321";
+// Une fois par version: efface les copies de l'appareil de la Présentation (anciennes copies possiblement mélangées entre départements).
+(function(){ try { if(localStorage.getItem("ldld-rd-purge") !== RD_V){ Object.keys(localStorage).forEach(function(k){ if(/^ldld-rd[pdc]-/.test(k)) localStorage.removeItem(k); }); localStorage.setItem("ldld-rd-purge", RD_V); } } catch(e){} })();
+function rdJournal(dep, src, res){ try { var j = JSON.parse(localStorage.getItem("ldld-rd-journal") || "[]"); j.push({v: RD_V, d: dep, s: src, r: res, h: new Date().toTimeString().slice(0, 8)}); localStorage.setItem("ldld-rd-journal", JSON.stringify(j.slice(-60))); } catch(e){} }
+function rdPoser(id, html, dep, src){
+  var z = document.getElementById(id); if(!z) return false;
+  var t = document.createElement("div"); t.innerHTML = html;
+  if(t.innerHTML === z.innerHTML){ rdJournal(dep, src, "inchangé"); return false; }
+  z.innerHTML = html; rdJournal(dep, src, "changé"); return true;
+}
 function rdHeureEnreg(){ var d = new Date(); return "Enregistré à " + d.getHours() + " h " + ("0"+d.getMinutes()).slice(-2); }
 function rdMois18(){
   var N = ["JANVIER","FÉVRIER","MARS","AVRIL","MAI","JUIN","JUILLET","AOÛT","SEPTEMBRE","OCTOBRE","NOVEMBRE","DÉCEMBRE"], p2 = function(n){ return ("0"+n).slice(-2); }, t = new Date(), r = [];
@@ -460,7 +471,7 @@ function rdPresentation(){
   // Jeton de page: toute réponse tardive (autre département, page quittée, ancienne demande) est ignorée.
   var tok = RD.tok = (RD.tok || 0) + 1, depP = RD.dep, planifOk = false, planifEchec = false, pubR = null;
   // Points: le brouillon (rd_planif_lire) est la seule source affichée; le publié ne sert qu'en secours si la lecture du brouillon échoue.
-  function pubSecours(){ var zp = document.getElementById("rds-pts"); if(courant() && pubR && zp && !planifOk) zp.innerHTML = rdPointsHtml(pubR); }
+  function pubSecours(){ if(courant() && pubR && !planifOk) rdPoser("rds-pts", rdPointsHtml(pubR), depP, "publié-secours"); }
   function courant(){ return RD.tok === tok && RD.dep === depP; }
   var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
   h += rdMenuHtml("pres");
@@ -485,7 +496,7 @@ function rdPresentation(){
     RD_SECTIONS.forEach(function(s){
       var z0 = document.getElementById("rds-"+s[0]); if(z0) z0.innerHTML = rdInit(s[0]);
       var nReq = RD["req_"+s[0]] = (RD["req_"+s[0]] || 0) + 1;
-      appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: depP, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]), ck = rdCacheCle(s[0], depP, per); if(r && r.ok && !r.attente && !(s[0] === "charge" && !(r.equipes || []).length)) rdCacheEcrire(ck, r); if(!courant() || RD["req_"+s[0]] !== nReq) return; if(r && r.ok && !r.attente && !(s[0] === "charge" && !(r.equipes || []).length)) rdCacheEcrire(ck, r); else { var c = rdCacheLire(ck); if(c && c.ok) r = c; } if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z && !RD_DEMO) z.innerHTML = rdMsg("Réseau indisponible"); });
+      appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: depP, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]), ck = rdCacheCle(s[0], depP, per); if(r && r.ok && !r.attente && !(s[0] === "charge" && !(r.equipes || []).length)) rdCacheEcrire(ck, r); if(!courant() || RD["req_"+s[0]] !== nReq) return; if(r && r.ok && !r.attente && !(s[0] === "charge" && !(r.equipes || []).length)) rdCacheEcrire(ck, r); else { var c = rdCacheLire(ck); if(c && c.ok) r = c; } if(z) rdPoser("rds-"+s[0], rdRendreSection(s[0], r), depP, "chiffres:"+s[0]); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z && !RD_DEMO) z.innerHTML = rdMsg("Réseau indisponible"); });
     });
   }
   var sp = document.getElementById("rdper"), sl = document.getElementById("rdpl");
@@ -498,7 +509,7 @@ function rdPresentation(){
   rdApresEcritures(function(){ var dep0 = depP; appelService({action: "rd_planif_lire", session: sessionGardee(), departement: dep0}).then(function(r){
     if(!r || !r.ok){ planifEchec = true; pubSecours(); return; } rdCacheEcrire("ldld-rdd-"+dep0, r);
     if(!courant()) return; planifOk = true;
-    var h = rdPointsPlanifHtml(r), zp = document.getElementById("rds-pts"); if(zp && h){ zp.setAttribute("data-brouillon", "1"); zp.innerHTML = h; } else if(zp){ planifOk = false; planifEchec = true; zp.innerHTML = rdPointsHtml(pubR || {}); } }).catch(function(){ planifEchec = true; pubSecours(); }); });
+    var h = rdPointsPlanifHtml(r), zp = document.getElementById("rds-pts"); if(zp && h){ zp.setAttribute("data-brouillon", "1"); rdPoser("rds-pts", h, dep0, "brouillon"); } else if(zp){ planifOk = false; planifEchec = true; rdPoser("rds-pts", rdPointsHtml(pubR || {}), dep0, "publié-ou-exemples"); } }).catch(function(){ planifEchec = true; pubSecours(); }); });
   chargerChiffres();
-  appelService({action: "rd_points_lire", session: sessionGardee(), departement: depP}).then(function(r){ if(r && r.ok !== false && (r.points || r.capsule)) rdCacheEcrire("ldld-rdp-"+depP, r); if(!courant()) return; pubR = r; if(planifEchec) pubSecours(); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return rdPuces(p); }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
+  appelService({action: "rd_points_lire", session: sessionGardee(), departement: depP}).then(function(r){ if(r && r.ok !== false && (r.points || r.capsule)) rdCacheEcrire("ldld-rdp-"+depP, r); if(!courant()) return; pubR = r; if(planifEchec) pubSecours(); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); rdPoser("rds-cap", c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return rdPuces(p); }).join("")+'</div>' : rdMsg("Capsule non disponible"), depP, "capsule"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
 }

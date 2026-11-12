@@ -176,18 +176,21 @@ function viderPerso(){ try { Object.keys(localStorage).forEach(function(k){ if(k
 var VUE = {on:false, reel:null, session:null, nom:"", relancer:null};
 function cleLecture(c){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); if(VUE.on) o._v = VUE.session; return JSON.stringify(o); }
 var VUE_LECT = {tableau:1, messages:1, ae_lire:1};   // en vue « employé au hasard » seulement: lectures préparées d'avance et gardées 30 min
+var RC_GEN = 0;   // monte à chaque vidage du cache: une lecture partie avant une écriture ne peut plus remettre une copie périmée
+var RD_FRAIS = /^rd_(points_lire|planif_lire|chiffres|capsules_lire|base_lire|commentaires_lire)$/;   // Réunion production: toujours lu frais (la copie locale instantanée est gérée par la page)
 function appelService(corps){
   var a = corps && corps.action;
-  if(!LECT[a] && !(VUE.on && VUE_LECT[a])){ if(!NEUTRE[a] && !/_liste$|_fichier$/.test(a || "")){ RCACHE = {}; viderPerso(); } return appelBrut(corps); }
+  if(RD_FRAIS.test(a || "")) return appelBrut(corps);
+  if(!LECT[a] && !(VUE.on && VUE_LECT[a])){ if(!NEUTRE[a] && !/_liste$|_fichier$/.test(a || "")){ RCACHE = {}; RC_GEN++; viderPerso(); } return appelBrut(corps); }
   var k = cleLecture(corps), e = RCACHE[k], t = Date.now();
   if(e && t - e.t < 1800000){
-    if(t - e.t > 20000 && !e.maj){ e.maj = 1; enArriere(function(){ return appelBrut(corps); }).then(function(r){ if(r && r.ok){ RCACHE[k] = {t: Date.now(), p: Promise.resolve(r)}; ecrirePerso(a, k, r); } }).catch(function(){}); }
+    if(t - e.t > 20000 && !e.maj){ e.maj = 1; var g0 = RC_GEN; enArriere(function(){ return appelBrut(corps); }).then(function(r){ if(r && r.ok && g0 === RC_GEN){ RCACHE[k] = {t: Date.now(), p: Promise.resolve(r)}; ecrirePerso(a, k, r); } }).catch(function(){}); }
     return e.p.then(copie);
   }
   var v = lirePerso(a, k);
   if(v){   // copie gardée sur l'appareil: affichée tout de suite, version fraîche chargée en silence
-    RCACHE[k] = {t: t, p: Promise.resolve(v.r), maj: 1};
-    enArriere(function(){ return appelBrut(corps); }).then(function(r){ if(r && r.ok){ RCACHE[k] = {t: Date.now(), p: Promise.resolve(r)}; ecrirePerso(a, k, r); } }).catch(function(){});
+    RCACHE[k] = {t: t, p: Promise.resolve(v.r), maj: 1}; var g1 = RC_GEN;
+    enArriere(function(){ return appelBrut(corps); }).then(function(r){ if(r && r.ok && g1 === RC_GEN){ RCACHE[k] = {t: Date.now(), p: Promise.resolve(r)}; ecrirePerso(a, k, r); } }).catch(function(){});
     return Promise.resolve(copie(v.r));
   }
   var p = appelBrut(corps); RCACHE[k] = {t: t, p: p};
