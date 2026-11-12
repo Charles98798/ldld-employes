@@ -17,7 +17,7 @@ function rdDemoSection(cle){
 }
 function rdCapHtml(c){ return c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return rdPuces(p); }).join("")+'</div>' : rdMsg("Capsule non disponible"); }
 // Cache par appareil des dernières vraies données (département, section, période): jamais de fictif au départ.
-function rdCacheCle(cle){ var p = RD.periode || {t:"mois"}; return "ldld-rdc-"+RD.dep+"-"+cle+"-"+(p.t === "mois" ? "m" : (p.du || "")+(p.au || "")); }
+function rdCacheCle(cle, dep, per){ var p = per || RD.periode || {t:"mois"}; return "ldld-rdc-"+(dep || RD.dep)+"-"+cle+"-"+(p.t === "mois" ? "m" : (p.du || "")+(p.au || "")); }
 function rdCacheLire(k){ try { return JSON.parse(localStorage.getItem(k) || "null"); } catch(e){ return null; } }
 function rdCacheEcrire(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 function rdInit(cle){ var c = rdCacheLire(rdCacheCle(cle)); return c && c.ok && !c.attente ? rdRendreSection(cle, c) : rdMsg("Un instant"); }
@@ -457,6 +457,11 @@ function rdRendreSection(cle, r){
 }
 function rdPresentation(){
   if(!rdPeutPlanifier()){ rdPoints(); return; }
+  // Jeton de page: toute réponse tardive (autre département, page quittée, ancienne demande) est ignorée.
+  var tok = RD.tok = (RD.tok || 0) + 1, depP = RD.dep, planifOk = false, planifEchec = false, pubR = null;
+  // Points: le brouillon (rd_planif_lire) est la seule source affichée; le publié ne sert qu'en secours si la lecture du brouillon échoue.
+  function pubSecours(){ var zp = document.getElementById("rds-pts"); if(courant() && pubR && zp && !planifOk) zp.innerHTML = rdPointsHtml(pubR); }
+  function courant(){ return RD.tok === tok && RD.dep === depP; }
   var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
   h += rdMenuHtml("pres");
   h += '<div class="chx" id="rdch">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div>';
@@ -479,7 +484,8 @@ function rdPresentation(){
     var per = RD.periode || {t:"mois"};
     RD_SECTIONS.forEach(function(s){
       var z0 = document.getElementById("rds-"+s[0]); if(z0) z0.innerHTML = rdInit(s[0]);
-      appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: RD.dep, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]), ck = rdCacheCle(s[0]); if(r && r.ok && !r.attente && !(s[0] === "charge" && !(r.equipes || []).length)) rdCacheEcrire(ck, r); else { var c = rdCacheLire(ck); if(c && c.ok) r = c; } if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z && !RD_DEMO) z.innerHTML = rdMsg("Réseau indisponible"); });
+      var nReq = RD["req_"+s[0]] = (RD["req_"+s[0]] || 0) + 1;
+      appelService({action: "rd_chiffres", session: sessionGardee(), section: s[0], departement: depP, periode: per.t, du: per.du || "", au: per.au || ""}).then(function(r){ var z = document.getElementById("rds-"+s[0]), ck = rdCacheCle(s[0], depP, per); if(r && r.ok && !r.attente && !(s[0] === "charge" && !(r.equipes || []).length)) rdCacheEcrire(ck, r); if(!courant() || RD["req_"+s[0]] !== nReq) return; if(r && r.ok && !r.attente && !(s[0] === "charge" && !(r.equipes || []).length)) rdCacheEcrire(ck, r); else { var c = rdCacheLire(ck); if(c && c.ok) r = c; } if(z) z.innerHTML = rdRendreSection(s[0], r); }).catch(function(){ var z = document.getElementById("rds-"+s[0]); if(z && !RD_DEMO) z.innerHTML = rdMsg("Réseau indisponible"); });
     });
   }
   var sp = document.getElementById("rdper"), sl = document.getElementById("rdpl");
@@ -489,9 +495,10 @@ function rdPresentation(){
     var m0 = mois18[0]; if(!RD.periode || RD.periode.t === "an") RD.periode = {t: "mois", du: m0.du, au: m0.au};
     mois18.forEach(function(m){ if(m.cle === RD.moisSel) RD.periode = {t: m === m0 ? "mois" : "dates", du: m.du, au: m.au}; });
   }
-  rdApresEcritures(function(){ var dep0 = RD.dep; appelService({action: "rd_planif_lire", session: sessionGardee(), departement: dep0}).then(function(r){
-    if(!r || !r.ok || RD.dep !== dep0) return; rdCacheEcrire("ldld-rdd-"+dep0, r);
-    var h = rdPointsPlanifHtml(r), zp = document.getElementById("rds-pts"); if(zp && h){ zp.setAttribute("data-brouillon", "1"); zp.innerHTML = h; } }).catch(function(){}); });
+  rdApresEcritures(function(){ var dep0 = depP; appelService({action: "rd_planif_lire", session: sessionGardee(), departement: dep0}).then(function(r){
+    if(!r || !r.ok){ planifEchec = true; pubSecours(); return; } rdCacheEcrire("ldld-rdd-"+dep0, r);
+    if(!courant()) return; planifOk = true;
+    var h = rdPointsPlanifHtml(r), zp = document.getElementById("rds-pts"); if(zp && h){ zp.setAttribute("data-brouillon", "1"); zp.innerHTML = h; } else if(zp){ planifOk = false; planifEchec = true; zp.innerHTML = rdPointsHtml(pubR || {}); } }).catch(function(){ planifEchec = true; pubSecours(); }); });
   chargerChiffres();
-  appelService({action: "rd_points_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok !== false && (r.points || r.capsule)) rdCacheEcrire("ldld-rdp-"+RD.dep, r); var zp = document.getElementById("rds-pts"); if(zp && !zp.getAttribute("data-brouillon")) zp.innerHTML = rdPointsHtml(r); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return rdPuces(p); }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
+  appelService({action: "rd_points_lire", session: sessionGardee(), departement: depP}).then(function(r){ if(r && r.ok !== false && (r.points || r.capsule)) rdCacheEcrire("ldld-rdp-"+depP, r); if(!courant()) return; pubR = r; if(planifEchec) pubSecours(); var z = document.getElementById("rds-cap"); if(!z) return; var c = (r && r.capsule) || (RD_DEMO ? RD_DEMO_CAPS : null); z.innerHTML = c ? '<div class="rdp"><b>'+rdE(c.titre || "")+'</b>'+(c.points || []).map(function(p){ return rdPuces(p); }).join("")+'</div>' : rdMsg("Capsule non disponible"); }).catch(function(){ var zp = document.getElementById("rds-pts"), zc = document.getElementById("rds-cap"); if(zp && !RD_DEMO) zp.innerHTML = rdMsg("Réseau indisponible"); if(zc && !RD_DEMO) zc.innerHTML = rdMsg("Réseau indisponible"); });
 }
