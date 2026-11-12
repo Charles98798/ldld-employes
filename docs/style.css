@@ -952,3 +952,7 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 /* Règle: le choix actif d'un groupe de boutons = option C (taupe pâle, texte noir, soulignement vert 4 px à l'intérieur); les autres plus pâles */
 .chx button[aria-pressed="true"],.choixc[aria-pressed="true"]{background:#B7B1A5!important;color:#1D1D1B!important;opacity:1!important;box-shadow:inset 0 -4px 0 #8EFF60!important}
 .chx button[aria-pressed="false"],.choixc[aria-pressed="false"]{background:#D9D6CE!important;color:#6E6350!important;opacity:1!important;box-shadow:none!important}
+
+/* Retrait suspendu des puces: la suite d'une ligne s'aligne sous la première lettre, jamais sous la puce */
+.pu{display:flex;gap:.55em;align-items:flex-start}.pu span:first-child{flex:none}.pu span:last-child{flex:1;min-width:0}
+.bandeau,.etq,.etiq{padding-left:1em!important;text-indent:-1em}

@@ -85,7 +85,7 @@ function ccPresentation(){
     if(!l || !l.length){ z.style.display = "none"; z.innerHTML = ""; return; }
     z.style.display = "";
     z.innerHTML = '<div class="rdt">05 <span>Commentaires clients</span></div><div class="rdp" style="margin-top:-6px"><small>Depuis la dernière réunion</small></div>' + l.map(function(c){
-      return '<div class="rdp"><small>'+rdE(c.date)+ccPastille(c.type)+'</small><div style="white-space:pre-line">'+rdE(c.texte)+'</div>'+ccVignettes(c.photos)+'</div>'; }).join("");
+      return '<div class="rdp"><small>'+rdE(c.date)+ccPastille(c.type)+'</small><div>'+rdPuces(c.texte)+'</div>'+ccVignettes(c.photos)+'</div>'; }).join("");
     ccRemplirImgs(z); ccLierVignettes(z);
     var ids = []; l.forEach(function(c){ (c.photos || []).forEach(function(p){ ids.push(p.m); }); });
     ccPhotos(ids, true, function(){ var zz = document.getElementById("rdcc"); if(zz) ccRemplirImgs(zz); });
@@ -98,7 +98,7 @@ function ccPresentation(){
 function ccListeHtml(l){
   if(!l || !l.length) return "";
   return '<div class="rdsm">Commentaires clients · '+rdE(RD.dep)+'</div>' + l.map(function(c){
-    return '<div class="rdp"><small>'+rdE(c.date)+ccPastille(c.type)+((c.photos || []).length ? ' · '+c.photos.length+(c.photos.length > 1 ? " photos" : " photo") : "")+'</small><div class="rdl2"><div class="rdtx" style="white-space:pre-line">'+rdE(c.texte)+'</div>'+rdIcones("data-cm", rdE(c.id), "data-cr", rdE(c.id))+'</div></div>'; }).join("");
+    return '<div class="rdp"><small>'+rdE(c.date)+ccPastille(c.type)+((c.photos || []).length ? ' · '+c.photos.length+(c.photos.length > 1 ? " photos" : " photo") : "")+'</small><div class="rdl2"><div class="rdtx">'+rdPuces(c.texte)+'</div>'+rdIcones("data-cm", rdE(c.id), "data-cr", rdE(c.id))+'</div></div>'; }).join("");
 }
 function ccListePlanif(){
   var dep = RD.dep;
