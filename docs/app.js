@@ -691,6 +691,13 @@ function prechargerDocs(){
   }));
 }
 document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && sessionGardee() && MOI){ prechargerDocs(); precharger(); prechargerLectures(); } });
+// Accès coupé (employé devenu inactif ou retiré): à chaque retour à l'application, au plus une vérification par 3 minutes; si le Service refuse, la session et toutes les données gardées sur l'appareil sont effacées.
+var ACCES_T = 0;
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState !== "visible" || !MOI || VUE.on || vueComme() || Date.now() - ACCES_T < 180000) return;
+  var s = sessionGardee(); if(!s) return; ACCES_T = Date.now();
+  appelBrut({action:"moi", session:s}).then(function(r){ if(r && r.ok === false && sessionGardee() === s){ garderSession(null); MOI = null; connexion(); } }).catch(function(){});
+});
 // Visionneuse intégrée (consultation seulement) : le PDF est dessiné page par page dans l'application, sans barre ni bouton d'enregistrement.
 function chargerScript(src){ return new Promise(function(ok, ko){ var s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }); }
 function visionneuse(titre, blob, retour){
