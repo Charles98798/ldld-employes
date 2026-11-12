@@ -35,19 +35,37 @@ function ccVignettes(photos, grandes){
     return '<img alt="Photo '+(i + 1)+'" data-ph="'+rdE(p.m)+'" data-g="'+rdE(p.g)+'" style="'+w+'" src="'+rdE(ccImgLire(p.m))+'">'; }).join("")+'</div>';
 }
 function ccLierVignettes(racine){
-  Array.prototype.forEach.call(racine.querySelectorAll("img[data-g]"), function(im){ im.onclick = function(){ ccAgrandir(im.getAttribute("data-g"), im.getAttribute("src")); }; });
+  Array.prototype.forEach.call(racine.querySelectorAll("img[data-g]"), function(im){ im.onclick = function(){
+    var fr = Array.prototype.slice.call(im.parentNode.querySelectorAll("img[data-g]"));
+    ccAgrandir(fr.map(function(x){ return {g: x.getAttribute("data-g"), m: x.getAttribute("data-ph")}; }), fr.indexOf(im)); }; });
 }
-function ccAgrandir(g, miniUrl){
+// Visionneuse: flèches précédente/suivante (exception demandée par Charles, limitée à cette visionneuse), glisser gauche/droite, X pour fermer
+function ccAgrandir(liste, i){
   var o = document.createElement("div");
-  o.style.cssText = "position:fixed;left:0;top:0;right:0;bottom:0;z-index:1000;background:rgba(29,29,27,.94);display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box";
+  o.style.cssText = "position:fixed;left:0;top:0;right:0;bottom:0;z-index:1000;background:rgba(29,29,27,.94);display:flex;align-items:center;justify-content:center;padding:56px 12px;box-sizing:border-box;touch-action:pan-y";
   var im = document.createElement("img"); im.alt = "Photo agrandie"; im.style.cssText = "max-width:100%;max-height:100%;display:block;object-fit:contain";
-  im.src = ccImgLire(g) || miniUrl || "";
   o.appendChild(im);
+  var bs = "position:absolute;background:#B7B1A5;color:#1D1D1B;border:0;border-radius:0;width:44px;height:44px;font-size:22px;line-height:44px;text-align:center;cursor:pointer;padding:0;font-family:inherit;";
+  function bouton(txt, css, label, f){ var b = document.createElement("button"); b.type = "button"; b.textContent = txt; b.setAttribute("aria-label", label); b.style.cssText = bs + css; b.onclick = function(e){ e.stopPropagation(); f(); }; o.appendChild(b); return b; }
   var fermer = function(){ if(o.parentNode) o.parentNode.removeChild(o); document.removeEventListener("keydown", cle); };
-  var cle = function(e){ if(e.key === "Escape") fermer(); };
-  o.onclick = fermer; document.addEventListener("keydown", cle);
+  var prec = bouton("\u2190", "left:12px;top:50%;margin-top:-22px", "Photo précédente", function(){ aller(i - 1); });
+  var suiv = bouton("\u2192", "right:12px;top:50%;margin-top:-22px", "Photo suivante", function(){ aller(i + 1); });
+  bouton("\u2715", "right:12px;top:calc(12px + env(safe-area-inset-top,0px))", "Fermer", fermer);
+  function aller(n){
+    if(n < 0 || n >= liste.length) return; i = n;
+    var p = liste[i], g = ccImgLire(p.g);
+    im.src = g || ccImgLire(p.m) || "";
+    prec.style.display = i > 0 ? "" : "none"; suiv.style.display = i < liste.length - 1 ? "" : "none";
+    if(!g) ccPhotos([p.g], false, function(){ if(liste[i] === p){ var u = ccImgLire(p.g); if(u) im.src = u; } });
+  }
+  var cle = function(e){ if(e.key === "Escape") fermer(); else if(e.key === "ArrowLeft") aller(i - 1); else if(e.key === "ArrowRight") aller(i + 1); };
+  var x0 = null;
+  o.addEventListener("touchstart", function(e){ x0 = e.touches.length === 1 ? e.touches[0].clientX : null; }, {passive: true});
+  o.addEventListener("touchend", function(e){ if(x0 === null) return; var dx = e.changedTouches[0].clientX - x0; x0 = null; if(Math.abs(dx) > 50) aller(dx < 0 ? i + 1 : i - 1); }, {passive: true});
+  o.onclick = fermer;
+  document.addEventListener("keydown", cle);
   document.body.appendChild(o);
-  if(!ccImgLire(g)) ccPhotos([g], false, function(){ var u = ccImgLire(g); if(u) im.src = u; });
+  aller(i);
 }
 
 // ---- Lecture
