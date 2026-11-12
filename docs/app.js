@@ -294,13 +294,13 @@ function prechargerAgendas(){
   } catch(e){}
 }
 function precharger2(){
+  chercher("heures", {action:"heures"}).catch(function(){});   // les heures en premier: page la plus ouverte, lecture la plus lente
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
   chercher("tableau", {action:"tableau"}).catch(function(){});
   chercher("tableau_courant", {action:"tableau_courant"}).catch(function(){});
   chercher("incendie_texte", {action:"incendie_texte"}).catch(function(){});
   chercher("manuel_texte", {action:"manuel_texte"}).catch(function(){});
   chercher("calendrier", {action:"calendrier"}).catch(function(){});
-  chercher("heures", {action:"heures"}).catch(function(){});
   if(MOI && (MOI.role === "direction" || MOI.role === "responsable")) prechargerAgendas();
   chercher("stationnement", {action:"stationnement"}).catch(function(){});
   if(MOI && (MOI.role === "direction" || MOI.role === "responsable")) chercher("contacts", {action:"contacts"}).catch(function(){});
