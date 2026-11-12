@@ -200,7 +200,7 @@ function rdBase(donnees, edition){
       : '<div class="rdl2"><div class="rdtx">'+rdPuces(p.texte)+'</div>'+rdIcones("data-m",rdE(p.id),"data-r",rdE(p.id))+'</div>')+'</div>'; }).join("");
   if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point de base</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
   h += '<div class="rdgrid"><button type="button" class="rdsoft" id="rdadd">Ajouter un point de base</button><button type="button" class="rdsoft" id="rdfin">Retour aux points de la réunion</button></div>';
-  h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Ces points de base servent de départ à chaque nouvelle réunion. Ils ne changent pas la réunion en cours.</small></div><div id="rdm"></div>';
+  h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Ces points de base servent de départ à chaque nouvelle réunion du département '+rdE(RD.dep)+' seulement. Ils ne changent ni les autres départements ni la réunion en cours.</small></div><div id="rdm"></div>';
   z.innerHTML = h;
   var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
   function appliquer(r){ if(r && r.ok){ rdBase(r); dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
