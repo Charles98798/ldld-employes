@@ -88,7 +88,7 @@ function rdAutoVider(){ RD_AUTO_VIDER = RD_AUTO_VIDER.filter(function(x){ return
 document.addEventListener("visibilitychange", function(){ if(document.hidden) rdAutoVider(); });
 window.addEventListener("pagehide", rdAutoVider);
 // Écran immuable une fois affiché: une zone n'est redessinée que si son contenu change réellement. Petit journal local (version, département, source, résultat) pour voir ce qui change.
-var RD_V = "323";
+var RD_V = "324";
 // Lecture monotone: un texte écrit depuis cet appareil il y a moins de 2 minutes ne peut pas être remplacé à l'écran par une lecture plus ancienne (dernière écriture gagne).
 var RD_ECRIT = {};
 function rdNoterEcrit(dep, id, texte){ if(!id) return; (RD_ECRIT[dep] = RD_ECRIT[dep] || {})[id] = {texte: texte, t: Date.now()}; }
@@ -209,6 +209,12 @@ function rdDiscussion(donnees, edition){
   function ecrire(corps){ appelService(corps).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); }
   // Les points fictifs deviennent de vrais points écrits au service au premier enregistrement (modifier, retirer, ajouter ou publier).
   function materialiser(exclure, remplace, texteNouveau, apres){
+    if(RD.mat) return;
+    appelService({action: "rd_planif_lire", session: sessionGardee(), departement: RD.dep}).then(function(g){
+      if(g && g.ok && (g.points || []).length){ RD_PLAN = g; rdDiscussion(g); dire("Points à jour · recommencez"); return; }
+      materialiser0(exclure, remplace, texteNouveau, apres); }).catch(function(){ dire("Réseau indisponible"); });
+  }
+  function materialiser0(exclure, remplace, texteNouveau, apres){
     if(RD.mat) return; RD.mat = true;   // un seul enregistrement à la fois: jamais de points écrits en double
     var liste = RD_DEMO_PTS.filter(function(p){ return "demo-"+p.n !== exclure; }).map(function(p){ return "demo-"+p.n === remplace.id ? remplace.texte : p.texte; });
     if(texteNouveau) liste.push(texteNouveau);
@@ -226,6 +232,12 @@ function rdDiscussion(donnees, edition){
     var reel = !fictif;
     // Exemples fictifs: au premier enregistrement ils deviennent de vrais points (sans quitter le champ), puis la modification continue sur le vrai point.
     function matSilencieux(t){
+      // Garde: si de vrais points existent déjà (lecture précédente vide ou périmée), on n'écrit JAMAIS les exemples (pas de doublons): on recharge la vraie liste.
+      return appelService({action: "rd_planif_lire", session: sessionGardee(), departement: RD.dep}).then(function(g){
+        if(g && g.ok && (g.points || []).length){ RD_PLAN = g; rdCacheEcrire("ldld-rdd-"+RD.dep, g); rdDiscussion(g); dire("Points à jour · modifiez à nouveau"); throw 0; }
+        return matSilencieux2(t); });
+    }
+    function matSilencieux2(t){
       var liste = RD_DEMO_PTS.map(function(p){ return ("demo-"+p.n) === edition ? t : p.texte; }); if(edition === "nouveau") liste.push(t);
       var idx = edition === "nouveau" ? liste.length - 1 : RD_DEMO_PTS.map(function(p){ return "demo-"+p.n; }).indexOf(edition);
       var suite = Promise.resolve(null);
@@ -267,6 +279,12 @@ function rdBase(donnees, edition){
   var dire = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); };
   function appliquer(r){ if(r && r.ok){ rdBase(r); dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }
   function materialiser(exclure, remplace, texteNouveau){
+    if(RD.mat) return;
+    appelService({action: "rd_base_lire", session: sessionGardee(), departement: RD.dep}).then(function(g){
+      if(g && g.ok && (g.points || []).length){ rdBase(g); return; }
+      materialiser0(exclure, remplace, texteNouveau); }).catch(function(){ dire("Réseau indisponible"); });
+  }
+  function materialiser0(exclure, remplace, texteNouveau){
     if(RD.mat) return; RD.mat = true;
     var liste = RD_DEMO_PTS.filter(function(p){ return "demo-"+p.n !== exclure; }).map(function(p){ return "demo-"+p.n === remplace.id ? remplace.texte : p.texte; });
     if(texteNouveau) liste.push(texteNouveau);
@@ -283,6 +301,11 @@ function rdBase(donnees, edition){
     var idA = edition === "nouveau" ? "" : edition;
     var reel = !fictif;
     function matSilencieux(t){
+      return appelService({action: "rd_base_lire", session: sessionGardee(), departement: RD.dep}).then(function(g){
+        if(g && g.ok && (g.points || []).length){ rdBase(g); throw 0; }
+        return matSilencieux2(t); });
+    }
+    function matSilencieux2(t){
       var liste = RD_DEMO_PTS.map(function(p){ return ("demo-"+p.n) === edition ? t : p.texte; }); if(edition === "nouveau") liste.push(t);
       var idx = edition === "nouveau" ? liste.length - 1 : RD_DEMO_PTS.map(function(p){ return "demo-"+p.n; }).indexOf(edition);
       var suite = Promise.resolve(null);
