@@ -150,7 +150,61 @@ function suiteAppels(){
 }
 setInterval(suiteAppels, 5000);
 document.addEventListener("visibilitychange", function(){ if(!document.hidden) suiteAppels(); });
+// Copie de lecture (Supabase, par le « guichet »). Seulement les heures, seulement quand l'interrupteur « heures » indique la copie, jamais en vue « employé au hasard », jamais de salaire. Au moindre doute (jeton, réseau, copie vide, vieille, d'un autre jour), la lecture directe de Google prend le relais: jamais de chiffre faux.
+var COPIE = {url:null, jeton:null, exp:0, interr:null, interrT:0, hors:0, prep:null};
+function torontoMaintenant(){
+  var p = {}; new Intl.DateTimeFormat("en-CA", {timeZone:"America/Toronto", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", weekday:"short", hourCycle:"h23"}).formatToParts(new Date()).forEach(function(x){ p[x.type] = x.value; });
+  return {date: p.year + "-" + p.month + "-" + p.day, min: Number(p.hour) * 60 + Number(p.minute), semaine: !/^(Sat|Sun)/.test(p.weekday)};
+}
+function minutesTexte(t){ var m = /^(\d{1,2}):(\d{2})/.exec(String(t || "")); return m ? Number(m[1]) * 60 + Number(m[2]) : null; }
+// Même calcul que le service (total du jour): segments entrée/sortie, segment ouvert jusqu'à maintenant, dîner d'une heure déduit s'il n'y a qu'une entrée et que la fin dépasse 13 h, plus l'ajustement.
+function totalJourCopie(pts, aj, now){
+  if(!pts.length) return null;
+  var p = pts.map(function(x){ return {h: minutesTexte(x.t), s: x.s}; }); if(p.some(function(x){ return x.h === null; })) return undefined;
+  p.sort(function(a, b){ return a.h - b.h; });
+  var t = 0, debut = null, n = 0;
+  p.forEach(function(x){ if(x.s === "entree"){ n++; if(debut === null) debut = x.h; } else if(x.s === "sortie" && debut !== null){ t += x.h - debut; debut = null; } });
+  if(debut !== null) t += Math.max(0, now - debut);
+  if(n === 1){ var sorties = p.filter(function(x){ return x.s === "sortie"; }).length, fin = sorties ? p[p.length - 1].h : now; if(fin > 780) t = Math.max(0, t - 60); }
+  return t + (aj || 0);
+}
+function guichetCopie(corps){
+  var ctl = window.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function(){ ctl.abort(); }, 6000) : 0;
+  return fetch(COPIE.url, {method:"POST", headers:{"Content-Type":"application/json", "Authorization":"Bearer " + COPIE.jeton}, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined})
+    .then(function(r){ clearTimeout(t); if(!r.ok) throw new Error("guichet " + r.status); return r.json(); }, function(e){ clearTimeout(t); throw e; });
+}
+function copiePreparer(corps){
+  if(COPIE.jeton && COPIE.exp - Date.now() > 60000 && COPIE.interr && Date.now() - COPIE.interrT < 300000) return Promise.resolve();
+  if(COPIE.prep) return COPIE.prep;
+  var p = appelDirectGoogle({action:"jeton_copie", session: corps && corps.session !== undefined ? corps.session : sessionGardee()}).then(function(r){
+    if(!r || !r.ok || !r.jeton || !r.url) throw new Error("jeton");
+    COPIE.url = r.url; COPIE.jeton = r.jeton; COPIE.exp = r.exp > 1e12 ? r.exp : r.exp * 1000;
+    return guichetCopie({action:"interrupteur"});
+  }).then(function(d){ if(!d || !d.ok) throw new Error("interrupteur"); COPIE.interr = {}; (d.interrupteurs || []).forEach(function(x){ COPIE.interr[x.domaine] = x.source; }); COPIE.interrT = Date.now(); });
+  COPIE.prep = p; var fin = function(){ COPIE.prep = null; }; p.then(fin, fin); return p;
+}
+function copiePrete(){ return COPIE.jeton && COPIE.exp - Date.now() > 60000 && COPIE.interr && Date.now() - COPIE.interrT < 300000; }
+function copieHeures(corps){
+  return guichetCopie({action:"lire", domaine:"heures", cle:""}).then(function(d){
+    if(!d || !d.ok || d.vide || !d.reponse) throw new Error("vide");
+    var r = d.reponse, nu = torontoMaintenant();
+    if(!r.ok || r.auj !== nu.date) throw new Error("jour");                                  // la copie date d'un autre jour: on lit Google
+    if(typeof r.calcMin !== "number" || typeof r.ajAuj !== "number") throw new Error("ancienne");   // publiée avant l'ajout du moment de calcul: on lit Google
+    if(nu.semaine && nu.min >= 6 * 60 && nu.min <= 19 * 60 && Date.now() - Date.parse(d.maj_t) > 45 * 60000) throw new Error("vieille");   // en journée, la copie est rafraîchie aux 10 à 25 min
+    var v = totalJourCopie(r.pointagesAuj || [], r.ajAuj, nu.min); if(v === undefined) throw new Error("format");
+    r.minutesAuj = v; (r.cette || []).forEach(function(x){ if(x.date === r.auj) x.min = v; });
+    return r;
+  });
+}
+// La copie ne retarde jamais une lecture: tant qu'elle n'est pas prête (jeton + interrupteur), Google répond, et la préparation se fait en arrière-plan.
 function appelDirect(corps, vu){
+  if(corps && corps.action === "heures" && !VUE.on && !vueComme() && Date.now() > COPIE.hors){
+    if(!copiePrete()){ copiePreparer(corps).catch(function(){ COPIE.hors = Date.now() + 600000; }); return appelDirectGoogle(corps, vu); }
+    if(COPIE.interr.heures === "copie") return copieHeures(corps).catch(function(e){ if(!/^(jour|ancienne|vide)$/.test(String(e && e.message))) COPIE.hors = Date.now() + 60000; return appelDirectGoogle(corps, vu); });
+  }
+  return appelDirectGoogle(corps, vu);
+}
+function appelDirectGoogle(corps, vu){
   var ctl = window.AbortController ? new AbortController() : null; if(vu) vu(ctl);
   var  t = ctl ? setTimeout(function(){ ctl.abort(); }, corps && corps.action === "docusign_envoyer" ? 170000 : 60000) : 0;   // jamais de « CHARGEMENT… » sans fin
   return fetch(URL_SERVICE, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined})
@@ -215,7 +269,7 @@ function chercher(cle, corps){
   corps.session = sessionGardee();
   return appelService(corps).then(function(r){ if(r && r.ok && !VUE.on){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
 }
-function viderCache(){ CACHE = {}; RCACHE = {}; precharger.t = 0; MOI_PRE = null; VUE_PRE = null; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
+function viderCache(){ CACHE = {}; RCACHE = {}; COPIE = {url:null, jeton:null, exp:0, interr:null, interrT:0, hors:0, prep:null}; precharger.t = 0; MOI_PRE = null; VUE_PRE = null; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
 /** Affiche la copie locale (sans écran de chargement) puis remplace en silence si la version a changé. */
 function obtenir(cle, corps, afficher, erreur, majSilencieuse){
   var local = lireCache(cle);
