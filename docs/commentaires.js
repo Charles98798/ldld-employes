@@ -108,9 +108,13 @@ function ccListePlanif(){
     Array.prototype.forEach.call(z.querySelectorAll("[data-cm]"), function(a){ a.onclick = function(e){ e.preventDefault(); var id = a.getAttribute("data-cm"); var c = (l || []).filter(function(x){ return x.id === id; })[0]; if(c) ccFormulaire(c); }; });
     Array.prototype.forEach.call(z.querySelectorAll("[data-cr]"), function(a){ a.onclick = function(e){ e.preventDefault(); var id = a.getAttribute("data-cr");
       confirmerOuiNon("Retirer ce commentaire client ?", function(){
+        // Retrait immédiat à l'écran; la liste est relue si l'écriture échoue.
+        var reste = (l || []).filter(function(q){ return q.id !== id; }); l = reste; dessiner(reste);
+        ["tout", "derniere"].forEach(function(d){ try { localStorage.removeItem("ldld-cc-"+d+"-"+dep); } catch(e){} delete CC.liste[d+"-"+dep]; });
         appelService({action: "rd_commentaire_retirer", session: sessionGardee(), id: id}).then(function(r){
-          if(r && r.ok){ ["tout", "derniere"].forEach(function(d){ try { localStorage.removeItem("ldld-cc-"+d+"-"+dep); } catch(e){} delete CC.liste[d+"-"+dep]; }); ccListePlanif(); }
-        }).catch(function(){}); }, false); }; });
+          ["tout", "derniere"].forEach(function(d){ try { localStorage.removeItem("ldld-cc-"+d+"-"+dep); } catch(e){} delete CC.liste[d+"-"+dep]; });
+          if(!(r && r.ok)) ccListePlanif();
+        }).catch(function(){ ccListePlanif(); }); }, false); }; });
   }
   var c0 = ccCache(dep, "tout"); if(c0) dessiner(c0);
   ccLire(dep, "tout", dessiner);

@@ -88,15 +88,21 @@ function rdAutoVider(){ RD_AUTO_VIDER = RD_AUTO_VIDER.filter(function(x){ return
 document.addEventListener("visibilitychange", function(){ if(document.hidden) rdAutoVider(); });
 window.addEventListener("pagehide", rdAutoVider);
 // Écran immuable une fois affiché: une zone n'est redessinée que si son contenu change réellement. Petit journal local (version, département, source, résultat) pour voir ce qui change.
-var RD_V = "324";
+var RD_V = "325";
 // Lecture monotone: un texte écrit depuis cet appareil il y a moins de 2 minutes ne peut pas être remplacé à l'écran par une lecture plus ancienne (dernière écriture gagne).
-var RD_ECRIT = {};
-function rdNoterEcrit(dep, id, texte){ if(!id) return; (RD_ECRIT[dep] = RD_ECRIT[dep] || {})[id] = {texte: texte, t: Date.now()}; }
+var RD_ECRIT = {}, RD_SUPPR = {};
+function rdNoterEcrit(dep, id, texte, n){ if(!id) return; (RD_ECRIT[dep] = RD_ECRIT[dep] || {})[id] = {texte: texte, t: Date.now(), n: n || 0}; }
+function rdNoterSuppr(dep, id){ (RD_SUPPR[dep] = RD_SUPPR[dep] || {})[id] = Date.now(); if(RD_ECRIT[dep]) delete RD_ECRIT[dep][id]; }
 function rdAppliquerEcrit(dep, r){
-  var m = RD_ECRIT[dep]; if(!m || !r || !r.points) return r;
-  r.points.forEach(function(p){ var e = m[p.id]; if(e && Date.now() - e.t < 120000 && p.texte !== e.texte){ rdJournal(dep, "lecture-périmée-corrigée", String(p.id)); p.texte = e.texte; } });
+  if(!r || !r.points) return r;
+  var m = RD_ECRIT[dep] || {}, sp = RD_SUPPR[dep] || {}, now = Date.now(), vus = {};
+  r.points = r.points.filter(function(p){ if(sp[p.id] && now - sp[p.id] < 120000){ rdJournal(dep, "retrait-local-gardé", String(p.id)); return false; } return true; });
+  r.points.forEach(function(p){ vus[p.id] = 1; var e = m[p.id]; if(e && now - e.t < 120000 && p.texte !== e.texte){ rdJournal(dep, "lecture-périmée-corrigée", String(p.id)); p.texte = e.texte; } });
+  Object.keys(m).forEach(function(id){ var e = m[id]; if(!vus[id] && now - e.t < 120000 && !sp[id] && String(e.texte || "").trim()){ rdJournal(dep, "ajout-local-gardé", id); r.points.push({id: id, n: e.n || (r.points.length + 1), texte: e.texte, etat: "brouillon"}); } });
   return r;
 }
+// Copie locale de l'état en cours de Planification (lue tout de suite par la Présentation, avant la fin des écritures).
+function rdSauverLocal(){ if(!RD_PLAN || !RD.dep) return; rdCacheEcrire("ldld-rdd-"+RD.dep, {ok: true, points: (RD_PLAN.points || []).filter(function(p){ return String(p.texte || "").trim(); })}); }
 // Une fois par version: efface les copies de l'appareil de la Présentation (anciennes copies possiblement mélangées entre départements).
 (function(){ try { if(localStorage.getItem("ldld-rd-purge") !== RD_V){ Object.keys(localStorage).forEach(function(k){ if(/^ldld-rd[pdc]-/.test(k)) localStorage.removeItem(k); }); localStorage.setItem("ldld-rd-purge", RD_V); } } catch(e){} })();
 function rdJournal(dep, src, res){ try { var j = JSON.parse(localStorage.getItem("ldld-rd-journal") || "[]"); j.push({v: RD_V, d: dep, s: src, r: res, h: new Date().toTimeString().slice(0, 8)}); localStorage.setItem("ldld-rd-journal", JSON.stringify(j.slice(-60))); } catch(e){} }
@@ -175,14 +181,18 @@ function rdCommentairesPage(){
   z.innerHTML = '<div class="rdgrid" style="margin-top:12px"><button type="button" class="rdsoft" id="ccadd">Ajouter un commentaire client</button></div><div id="cclist"></div>';
   if(typeof ccFormulaire === "function"){ document.getElementById("ccadd").onclick = function(){ ccFormulaire(); }; ccListePlanif(); }
 }
-var RD_PLAN = null;
+var RD_PLAN = null, RD_TMP = 0, RD_TMPMAP = {}, RD_TMPSUPPR = {};
+function rdIdReel(id){ return RD_TMPMAP[id] || id; }
 function rdDiscussion(donnees, edition){
   var z = document.getElementById("rdz"); if(!z) return;
   if(!donnees){
     appelService({action: "rd_planif_lire", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(!document.getElementById("rdz")) return; if(!r || !r.ok){ document.getElementById("rdz").innerHTML = rdErreur(r); return; } rdAppliquerEcrit(RD.dep, r); RD_PLAN = r; rdDiscussion(r); }).catch(function(){ var q = document.getElementById("rdz"); if(q) q.innerHTML = rdMsg("Réseau indisponible"); });
     return;
   }
+  // Points locaux vides (ajout abandonné) retirés, sauf celui en cours de saisie.
+  donnees.points = (donnees.points || []).filter(function(p){ return !(p.tmp && !String(p.texte || "").trim() && p.id !== edition); });
   var pts = donnees.points || [], h = "", fictif = RD_DEMO && !pts.length;
+  if(!fictif){ RD_PLAN = donnees; rdSauverLocal(); }
   if(fictif) pts = RD_DEMO_PTS.map(function(p){ return {id: "demo-"+p.n, n: p.n, texte: p.texte, etat: "brouillon", demo: true}; });
   var estDemo = function(id){ return String(id).indexOf("demo-") === 0; };
   if(fictif && !donnees.date) h += '<div class="rddate">Mardi 17 novembre · 9 h 30</div>';
@@ -194,7 +204,7 @@ function rdDiscussion(donnees, edition){
     if(separe && lastG !== !!p.prochaine){ lastG = !!p.prochaine; ent = '<div class="rdsm">'+(lastG ? "Prochaine réunion · brouillon" : "Réunion en cours · publiée")+'</div>'; }
     return ent + (function(){
     return '<div class="rdp">'+'<small>Point '+rdE(p.n)+(p.etat === "brouillon" && !p.demo ? ' · brouillon' : '')+'</small>' + (enEdit
-      ? '<textarea class="rdzone" id="rdtx" maxlength="400" rows="3">'+rdE(p.texte)+'</textarea>'
+      ? '<textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point">'+rdE(p.texte)+'</textarea>'
       : '<div class="rdl2"><div class="rdtx">'+rdPuces(p.texte)+'</div>'+rdIcones("data-m",rdE(p.id),"data-r",rdE(p.id))+'</div>') + '</div>';
     })();
   }).join("");
@@ -222,13 +232,24 @@ function rdDiscussion(donnees, edition){
     liste.forEach(function(t){ suite = suite.then(function(){ return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: "", texte: t}); }); });
     suite.then(function(r){ RD.mat = false; if(apres && r && r.ok) return apres(r); appliquer(r); }).catch(function(){ RD.mat = false; dire("Réseau indisponible"); });
   }
-  Array.prototype.forEach.call(z.querySelectorAll("[data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); rdDiscussion(RD_PLAN, a.getAttribute("data-m")); }; });
-  Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); confirmerOuiNon("Retirer ce point ?", function(){ dire("Retrait en cours"); if(fictif){ materialiser(a.getAttribute("data-r"), {}, ""); return; } ecrire({action: "rd_point_retirer", session: sessionGardee(), departement: RD.dep, id: a.getAttribute("data-r")}); }, false); }; });
+  Array.prototype.forEach.call(z.querySelectorAll("[data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); rdDiscussion(RD_PLAN, rdIdReel(a.getAttribute("data-m"))); }; });
+  Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); confirmerOuiNon("Retirer ce point ?", function(){
+    var id0 = a.getAttribute("data-r"), id = rdIdReel(id0); if(fictif){ dire("Retrait en cours"); materialiser(id, {}, ""); return; }
+    // Retrait immédiat à l'écran, puis écriture au Service; l'écran revient en arrière si l'écriture échoue.
+    rdNoterSuppr(RD.dep, id); var avant = (RD_PLAN.points || []).slice(); RD_PLAN.points = avant.filter(function(p){ return p.id !== id && p.id !== id0; }); rdDiscussion(RD_PLAN);
+    if(String(id).indexOf("tmp-") === 0){ RD_TMPSUPPR[id] = true; return; }
+    var d2 = function(t){ var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg(t); }; d2("Retrait en cours");
+    appelService({action: "rd_point_retirer", session: sessionGardee(), departement: RD.dep, id: id}).then(function(r){
+      if(r && r.ok){ RD_ECRIT[RD.dep] && delete RD_ECRIT[RD.dep][id]; RD_PLAN = r; rdCacheEcrire("ldld-rdd-"+RD.dep, r); if(document.getElementById("rdz") && !document.getElementById("rdtx")) rdDiscussion(r); d2(rdHeureEnreg()); }
+      else { delete RD_SUPPR[RD.dep][id]; RD_PLAN.points = avant; rdDiscussion(RD_PLAN); d2((r && r.erreur) || "Non retiré · réessayez"); }
+    }).catch(function(){ delete RD_SUPPR[RD.dep][id]; RD_PLAN.points = avant; rdDiscussion(RD_PLAN); d2("Non retiré · réseau indisponible"); });
+  }, false); }; });
   var ok = document.getElementById("rdok"), no = document.getElementById("rdno");
   if(no) no.onclick = function(e){ e.preventDefault(); rdDiscussion(RD_PLAN); };
   (function(){
     var ta = document.getElementById("rdtx"); if(!ta) return;
-    var idA = edition === "nouveau" ? "" : edition;
+    ta.addEventListener("input", function(){ var q = ((RD_PLAN && RD_PLAN.points) || []).filter(function(p){ return p.id === edition; })[0]; if(q){ q.texte = ta.value; rdSauverLocal(); } });
+    var idA = (edition === "nouveau" || String(edition).indexOf("tmp-") === 0) ? "" : edition;
     var reel = !fictif;
     // Exemples fictifs: au premier enregistrement ils deviennent de vrais points (sans quitter le champ), puis la modification continue sur le vrai point.
     function matSilencieux(t){
@@ -245,9 +266,16 @@ function rdDiscussion(donnees, edition){
       return suite.then(function(r){ if(r && r.ok){ var L = r.points || []; if(L[L.length - liste.length + idx]) idA = L[L.length - liste.length + idx].id; rdNoterEcrit(RD.dep, idA, t); reel = true; RD_PLAN = r; rdCacheEcrire("ldld-rdd-"+RD.dep, r); dire(rdHeureEnreg()); } else { dire((r && r.erreur) || "Non enregistré · réessayez"); throw 0; } });
     }
     rdAuto(ta, function(t){ dire("Enregistrement en cours"); if(!reel) return matSilencieux(t).catch(function(){ dire("Non enregistré · réessayez"); throw 0; }); return appelService({action: "rd_point_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
-      if(r && r.ok){ if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; } rdNoterEcrit(RD.dep, idA, t); RD_PLAN = r; rdCacheEcrire("ldld-rdd-"+RD.dep, r); dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
+      if(r && r.ok){ if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; if(String(edition).indexOf("tmp-") === 0 && idA){ RD_TMPMAP[edition] = idA; if(RD_TMPSUPPR[edition]){ appelService({action: "rd_point_retirer", session: sessionGardee(), departement: RD.dep, id: idA}); } } } rdNoterEcrit(RD.dep, idA, t, (function(){ var q = (r.points || []).filter(function(p){ return p.id === idA; })[0]; return q ? q.n : 0; })()); var gardes = ((RD_PLAN && RD_PLAN.points) || []).filter(function(p){ return p.tmp && p.id !== edition; }); rdCacheEcrire("ldld-rdd-"+RD.dep, r); RD_PLAN = r; RD_PLAN.points = (r.points || []).concat(gardes); dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
   })();
-  document.getElementById("rdadd").onclick = function(){ rdDiscussion(RD_PLAN, "nouveau"); };
+  document.getElementById("rdadd").onclick = function(){
+    if(fictif){ rdDiscussion(RD_PLAN, "nouveau"); return; }
+    var L = (RD_PLAN.points || []).filter(function(p){ return !(p.tmp && !String(p.texte || "").trim()); });
+    RD_TMP = (RD_TMP || 0) + 1; var nmax = 0; L.forEach(function(p){ nmax = Math.max(nmax, +p.n || 0); });
+    var tmp = {id: "tmp-"+RD_TMP, n: nmax + 1, texte: "", etat: "brouillon", tmp: true};
+    RD_PLAN.points = L.concat([tmp]); rdDiscussion(RD_PLAN, tmp.id);
+    var ta = document.getElementById("rdtx"); if(ta) try { ta.focus(); } catch(e){}
+  };
   document.getElementById("rdpub").onclick = function(){ dire("Publication en cours"); if(fictif){ materialiser("", {}, "", function(){ return appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }); }); return; } appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); };
   document.getElementById("rdhist").onclick = function(){ rdHistorique(); };
   var bb = document.getElementById("rdbase"); if(bb) bb.onclick = function(){ rdBase(); };
@@ -293,7 +321,15 @@ function rdBase(donnees, edition){
     suite.then(function(r){ RD.mat = false; appliquer(r); }).catch(function(){ RD.mat = false; dire("Réseau indisponible"); });
   }
   Array.prototype.forEach.call(z.querySelectorAll("[data-m]"), function(a){ a.onclick = function(e){ e.preventDefault(); rdBase(donnees, a.getAttribute("data-m")); }; });
-  Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); confirmerOuiNon("Retirer ce point ?", function(){ dire("Retrait en cours"); if(fictif){ materialiser(a.getAttribute("data-r"), {}, ""); return; } appelService({action: "rd_base_retirer", session: sessionGardee(), departement: RD.dep, id: a.getAttribute("data-r")}).then(appliquer).catch(function(){ dire("Réseau indisponible"); }); }, false); }; });
+  Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); confirmerOuiNon("Retirer ce point ?", function(){
+    var id = a.getAttribute("data-r"); if(fictif){ dire("Retrait en cours"); materialiser(id, {}, ""); return; }
+    // Retrait immédiat à l'écran, puis écriture au Service; retour en arrière si l'écriture échoue.
+    var avant = donnees; donnees = {ok: true, points: (avant.points || []).filter(function(p){ return p.id !== id; })}; rdBase(donnees); dire("Retrait en cours");
+    appelService({action: "rd_base_retirer", session: sessionGardee(), departement: RD.dep, id: id}).then(function(r){
+      if(r && r.ok){ donnees = r; if(document.getElementById("rdz") && !document.getElementById("rdtx")) rdBase(r); dire(rdHeureEnreg()); }
+      else { rdBase(avant); dire((r && r.erreur) || "Non retiré · réessayez"); }
+    }).catch(function(){ rdBase(avant); dire("Non retiré · réseau indisponible"); });
+  }, false); }; });
   var ok = document.getElementById("rdok"), no = document.getElementById("rdno");
   if(no) no.onclick = function(e){ e.preventDefault(); rdBase(donnees); };
   (function(){
@@ -315,7 +351,7 @@ function rdBase(donnees, edition){
 rdAuto(ta, function(t){ dire("Enregistrement en cours"); if(!reel) return matSilencieux(t).catch(function(){ dire("Non enregistré · réessayez"); throw 0; }); return appelService({action: "rd_base_ecrire", session: sessionGardee(), departement: RD.dep, id: idA, texte: t}).then(function(r){
       if(r && r.ok){ donnees = r; if(!idA){ var L = r.points || []; if(L.length) idA = L[L.length - 1].id; } dire(rdHeureEnreg()); } else dire((r && r.erreur) || "Non enregistré · réessayez"); }).catch(function(){ dire("Réseau indisponible"); throw 0; }); }, false);
   })();
-  document.getElementById("rdadd").onclick = function(){ rdBase(donnees, "nouveau"); };
+  document.getElementById("rdadd").onclick = function(){ try { document.activeElement.blur(); } catch(e){} rdApresEcritures(function(){ rdBase(donnees, "nouveau"); }); };
   document.getElementById("rdfin").onclick = function(){ RD.vue = "discussion"; rdPlanif(); };
 }
 function rdHistorique(){
