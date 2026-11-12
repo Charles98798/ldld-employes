@@ -46,7 +46,7 @@ function rdPointsHtml(r){
 function rdPointsPlanifHtml(r){
   var pts = ((r && r.points) || []).filter(function(p){ return p && String(p.texte || "").trim(); });
   if(!pts.length) return null;
-  return '<div class="rdt">01 <span>Points de discussion</span></div>' + pts.map(function(p, i){ return '<div class="rdp"><small>Point '+rdE(p.n || (i + 1))+(p.etat === "brouillon" ? ' · brouillon' : '')+'</small><div>'+rdPuces(p.texte)+'</div></div>'; }).join("");
+  return '<div class="rdt">01 <span>Points de discussion</span></div>' + pts.map(function(p, i){ return '<div class="rdp"><small>Point '+rdE(p.n || (i + 1))+'</small><div>'+rdPuces(p.texte)+'</div></div>'; }).join("");
 }
 function rdCapPresCle(n){ return "ldld-rd-cap-" + n; }
 function rdCapPresNoter(n){ try { localStorage.setItem(rdCapPresCle(n), rdPubTexte(new Date())); } catch(e){} }
@@ -88,7 +88,7 @@ function rdAutoVider(){ RD_AUTO_VIDER = RD_AUTO_VIDER.filter(function(x){ return
 document.addEventListener("visibilitychange", function(){ if(document.hidden) rdAutoVider(); });
 window.addEventListener("pagehide", rdAutoVider);
 // Écran immuable une fois affiché: une zone n'est redessinée que si son contenu change réellement. Petit journal local (version, département, source, résultat) pour voir ce qui change.
-var RD_V = "321";
+var RD_V = "322";
 // Une fois par version: efface les copies de l'appareil de la Présentation (anciennes copies possiblement mélangées entre départements).
 (function(){ try { if(localStorage.getItem("ldld-rd-purge") !== RD_V){ Object.keys(localStorage).forEach(function(k){ if(/^ldld-rd[pdc]-/.test(k)) localStorage.removeItem(k); }); localStorage.setItem("ldld-rd-purge", RD_V); } } catch(e){} })();
 function rdJournal(dep, src, res){ try { var j = JSON.parse(localStorage.getItem("ldld-rd-journal") || "[]"); j.push({v: RD_V, d: dep, s: src, r: res, h: new Date().toTimeString().slice(0, 8)}); localStorage.setItem("ldld-rd-journal", JSON.stringify(j.slice(-60))); } catch(e){} }
