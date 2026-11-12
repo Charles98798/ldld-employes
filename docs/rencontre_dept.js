@@ -23,7 +23,7 @@ function rdCacheEcrire(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); 
 function rdInit(cle){ var c = rdCacheLire(rdCacheCle(cle)); return c && c.ok && !c.attente ? rdRendreSection(cle, c) : rdMsg("Un instant"); }
 function rdDemoMarque(){ return RD_DEMO ? '<div class="rdp"><small>▪ Données fictives pour essai</small></div>' : ""; }
 // Menu unique (même composant sur Présentation, Planification discussion, Planification capsule): bouton taupe pâli + liste à 3 choix, choix actif en vert.
-var RD_CHOIX = [["pres","Présentation"],["disc","Planification discussion"],["cap","Planification capsule"]];
+var RD_CHOIX = [["pres","Présentation"],["disc","Planification discussion"],["cap","Planification capsule"],["com","Planification commentaire"]];
 function rdMenuHtml(actif){
   var lib = ""; RD_CHOIX.forEach(function(c){ if(c[0] === actif) lib = c[1]; });
   return '<div class="rdbtn"><button type="button" class="rdplan" id="rdmenu" aria-expanded="false">'+rdE(lib)+'</button><div id="rdml" style="display:none;background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+RD_CHOIX.map(function(c){ return '<a href="#" data-c="'+c[0]+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1D1D1B;text-decoration:none;'+(c[0] === actif ? "background:#8EFF60;" : "")+'">'+rdE(c[1])+'</a>'; }).join("")+'</div></div>';
@@ -33,7 +33,7 @@ function rdMenuLier(actif){
   bm.onclick = function(){ var ouvert = lm.style.display !== "none"; lm.style.display = ouvert ? "none" : "block"; bm.setAttribute("aria-expanded", ouvert ? "false" : "true"); };
   Array.prototype.forEach.call(lm.querySelectorAll("a"), function(a){ a.onclick = function(e){ e.preventDefault(); var c = a.getAttribute("data-c");
     if(c === actif){ lm.style.display = "none"; bm.setAttribute("aria-expanded", "false"); return; }
-    if(c === "pres") rdPresentation(); else { RD.vue = c === "cap" ? "capsule" : "discussion"; rdPlanif(); } }; });
+    if(c === "pres") rdPresentation(); else { RD.vue = c === "cap" ? "capsule" : (c === "com" ? "commentaire" : "discussion"); rdPlanif(); } }; });
 }
 function rdPointsHtml(r){
   var pts = (r && r.points) || [], fict = RD_DEMO && !pts.length; if(fict) pts = RD_DEMO_PTS;
@@ -112,13 +112,20 @@ function rdPoints(){
 }
 
 // Planification: barre noire avec liste déroulante Discussion / Capsule.
-function rdBarre(){ return rdMenuHtml(RD.vue === "capsule" ? "cap" : "disc"); }
+function rdBarre(){ return rdMenuHtml(RD.vue === "capsule" ? "cap" : (RD.vue === "commentaire" ? "com" : "disc")); }
 function rdPlanif(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>'+rdBarre()+'<div id="rdz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); rdPoints(); };
-  rdMenuLier(RD.vue === "capsule" ? "cap" : "disc");
+  rdMenuLier(RD.vue === "capsule" ? "cap" : (RD.vue === "commentaire" ? "com" : "disc"));
   if(RD.vue === "capsule") return rdCapsules();
+  if(RD.vue === "commentaire") return rdCommentairesPage();
   rdDiscussion();
+}
+// Planification commentaire: ajout, modification et retrait des commentaires clients du département (sauvegarde automatique dans le formulaire).
+function rdCommentairesPage(){
+  var z = document.getElementById("rdz"); if(!z) return;
+  z.innerHTML = '<div class="rdgrid" style="margin-top:12px"><button type="button" class="rdsoft" id="ccadd">Ajouter un commentaire client</button></div><div id="cclist"></div>';
+  if(typeof ccFormulaire === "function"){ document.getElementById("ccadd").onclick = function(){ ccFormulaire(); }; ccListePlanif(); }
 }
 var RD_PLAN = null;
 function rdDiscussion(donnees, edition){
@@ -146,7 +153,6 @@ function rdDiscussion(donnees, edition){
   if(!pts.length && edition !== "nouveau") h += rdMsg("Aucun point pour la prochaine rencontre");
   if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea><div class="rdact"><a href="#" id="rdok">Enregistrer</a><a href="#" id="rdno">Annuler</a></div></div>';
   h += '<div class="rdgrid"><button type="button" class="rdsoft" id="rdadd">Ajouter un point</button>'+((MOI && MOI.role === "direction") ? '<button type="button" class="rdsoft" id="rdbase">Modifier les points de base</button>' : '<span></span>')+'<button type="button" class="rdsoft rdpubb" id="rdpub">Publier aux employés</button><button type="button" class="rdsoft" id="rdhist">Historique</button></div>';
-  if(typeof ccFormulaire === "function") h += '<div class="rdgrid" style="margin-top:12px"><button type="button" class="rdsoft" id="ccadd">Ajouter un commentaire client</button></div><div id="cclist"></div>';
   h += '<div class="rdp" style="margin-top:12px"><small>'+rdE("Dernière publication : " + (donnees.derniere_publication || rdPubLue() || "jamais"))+'</small></div>';
   h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Chaque réunion repart des points de base. Vos modifications ci-dessus ne touchent que cette réunion.</small></div><div id="rdm"></div>';
   z.innerHTML = h;
@@ -171,7 +177,6 @@ function rdDiscussion(donnees, edition){
   document.getElementById("rdpub").onclick = function(){ dire("Publication en cours"); if(fictif){ materialiser("", {}, "", function(){ return appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }); }); return; } appelService({action: "rd_points_publier", session: sessionGardee(), departement: RD.dep}).then(function(r){ if(r && r.ok){ rdPubNoter(); RD_PLAN = r; rdDiscussion(r); var m = document.getElementById("rdm"); if(m) m.innerHTML = rdMsg("Publié aux employés · " + rdPubTexte(new Date())); } else dire((r && r.erreur) || "Non publié · réessayez"); }).catch(function(){ dire("Réseau indisponible"); }); };
   document.getElementById("rdhist").onclick = function(){ rdHistorique(); };
   var bb = document.getElementById("rdbase"); if(bb) bb.onclick = function(){ rdBase(); };
-  var ca = document.getElementById("ccadd"); if(ca){ ca.onclick = function(){ ccFormulaire(); }; ccListePlanif(); }
 }
 
 // Points de base du département (Direction seulement): chaque nouvelle réunion repart d'une copie. Modifier ici ne change que les réunions futures.
