@@ -360,6 +360,28 @@ var RD_SECTIONS = [
 ];
 // RÈGLE UNIVERSELLE: une liste qui porte une date l'affiche en colonnes Date | Cas (description dessous) | Étape.
 function rdEstDate(t){ return /^\d{4}-\d{2}-\d{2}/.test(String(t || "")); }
+// Toute date reçue (AAAA-MM-JJ, « 2 oct. », JJ/MM/AAAA…) devient AAAA-MM-JJ; sans année, l'année la plus récente qui n'est pas dans le futur.
+function rdIsoDate(t){
+  t = String(t == null ? "" : t).trim(); var m;
+  if(/^\d{4}-\d{2}-\d{2}/.test(t)) return t.slice(0, 10);
+  if((m = /^(\d{4})[\/.](\d{1,2})[\/.](\d{1,2})/.exec(t))) return m[1]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[3]).slice(-2);
+  if((m = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/.exec(t))) return m[3]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[1]).slice(-2);
+  var mois = ["janv","févr","mars","avr","mai","juin","juil","août","sept","oct","nov","déc"], f = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if((m = /^(\d{1,2})\s+([a-z]+)/.exec(f))){
+    var k = -1; mois.forEach(function(x, i){ if(k < 0 && f.slice(m[0].length - m[2].length, m[0].length).indexOf(x.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) === 0) k = i; });
+    if(k >= 0){ var n = new Date(), a = n.getFullYear(), d = new Date(a, k, +m[1]); if(d.getTime() > n.getTime() + 86400000) a--; return a+"-"+("0"+(k + 1)).slice(-2)+"-"+("0"+m[1]).slice(-2); }
+  }
+  return t;
+}
+// Lignes du Service -> [date, cas, description, étape] pour la liste en colonnes Date | Cas | Étape.
+function rdLignesCol(cle, L){
+  return (L || []).map(function(l){
+    if(cle === "nc"){ var cas = [l[2], l[1]].filter(function(x){ return x; }).join(" · "), desc = [cas ? l[4] : "", l[5]].filter(function(x){ return x; }).join(" · ");
+      return [rdIsoDate(l[0]), cas || l[4] || "", desc, l[3] || ""]; }
+    if(cle === "escomptes") return [rdIsoDate(l[0]), String(l[1] == null ? "" : l[1]).replace(/^\s*dossier\s*(n[o°]?\.?)?\s*/i, ""), "", l[2] || ""];
+    return [rdIsoDate(l[0])].concat(l.slice(1));
+  });
+}
 function rdListeDates(L, descs, col3, col2){
   var g = "display:grid;grid-template-columns:26% 44% 30%;gap:0 8px;";
   return '<div class="rdp" style="'+g+'font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>'+(col2 || "Cas")+'</span><span>'+(col3 || "Étape")+'</span></div>'+L.map(function(c, i){
@@ -430,7 +452,7 @@ function rdRendreSection(cle, r){
   }
   h += rdSerie(cle === "cas" ? "Cas non complétés par mois" : (cle === "nc" ? "Non-conformités par mois" : "Nombre de crédits par mois"), r.serie, r.serie_an_passe);
   var L = r.lignes || [];
-  h += L.length ? (L.every(function(l){ return l && l.length > 1 && rdEstDate(l[0]); }) ? rdListeDates(L, cle === "escomptes" ? r.descriptions : null, cle === "escomptes" ? "Montant" : "", cle === "escomptes" ? "Dossier" : "") : L.map(function(l){ return rdLigne(l); }).join("")) : (h ? "" : rdMsg("Aucune donnée pour cette période"));
+  h += L.length ? ((cle === "nc" || cle === "escomptes") ? rdListeDates(rdLignesCol(cle, L), cle === "escomptes" ? r.descriptions : null, cle === "escomptes" ? "Montant" : "", cle === "escomptes" ? "Dossier" : "") : L.every(function(l){ return l && l.length > 1 && rdEstDate(l[0]); }) ? rdListeDates(L) : L.map(function(l){ return rdLigne(l); }).join("")) : (h ? "" : rdMsg("Aucune donnée pour cette période"));
   return h;
 }
 function rdPresentation(){
