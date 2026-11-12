@@ -1279,7 +1279,7 @@ var NE_ETAPES = [
   {k:"cp", l:"Code postal", r:1, ty:"cp"}, {k:"tel", l:"Téléphone", r:1, ty:"tel"}, {k:"tel2", l:"Autre téléphone", ty:"tel"},
   {k:"courriel", l:"Courriel personnel", r:1, ty:"courriel"}]},
  {t:"Poste", c:[
-  {k:"cat", l:"Catégorie", r:1, o:["Administratif","Auxiliaire","Professionnel en informatique","Technologue","Gestionnaire / Expert"]},
+  {k:"cat", l:"Catégorie", r:1, o:["Administratif","Auxiliaire","Professionnel en informatique","Technologue","Gestionnaire","Expert technique"]},
   {k:"entree", l:"Date d'entrée en fonction", r:1, ty:"date"}, {k:"exp", l:"Expérience dans le métier (années)", r:1, ty:"nombre"},
   {k:"resp", l:"Responsable des évaluations", r:1, dyn:1, d:"CHARLES"}, {k:"prog", l:"Programme de reconnaissance", auto:1, si:function(v){ return !!NE_PROG[v.cat]; }}]},
  {t:"Horaire", c:[{k:"horaire", l:"Horaire", ty:"horaire"}, {k:"heures", l:"Heures par semaine", r:1, ty:"nombre", d:"40"}, {k:"arrivee", l:"Arrivée, première journée", r:1, ty:"heure", d:"08:00"}, {k:"accueil", l:"Personne qui accueille", r:1, dyn:1, d:"Charles Desjardins"}]},
@@ -1291,13 +1291,13 @@ var NE_ETAPES = [
  {t:"Bilan des responsabilités", c:[{k:"bilan", l:"Bilan", ty:"bilan"}]},
  {t:"Résumé", c:[{k:"comm", l:"Questions ou commentaires", ty:"long"}]}
 ];
-var NE_PROG = {"Gestionnaire / Expert":"Gestion", "Auxiliaire":"Production", "Technologue":"Production", "Professionnel en informatique":"Production"};
+var NE_PROG = {"Gestionnaire":"Gestion", "Expert technique":"Production", "Gestionnaire / Expert":"Gestion", "Auxiliaire":"Production", "Technologue":"Production", "Professionnel en informatique":"Production"};
 var NE_JOURS = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
 var NE_DOCS = ["Votre numéro d'assurance sociale.","Une copie de votre permis de travail, s'il y a lieu.","Un spécimen de chèque, ou une preuve de dépôt direct de votre institution financière.","Une copie de vos diplômes et de votre carte de membre d'un ordre professionnel, s'il y a lieu.","Une preuve d'adresse récente, ainsi que votre courriel, votre numéro de téléphone et votre date de naissance."];
 var NE_HOR_ADM = [["08:00","17:00"],["07:30","17:00"],["07:30","17:00"],["07:30","17:00"],["07:30","12:00"]];
 var NE_HOR_PROD = [["08:00","17:00"],["07:00","17:00"],["07:00","17:00"],["07:00","17:00"],["07:00","12:00"]];
 // Valeurs par défaut du classeur (calculées là-bas depuis les employés actifs; à relire du Service quand il les fournira)
-var NE_AVANT = {"Administratif":{assur:1500,otpadq:0,boni:"",vac:2,feries:10,maladie:6},"Auxiliaire":{assur:2300,otpadq:264,boni:4200,vac:2,feries:10,maladie:6},"Professionnel en informatique":{assur:1900,otpadq:264,boni:4200,vac:2,feries:10,maladie:6},"Technologue":{assur:2500,otpadq:680,boni:4200,vac:2,feries:10,maladie:6},"Gestionnaire / Expert":{assur:2500,otpadq:680,boni:4200,vac:3,feries:10,maladie:2}};
+var NE_AVANT = {"Administratif":{assur:1500,otpadq:0,boni:"",vac:2,feries:10,maladie:6},"Auxiliaire":{assur:2300,otpadq:264,boni:4200,vac:2,feries:10,maladie:6},"Professionnel en informatique":{assur:1900,otpadq:264,boni:4200,vac:2,feries:10,maladie:6},"Technologue":{assur:2500,otpadq:680,boni:4200,vac:2,feries:10,maladie:6},"Gestionnaire":{assur:2500,otpadq:680,boni:4200,vac:3,feries:10,maladie:2},"Expert technique":{assur:2500,otpadq:680,boni:4200,vac:3,feries:10,maladie:2},"Gestionnaire / Expert":{assur:2500,otpadq:680,boni:4200,vac:3,feries:10,maladie:2}};
 function neHeures(h){
   var t = 0, n = 0;
   for(var i = 0; i < 7; i++){ var d = h[i]; if(d && d.a && d.b && d.b > d.a){ n++; var m = (Number(d.b.slice(0,2)) * 60 + Number(d.b.slice(3))) - (Number(d.a.slice(0,2)) * 60 + Number(d.a.slice(3))); if(m > 360) m -= 60; t += m; } }
