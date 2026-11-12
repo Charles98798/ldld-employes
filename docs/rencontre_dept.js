@@ -301,11 +301,21 @@ var RD_SECTIONS = [
 ];
 // RÈGLE UNIVERSELLE: une liste qui porte une date l'affiche en colonnes Date | Cas (description dessous) | Étape.
 function rdEstDate(t){ return /^\d{4}-\d{2}-\d{2}/.test(String(t || "")); }
-function rdListeDates(L){
+function rdListeDates(L, descs, col3, col2){
   var g = "display:grid;grid-template-columns:26% 44% 30%;gap:0 8px;";
-  return '<div class="rdp" style="'+g+'font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>Cas</span><span>Étape</span></div>'+L.map(function(c){
+  return '<div class="rdp" style="'+g+'font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>'+(col2 || "Cas")+'</span><span>'+(col3 || "Étape")+'</span></div>'+L.map(function(c, i){
     var d = c[0], cas = c[1], etape = c.length > 3 ? c[3] : (c.length > 2 ? c[2] : ""), desc = c.length > 3 ? c[2] : "";
-    return '<div class="rdp" style="'+g+'font-size:13px"><span>'+rdE(String(d).slice(0, 10))+'</span><span>'+rdE(cas)+(desc ? '<div style="color:#6E6350">'+rdE(desc)+'</div>' : "")+'</span><span>'+rdE(etape)+'</span></div>'; }).join("");
+    return '<div class="rdp" style="'+g+'font-size:13px"><span>'+rdE(String(d).slice(0, 10))+'</span><span>'+rdE(col3 === "Montant" ? String(cas).replace(/^\s*dossier\s*/i, "") : cas)+(desc ? '<div style="color:#6E6350">'+rdE(desc)+'</div>' : "")+'</span><span>'+rdE(etape)+'</span></div>'+rdDescLigne(descs && descs[i]); }).join("");
+}
+// Escomptes prévisibles: description d'analyse (colonne « description » de credits.csv), petit texte sous le cas; cachée si vide, jamais de nom de patient.
+function rdDescLigne(d){
+  if(d == null || d === "") return "";
+  var nett = function(t){ return String(t == null ? "" : t).replace(/\s+/g, " ").trim(); };
+  var l = [];
+  if(typeof d === "string"){
+    d.split("|").forEach(function(p){ p = nett(p); if(!p) return; var m = /^(analyse|travail effectu[ée])\s*:\s*(.*)$/i.exec(p); l.push(m ? [/^a/i.test(m[1]) ? "Analyse" : "Travail effectué", m[2]] : ["", p]); });
+  } else { l = [["Analyse", nett(d.analyse)], ["Travail effectué", nett(d.travail)]]; }
+  return l.filter(function(x){ return x[1]; }).map(function(x){ return '<div class="rdp" style="font-size:12px;color:#6E6350;padding-top:0;overflow-wrap:anywhere">'+(x[0] ? '<span style="letter-spacing:.08em;text-transform:uppercase;font-size:10px">'+x[0]+'</span><br>' : "")+rdE(x[1])+'</div>'; }).join("");
 }
 function rdLigne(cols){ return '<div class="rdp" style="display:flex;gap:10px;flex-wrap:wrap"><span>'+cols.map(rdE).join('</span><span>')+'</span></div>'; }
 function rdCourbe(a, b){
@@ -361,7 +371,7 @@ function rdRendreSection(cle, r){
   }
   h += rdSerie(cle === "cas" ? "Cas non complétés par mois" : (cle === "nc" ? "Non-conformités par mois" : "Nombre de crédits par mois"), r.serie, r.serie_an_passe);
   var L = r.lignes || [];
-  h += L.length ? (L.every(function(l){ return l && l.length > 1 && rdEstDate(l[0]); }) ? rdListeDates(L) : L.map(function(l){ return rdLigne(l); }).join("")) : (h ? "" : rdMsg("Aucune donnée pour cette période"));
+  h += L.length ? (L.every(function(l){ return l && l.length > 1 && rdEstDate(l[0]); }) ? rdListeDates(L, cle === "escomptes" ? r.descriptions : null, cle === "escomptes" ? "Montant" : "", cle === "escomptes" ? "Dossier" : "") : L.map(function(l){ return rdLigne(l); }).join("")) : (h ? "" : rdMsg("Aucune donnée pour cette période"));
   return h;
 }
 function rdPresentation(){
