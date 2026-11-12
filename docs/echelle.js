@@ -22,7 +22,10 @@ function echSauver(champ, valeur){
 }
 function echGrille(){
   var d = ECH.d, t = d.taux == null ? 0 : d.taux / 100;
-  var h = '<div class="e5"><div class="h"></div>' + d.cats.map(function(c){ return '<div class="h">' + echEsc(c) + '</div>'; }).join("");
+  var n = d.cats.length;
+  // Jamais de grille décalée: le nombre de colonnes suit les catégories, et un écart de nombre de valeurs est refusé.
+  if(!n || d.maxAvant.length !== n) return '<p class="finnote">Échelle non affichée : les catégories et les valeurs ne correspondent pas. Avisez le support.</p>';
+  var h = '<div class="e5" style="grid-template-columns:34px repeat(' + n + ',minmax(0,1fr));font-size:' + (n > 5 ? 9.5 : 11) + 'px"><div class="h"></div>' + d.cats.map(function(c){ return '<div class="h">' + echEsc(c) + '</div>'; }).join("");
   d.positions.forEach(function(p){ h += '<div class="l">' + Math.round(p*100) + ' %</div>' + d.maxAvant.map(function(m){ return '<div>' + echFr(echArr(m*(1+t)*p, 2), 2) + '</div>'; }).join(""); });
   h += '<div class="l mx">Max. base</div>' + d.maxAvant.map(function(m){ return '<div class="mx">' + echFr(m, 2) + '</div>'; }).join("") + '</div>';
   return h;
