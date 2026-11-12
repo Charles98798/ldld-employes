@@ -1,18 +1,6 @@
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
-  function agir(id, nom, actif){
-    confirmerOuiNon((actif ? "Réactiver " : "Désactiver ")+nom+"?", function(){
-      neTache({nom: nom, duree: 8000, reste: true, fin: function(E){ if(E.etat === "ok") setTimeout(function(){ if(document.getElementById("ge")) gestionEmployes(); }, 1500); }, lib: actif ? {cours: "Réactivation en cours", ok: "Employé réactivé", non: "Employé non réactivé"} : {cours: "Désactivation en cours", ok: "Employé désactivé", non: "Employé non désactivé"},
-        run: function(){ return appelService({action:"employe_actif", session:sessionGardee(), id:id, actif:actif}); }});
-    });
-  }
-  function supprimer(id, nom){
-    confirmerOuiNon("Supprimer "+nom+"? Ses archives sont gardées 4 ans.", function(){
-      neTache({nom: nom, duree: 20000, reste: true, fin: function(E){ if(E.etat === "ok") setTimeout(function(){ if(document.getElementById("ge")) gestionEmployes(); }, 1500); }, lib: {cours: "Suppression en cours", ok: "Employé supprimé", non: "Employé non supprimé"}, reseau: "Réponse non reçue, vérifiez le classeur",
-        run: function(){ return appelService({action:"employe_supprimer", session:sessionGardee(), id:id}); }});
-    }, true);
-  }
 // Pictogrammes de l'accueil : blocs carrés pleins sur une grille de 24, couleur du texte.
 var PICTOS = {
  "Mes heures": "M2 2h20v20h-20zM5 5h14v14h-14zM11 6 L13 6 L13 11 L17 11 L17 13 L11 13z",
@@ -2229,18 +2217,14 @@ function gestionEmployes(){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function agir(id, nom, actif){
     confirmerOuiNon((actif ? "Réactiver " : "Désactiver ")+nom+"?", function(){
-      var el = document.getElementById("ge"); if(el) el.innerHTML = '<div class="bandeau">▪ EN COURS…</div>';
-      appelService({action:"employe_actif", session:sessionGardee(), id:id, actif:actif}).then(function(r){
-        if(!r || !r.ok) throw 0; gestionEmployes();
-      }).catch(function(){ var e2 = document.getElementById("ge"); if(e2) e2.innerHTML = '<div class="bandeau">▪ ÉCHEC · RÉESSAYEZ</div>'; setTimeout(gestionEmployes, 1800); });
+      neTache({nom: nom, duree: 8000, fin: function(E){ if(E.etat === "ok") setTimeout(function(){ if(document.getElementById("ge")) gestionEmployes(); }, 1500); }, lib: actif ? {cours: "Réactivation en cours", ok: "Employé réactivé", non: "Employé non réactivé"} : {cours: "Désactivation en cours", ok: "Employé désactivé", non: "Employé non désactivé"},
+        run: function(){ return appelService({action:"employe_actif", session:sessionGardee(), id:id, actif:actif}); }});
     });
   }
   function supprimer(id, nom){
     confirmerOuiNon("Supprimer "+nom+"? Ses archives sont gardées 4 ans.", function(){
-      var el = document.getElementById("ge"); if(el) el.innerHTML = '<div class="bandeau">▪ SUPPRESSION EN COURS…</div>';
-      appelService({action:"employe_supprimer", session:sessionGardee(), id:id}).then(function(r){
-        if(!r || !r.ok) throw 0; gestionEmployes();
-      }).catch(function(){ var e2 = document.getElementById("ge"); if(e2) e2.innerHTML = '<div class="bandeau">▪ ÉCHEC · VÉRIFIEZ LE CLASSEUR</div>'; setTimeout(gestionEmployes, 2500); });
+      neTache({nom: nom, duree: 20000, fin: function(E){ if(E.etat === "ok") setTimeout(function(){ if(document.getElementById("ge")) gestionEmployes(); }, 1500); }, lib: {cours: "Suppression en cours", ok: "Employé supprimé", non: "Employé non supprimé"}, reseau: "Réponse non reçue, vérifiez le classeur",
+        run: function(){ return appelService({action:"employe_supprimer", session:sessionGardee(), id:id}); }});
     }, true);
   }
   appelService({action:"employes_etat", session:sessionGardee()}).then(function(r){
