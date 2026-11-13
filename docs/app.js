@@ -1,4 +1,4 @@
-var APP_PUB = "401";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "402";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -529,6 +529,8 @@ function chargerAujourdhui(){
     obtenir("evenements_employe", {action:"evenements_employe"}, function(r){ if(r && r.evenements) fin(r.evenements, []); }, function(){}, true);
     return;
   }
+  var cleAuj = "ldld-c-auj-" + deb + "-" + (MOI && MOI.nom || "");   // dernier affichage gardé sur l'appareil: le haut de l'accueil apparaît tout de suite, la lecture reprend en silence
+  try { var g = JSON.parse(localStorage.getItem(cleAuj)); if(g && g.j === isoJour(t) && !AUJ_VU){ AUJ_VU = true; fin(g.l, g.jj); } } catch(e){}
   var lu = DH_CACHE.agendas ? Promise.resolve() : appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.agendas) DH_CACHE.agendas = r.agendas.filter(function(a){ return a.ecriture; }); });
   lu.then(function(){
     var ids = (DH_CACHE.agendas || []).map(function(a){ return a.id; }).slice(0, 8); if(ids.indexOf("primary") < 0) ids.unshift("primary");
@@ -536,9 +538,11 @@ function chargerAujourdhui(){
   }).then(function(r){
     if(!(r && r.ok && r.semaines)) return;
     var tous = [], jj = []; r.semaines.forEach(function(w){ (w.evenements || []).forEach(function(e){ tous.push(e); }); (w.journee || []).forEach(function(e){ jj.push(e); }); });
+    try { localStorage.setItem(cleAuj, JSON.stringify({j: isoJour(t), l: tous, jj: jj})); } catch(e){}
     fin(tous, jj);
   }).catch(function(){});
 }
+var AUJ_VU = false;
 // Accueil unique: chaque entrée a un groupe, un pictogramme et des droits par défaut [employé, responsable, direction].
 // La page Contrôle (Direction) peut changer les droits des entrées non verrouillées; le service refuse aussi l'accès.
 var ENT = [
