@@ -1,4 +1,4 @@
-var APP_PUB = "441";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "442";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -1722,7 +1722,7 @@ function prixSoumissions(){
         b.tabs.forEach(function(t){
           var ls = t.l.filter(function(x){ return !rech || ok(x.fr) || ok(t.t) || ok(b.t); });
           if(!ls.length) return;
-          if(t.t) rows += '<div class="pst" style="margin-top:38px">'+esc(t.t)+'</div>';
+          if(t.t) rows += '<div class="pst">'+esc(t.t)+'</div>';
           ls.forEach(function(x){ nb++; rows += '<div class="psl"><span>'+esc(x.fr)+'</span>'+(x.delai ? '<i>'+esc(String(x.delai))+' j</i>' : "")+'<b>'+fmt(x.prix)+'</b></div>'; });
         });
         if(!nb) return; n++;
