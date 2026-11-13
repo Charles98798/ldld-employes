@@ -16,11 +16,16 @@ function echOuvrir(){
   app.innerHTML = '<div class="page ppx ech"><h1>Échelle salariale \u2191\u00a0taux</h1><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"><div class="bandeau" id="ech_att">▪ UN INSTANT</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var pre = (ECH.pre && Date.now() - ECH.preT < 180000) ? ECH.pre : null; ECH.pre = null;
-  (pre || appelService({action: "ech_donnees", session: sessionGardee()})).then(function(r){
+  var frais = function(){ return appelService({action: "ech_donnees", session: sessionGardee()}); };
+  // Si la lecture préchargée tarde plus de 12 s, on refait une demande neuve (la première continue en arrière-plan).
+  var fini = false;
+  var base = (pre || frais()).then(function(r){ fini = true; return r; });
+  var garde = new Promise(function(ok){ setTimeout(function(){ if(!fini) ok(frais()); }, 12000); });
+  Promise.race([base, garde]).then(function(r){
     if(!document.getElementById("ech_app")) return;
     if(r && r.ok){ ECH.d = r.r; echRendu(); }
-    else { var a = document.getElementById("ech_att"); if(a) a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · RÉESSAYEZ"; }
-  }).catch(function(){ var a = document.getElementById("ech_att"); if(a) a.textContent = "▪ RÉSEAU INDISPONIBLE · RÉESSAYEZ"; });
+    else { var a = document.getElementById("ech_att"); if(a){ a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = echOuvrir; } }
+  }).catch(function(){ var a = document.getElementById("ech_att"); if(a){ a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = echOuvrir; } });
 }
 function echSauver(champ, valeur){
   var et = document.getElementById("ech_etat"); if(et) et.textContent = "Enregistrement…";
