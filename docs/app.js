@@ -1,4 +1,4 @@
-var APP_PUB = "437";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "438";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -1274,6 +1274,7 @@ function controleOuvrir(){
     var h = '<div class="ctg"><span></span>' + noms.map(function(n, k){ return '<b>'+n+'<i style="background:'+CTL_COULEURS[k]+'"></i></b>'; }).join("");
     var g = "";
     ENT.forEach(function(x){
+      if(x.s) return;   // les sous-pages (Conseil · …, Finances · …) suivent le droit de leur onglet d'accueil: aucun contrôle de sous-groupe
       if(x.g !== g){ g = x.g; h += '<div class="ctt">▪ '+esc(g === "Contrôle" ? "Contrôle des onglets" : g)+'</div>'; }
       h += '<span class="ctn">'+esc(x.l)+(x.v ? '<small> · verrouillé</small>' : "")+'</span>';
       for(var k = 0; k < 3; k++){

@@ -143,7 +143,7 @@ function financeGraphique(type){
 var FIN_ORIGINE = "conseil";
 function finRetour(){ if(FIN_ORIGINE === "finances") financesMenu(); else financeMenu(); }
 // Conseil d'administration: Production, Indicateurs et ratios par catégorie (sans montants)
-function finOk(id){ return typeof entreeOk === "function" && ENT_PAR_ID[id] ? entreeOk(ENT_PAR_ID[id]) : true; }
+function finOk(id){ var pid = /^conseil_/.test(id) ? "conseil" : (/^finances_/.test(id) ? "finances" : id); return typeof entreeOk === "function" && ENT_PAR_ID[pid] ? entreeOk(ENT_PAR_ID[pid]) : true; }   // une sous-page suit le droit de son onglet d'accueil
 function financeMenu(){
   FIN_ORIGINE = "conseil";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Conseil d\'administration</h1>' +
