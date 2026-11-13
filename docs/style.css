@@ -969,3 +969,13 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .eev .eh{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
 .eev .et{font-size:15px;font-weight:500;line-height:1.3;overflow-wrap:anywhere}
 .eev .ed{font-size:13px;line-height:1.45;opacity:.75;overflow-wrap:anywhere;white-space:pre-line}
+
+/* Listes déroulantes: style A partout (bloc taupe carré 46 px, petit chevron). Les sélecteurs invisibles du menu d'actions (.act) gardent leur rôle. */
+select:not(.act){appearance:none!important;-webkit-appearance:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;min-height:46px;height:auto;padding:0 38px 0 14px!important;font-family:inherit;font-size:15px!important;font-weight:400!important;letter-spacing:normal!important;text-transform:none!important;text-align:left!important;line-height:1.2;color:#1D1D1B!important;background-color:#B7B1A5!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236F675A' stroke-width='1.6'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 14px center!important;background-size:12px 8px!important;cursor:pointer;max-width:100%}
+select:not(.act).rose{background-color:#f4b3c4!important}
+select:not(.act) option{color:#1D1D1B;background:#E2E0D6;font-size:16px}
+.ppx .decision select:not(.act){background-color:var(--pr)!important}
+.ppx .decision select.ok:not(.act),.ppx .decision select.lock:not(.act){background-color:#B7B1A5!important}
+.ppx .decision select.lock{color:#6E6350!important}
+select:not(.act){width:100%;box-sizing:border-box}
+.rdbar select:not(.act){width:auto}
