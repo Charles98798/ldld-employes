@@ -1,4 +1,4 @@
-var APP_PUB = "431";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "432";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -20,7 +20,7 @@ var PICTOS = {
  "Rencontres demandées": "M9 5h6v6h-6zM7 12h10v10h-10zM18 2h3v10h-3z",
  "Entretien machinerie": "M2 19h20v3h-20zM3 9h4v10h-4zM9 9h6v10h-6zM17 4h4v15h-4zM4 3h3v6h-3zM15 9h2v3h-2z",
  "Positionnement employé": "M4 4h16v3h-16zM4 17h16v3h-16zM4 7h3v10h-3zM17 7h3v10h-3zM10 0h4v4h-4zM10 20h4v4h-4zM0 10h4v4h-4zM20 10h4v4h-4zM10 10h4v4h-4z",
- "Échelle salariale": "M2 3h20v4h-20zM2 9h4v3h-4zM8 9h4v3h-4zM14 9h4v3h-4zM19 9h3v12h-3zM2 14h4v3h-4zM8 14h4v3h-4zM14 14h4v3h-4zM2 19h4v2h-4zM8 19h4v2h-4zM14 19h4v2h-4z",
+ "Échelle salariale": "M11 3h2v2h-2zM9 5h6v2H9zM7 7h10v2H7zM10 9h4v10h-4z",
  "Indicateurs": "M3 12h5v9h-5zM10 6h5v15h-5zM17 2h5v19h-5z",
  "Ratios par catégorie": "M2 5h16v5h-16zM2 14h11v5h-11zM20 3h2v18h-2z",
  "Ventes vs an passé": "M2 12h4v9h-4zM7 8h4v13h-4zM13 14h4v7h-4zM18 4h4v17h-4z",
@@ -28,7 +28,7 @@ var PICTOS = {
  "Comptes clients": "M3 3h18v18h-18zM7 8h10v2h-10zM7 12h10v2h-10zM7 16h5v2h-5z",
  "Production": "M2 4h6v6h-6zM9 4h6v6h-6zM16 4h6v6h-6zM2 13h20v3h-20zM4 18h4v4h-4zM16 18h4v4h-4z",
  "Contrôle": "M2 2h20v20h-20zM5 5h14v14h-14zM7 12h3v3h-3zM10 15h3v3h-3zM13 9h3v6h-3z",
- "Prix et soumissions": "M2 11l9-9h11v11l-9 9zM15 5h4v4h-4z",
+ "Prix et soumissions": "M2 2h20v20H2zM5 5v14h14V5zM7 7h10v10H7zM10 10h3v3h-3z",
  "Finances": "M4 1h16v22h-16zM7 4h10v5h-10zM7 12h3v3h-3zM11 12h2v3h-2zM14 12h3v3h-3zM7 17h3v3h-3zM11 17h2v3h-2zM14 17h3v3h-3z",
  "Conseil d'administration": "M5 9h14v6h-14zM6 4h4v3h-4zM14 4h4v3h-4zM6 17h4v3h-4zM14 17h4v3h-4zM2 10h2v4h-2zM20 10h2v4h-2z",
  "Employés": "M3 4h6v6h-6zM15 4h6v6h-6zM3 13h18v8h-18z",
