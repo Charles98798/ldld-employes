@@ -1,4 +1,4 @@
-var APP_PUB = "450";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "451";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2513,10 +2513,37 @@ function gestionEmployes(){
     Array.prototype.forEach.call(el.querySelectorAll("button[data-k]"), function(b){ b.onclick = function(){ var x = r.inactifs[+b.getAttribute("data-k")]; agir(x.id, x.nom, true); }; });
   }).catch(function(){ var el = document.getElementById("ge"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
+function evoPortrait(p, pctPos, tauxH){
+  var H = (p.historique || []).filter(function(q){ return q && q.pos != null; }).map(function(q){ return {an: q.an, v: q.pos * 100}; });
+  var an0 = new Date().getFullYear(), pn = parseFloat(String(p.position).replace(",", ".")); if(isFinite(pn)) H.push({an: an0, v: Math.abs(pn) <= 2.5 ? pn * 100 : pn});
+  if(p.suivante && p.suivante.pos != null) H.push({an: p.suivante.annee, v: p.suivante.pos * 100, s: true});
+  var S = (p.histSalaire || []).filter(function(q){ return q && q.taux != null; }).map(function(q){ return {an: q.an, v: Number(q.taux), s: q.an > an0}; });
+  if(!H.length && !S.length) return "";
+  function barres(titre, L, fmt){
+    if(!L.length) return "";
+    var mx = Math.max.apply(null, L.map(function(x){ return x.v; })) || 1, mn = Math.min.apply(null, L.map(function(x){ return x.v; }));
+    var h = '<div class="ptk" style="margin-top:14px">'+titre+'</div><div class="pte">' + L.map(function(x){ var hh = 30 + (mx === mn ? 40 : (x.v - mn) / (mx - mn) * 70); return '<div'+(x.an === an0 ? ' class="l"' : "")+' style="height:'+hh+'%'+(x.s ? ';opacity:.55' : '')+'"><span>'+fmt(x.v)+'</span></div>'; }).join("") + '</div><div class="ptq">' + L.map(function(x){ return '<span>'+x.an+(x.s ? (p.suivante && p.suivante.confirme === false ? "<br>proposé" : "<br>confirmé") : "")+'</span>'; }).join("") + '</div>';
+    return h;
+  }
+  return '<div class="ptx">Évolution sur 5 ans</div>' + barres("Position dans l’échelle", H, function(v){ return Math.round(v) + " %"; }) + barres("Taux horaire", S, function(v){ return v.toFixed(2).replace(".", ",") + " $"; });
+}
 function sectionsPortrait(p){
   function pct(x){ return x === null || x === undefined ? "—" : Math.round(x*100)+" %"; }
   var c = p.contribution, ch = p.charge, pa = p.paroles, ci = p.cibles || {}, h = "";
   h += '<div class="pts"><b>03</b>Contribution</div>';
+  var evs = (p.evaluations || []);
+  function fl(d, pts){ if(d === null || d === undefined || d === 0) return ""; return ' <span class="ptf">'+(d > 0 ? "▲ +" : "▼ −")+String(Math.abs(d)).replace(".", ",")+(pts ? " pt" : "")+'</span>'; }
+  if(evs.length){
+    h += (p.pointage && p.pointage.n > 1 ? '<div class="ptk">Moyenne de '+p.pointage.n+' évaluations</div>' : "") + evs.map(function(q){
+      var e = q.ecart || {}, d = q.date ? q.date : (q.annee + " · rencontre " + q.renc), n = [];
+      if(q.tech != null) n.push("technique " + String(q.tech).replace(".", ",") + fl(e.tech));
+      if(q.auto != null) n.push("autonomie " + String(q.auto).replace(".", ",") + fl(e.auto));
+      if(q.qual != null) n.push("qualité " + String(q.qual).replace(".", ",") + fl(e.qual));
+      if(q.obj != null) n.push("objectifs " + pct(q.obj) + fl(e.obj, true));
+      return '<div class="pte2"><div class="pth"><span>'+esc(String(d))+'</span><b>'+pct(q.resultat)+fl(e.resultat, true)+'</b></div><div class="ptk" style="text-transform:none;letter-spacing:0">'+n.join(" · ")+'</div><div class="ptz"><i style="width:'+Math.max(0, Math.min(100, Math.round((q.resultat || 0) * 100)))+'%"></i></div></div>';
+    }).join("");
+    if(p.pointage && p.pointage.rows) h += '<div style="margin-top:8px">' + p.pointage.rows.map(function(r){ return '<div class="ptl"><span>'+esc(r.nom)+' ('+r.sur+')</span><b>'+(r.points === null || r.points === undefined ? "—" : String(r.points).replace(".", ","))+'</b></div>'; }).join("") + (p.pointage.total != null ? '<div class="ptl"><span>Total</span><b>'+String(p.pointage.total).replace(".", ",")+' %</b></div>' : "") + '</div>';
+  } else
   h += c ? '<div style="font-size:28px">'+pct(c.resultat)+'</div>' +
       [["Technique", c.tech], ["Autonomie", c.auto], ["Qualité", c.qual]].filter(function(l){ return l[1] !== null && l[1] !== undefined; })
         .map(function(l){ return '<div class="ligne"><span>▪ '+l[0]+'</span><span>'+esc(String(l[1]).replace(".", ","))+'</span></div>'; }).join("") +
@@ -2557,6 +2584,7 @@ function portrait(id){
       sec("01", "Position dans l’échelle") +
       '<div class="ptk">L’échelle · '+esc(String(p.categorie))+'</div><div class="ptb">Vous êtes à '+pctPos(p.position)+'</div>' +
       (ech.length ? '<div class="ptr"><i style="width:'+w+'%"></i><em style="left:'+w+'%"></em></div><div class="ptt"><div><div class="ptk">Bas</div><div class="ptv">'+pctPos(bas.p)+'</div><div class="ptd">'+tauxH(bas.t)+' / h</div></div><div class="on"><div class="ptk">Votre position</div><div class="ptv">'+pctPos(p.position)+'</div><div class="ptd">'+(cur ? tauxH(cur.t)+' / h' : "")+'</div></div><div><div class="ptk">Sommet</div><div class="ptv">'+pctPos(hau.p)+'</div><div class="ptd">'+tauxH(hau.t)+' / h</div></div></div>' : "") +
+      evoPortrait(p, pctPos, tauxH) +
       sec("02", "Rémunération globale") + '<div class="ptb">'+dollars(p.total)+'</div>' +
       lignes.map(function(l){ return lig(l[0], dollars(l[1])); }).join("") +
       (tot ? '<div class="ptk" style="margin-top:12px">Répartition de votre rémunération globale</div><div class="ptp"><i style="width:'+pp(bs)+'%;background:#B4AB9B"></i><i style="width:'+pp(cg)+'%;background:#d9cfba"></i><i style="width:'+pp(au)+'%;background:#E3DFD3"></i></div><div class="ptg"><div><s style="background:#B4AB9B"></s>Salaire de base · '+pp(bs)+' %</div><div><s style="background:#d9cfba"></s>Vacances, fériés et maladie · '+pp(cg)+' %</div><div><s style="background:#E3DFD3"></s>Autres avantages · '+pp(au)+' %</div></div>' : "") +
