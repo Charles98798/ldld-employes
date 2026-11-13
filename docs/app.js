@@ -1077,7 +1077,7 @@ function graphJoursActif(el){
   choisir(bs[bs.length-1]);
 }
 function tableau(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Charges de travail</h1><div id="tb"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Tableau de bord</h1><div id="tb"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   obtenir("tableau", {action:"tableau"}, function(r){
     var el = document.getElementById("tb"); if(!el) return;
@@ -2572,7 +2572,7 @@ function vueEmploye(i){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ UN INSTANT</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); VUE.pend = false; VUE.on = false; menu(); };
   VUE.pend = true;
-  var vueDel = setTimeout(function(){ if(VUE.pend){ VUE.pend = false; VUE.on = false; sectionBase(i); } }, 6000);
+  var vueDel = setTimeout(function(){ if(VUE.pend){ VUE.pend = false; VUE.on = false; sectionBase(i); } }, 20000);
   var pre = VUE_PRE; VUE_PRE = null;
   var pr = (pre && pre.reelle === reelle && Date.now() - pre.t < 3000000) ? pre.p : appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:prec});
   pr.then(function(r){
