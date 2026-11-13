@@ -1,4 +1,4 @@
-var APP_PUB = "446";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "447";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -1892,7 +1892,8 @@ function agendaEstLabo(id){
   return !!a && AGENDAS_LABO.indexOf(nomSimple(a.nom || a.titre || a.summary)) >= 0;
 }
 // Participants: liste « Groupes » et liste « Employés » (choix multiples). Les membres d'un groupe choisi sont en gris pâle dans la liste Employés.
-function participants(personnes, groupes, surChangement, init){
+function participants(personnes, groupes, surChangement, init, extra){
+  extra = extra || {};
   var S = {grp: (init && init.grp) || [], emp: (init && init.emp) || [], ouvert: "", err: false, zone: null, restreint: false};
   var persTous = personnes.map(function(p){ return {c: p.c, nom: nomTitre(p.nom), id: p.id || "", role: p.role || ""}; });
   var pers = persTous, groupesTous = groupes;
@@ -1917,6 +1918,13 @@ function participants(personnes, groupes, surChangement, init){
       h += '<span class="lbl">Groupes · obligatoire</span><div class="'+cl()+'" id="pg"><div>'+(S.grp.length ? chips(S.grp, "g") : '<span class="vide">Choisir un ou plusieurs groupes</span>')+'</div><span style="padding:2px 4px">'+(S.ouvert === "g" ? "▴" : "▾")+'</span></div>';
       if(S.ouvert === "g") h += '<div class="msl">'+groupes.map(function(g){ var on = S.grp.indexOf(g.nom) >= 0; return '<div data-g="'+esc(g.nom)+'"><span class="cb'+(on ? " on" : "")+'">'+(on ? "✓" : "")+'</span>'+esc(g.nom)+'</div>'; }).join("")+'</div>';
     }
+    [["c", "Catégorie", "une catégorie", extra.categories], ["q", "Équipe", "une équipe", extra.equipes]].forEach(function(L){
+      var its = (L[3] || []).map(function(g){ return {nom: g.nom, m: (g.membres || []).filter(function(c){ return pers.some(function(p){ return p.c === c; }); })}; }).filter(function(g){ return g.m.length; });
+      if(!its.length) return;
+      var pris = its.filter(function(g){ return g.m.every(function(c){ return S.emp.indexOf(c) >= 0 || via[c]; }); }).map(function(g){ return g.nom; });
+      h += '<span class="lbl">'+L[1]+'</span><div class="ms" data-lt="'+L[0]+'"><div>'+(pris.length ? esc(pris.join(", ")) : '<span class="vide">Choisir '+L[2]+'</span>')+'</div><span style="padding:2px 4px">'+(S.ouvert === L[0] ? "▴" : "▾")+'</span></div>';
+      if(S.ouvert === L[0]) h += '<div class="msl">'+its.map(function(g){ var on = pris.indexOf(g.nom) >= 0; return '<div data-lm="'+L[0]+'|'+esc(g.nom)+'"><span class="cb'+(on ? " on" : "")+'">'+(on ? "✓" : "")+'</span>'+esc(g.nom)+' ('+g.m.length+')</div>'; }).join("")+'</div>';
+    });
     h += '<span class="lbl">Employés · obligatoire</span><div class="'+cl()+'" id="pe"><div>'+(S.emp.length ? chips(S.emp, "e") : '<span class="vide">'+(vide ? "Choisir un ou plusieurs employés" : "Aucun employé en plus")+'</span>')+'</div><span style="padding:2px 4px">'+(S.ouvert === "e" ? "▴" : "▾")+'</span></div>';
     if(S.ouvert === "e"){
       var toutes = pers.length && pers.every(function(p){ return S.emp.indexOf(p.c) >= 0 || via[p.c]; });
@@ -1928,6 +1936,12 @@ function participants(personnes, groupes, surChangement, init){
     if(n) h += '<div class="resume">'+n+' participant'+(n > 1 ? "s" : "")+' · '+esc(noms().slice(0, 3).join(", ")+(noms().length > 3 ? "…" : ""))+'</div>';
     z.innerHTML = h;
     var pg = document.getElementById("pg"); if(pg) pg.onclick = function(){ S.ouvert = S.ouvert === "g" ? "" : "g"; rendre(); };
+    Array.prototype.forEach.call(z.querySelectorAll("[data-lt]"), function(x){ x.onclick = function(){ var t = x.getAttribute("data-lt"); S.ouvert = S.ouvert === t ? "" : t; rendre(); }; });
+    Array.prototype.forEach.call(z.querySelectorAll("[data-lm]"), function(x){ x.onclick = function(){
+      var kv = x.getAttribute("data-lm").split("|"), src = kv[0] === "c" ? extra.categories : extra.equipes, nom = kv.slice(1).join("|"), g = (src || []).filter(function(q){ return q.nom === nom; })[0]; if(!g) return;
+      var m = membresChoisis(), mem = (g.membres || []).filter(function(c){ return pers.some(function(p){ return p.c === c; }); }), tout = mem.every(function(c){ return S.emp.indexOf(c) >= 0 || m[c]; });
+      if(tout) S.emp = S.emp.filter(function(c){ return mem.indexOf(c) < 0; }); else mem.forEach(function(c){ if(!m[c] && S.emp.indexOf(c) < 0) S.emp.push(c); });
+      changer(); }; });
     document.getElementById("pe").onclick = function(){ S.ouvert = S.ouvert === "e" ? "" : "e"; rendre(); };
     Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(x){ x.onclick = function(ev){ ev.stopPropagation();
       var t = x.getAttribute("data-r"), v = x.getAttribute("data-v"), a = t === "g" ? S.grp : S.emp; a.splice(a.indexOf(v), 1); changer(); }; });
@@ -2273,7 +2287,7 @@ function nouveau(onglet){
   var locG = lireCache("equipe_groupes"); if(locG) chercher("equipe_groupes", {action:"equipe_groupes"}).catch(function(){});
   (locG ? Promise.resolve(locG) : chercher("equipe_groupes", {action:"equipe_groupes"})).then(function(r){
     if(!r || !r.ok) throw 0;
-    part = participants(r.personnes, r.groupes || [], majBouton);
+    part = participants(r.personnes, r.groupes || [], majBouton, null, {categories: r.categories, equipes: r.equipes});
     part.monter(document.getElementById("npart")); dessinerReste();
   }).catch(function(){ document.getElementById("npart").innerHTML = '<div class="bandeau">▪ LISTE INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
@@ -2313,7 +2327,7 @@ function modifierReunion(e){
     var gN = (e.groupes || []).map(nomSimple), iD = e.ids || [];   // sélection enregistrée avec l'événement (numéros LDLD et groupes); sinon, les noms du champ « À »
     (r.groupes || []).forEach(function(g){ if(noms.indexOf(g.nom) >= 0 || gN.indexOf(nomSimple(g.nom)) >= 0) init.grp.push(g.nom); });
     r.personnes.forEach(function(p){ if(noms.indexOf(nomTitre(p.nom)) >= 0 || (p.id && iD.indexOf(p.id) >= 0)) init.emp.push(p.c); });
-    part = participants(r.personnes, r.groupes || [], maj, init);
+    part = participants(r.personnes, r.groupes || [], maj, init, {categories: r.categories, equipes: r.equipes});
     part.monter(document.getElementById("npart"));
     document.getElementById("nreste").innerHTML = '<div id="ndh"></div><span class="lbl">Sujet · obligatoire</span><input class="bx" id="nsuj" maxlength="120" value="'+esc(sujet)+'">' +
       '<a class="doc" href="#" id="nsup" style="margin-top:14px"><span>▪ Supprimer cette réunion</span></a>';
