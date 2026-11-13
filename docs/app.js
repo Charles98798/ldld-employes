@@ -1,4 +1,4 @@
-var APP_PUB = "402";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "403";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -121,6 +121,7 @@ function demarrage(){
   if(!app.querySelector(".demarrage")) app.innerHTML = '<div class="demarrage"><div class="lgx" role="img" aria-label="Lafond Desjardins laboratoire dentaire">'+'<img class="p1" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p2" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p3" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<svg class="lgl" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line class="hl" x1="0" y1="9.04" x2="95" y2="9.04"/><line class="hr" x1="0" y1="26.72" x2="95" y2="26.72"/><line class="hl" x1="0" y1="44.5" x2="95" y2="44.5"/><line class="hr" x1="0" y1="53.55" x2="95" y2="53.55"/><line class="vt" x1="7.51" y1="0" x2="7.51" y2="95"/><line class="vb" x1="44.45" y1="0" x2="44.45" y2="95"/><line class="vt" x1="48.05" y1="0" x2="48.05" y2="95"/><line class="vb" x1="92.5" y1="0" x2="92.5" y2="95"/></svg>'+'</div></div>';   // déjà dessiné par index.html pour apparaître dès l'ouverture
   MOI_PRE = null; var s0 = sessionGardee();
   if(s0 && !lireMoi(s0)) MOI_PRE = appelService({action:"moi", session:s0});   // demandé pendant l'animation, pas après
+  if(s0 && !VUE.on){ if(COPIE.sess === undefined) COPIE.sess = s0; if(COPIE.sess === s0) copiePreparer({session: s0}).catch(function(){}); }   // la clé d'accès à la copie se prépare pendant l'animation: les lectures de l'accueil partent prêtes
   setTimeout(ouvrirSession, 3900);
 }
 var MOI_PRE = null;
