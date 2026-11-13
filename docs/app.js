@@ -176,8 +176,10 @@ function guichetCopie(corps){
 function copiePreparer(corps){
   if(COPIE.jeton && COPIE.exp - Date.now() > 120000 && COPIE.interr && Date.now() - COPIE.interrT < 240000) return Promise.resolve();   // jeton de 5 min: renouvelé en arrière-plan dès qu'il lui reste moins de 2 min
   if(COPIE.prep) return COPIE.prep;
-  var p = appelDirectGoogle({action:"jeton_copie", session: corps && corps.session !== undefined ? corps.session : sessionGardee()}).then(function(r){
+  var sessDem = corps && corps.session !== undefined ? corps.session : sessionGardee();
+  var p = appelDirectGoogle({action:"jeton_copie", session: sessDem}).then(function(r){
     if(!r || !r.ok || !r.jeton || !r.url) throw new Error("jeton");
+    if(COPIE.sess !== undefined && COPIE.sess !== sessDem) throw new Error("session");   // la session a changé pendant la demande: ce jeton n'est plus le bon
     COPIE.url = r.url; COPIE.jeton = r.jeton; COPIE.exp = r.exp > 1e12 ? r.exp : r.exp * 1000;
     return guichetCopie({action:"interrupteur"});
   }).then(function(d){ if(!d || !d.ok) throw new Error("interrupteur"); COPIE.interr = {}; (d.interrupteurs || []).forEach(function(x){ COPIE.interr[x.domaine] = x.source; }); COPIE.interrT = Date.now(); });
@@ -209,7 +211,12 @@ function copieSimple(domaine){
 // La copie ne retarde jamais une lecture: tant qu'elle n'est pas prête (jeton + interrupteur), Google répond, et la préparation se fait en arrière-plan.
 function appelDirect(corps, vu){
   var a = corps && corps.action;
-  if((a === "heures" || COPIE_SIMPLE[a]) && !VUE.on && !vueComme() && Date.now() > COPIE.hors){
+  if(a === "heures" || COPIE_SIMPLE[a]){   // le jeton de la copie appartient à la session qui l'a demandé: si la session change (voir comme, autre employé), on repart de zéro
+    var sess = corps.session !== undefined ? corps.session : sessionGardee();
+    if(COPIE.sess !== undefined && COPIE.sess !== sess){ COPIE.jeton = null; COPIE.exp = 0; COPIE.interr = null; COPIE.interrT = 0; COPIE.prep = null; COPIE.hors = 0; }
+    COPIE.sess = sess;
+  }
+  if((a === "heures" || COPIE_SIMPLE[a]) && Date.now() > COPIE.hors){
     if(!copiePrete()){ copiePreparer(corps).catch(function(){ COPIE.hors = Date.now() + 600000; }); return appelDirectGoogle(corps, vu); }
     if(COPIE.exp - Date.now() < 120000 || Date.now() - COPIE.interrT > 240000) copiePreparer(corps).catch(function(){});   // renouvellement silencieux: la lecture en cours utilise encore le jeton valide
     if(COPIE.interr[a] === "copie") return (a === "heures" ? copieHeures(corps) : copieSimple(a)).catch(function(e){ if(!/^(jour|ancienne|vide|vieille)$/.test(String(e && e.message))) COPIE.hors = Date.now() + 60000; return appelDirectGoogle(corps, vu); });
