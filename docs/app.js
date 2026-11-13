@@ -1979,7 +1979,7 @@ function dateHeure(opts, surChangement){
         g += '<div class="'+(choisi ? "n" : occ && opts.agenda === false ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
     }
     h += g + '</div>' + legende();
-    if(S.jour && !opts.mois){
+    if(S.jour && !opts.mois && S.jour >= isoJour(S.lundi) && S.jour <= isoJour(fin)){
       var d0j = depuis(S.jour), duJour = S.evs.filter(function(e){ return isoJour(new Date(e.debut)) === S.jour && e.id !== opts.exclure; });
       var jjJour = jjDe(S.jj, S.jour);
       h += '<span class="lbl">'+jourTxt(d0j)+(conge(S.jour) ? " \u00b7 labo ferm\u00e9" : "")+'</span>' + jjJour.map(function(e){ var c = couleurAg(e.ag); return '<div class="ligne"><span style="font-size:10px">TOUTE LA JOURNÉE</span><span style="flex:1;margin-left:12px"><i style="display:inline-block;width:10px;height:10px;background:'+c.f+';margin-right:6px"></i>'+esc(e.titre)+'</span></div>'; }).join("") + ((duJour.length || jjJour.length) ? (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut), mod = e.ldld && opts.modifier !== false;
