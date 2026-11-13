@@ -1,4 +1,4 @@
-var APP_PUB = "415";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "416";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -359,7 +359,6 @@ function aeNonDispo(){
 }
 function aeEntree(){
   var ae = lireCache("ae");
-  if(ae && ae.rencontres && !(MOI && MOI.role === "direction" && !vueComme()) && !ae.rencontres.some(aeARemplir)) return aeNonDispo();
   section(2);
 }
 function pastilleAuto(){
@@ -1024,7 +1023,12 @@ function evaluations(){
   obtenir("ae", {action:"ae_lire"}, function(r){
     var el = document.getElementById("ev"); if(!el) return;
     var dues = r.rencontres.filter(aeARemplir);   // seulement celles à remplir, jamais les anciennes
-    if(!dues.length){ menu(); aeNonDispo(); return; }
+    if(!dues.length){
+      var auj0 = new Date(); auj0 = new Date(auj0.getFullYear(), auj0.getMonth(), auj0.getDate()), suiv = null;
+      r.rencontres.forEach(function(m){ var p = /^(\d{4})-(\d\d)-(\d\d)/.exec(m.date || ""); if(!p || m.terminee) return; var rd = new Date(+p[1], +p[2]-1, +p[3]), dispo = new Date(rd.getFullYear(), rd.getMonth(), rd.getDate()-14); if(rd >= auj0 && (!suiv || dispo < suiv)) suiv = dispo; });
+      el.innerHTML = '<div class="aevide">'+(suiv ? 'Votre prochaine autoévaluation sera disponible le '+(suiv.getDate() === 1 ? "1er" : suiv.getDate())+' '+MOIS_LONGS[suiv.getMonth()]+' '+suiv.getFullYear()+'.' : 'Aucune autoévaluation à remplir pour le moment.')+'</div>';
+      return;
+    }
     if(dues.length === 1){ autoeval(dues[0].rencontre, true, dues[0].date); return; }   // une seule : on l'ouvre directement
     el.innerHTML = dues.map(function(m){
       return '<a class="rang" href="#" data-r="'+m.rencontre+'" data-d="'+esc(m.date || "")+'">▪ Autoévaluation · rencontre '+m.rencontre+'<small>'+'Rencontre du '+esc(aeDateTxt(m.date))+'</small></a>'; }).join("");
