@@ -80,8 +80,7 @@ function echActuelle(){
   else appelService({action: "embauche_donnees", session: sessionGardee()}).then(function(r){ ECH.act = r; rendre(r); }).catch(function(){ z.innerHTML = echSel() + '<div class="bandeau">▪ ÉCHELLE EN COURS INDISPONIBLE</div>'; echSelLier(); });
 }
 function echRendu(){
-  if(ECH.vue === "act") return echActuelle();
-  var d = ECH.d, h = echSel() + '<div class="band">Année suivante en préparation — ' + d.annee + '</div>';
+  var d = ECH.d, h = '<div class="band">Année suivante en préparation — ' + d.annee + '</div>';
   h += '<div class="sect"><span class="num">01</span><span class="lab">Taux d’augmentation applicable</span></div><div class="tr"><span>Taux d’augmentation</span>' + echCase("ech_taux", d.taux, "%") + '</div>';
   h += '<div class="sect"><span class="num">02</span><span class="lab">Taux du marché</span></div>' + d.marche.map(function(m, i){ return '<div class="tr"><span>' + echEsc(m.nom) + '</span>' + echCase("ech_mar" + i, m.val, "%") + '</div>'; }).join("");
   h += '<div class="sect"><span class="num">03</span><span class="lab">Écart de la grille avec le marché</span></div><div id="ech_ecarts">' + echEcarts() + '</div>';
@@ -91,7 +90,7 @@ function echRendu(){
   h += '<div class="sect"><span class="num">06</span><span class="lab">Bonification annuelle — gestionnaires</span></div><div class="lab" style="display:flex;justify-content:space-between"><span>Marge brute</span><span>% du salaire annuel</span></div>' +
     d.bonusAnnuel.map(function(b, i){ return '<div class="g6">' + echCase("ech_bam" + i, b.marge, "%") + '<span class="f">' + echEsc(b.mot || "") + '</span><span class="ar"></span>' + echCase("ech_bap" + i, b.pct == null && i === 0 ? 0 : b.pct, "%") + '</div>'; }).join("");
   h += '<p class="finnote" id="ech_etat"></p>';
-  document.getElementById("ech_app").innerHTML = h; echSelLier();
+  document.getElementById("ech_app").innerHTML = h;
   function lier(id, maj, champ, ind){
     var el = document.getElementById(id); if(!el) return;
     el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; var n = echNum(el.value); if(n != null || el.value.trim() === "") { maj(n); if(ind) { document.getElementById("ech_grille").innerHTML = echGrille(); document.getElementById("ech_ecarts").innerHTML = echEcarts(); echLierRefs(); } } };
