@@ -1015,3 +1015,5 @@ select:not(.act){width:100%;box-sizing:border-box}
 #psr{margin:10px 0}
 
 .aevide{background:#B7B1A5;color:#1D1D1B;padding:26px 20px;margin:28vh auto 0;max-width:320px;text-align:center;font-size:15px;line-height:1.4}
+
+.page.scbar .retour{display:none!important}

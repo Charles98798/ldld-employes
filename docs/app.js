@@ -1,4 +1,4 @@
-var APP_PUB = "424";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "425";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2402,14 +2402,23 @@ function suiviCharge(){
   var sauvNote = "";
   function lireNote(){ var t = document.getElementById("snt"); if(t) sauvNote = t.value; }
   function barre(){
-    var b = document.getElementById("scb");
-    if(!b){ b = document.createElement("button"); b.type = "button"; b.id = "scb"; b.className = "bouton"; document.body.appendChild(b); }
-    b.style.cssText = "position:fixed;z-index:20;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);width:auto;margin:0;font-size:13px;padding:13px 18px;" + (etat && etat !== ETATS[0] ? "" : "opacity:.5");
+    var bar = document.getElementById("scbar"), b, r;
+    if(!bar){
+      bar = document.createElement("div"); bar.id = "scbar";
+      bar.innerHTML = '<button type="button" id="scr" class="bouton">Retour</button><button type="button" id="scb" class="bouton"></button>';
+      document.body.appendChild(bar);
+      document.getElementById("tb").classList.add("scbar");
+    }
+    bar.style.cssText = "position:fixed;z-index:20;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);display:flex;gap:8px";
+    r = document.getElementById("scr"); r.style.cssText = "flex:1 1 0;min-width:0;margin:0;white-space:nowrap;font-size:12px;padding:14px 4px;background:#8EFF60;color:#1D1D1B";
+    r.onclick = function(){ nettoyer(); responsable(); };
+    b = document.getElementById("scb");
+    b.style.cssText = "flex:1 1 0;min-width:0;margin:0;white-space:nowrap;font-size:12px;padding:14px 4px;" + (etat && etat !== ETATS[0] ? "" : "opacity:.5");
     b.disabled = !(etat && etat !== ETATS[0]);
-    b.textContent = i === liste.length-1 ? "Enregistrer et terminer" : "Enregistrer et suivant";
+    b.textContent = i === liste.length-1 ? "Enregistrer, terminer" : "Enregistrer, suivant";
     b.onclick = enregistrer;
   }
-  function nettoyer(){ var b = document.getElementById("scb"); if(b) b.remove(); }
+  function nettoyer(){ var b = document.getElementById("scbar"); if(b) b.remove(); var t = document.getElementById("tb"); if(t) t.classList.remove("scbar"); }
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); nettoyer(); responsable(); };
   function suivant(){
     nettoyer();
