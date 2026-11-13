@@ -1,4 +1,4 @@
-var APP_PUB = "433";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "434";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -575,7 +575,7 @@ var ENT = [
  {id:"retirer_employe", g:"Gestion des employés", l:"Retirer un employé", p:"Retirer un employé", d:[0,0,1], f:function(){ gestionEmployes(); }},
  {id:"portrait", g:"Gestion des employés", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portrait(); }},
  {id:"suivi_charge", g:"Gestion des employés", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
- {id:"echelle_salariale", g:"Gestion des employés", l:"Échelle salariale \u2191\u00a0taux", p:"Échelle salariale", d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
+ {id:"echelle_salariale", g:"Gestion des employés", l:"Échelle salariale\u2191taux", p:"Échelle salariale", d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
  {id:"positionnement_employe", g:"Gestion des employés", l:"Position employé", p:"Positionnement employé", d:[0,0,1], f:function(){ posEmpOuvrir(); }},
  {id:"envoi_salarial", g:"Gestion des employés", l:"Envoi salarial", p:"Envoi salarial", d:[0,0,1], v:1, f:function(){ bientot(this); }},
  {id:"stationnement", g:"Installations", l:"Stationnement", p:"Stationnement", d:[0,1,1], f:function(){ attributionPage("place"); }},
@@ -598,7 +598,7 @@ var ENT = [
  {id:"utilisation", g:"Contrôle", l:"Utilisation app", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
  {id:"controle", g:"Contrôle", l:"Contrôle", p:"Contrôle", d:[0,0,1], v:1, f:function(){ controleOuvrir(); }}
 ];
-var FLECHE_TXT = '<svg viewBox="0 0 24 24" aria-hidden="true" style="width:.9em;height:.9em;vertical-align:-.08em;fill:currentColor"><path d="M11 3h2v2h-2zM9 5h6v2H9zM7 7h10v2H7zM10 9h4v10h-4z"/></svg>';
+var FLECHE_TXT = '<svg viewBox="0 0 24 24" aria-hidden="true" style="width:.9em;height:.9em;vertical-align:-.08em;fill:currentColor;margin:0 .12em 0 .5em"><path d="M11 3h2v2h-2zM9 5h6v2H9zM7 7h10v2H7zM10 9h4v10h-4z"/></svg>';
 var ENT_PAR_ID = {}; ENT.forEach(function(x){ ENT_PAR_ID[x.id] = x; });
 var ORDRE_EMPLOYE = ["mes_heures","messages","tableau_de_bord","calendrier","rencontre","autoevaluation","remuneration","manuel","plan_incendie","mon_profil","entretien_machinerie"];
 var DROITS_SERVICE = null;   // {id: true/false} pour mon rôle, lu du service (action onglets_lire); absent = droits par défaut
