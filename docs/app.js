@@ -1,3 +1,4 @@
+var APP_PUB = "356";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -107,7 +108,7 @@ function filetVide(){
   var plein = c.innerText.replace(/\s+/g, "").length > 0 || !!c.querySelector("input,select,textarea,button,img,svg,canvas,a");
   var m = pg.querySelector(".auto-instant");
   if(plein){ if(m) m.remove(); return; }
-  if(!m){ m = document.createElement("div"); m.className = "bandeau auto-instant"; m.textContent = "▪ UN INSTANT"; var r = pg.querySelector("a.retour"); pg.insertBefore(m, r || null); }
+  if(!m){ m = document.createElement("div"); m.className = "bandeau auto-instant"; m.textContent = "▪ UN INSTANT · " + APP_PUB; var r = pg.querySelector("a.retour"); pg.insertBefore(m, r || null); }
 }
 setInterval(filetVide, 300);
 window.addEventListener("resize", majRetour);
@@ -1077,7 +1078,7 @@ function graphJoursActif(el){
   choisir(bs[bs.length-1]);
 }
 function tableau(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Tableau de bord</h1><div id="tb">'+(VUE.on ? '<div class="bandeau">▪ UN INSTANT</div><p class="aide" id="vdiag" style="font-size:11px"></p>' : '')+'</div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Tableau de bord</h1><div id="tb">'+(VUE.on ? '<div class="bandeau">▪ UN INSTANT · '+APP_PUB+'</div><p class="aide" id="vdiag" style="font-size:11px"></p>' : '')+'</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   if(VUE.on){ vd("tableau demandé"); }
   obtenir("tableau", {action:"tableau"}, function(r){
@@ -2578,7 +2579,7 @@ function vuePreparer(reelle){
 function vueEmploye(i){
   var reelle = VUE.on ? VUE.reel : sessionGardee(), ancien = VUE.on ? VUE.session : null, prec = VUE.nom;
   VUE.on = false;
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ UN INSTANT</div><p class="aide" id="vdiag" style="font-size:11px"></p></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ UN INSTANT · '+APP_PUB+'</div><p class="aide" id="vdiag" style="font-size:11px"></p></div>';
   VDIAG = []; VD0 = Date.now(); vd("ouverture " + (VUE_PRE ? "(préparé)" : "(non préparé)"));
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); VUE.pend = false; VUE.on = false; menu(); };
   VUE.pend = true;
