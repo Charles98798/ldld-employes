@@ -1,4 +1,4 @@
-var APP_PUB = "363";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "364";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -200,7 +200,7 @@ function copieHeures(corps){
   });
 }
 // Domaines lus dans la copie (une réponse par employé, même forme que le service). Ligne absente, purgée, en erreur ou trop vieille: Google répond.
-var COPIE_SIMPLE = {tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
+var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
 function copieSimple(domaine){
   return guichetCopie({action:"lire", domaine:domaine, cle:""}).then(function(d){
     if(!d || !d.ok || d.vide || !d.reponse) throw new Error("vide");
@@ -244,7 +244,7 @@ function appelDirectGoogle(corps, vu){
 
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
-var LECT = {rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
+var LECT = {evenements_employe:1, rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
 var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 // Copie gardée sur l'appareil (affichée tout de suite à l'ouverture, remplacée en silence par la version fraîche). JAMAIS de salaire ni de rémunération (Portrait, Échelle, Positionnement, Embauche, Employé actuel restent en mémoire seulement).
@@ -2444,7 +2444,39 @@ function contactsResp(){
 // Calendrier : congés de l'entreprise (congé / fermé en noir) et réunions de l'employé (en vert); un mois à la fois.
 var MOIS_COURTS = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
 var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+// Calendrier de l'employé: seulement ses événements (titre, jour, heures, description), sans grille ni planification.
+var JOURS_LONGS_E = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"], MOIS_E = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+function heureFr(t){ var m = /T(\d{2}):(\d{2})/.exec(t || ""); if(!m) return ""; return (+m[1]) + (m[2] === "00" ? " h" : " h " + m[2]); }
+function jourFr(iso){ var a = iso.split("-"), d = new Date(+a[0], +a[1] - 1, +a[2]); return JOURS_LONGS_E[d.getDay()] + " " + (+a[2]) + " " + MOIS_E[+a[1] - 1]; }
+function calendrierEmploye(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  var tn = torontoMaintenant().date, evs = [], fermes = [];
+  function dessiner(){
+    var el = document.getElementById("cal"); if(!el) return;
+    var liste = evs.map(function(x){ var j = String(x.debut || "").slice(0, 10), h = heureFr(x.debut), f = heureFr(x.fin); return {j:j, h:h ? (f ? h + " à " + f : h) : "", t:x.titre || "", d:x.texte || "", tri:String(x.debut || "")}; })
+      .concat(fermes.map(function(x){ return {j:x.d, h:"Toute la journée", t:x.n || "Laboratoire fermé", d:"", tri:x.d + "T00:00"}; }))
+      .filter(function(x){ return x.j >= tn; });
+    liste.sort(function(a, b){ return a.tri < b.tri ? -1 : a.tri > b.tri ? 1 : 0; });
+    if(!liste.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR POUR VOUS</div>'; return; }
+    var h = "", cur = "";
+    liste.forEach(function(x){
+      if(x.j !== cur){ cur = x.j; h += '<div class="ejour">'+(cur === tn ? "Aujourd'hui · " : "")+esc(jourFr(cur))+'</div>'; }
+      h += '<div class="eev'+(cur === tn ? ' auj' : '')+'"><div class="eh">'+esc(x.h)+'</div><div class="et">'+esc(x.t)+'</div>'+(x.d ? '<div class="ed">'+esc(x.d)+'</div>' : '')+'</div>';
+    });
+    el.innerHTML = h;
+  }
+  obtenir("evenements_employe", {action:"evenements_employe"}, function(r){
+    if(!r || !r.evenements) throw 0;
+    evs = r.evenements; dessiner();
+  }, function(){ var el = document.getElementById("cal"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
+  chercher("calendrier_labo", {action:"calendrier_labo"}).then(function(c){
+    if(!c || !c.ok || !c.jours) return;
+    fermes = c.jours.filter(function(x){ return x.t === "f" || x.t === "p" || x.t === "c"; }); dessiner();
+  }).catch(function(){});
+}
 function calendrier(){
+  if(!peutEcrire() && !VUE.on) return calendrierEmploye();
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"'+(peutEcrire() ? ' style="display:none"' : '')+'></div>'+(peutEcrire() ? '<div id="calmod"></div>' : '')+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   if(peutEcrire()){ var dhc = dateHeure({mois: true}); dhc.monter(document.getElementById("calmod")); }

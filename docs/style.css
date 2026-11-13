@@ -961,3 +961,11 @@ html,body{overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y;positi
 .lgm,.tcol{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px}.lgm.un,.tcol.un{grid-template-columns:minmax(0,1fr)}.lgm>span:nth-child(2){text-align:left}
 .etiq.tcol{padding-left:0!important;padding-right:0;text-indent:0}
 .ligne.lgm:has(.actw){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px;justify-content:normal}.ligne.lgm:has(.actw)>span:nth-child(2){text-align:left}
+
+/* Calendrier de l'employé: liste de ses événements */
+.ejour{font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:18px 0 8px}
+.eev{background:#E3DFD3;color:#1D1D1B;padding:12px 14px;margin:0 0 8px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.eev.auj{border-left:4px solid #8EFF60}
+.eev .eh{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.eev .et{font-size:15px;font-weight:500;line-height:1.3;overflow-wrap:anywhere}
+.eev .ed{font-size:13px;line-height:1.45;opacity:.75;overflow-wrap:anywhere;white-space:pre-line}
