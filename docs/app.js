@@ -2550,7 +2550,10 @@ function section(i){
 var VUE_PRE = null, VUE_DERNIER = "";
 function cleLectureVue(c, sess){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); o._v = sess; return JSON.stringify(o); }
 // Employé fixe pour les essais de la Direction (Antonio); si le service ne le trouve pas, tirage au hasard comme avant.
-function vueTirage(reelle){ return appelBrut({action:"voir_comme", session:reelle, nom:"Antonio"}).then(function(r){ if(r && r.ok) return r; return appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:""}); }); }
+function vueTirage(reelle){   // hors de la file d'appels: la file est pleine de préchargements à l'ouverture et retardait « voir comme » de 15 à 25 s
+  function va(c){ return appelDirectGoogle(c); }
+  return va({action:"voir_comme", session:reelle, nom:"Antonio"}).then(function(r){ if(r && r.ok) return r; return va({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:""}); });
+}
 function vuePreparer(reelle){
   if(!reelle || VUE_PRE || !MOI || MOI.role !== "direction" || vueComme()) return;
   var pre = {reelle: reelle, t: Date.now()};
