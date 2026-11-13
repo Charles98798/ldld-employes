@@ -1,4 +1,4 @@
-var APP_PUB = "420";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "421";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2372,7 +2372,7 @@ var SC_AGENDAS = null;
 function suiviCharge(){
   app.innerHTML = '<div class="page" id="tb" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi de charge</h1><div id="sc"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  var liste = [], i = 0, etat = "", noteOn = false, planOn = false, msg = "", occupe = false;
+  var liste = [], i = 0, etat = "", noteOn = true, planOn = false, msg = "", occupe = false;
   var dh = null;
   var ETATS = ["Tout va bien", "À surveiller", "Intervention requise"];
   function pc(x){ return x == null ? "—" : Math.round(x*100)+" %"; }
@@ -2386,21 +2386,16 @@ function suiviCharge(){
   function dessiner(){
     var el = document.getElementById("sc"); if(!el) return;
     var p = liste[i], d = p.dernier;
-    var h = '<div class="etiq">\u25aa '+(i+1)+' SUR '+liste.length+'</div><div style="font-size:22px;margin:2px 0 12px">'+esc(p.nom)+'</div>' +
+    var h = '<span class="lbl">Employé</span><select class="bx" id="sce" style="margin-bottom:12px">'+liste.map(function(x, k){ return '<option value="'+k+'"'+(k === i ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
       ''+tuile(p.effectuee, "CHARGE EFFECTUÉE", 0.8, false, "#8D806A")+tuile(p.nonTerminee, "CHARGE NON TERMINÉE", 0.05, true, "#1D1D1B")+tuile(p.objectifs, "OBJECTIFS ATTEINTS", 0.8, false, "#8D806A") +
       '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente</b>'+(d ? '<div style="margin-bottom:4px">'+dateCourte(d.date)+' · État choisi : <span style="font-weight:600">'+esc(d.etat)+'</span></div>' : "")+(d && d.note ? esc(d.note) : '<span>'+(d ? "Aucune note." : "Aucun suivi précédent.")+'</span>')+'</div>' +
       '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, !etat, "se"+k); }).join("")+'</div>' +
-      '<div class="etq" style="margin-top:14px">OPTIONNEL</div>' +
-      (noteOn ? '<div style="display:flex;gap:6px;margin-top:4px;align-items:flex-start"><textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="flex:1;margin:0">'+esc(sauvNote)+'</textarea><button type="button" id="snx" class="bouton" aria-label="Fermer la note" style="margin:0;width:40px;flex:none;padding:10px 0;font-size:16px">✕</button></div>'
-        : '<div style="display:flex;gap:6px;margin-top:4px">'+bouton("Inscrire une note", false, false, "sn")+bouton("Planifier une rencontre", planOn, false, "sp")+'</div>') +
-      (planOn ? '<div id="scp"><div id="scdh"></div><span class="lbl">Sujet</span><div class="bx">Suivi de charge · '+esc(p.nom)+'</div></div>' : "") +
+      '<div class="etq" style="margin-top:14px">NOTE · OPTIONNELLE</div>' +
+      '<textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="width:100%;margin:4px 0 0">'+esc(sauvNote)+'</textarea>' +
       (msg ? '<div class="bandeau" style="margin-top:10px">'+esc(msg)+'</div>' : "");
     el.innerHTML = h;
-    ETATS.forEach(function(x, k){ document.getElementById("se"+k).onclick = function(){ lireNote(); etat = x; msg = ""; dessiner(); }; });
-    var bn = document.getElementById("sn"); if(bn) bn.onclick = function(){ noteOn = true; dessiner(); document.getElementById("snt").focus(); };
-    var bx = document.getElementById("snx"); if(bx) bx.onclick = function(){ lireNote(); noteOn = false; dessiner(); };
-    var bp = document.getElementById("sp"); if(bp) bp.onclick = function(){ planOn = !planOn; dh = planOn ? dateHeure({}) : null; dessiner(); };
-    if(planOn) dh.monter(document.getElementById("scdh"));
+    ETATS.forEach(function(x, k){ document.getElementById("se"+k).onclick = function(){ lireNote(); etat = x; msg = ""; if(k === 0) enregistrer(); else dessiner(); }; });
+    document.getElementById("sce").onchange = function(){ i = +this.value; etat = ""; sauvNote = ""; msg = ""; occupe = false; window.scrollTo(0, 0); dessiner(); };
     barre();
   }
   var sauvNote = "";
@@ -2408,7 +2403,8 @@ function suiviCharge(){
   function barre(){
     var b = document.getElementById("scb");
     if(!b){ b = document.createElement("button"); b.type = "button"; b.id = "scb"; b.className = "bouton"; document.body.appendChild(b); }
-    b.style.cssText = "position:fixed;z-index:20;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);width:auto;margin:0;font-size:13px;padding:13px 18px;" + (etat ? "" : "opacity:.5");
+    b.style.cssText = "position:fixed;z-index:20;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);width:auto;margin:0;font-size:13px;padding:13px 18px;" + (etat && etat !== ETATS[0] ? "" : "opacity:.5");
+    b.disabled = !(etat && etat !== ETATS[0]);
     b.textContent = i === liste.length-1 ? "Enregistrer et terminer" : "Enregistrer et suivant";
     b.onclick = enregistrer;
   }
@@ -2417,7 +2413,7 @@ function suiviCharge(){
   function suivant(){
     nettoyer();
     if(i >= liste.length-1){ responsable(); return; }
-    i++; etat = ""; noteOn = false; planOn = false; dh = null; sauvNote = ""; msg = ""; occupe = false; window.scrollTo(0, 0); dessiner();
+    i++; etat = ""; noteOn = true; planOn = false; dh = null; sauvNote = ""; msg = ""; occupe = false; window.scrollTo(0, 0); dessiner();
   }
   function enregistrer(){
     if(occupe) return;
