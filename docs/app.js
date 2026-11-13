@@ -1,4 +1,4 @@
-var APP_PUB = "376";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "377";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -553,7 +553,7 @@ var ENT = [
  {id:"messages_envoyes", s:1, g:"Équipe", l:"Historique message", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
  {id:"reunion_production", g:"Équipe", l:"Réunion production", p:"Réunion production", d:[1,1,1], f:function(){ rencontreDept(); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
- {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
+ {id:"employe_actuel", s:1, g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
  {id:"positionnement_embauche", g:"Gestion des employés", l:"Position d’embauche", p:"Position d’embauche", n:1, d:[0,0,1], f:function(){ embauchePos(); }},
  {id:"nouvel_employe", g:"Gestion des employés", l:"Contrat d’embauche", p:"Nouvel employé", n:2, d:[0,0,1], v:1, f:function(){ nouvelEmploye(); }},
  {id:"retirer_employe", g:"Gestion des employés", l:"Retirer un employé", p:"Retirer un employé", d:[0,0,1], f:function(){ gestionEmployes(); }},
