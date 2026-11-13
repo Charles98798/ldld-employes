@@ -294,6 +294,7 @@ input,textarea{color-scheme:light}
 .gs{display:grid;grid-template-columns:30px repeat(7,1fr);border:1px solid var(--tx);margin:6px 0;font-size:10px}
 .gs>*{border-right:1px solid #B4AB9B;border-bottom:1px solid #B4AB9B;height:24px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden;line-height:1.1;cursor:pointer}
 .gs .h{color:var(--tx2);cursor:default}
+.gs .ja{background:rgba(70,58,38,.07)}
 .gs .d{height:24px;background:#B4AB9B;color:#1D1D1B;font-size:11px}
 .gs .d.on{background:var(--tx);color:var(--noir)}
 .gs .e{background:#B4AB9B}

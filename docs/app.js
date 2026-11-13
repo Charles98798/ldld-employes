@@ -1,4 +1,4 @@
-var APP_PUB = "412";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "413";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2058,14 +2058,14 @@ function dateHeure(opts, surChangement){
     if(S.jj.length){
       g += '<div class="h" style="height:auto;min-height:24px">Jour</div>';
       for(k = 0; k < 7; k++){ dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); var lj = jjDe(S.jj, isoJour(dj));
-        g += '<div style="min-width:0;height:auto;min-height:24px;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:visible;gap:2px;padding:2px 1px">'+lj.map(function(e){ var c = couleurEv(e); return '<span style="background:'+c.f+';color:'+c.t+';font-size:8px;line-height:10px;padding:1px 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;text-align:left">'+esc(e.titre)+'</span>'; }).join("")+'</div>'; }
+        g += '<div'+(isoJour(dj) === aujIso ? ' class="ja"' : '')+' style="min-width:0;height:auto;min-height:24px;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:visible;gap:2px;padding:2px 1px">'+lj.map(function(e){ var c = couleurEv(e); return '<span style="background:'+c.f+';color:'+c.t+';font-size:8px;line-height:10px;padding:1px 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;text-align:left">'+esc(e.titre)+'</span>'; }).join("")+'</div>'; }
     }
     for(var hh = 7; hh <= 18; hh++){
       g += '<div class="h">'+hh+' h</div>';
       for(k = 0; k < 7; k++){ dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); ij = isoJour(dj); var pj = ij < aujIso;
         var occE = S.evs.filter(function(e){ var d0 = new Date(e.debut); return isoJour(d0) === ij && d0.getHours() <= hh && new Date(e.fin) > new Date(dj.getFullYear(), dj.getMonth(), dj.getDate(), hh, 0); })[0], occ = !!occE;
         var choisi = ij === S.jour && S.heure && +S.heure.split(":")[0] === hh;
-        g += '<div class="'+(choisi ? "n" : occ && opts.agenda === false ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
+        g += '<div class="'+(choisi ? "n" : occ && opts.agenda === false ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+(ij === aujIso ? " ja" : "")+'"'+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
     }
     h += g + '</div>' + legende();
     if(S.jour && !opts.mois && S.jour >= isoJour(S.lundi) && S.jour <= isoJour(fin)){
