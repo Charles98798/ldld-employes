@@ -982,3 +982,5 @@ select:not(.act){width:100%;box-sizing:border-box}
 .ppx #pp_app .pph{display:none}
 /* Bouton Retour du bas: toujours le même petit carré vert, à gauche, sur toutes les pages (Tableau de bord = modèle). */
 .page .retour,.page.ppx .retour,.page.fin .retour,.page.ech .retour,.ppx .retour,.fin .retour{position:static!important;left:auto!important;top:auto!important;bottom:auto!important;order:99;display:inline-block!important;width:auto!important;height:auto!important;min-height:0!important;margin:30px 0 26px!important;padding:13px 18px!important;box-sizing:border-box;text-align:left;background:#8EFF60;color:#1D1D1B;text-decoration:none;font-size:13px;letter-spacing:1px;font-weight:600;text-transform:uppercase;line-height:normal}
+/* Dans les pages en colonne (flex/grid), le Retour ne s'étire jamais: petit carré à gauche. */
+.page .retour,.ppx .retour,.fin .retour,.ech .retour{align-self:flex-start!important;justify-self:start!important;width:fit-content!important;max-width:none!important;flex:0 0 auto!important;float:none!important}
