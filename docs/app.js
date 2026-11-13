@@ -1619,7 +1619,7 @@ function groupesFrequence(taches){
 // Entretien machinerie : responsables et direction consultent et modifient; l'employé voit seulement ses machines (« Mes entretiens »).
 function entretien(){
   if(!entretien.verifie){ entretien.verifie = true; var s0 = sessionGardee(); appelBrut({action:"moi", session:s0}).then(function(r){ entretien.verifie = false; if(r && r.ok && MOI && r.role !== MOI.role){ MOI = r; try { garderMoi(s0, r); } catch(e){} entretien(); } }).catch(function(){ entretien.verifie = false; }); }
-  var tous = peutEcrire(), d = null, vue = "secteur", sel = "non", msg = "", mode = "liste", fiche = null, pick = false, supprime = false;
+  var tous = peutEcrire(), ecr = !!(MOI && (MOI.role === "direction" || /^gestionnaire/.test(String(MOI.poste || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase()))), d = null, vue = "secteur", sel = "non", msg = "", mode = "liste", fiche = null, pick = false, supprime = false;
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+"Entretien machinerie"+'</h1><div id="en"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(tous && mode !== "liste"){ mode = "liste"; pick = false; dessiner(); } else if(tous) responsable(); else menu(); };
   function nomsLignes(t){ return String(t).split("\n").map(function(x){ return x.replace(/^\s*[▪•]\s*/, ""); }); }
@@ -1642,7 +1642,7 @@ function entretien(){
     if(mode === "fiche" || mode === "edition") return dessinerFiche(el);
     var h = "";
     if(tous){
-      h += '<div class="tgm"><button type="button" class="tgb'+(vue === "secteur" ? " on" : "")+'" data-v="secteur">Par secteur</button><button type="button" class="tgb'+(vue === "employe" ? " on" : "")+'" data-v="employe">Par employé</button><button type="button" class="tgb ajm" id="ena"><svg class="plus" viewBox="0 0 14 14" aria-hidden="true"><path d="M5.2 0h3.6v5.2H14v3.6H8.8V14H5.2V8.8H0V5.2h5.2z"/></svg> Machine</button></div>';
+      h += '<div class="tgm"><button type="button" class="tgb'+(vue === "secteur" ? " on" : "")+'" data-v="secteur">Par secteur</button><button type="button" class="tgb'+(vue === "employe" ? " on" : "")+'" data-v="employe">Par employé</button>'+(ecr ? '<button type="button" class="tgb ajm" id="ena"><svg class="plus" viewBox="0 0 14 14" aria-hidden="true"><path d="M5.2 0h3.6v5.2H14v3.6H8.8V14H5.2V8.8H0V5.2h5.2z"/></svg> Machine</button>' : '')+'</div>';
       h += '<select class="champ selr" id="ens"><option value="non"'+(sel === "non" ? " selected" : "")+'>Machines non attribuées</option>' +
         (vue === "secteur" ? secteurs().map(function(z){ return '<option value="'+esc(z)+'"'+(sel === z ? " selected" : "")+'>'+esc(z)+'</option>'; }) : d.employes.map(function(e){ return '<option value="'+e.id+'"'+(sel === String(e.id) ? " selected" : "")+'>'+esc(e.nom)+'</option>'; })).join("") + '</select>';
     }
@@ -1653,7 +1653,7 @@ function entretien(){
     ms.forEach(function(m){
       if(!tous && m.zone !== zone || tous && vue === "employe" && sel !== "non" && m.zone !== zone){ zone = m.zone; h += '<div class="etiq" style="margin-top:14px">▪ '+esc(zone.toUpperCase())+'</div>'; }
       var fin = "";
-      if(tous){
+      if(tous && ecr){
         if(supprime) fin = '<button type="button" class="ib" data-del="'+m.ligne+'" aria-label="Supprimer">✕</button>';
         else fin = '<span class="actw"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M1 3h6v6h-6zM0 11h8v10h-8zM13 3h6v6h-6zM12 11h8v10h-8z"/></svg><select class="act" data-act="'+m.ligne+'" aria-label="Responsable"><option value="">Responsable</option>'+(m.resp ? '<option value="retirer">Retirer</option><option value="transferer">Transférer</option>' : '<option value="attribuer">Attribuer</option>')+'</select></span>';
       }
@@ -1698,7 +1698,7 @@ function entretien(){
         '<div class="aeact"><button type="button" class="bouton lg" id="enp">Ajouter une tâche</button></div>';
     }
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
-    if(tous) h += '<div class="aeact tro"><button type="button" class="bouton lg" id="enm"'+(edition ? " disabled" : "")+'>Modifier</button>'+(m.ligne ? '<button type="button" class="bouton lg" id="ens3"'+(edition ? " disabled" : "")+'>Supprimer</button>' : "")+'<button type="button" class="bouton" id="enok" disabled>Enregistrer</button></div>';
+    if(tous && ecr) h += '<div class="aeact tro"><button type="button" class="bouton lg" id="enm"'+(edition ? " disabled" : "")+'>Modifier</button>'+(m.ligne ? '<button type="button" class="bouton lg" id="ens3"'+(edition ? " disabled" : "")+'>Supprimer</button>' : "")+'<button type="button" class="bouton" id="enok" disabled>Enregistrer</button></div>';
     if(m.confirmeSup) h += '<div class="pop"><div class="popc"><div class="popt">Supprimer cette machine ?</div><div class="aeact"><button type="button" class="bouton" id="supoui">Oui, supprimer</button><button type="button" class="bouton lg" id="supnon">Non</button></div></div></div>';
     el.innerHTML = h;
     function pleines(){ return m.rows.filter(function(r){ return r.f || r.t.trim(); }); }
