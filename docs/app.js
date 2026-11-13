@@ -199,7 +199,7 @@ function copieHeures(corps){
   });
 }
 // Domaines lus dans la copie (une réponse par employé, même forme que le service). Ligne absente, purgée, en erreur ou trop vieille: Google répond.
-var COPIE_SIMPLE = {tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1};
+var COPIE_SIMPLE = {charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
 function copieSimple(domaine){
   return guichetCopie({action:"lire", domaine:domaine, cle:""}).then(function(d){
     if(!d || !d.ok || d.vide || !d.reponse) throw new Error("vide");
