@@ -80,7 +80,7 @@ function embPage1(z){
     dips = [[0, "Aucun (+ 0 %)"], [2, "DEC (+ 2 %)"], [4, "Baccalauréat (+ 4 %)"]], hres = (D.heures || []).map(function(v){ return [v, String(v).replace(".", ",")+" h"]; });
   function inp(k, ph, max, type){ return '<span class="lbl">'+esc(ph)+'</span><input class="bx pk'+(String(S[k]).trim() ? "" : " rose")+'" data-k="'+k+'" placeholder="'+esc(ph)+'" maxlength="'+max+'" value="'+esc(S[k])+'" autocomplete="off"'+(type ? ' data-t="'+type+'"' : "")+'>'; }
   function sel(k, ph, liste, vide){ return '<span class="lbl">'+esc(ph)+'</span><select class="bx pk'+(String(S[k]) !== "" ? "" : " rose")+'" data-k="'+k+'">'+embOpts(liste, S[k], vide || ph)+'</select>'; }
-  z.innerHTML = '<h1>Position d’embauche</h1><div class="lab">01 · Le candidat</div>'+sel("annee", "Échelle · année", ans)+
+  z.innerHTML = '<h1>Position d’embauche</h1><div class="lab">01 · Le candidat</div>'+sel("annee", "Année de l’échelle", ans)+
     '<div style="display:flex;gap:8px"><div style="flex:1">'+inp("prenom", "Prénom", 40)+'</div><div style="flex:1">'+inp("famille", "Nom", 40)+'</div></div>'+inp("adresse", "Adresse", 80)+
     '<div style="display:flex;gap:8px"><div style="flex:1">'+inp("ville", "Ville", 40)+'</div><div style="flex:1">'+inp("cp", "Code postal", 7)+'</div></div>'+inp("naissance", "Date de naissance", 10, "date")+
     '<div class="lab">02 · Le poste</div>'+sel("poste", "Poste", postes)+sel("exp", "Expérience dans le métier", exp)+sel("dip", "Diplôme relié", dips)+sel("hors", "Expérience hors poste", hors)+sel("heures", "Heures par semaine", hres);
