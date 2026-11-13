@@ -1,4 +1,4 @@
-var APP_PUB = "360";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "361";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2568,7 +2568,7 @@ function vuePreparer(reelle){
     if(r && r.ok){
       [{action:"heures"}, {action:"tableau_courant"}, {action:"tableau"}, {action:"charges_jours"}].forEach(function(c){
         var k = cleLectureVue(c, r.session); c.session = r.session;
-        var p = enArriere(function(){ return appelBrut(c); });
+        var p = appelDirect(c);   // hors de la file d'appels (pleine de préchargements à l'ouverture): le tableau reprend cette promesse
         RCACHE[k] = {t: Date.now(), p: p};
         p.then(function(x){ if(!(x && x.ok) && RCACHE[k] && RCACHE[k].p === p) delete RCACHE[k]; }, function(){ if(RCACHE[k] && RCACHE[k].p === p) delete RCACHE[k]; });
       });
