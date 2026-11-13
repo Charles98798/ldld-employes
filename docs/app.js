@@ -1,4 +1,4 @@
-var APP_PUB = "356";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "357";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2564,7 +2564,7 @@ function vuePreparer(reelle){
   var pre = {reelle: reelle, t: Date.now()};
   pre.p = enArriere(function(){ return vueTirage(reelle); }).then(function(r){
     if(r && r.ok){
-      [{action:"heures"}, {action:"tableau_courant"}].forEach(function(c){
+      [{action:"heures"}, {action:"tableau_courant"}, {action:"tableau"}, {action:"charges_jours"}].forEach(function(c){
         var k = cleLectureVue(c, r.session); c.session = r.session;
         var p = enArriere(function(){ return appelBrut(c); });
         RCACHE[k] = {t: Date.now(), p: p};
@@ -2594,7 +2594,6 @@ function vueEmploye(i){
     VUE = {on:true, reel:reelle, session:r.session, nom:r.nom || "", relancer:function(){ vueEmploye(i); }};
     VUE_DERNIER = r.nom || "";
     sectionBase(i);
-    vuePreparer(reelle);
   }).catch(function(e){ vd("échec " + (e && e.message)); VUE.pend = false; VUE.on = false; sectionBase(i); });
 }
 function vueFin(){
