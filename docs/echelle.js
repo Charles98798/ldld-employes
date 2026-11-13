@@ -54,7 +54,7 @@ function echEcarts(){
     var med = echArr(e.maxAvant*(1+t)*e.posMediane, 2), ref = e.ref != null ? e.ref : e.refPasse, ec = ref ? (med / ref - 1) * 100 : null;
     h += '<div class="lab">' + echEsc(e.nom) + '</div><div class="tr"><span>Médiane de l’échelle</span><b>' + echFr(med, 2) + ' $</b></div>' +
       '<div class="tr"><span>Référence (Guichet-Emplois)</span>' + echCase("ech_ref" + i, e.ref, "$") + '</div>' +
-      '<div class="tr"><span>Écart</span><b>' + (ec == null ? "—" : (ec >= 0 ? "+ " : "− ") + echFr(Math.abs(ec), 1) + " %") + '</b></div>';
+      '<div class="tr"><span>Écart</span><b>' + (ec == null ? "—" : (ec >= 0 ? "+ " : "− ") + echFr(Math.abs(ec), 0) + " %") + '</b></div>';
   });
   return h;
 }
