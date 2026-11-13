@@ -1397,11 +1397,12 @@ function neTache(cfg){
     if(r && r.ok){ E.etat = "ok"; E.p = 100; E.ldld = cfg.suite ? cfg.suite(r) : ""; }
     else { E.etat = "non"; E.err = String((r && r.erreur) || "Réessayez"); }
     if(NE_ENV === E) neEnvDessiner();
+    if(E.etat === "ok" && cfg.disparait) setTimeout(function(){ if(NE_ENV === E){ NE_ENV = null; neEnvDessiner(); } }, cfg.disparait);
     if(cfg.fin) cfg.fin(E);
   }).catch(function(){ fin = true; clearInterval(tick); E.etat = "non"; E.err = cfg.reseau || "Réseau, réessayez"; if(NE_ENV === E) neEnvDessiner(); });
 }
 function neEnvoyer(dem){
-  neTache({nom: dem.nom, lib: {cours: "Envoi contrat en cours", ok: "Contrat envoyé", non: "Contrat non envoyé"}, reseau: "Réponse non reçue, vérifiez votre courriel avant de réessayer",
+  neTache({nom: dem.nom, disparait: 5000, lib: {cours: "Envoi contrat en cours", ok: "Contrat envoyé", non: "Contrat non envoyé"}, reseau: "Réponse non reçue, vérifiez votre courriel avant de réessayer",
     run: function(){ return appelService({action: "docusign_envoyer", session: sessionGardee(), id: dem.id, courriel: dem.courriel, confirme: true}).then(function(r){ if(r && r.ok){ NE_ATT = null; NE_ATTP = null; menu.attPre = false; } return r; }); },
     suite: function(r){ return (r.r && r.r.ldld) || ""; }});
 }
@@ -2307,7 +2308,7 @@ function gestionEmployes(){
   }
   function supprimer(id, nom){
     confirmerOuiNon("Supprimer "+nom+"? Ses archives sont gardées 4 ans.", function(){
-      neTache({nom: nom, duree: 20000, fin: function(E){ if(E.etat === "ok") setTimeout(function(){ if(document.getElementById("ge")) gestionEmployes(); }, 1500); }, lib: {cours: "Suppression en cours", ok: "Employé supprimé", non: "Employé non supprimé"}, reseau: "Réponse non reçue, vérifiez le classeur",
+      neTache({nom: nom, duree: 20000, disparait: 3000, fin: function(E){ if(E.etat === "ok") setTimeout(function(){ if(document.getElementById("ge")) gestionEmployes(); }, 1500); }, lib: {cours: "Suppression en cours", ok: "Employé supprimé", non: "Employé non supprimé"}, reseau: "Réponse non reçue, vérifiez le classeur",
         run: function(){ return appelService({action:"employe_supprimer", session:sessionGardee(), id:id}); }});
     }, true);
   }
