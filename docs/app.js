@@ -586,7 +586,7 @@ var ENT = [
  {id:"suivi_charge", g:"Gestion des employés", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
  {id:"echelle_salariale", g:"Gestion des employés", l:"Échelle salariale\u2191taux", p:"Échelle salariale", d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
  {id:"positionnement_employe", g:"Gestion des employés", l:"Position employé", p:"Positionnement employé", d:[0,0,1], f:function(){ posEmpOuvrir(); }},
- {id:"envoi_salarial", g:"Gestion des employés", l:"Envoi salarial", p:"Envoi salarial", d:[0,0,1], v:1, f:function(){ bientot(this); }},
+ {id:"envoi_salarial", g:"Gestion des employés", l:"Envoi salarial", p:"Envoi salarial", d:[0,0,1], v:1, f:function(){ envOuvrir(); }},
  {id:"stationnement", g:"Installations", l:"Stationnement", p:"Stationnement", d:[0,1,1], f:function(){ attributionPage("place"); }},
  {id:"casier", g:"Installations", l:"Casier", p:"Casier", d:[0,1,1], f:function(){ attributionPage("casier"); }},
  {id:"entretien_machinerie", g:"Installations", l:"Entretien machinerie", p:"Entretien machinerie", d:[1,1,1], f:function(){ entretien(); }},
