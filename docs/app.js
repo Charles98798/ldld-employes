@@ -1,4 +1,4 @@
-var APP_PUB = "364";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "366";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -594,7 +594,7 @@ function entreeOk(x){
   return !!x.d[r];
 }
 function entreesVisibles(){
-  var l = ENT.filter(function(x){ return !x.s && entreeOk(x); });
+  var l = ENT.filter(function(x){ return !x.s && entreeOk(x) && !(x.id === "calendrier" && !peutEcrire()); });
   if(!peutEcrire()){ var o = ORDRE_EMPLOYE; l.sort(function(a, b){ var x = o.indexOf(a.id), y = o.indexOf(b.id); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); }); }
   return l;
 }
@@ -611,7 +611,7 @@ function menu(){
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
   vis.forEach(function(x){
     if(grp && x.g !== g){ g = x.g; h += '<div class="gtit">▪ '+esc(g)+'</div>'; }
-    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.l)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(x.n ? '<b class="nc">'+x.n+'</b>' : "")+'</span></a>';
+    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.id === "messages" && !grp ? "Calendrier et messages" : x.l)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(x.n ? '<b class="nc">'+x.n+'</b>' : "")+'</span></a>';
   });
   if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { posEmpPrecharger(); embPrecharger(); } catch(e){} }
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="envg"></div><div id="auj"></div>' + h +
@@ -651,13 +651,27 @@ var MOIS = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.",
 function dateCourte(t){ var d = new Date(t); return d.getDate()+" "+MOIS[d.getMonth()]+" "+d.getFullYear(); }
 function peutEcrire(){ return MOI && (MOI.role === "direction" || MOI.role === "responsable"); }
 var FILTRE_MSG = "";
+// Bloc « À faire » de l'onglet fusionné: une autoévaluation à remplir, un toucher l'ouvre.
+function aeAFaire(){
+  function poser(){
+    var z = document.getElementById("afaire"); if(!z) return;
+    var ae = lireCache("ae");
+    if(!(ae && ae.rencontres && ae.rencontres.some(aeARemplir))){ z.innerHTML = ""; return; }
+    z.innerHTML = '<div class="etiq">▪ À FAIRE</div><a class="eev auj" href="#" id="aefaire"><div class="eh">Autoévaluation</div><div class="et">Votre autoévaluation est prête</div><div class="ed">Touchez ici pour l\'ouvrir.</div></a>';
+    document.getElementById("aefaire").onclick = function(e){ e.preventDefault(); aeEntree(); };
+  }
+  poser();
+  chercher("ae", {action:"ae_lire"}).then(poser).catch(function(){});
+}
 function messages(filtre){
   if(typeof filtre === "string") FILTRE_MSG = filtre;
-  var titreMsg = FILTRE_MSG === "envoyes" ? "Historique message" : FILTRE_MSG === "rencontres" ? "Rencontre demandée" : "Message reçu";
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1><div id="liste"></div>' +
+  var fusion = (!peutEcrire() && !FILTRE_MSG && !VUE.on);
+  var titreMsg = fusion ? "Calendrier et messages" : FILTRE_MSG === "envoyes" ? "Historique message" : FILTRE_MSG === "rencontres" ? "Rencontre demandée" : "Message reçu";
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div><div class="etiq">▪ À VENIR</div><div id="aven"></div><div class="etiq">▪ REÇUS</div>' : '') + '<div id="liste"></div>' +
     (peutEcrire() && !FILTRE_MSG ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
   var w = document.getElementById("ecrire"); if(w) w.onclick = function(e){ e.preventDefault(); nouveau("message"); };
+  if(fusion){ evenementsEmploye("aven"); aeAFaire(); }
   obtenir("messages", {action:"messages"}, function(r){
     if(!document.getElementById("liste")) return;
     MESSAGES = r.messages; var l = lus();
@@ -2448,12 +2462,10 @@ var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","ao
 var JOURS_LONGS_E = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"], MOIS_E = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
 function heureFr(t){ var m = /T(\d{2}):(\d{2})/.exec(t || ""); if(!m) return ""; return (+m[1]) + (m[2] === "00" ? " h" : " h " + m[2]); }
 function jourFr(iso){ var a = iso.split("-"), d = new Date(+a[0], +a[1] - 1, +a[2]); return JOURS_LONGS_E[d.getDay()] + " " + (+a[2]) + " " + MOIS_E[+a[1] - 1]; }
-function calendrierEmploye(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"></div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+function evenementsEmploye(idEl){
   var tn = torontoMaintenant().date, evs = [], fermes = [];
   function dessiner(){
-    var el = document.getElementById("cal"); if(!el) return;
+    var el = document.getElementById(idEl); if(!el) return;
     var liste = evs.map(function(x){ var j = String(x.debut || "").slice(0, 10), h = heureFr(x.debut), f = heureFr(x.fin); return {j:j, h:h ? (f ? h + " à " + f : h) : "", t:x.titre || "", d:x.texte || "", tri:String(x.debut || "")}; })
       .concat(fermes.map(function(x){ return {j:x.d, h:"Toute la journée", t:x.n || "Laboratoire fermé", d:"", tri:x.d + "T00:00"}; }))
       .filter(function(x){ return x.j >= tn; });
@@ -2469,11 +2481,16 @@ function calendrierEmploye(){
   obtenir("evenements_employe", {action:"evenements_employe"}, function(r){
     if(!r || !r.evenements) throw 0;
     evs = r.evenements; dessiner();
-  }, function(){ var el = document.getElementById("cal"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
+  }, function(){ var el = document.getElementById(idEl); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
   chercher("calendrier_labo", {action:"calendrier_labo"}).then(function(c){
     if(!c || !c.ok || !c.jours) return;
     fermes = c.jours.filter(function(x){ return x.t === "f" || x.t === "p" || x.t === "c"; }); dessiner();
   }).catch(function(){});
+}
+function calendrierEmploye(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier</h1><div id="cal"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  evenementsEmploye("cal");
 }
 function calendrier(){
   if(!peutEcrire() && !VUE.on) return calendrierEmploye();
