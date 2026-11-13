@@ -2190,8 +2190,9 @@ function modifierReunion(e){
   appelService({action:"equipe_groupes", session:sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
     var noms = String(e.a || "").split(", "), init = {grp: [], emp: []};
-    (r.groupes || []).forEach(function(g){ if(noms.indexOf(g.nom) >= 0) init.grp.push(g.nom); });
-    r.personnes.forEach(function(p){ if(noms.indexOf(nomTitre(p.nom)) >= 0) init.emp.push(p.c); });
+    var gN = (e.groupes || []).map(nomSimple), iD = e.ids || [];   // sélection enregistrée avec l'événement (numéros LDLD et groupes); sinon, les noms du champ « À »
+    (r.groupes || []).forEach(function(g){ if(noms.indexOf(g.nom) >= 0 || gN.indexOf(nomSimple(g.nom)) >= 0) init.grp.push(g.nom); });
+    r.personnes.forEach(function(p){ if(noms.indexOf(nomTitre(p.nom)) >= 0 || (p.id && iD.indexOf(p.id) >= 0)) init.emp.push(p.c); });
     part = participants(r.personnes, r.groupes || [], maj, init);
     part.monter(document.getElementById("npart"));
     document.getElementById("nreste").innerHTML = '<div id="ndh"></div><span class="lbl">Sujet · obligatoire</span><input class="bx" id="nsuj" maxlength="120" value="'+esc(sujet)+'">' +
