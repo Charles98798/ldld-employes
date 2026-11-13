@@ -57,8 +57,31 @@ function echEcarts(){
   });
   return h;
 }
+function echSel(){
+  var v = ECH.vue || "suiv";
+  return '<div class="tgm" style="margin-bottom:10px"><button type="button" class="tgb' + (v === "act" ? " on" : "") + '" data-ev="act">Année en cours</button><button type="button" class="tgb' + (v === "suiv" ? " on" : "") + '" data-ev="suiv">Année suivante</button></div>';
+}
+function echSelLier(){
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ev]"), function(b){ b.onclick = function(){ ECH.vue = b.getAttribute("data-ev"); echRendu(); }; });
+}
+function echActuelle(){
+  var z = document.getElementById("ech_app");
+  z.innerHTML = echSel() + '<div class="bandeau" id="ech_att">▪ UN INSTANT</div>'; echSelLier();
+  var rendre = function(r){
+    var E = null; ((r && r.r && r.r.echelles) || (r && r.echelles) || []).forEach(function(e){ if(e.actuelle) E = e; });
+    if(!E){ z.innerHTML = echSel() + '<div class="bandeau">▪ ÉCHELLE EN COURS INDISPONIBLE</div>'; echSelLier(); return; }
+    var np = E.echelons.length, cats = Object.keys(E.cats);
+    var g = '<div class="band">Année en cours — ' + E.annee + '</div><div class="sect"><span class="num">04</span><span class="lab">Échelle salariale</span></div><div id="ech_grille"><div class="e5" style="grid-template-columns:58px repeat(' + np + ',minmax(0,1fr));font-size:8.5px;letter-spacing:0"><div class="h"></div>' +
+      E.echelons.map(function(p){ return '<div class="h" style="padding:0">' + Math.round(p > 1 ? p : p*100) + '&nbsp;%</div>'; }).join("");
+    cats.forEach(function(c){ g += '<div class="l" style="font-size:8.5px;line-height:1.1;text-align:left">' + echEsc(c) + '</div>' + E.cats[c].map(function(v){ return '<div style="padding:0">' + echFr(v, 2) + '</div>'; }).join(""); });
+    z.innerHTML = echSel() + g + '</div></div>'; echSelLier();
+  };
+  if(ECH.act) rendre(ECH.act);
+  else appelService({action: "embauche_donnees", session: sessionGardee()}).then(function(r){ ECH.act = r; rendre(r); }).catch(function(){ z.innerHTML = echSel() + '<div class="bandeau">▪ ÉCHELLE EN COURS INDISPONIBLE</div>'; echSelLier(); });
+}
 function echRendu(){
-  var d = ECH.d, h = '<div class="band">Année suivante en préparation — ' + d.annee + '</div>';
+  if(ECH.vue === "act") return echActuelle();
+  var d = ECH.d, h = echSel() + '<div class="band">Année suivante en préparation — ' + d.annee + '</div>';
   h += '<div class="sect"><span class="num">01</span><span class="lab">Taux d’augmentation applicable</span></div><div class="tr"><span>Taux d’augmentation</span>' + echCase("ech_taux", d.taux, "%") + '</div>';
   h += '<div class="sect"><span class="num">02</span><span class="lab">Taux du marché</span></div>' + d.marche.map(function(m, i){ return '<div class="tr"><span>' + echEsc(m.nom) + '</span>' + echCase("ech_mar" + i, m.val, "%") + '</div>'; }).join("");
   h += '<div class="sect"><span class="num">03</span><span class="lab">Écart de la grille avec le marché</span></div><div id="ech_ecarts">' + echEcarts() + '</div>';
@@ -68,7 +91,7 @@ function echRendu(){
   h += '<div class="sect"><span class="num">06</span><span class="lab">Bonification annuelle — gestionnaires</span></div><div class="lab" style="display:flex;justify-content:space-between"><span>Marge brute</span><span>% du salaire annuel</span></div>' +
     d.bonusAnnuel.map(function(b, i){ return '<div class="g6">' + echCase("ech_bam" + i, b.marge, "%") + '<span class="f">' + echEsc(b.mot || "") + '</span><span class="ar"></span>' + echCase("ech_bap" + i, b.pct == null && i === 0 ? 0 : b.pct, "%") + '</div>'; }).join("");
   h += '<p class="finnote" id="ech_etat"></p>';
-  document.getElementById("ech_app").innerHTML = h;
+  document.getElementById("ech_app").innerHTML = h; echSelLier();
   function lier(id, maj, champ, ind){
     var el = document.getElementById(id); if(!el) return;
     el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; var n = echNum(el.value); if(n != null || el.value.trim() === "") { maj(n); if(ind) { document.getElementById("ech_grille").innerHTML = echGrille(); document.getElementById("ech_ecarts").innerHTML = echEcarts(); echLierRefs(); } } };
