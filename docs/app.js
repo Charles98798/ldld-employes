@@ -1,4 +1,4 @@
-var APP_PUB = "449";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "450";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2516,17 +2516,17 @@ function gestionEmployes(){
 function sectionsPortrait(p){
   function pct(x){ return x === null || x === undefined ? "—" : Math.round(x*100)+" %"; }
   var c = p.contribution, ch = p.charge, pa = p.paroles, ci = p.cibles || {}, h = "";
-  h += '<div class="etq" style="margin-top:14px">CONTRIBUTION</div>';
+  h += '<div class="pts"><b>03</b>Contribution</div>';
   h += c ? '<div style="font-size:28px">'+pct(c.resultat)+'</div>' +
       [["Technique", c.tech], ["Autonomie", c.auto], ["Qualité", c.qual]].filter(function(l){ return l[1] !== null && l[1] !== undefined; })
         .map(function(l){ return '<div class="ligne"><span>▪ '+l[0]+'</span><span>'+esc(String(l[1]).replace(".", ","))+'</span></div>'; }).join("") +
       (c.obj !== null && c.obj !== undefined ? '<div class="ligne"><span>▪ Objectifs</span><span>'+pct(c.obj)+'</span></div>' : "")
     : '<div class="bandeau">▪ AUCUNE APPRÉCIATION CETTE ANNÉE</div>';
-  h += '<div class="etiq" style="margin-top:18px">▪ 02 CHARGE DE TRAVAIL</div>';
+  h += '<div class="pts"><b>05</b>Objectifs et charges</div>';
   h += ch ? [["Charge effectuée", ch.effectuee, "cible "+pct(ci.effectuee)], ["Charge non terminée", ch.nonTerminee, "cible "+pct(ci.nonTerminee)], ["Objectifs atteints", ch.objectifs, "cible "+pct(ci.objectifs)]]
       .map(function(l){ return '<div class="ligne"><span>▪ '+l[0]+' <small>'+l[2]+'</small></span><span>'+pct(l[1])+'</span></div>'; }).join("")
     : '<div class="bandeau">▪ DONNÉES À VENIR</div>';
-  h += '<div class="etiq" style="margin-top:18px">▪ 03 POUR NOTRE DISCUSSION</div>';
+  h += '<div class="pts"><b>04</b>Pour notre discussion</div>';
   h += pa ? [["CE QUI VA BIEN", pa.bien], ["À DÉVELOPPER", pa.developper], ["À ABORDER", pa.aborder]].filter(function(l){ return l[1]; })
       .map(function(l){ return '<div class="etq" style="margin-top:10px">'+l[0]+'</div><div>'+esc(l[1])+'</div>'; }).join("")
     : '<div class="bandeau">▪ AUTOÉVALUATION NON REMPLIE</div>';
@@ -2544,14 +2544,23 @@ function portrait(id){
     var p = r.portrait, liste = r.employes, i = liste.map(function(x){ return x.id; }).indexOf(p.id);
     var posNum = parseFloat(String(p.position).replace(",", ".")), ech = p.echelle || [];
     var lignes = [["Salaire de base", p.base], ["Vacances, fériés et maladie", p.conges], ["Boni", p.boni], ["Assurances collectives", p.assurances], ["Cotisation OTPADQ", p.otpadq]];
-    el.innerHTML = '<h1>Portrait d’un employé</h1><div class="etiq">'+esc(p.nom)+'</div><div class="etiq">'+esc(String(p.categorie).toUpperCase())+' · PORTRAIT '+(new Date().getFullYear())+'</div>' +
+    function sec(n, t){ return '<div class="pts"><b>'+n+'</b>'+t+'</div>'; }
+    function lig(l, v){ return '<div class="ptl"><span>'+l+'</span><b>'+v+'</b></div>'; }
+    var cur = null, bas = null, hau = null;
+    if(ech.length){ bas = ech[0]; hau = ech[ech.length-1]; ech.forEach(function(c){ if(parseFloat(String(c.p).replace(",", ".")) === posNum) cur = c; }); }
+    var pn = function(c){ var n = parseFloat(String(c.p).replace(",", ".")); if(Math.abs(n) <= 2.5) n = n * 100; return n; }, lo = bas ? pn(bas) : 0, hi = hau ? pn(hau) : 100, pc = Math.abs(posNum) <= 2.5 ? posNum * 100 : posNum, w = isFinite(pc) && hi > lo ? Math.max(0, Math.min(100, (pc - lo) / (hi - lo) * 100)) : 0;
+    var tot = Number(p.total) || 0, bs = Number(p.base) || 0, cg = Number(p.conges) || 0, au = Math.max(0, tot - bs - cg), pp = function(x){ return tot ? Math.round(x / tot * 100) : 0; };
+    el.innerHTML = '<h1>Portrait d’un employé</h1>' +
       '<select class="champ" id="ps">'+liste.map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id === p.id ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
-      '<div class="aeact" style="margin:0 0 14px"><button type="button" class="bouton" id="pp" style="margin:0"'+(i <= 0 ? " disabled" : "")+'>Précédent</button><button type="button" class="bouton" id="psv" style="margin:0"'+(i >= liste.length-1 ? " disabled" : "")+'>Suivant</button></div>' +
-      '<div class="etiq">▪ 01 OÙ VOUS EN ÊTES</div>' +
-      '<div class="dh"><div style="flex:1"><div class="etq">EXPÉRIENCE</div><div style="font-size:28px">'+(p.experience === null ? "—" : esc(String(p.experience).replace(".", ","))+' <small>ans</small>')+'</div></div><div style="flex:1"><div class="etq">POSITION DANS L\'ÉCHELLE</div><div style="font-size:28px">'+pctPos(p.position)+'</div></div></div>' +
-      '<div class="etq" style="margin-top:14px">RÉMUNÉRATION GLOBALE</div><div style="font-size:28px">'+dollars(p.total)+'</div>' +
-      lignes.map(function(l){ return '<div class="ligne"><span>▪ '+l[0]+'</span><span>'+dollars(l[1])+'</span></div>'; }).join("") +
-      (ech.length ? '<div class="etiq" style="margin-top:18px">▪ ÉCHELLE SALARIALE — '+esc(String(p.categorie).toUpperCase())+'</div><div style="overflow-x:auto"><table class="gs-t" style="border-collapse:collapse;font-size:12px;width:100%"><tr>'+ech.map(function(c){ var act = parseFloat(String(c.p).replace(",", ".")) === posNum; return '<td style="padding:6px 4px;text-align:center;border:1px solid var(--tx2)'+(act ? ';background:var(--tx);color:var(--noir)' : '')+'">'+pctPos(c.p)+'</td>'; }).join("")+'</tr><tr>'+ech.map(function(c){ var act = parseFloat(String(c.p).replace(",", ".")) === posNum; return '<td style="padding:6px 4px;text-align:center;border:1px solid var(--tx2)'+(act ? ';background:var(--tx);color:var(--noir)' : '')+'">'+tauxH(c.t)+'</td>'; }).join("")+'</tr></table></div>' : "") + sectionsPortrait(p);
+      '<div class="ptn"><button type="button" id="pp"'+(i <= 0 ? " disabled" : "")+'>Précédent</button><button type="button" id="psv"'+(i >= liste.length-1 ? " disabled" : "")+'>Suivant</button></div>' +
+      '<div class="ptk">'+esc(String(p.categorie))+' · Portrait '+(new Date().getFullYear())+' · '+(p.experience === null || p.experience === undefined ? "—" : esc(String(p.experience).replace(".", ","))+' ans d’expérience')+'</div>' +
+      sec("01", "Position dans l’échelle") +
+      '<div class="ptk">L’échelle · '+esc(String(p.categorie))+'</div><div class="ptb">Vous êtes à '+pctPos(p.position)+'</div>' +
+      (ech.length ? '<div class="ptr"><i style="width:'+w+'%"></i><em style="left:'+w+'%"></em></div><div class="ptt"><div><div class="ptk">Bas</div><div class="ptv">'+pctPos(bas.p)+'</div><div class="ptd">'+tauxH(bas.t)+' / h</div></div><div class="on"><div class="ptk">Votre position</div><div class="ptv">'+pctPos(p.position)+'</div><div class="ptd">'+(cur ? tauxH(cur.t)+' / h' : "")+'</div></div><div><div class="ptk">Sommet</div><div class="ptv">'+pctPos(hau.p)+'</div><div class="ptd">'+tauxH(hau.t)+' / h</div></div></div>' : "") +
+      sec("02", "Rémunération globale") + '<div class="ptb">'+dollars(p.total)+'</div>' +
+      lignes.map(function(l){ return lig(l[0], dollars(l[1])); }).join("") +
+      (tot ? '<div class="ptk" style="margin-top:12px">Répartition de votre rémunération globale</div><div class="ptp"><i style="width:'+pp(bs)+'%;background:#B4AB9B"></i><i style="width:'+pp(cg)+'%;background:#d9cfba"></i><i style="width:'+pp(au)+'%;background:#E3DFD3"></i></div><div class="ptg"><div><s style="background:#B4AB9B"></s>Salaire de base · '+pp(bs)+' %</div><div><s style="background:#d9cfba"></s>Vacances, fériés et maladie · '+pp(cg)+' %</div><div><s style="background:#E3DFD3"></s>Autres avantages · '+pp(au)+' %</div></div>' : "") +
+      sectionsPortrait(p);
     document.getElementById("ps").onchange = function(){ portrait(this.value); };
     var pp = document.getElementById("pp"), sv = document.getElementById("psv");
     if(pp) pp.onclick = function(){ if(i > 0) portrait(liste[i-1].id); };
