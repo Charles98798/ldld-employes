@@ -2178,13 +2178,14 @@ function modifierReunion(e){
   function envoyerMod(portee){
     var q = dh.lire(); var bt = document.getElementById("btnbas"); bt.disabled = true; dire("▪ ENREGISTREMENT…");
     var nomsChoisis = part.noms().join(", ").slice(0, 190), corpsMod = {action:"agenda_modifier", session:sessionGardee(), id:e.id, portee:portee, titre:sujet.trim(), texte:e.texte || "", a:nomsChoisis, debut:q.date+"T"+q.heure, minutes:dur};
-    if(nomsChoisis !== String(e.a || "")){ corpsMod.ids = part.ids(); corpsMod.groupes = part.groupes(); if(e.ag) corpsMod.agenda = e.ag; }   // la sélection n'est envoyée que si elle a changé
+    if(e.ag || e.agenda) corpsMod.agenda = e.ag || e.agenda;   // l'événement est retrouvé dans SON agenda
+    if(nomsChoisis !== String(e.a || "")){ corpsMod.ids = part.ids(); corpsMod.groupes = part.groupes(); }   // la sélection n'est envoyée que si elle a changé
     appelService(corpsMod).then(function(r){
       if(r && r.ok){ dire("▪ RÉUNION MODIFIÉE"); setTimeout(retour, 1000); } else { bt.disabled = false; dire("▪ NON MODIFIÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
     }).catch(function(){ bt.disabled = false; dire("▪ NON MODIFIÉE · RÉSEAU"); });
   }
   function supprimer(){ confirmerOuiNon("Supprimer cette réunion ?", function(){
-    dire("▪ SUPPRESSION…"); appelService({action:"agenda_supprimer", session:sessionGardee(), id:e.id, serie:false}).then(function(r){
+    dire("▪ SUPPRESSION…"); appelService({action:"agenda_supprimer", session:sessionGardee(), agenda:(e.ag || e.agenda || undefined), id:e.id, serie:false}).then(function(r){
       if(r && r.ok) retour(); else dire("▪ NON SUPPRIMÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }).catch(function(){ dire("▪ NON SUPPRIMÉE · RÉSEAU"); }); }, true); }
   appelService({action:"equipe_groupes", session:sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
@@ -2215,7 +2216,7 @@ function mesEvenements(){
     var bm = document.getElementById("mm"); if(bm) bm.onclick = function(){ modifierReunion(liste[choisi]); };
     var bs = document.getElementById("ms"); if(bs) bs.onclick = function(){ mode = "sup"; dessiner(); };
     function sup(serie){ var e = liste[choisi]; msg = "▪ SUPPRESSION…"; dessiner();
-      appelService({action:"agenda_supprimer", session:sessionGardee(), id:e.id, serie:serie}).then(function(r){ if(r && r.ok){ choisi = null; mode = ""; msg = ""; charger(); } else { msg = "▪ "+String((r && r.erreur) || "ÉCHEC").toUpperCase(); dessiner(); } }).catch(function(){ msg = "▪ ÉCHEC · RÉSEAU"; dessiner(); }); }
+      appelService({action:"agenda_supprimer", session:sessionGardee(), agenda:(e.ag || e.agenda || undefined), id:e.id, serie:serie}).then(function(r){ if(r && r.ok){ choisi = null; mode = ""; msg = ""; charger(); } else { msg = "▪ "+String((r && r.erreur) || "ÉCHEC").toUpperCase(); dessiner(); } }).catch(function(){ msg = "▪ ÉCHEC · RÉSEAU"; dessiner(); }); }
     var b1 = document.getElementById("m1"); if(b1) b1.onclick = function(){ confirmerOuiNon("Supprimer cet événement ?", function(){ sup(false); }, false); };
     var b2 = document.getElementById("m2"); if(b2) b2.onclick = function(){ confirmerOuiNon("Supprimer toute la série ?", function(){ sup(true); }, false); };
   }
