@@ -12,6 +12,8 @@ function ccAujourdhui(){ try { return new Intl.DateTimeFormat("en-CA", {timeZone
 
 // ---- Photos: cache des miniatures sur l'appareil, lecture authentifiée par lots
 function ccImgCle(id){ return "ldld-ccm-"+id; }
+// Version des miniatures: un changement vide toutes les miniatures gardées sur l'appareil (photos remplacées par des versions masquées le 13 novembre).
+(function(){ try { if(localStorage.getItem("ldld-ccm-version") !== "2"){ Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-ccm-") === 0) localStorage.removeItem(k); }); localStorage.setItem("ldld-ccm-version", "2"); } } catch(e){} })();
 function ccImgLire(id){ if(CC.img[id]) return CC.img[id]; try { var v = localStorage.getItem(ccImgCle(id)); if(v){ CC.img[id] = v; return v; } } catch(e){} return ""; }
 function ccImgGarder(id, url, mini){ CC.img[id] = url; if(mini){ try { localStorage.setItem(ccImgCle(id), url); } catch(e){} } }
 function ccPhotos(ids, mini, apres){
