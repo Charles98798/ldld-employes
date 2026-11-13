@@ -1,4 +1,4 @@
-var APP_PUB = "422";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "423";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2391,10 +2391,11 @@ function suiviCharge(){
       '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente</b>'+(d ? '<div style="margin-bottom:4px">'+dateCourte(d.date)+' · État choisi : <span style="font-weight:600">'+esc(d.etat)+'</span></div>' : "")+(d && d.note ? esc(d.note) : '<span>'+(d ? "Aucune note." : "Aucun suivi précédent.")+'</span>')+'</div>' +
       '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, !etat, "se"+k); }).join("")+'</div>' +
       '<div class="etq" style="margin-top:14px">NOTE · OPTIONNELLE</div>' +
-      '<textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="width:100%;margin:4px 0 0">'+esc(sauvNote)+'</textarea>' +
+      '<textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="width:100%;box-sizing:border-box;margin:4px 0 0;background:#B7B1A5;color:#1D1D1B;border:0;border-radius:0;padding:12px">'+esc(sauvNote)+'</textarea>' +
       (msg ? '<div class="bandeau" style="margin-top:10px">'+esc(msg)+'</div>' : "");
     el.innerHTML = h;
     ETATS.forEach(function(x, k){ document.getElementById("se"+k).onclick = function(){ lireNote(); etat = x; msg = ""; if(k === 0) enregistrer(); else dessiner(); }; });
+    document.getElementById("se2").style.flexGrow = "1.8"; document.getElementById("se0").style.flexGrow = "0.9"; document.getElementById("se1").style.flexGrow = "1";
     document.getElementById("sce").onchange = function(){ i = +this.value; etat = ""; sauvNote = ""; msg = ""; occupe = false; window.scrollTo(0, 0); dessiner(); };
     barre();
   }
