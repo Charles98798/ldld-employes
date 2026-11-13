@@ -1,4 +1,4 @@
-var APP_PUB = "362";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "363";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -218,7 +218,18 @@ function appelDirect(corps, vu){
     COPIE.sess = sess;
   }
   if((a === "heures" || COPIE_SIMPLE[a]) && Date.now() > COPIE.hors){
-    if(!copiePrete()){ copiePreparer(corps).catch(function(){ COPIE.hors = Date.now() + 600000; }); return appelDirectGoogle(corps, vu); }
+    if(!copiePrete()){
+      // Copie pas encore prête (jeton + interrupteur, environ 1 s): on l'attend 2,5 s au plus; passé ce délai, ou si elle échoue, Google répond. La première réponse gagne.
+      return new Promise(function(ok, ko){
+        var fini = false, g = false, tm = 0;
+        function google(){ if(g) return; g = true; appelDirectGoogle(corps, vu).then(function(r){ if(!fini){ fini = true; ok(r); } }, function(e){ if(!fini){ fini = true; ko(e); } }); }
+        tm = setTimeout(google, 2500);
+        copiePreparer(corps).then(function(){
+          if(!(copiePrete() && COPIE.interr[a] === "copie")) throw new Error("nonprete");
+          return a === "heures" ? copieHeures(corps) : copieSimple(a);
+        }).then(function(r){ if(!fini){ fini = true; clearTimeout(tm); ok(r); } }, function(e){ clearTimeout(tm); var m = String(e && e.message); if(!/^(jour|ancienne|vide|vieille|nonprete)$/.test(m)) COPIE.hors = Date.now() + 120000; google(); });
+      });
+    }
     if(COPIE.exp - Date.now() < 120000 || Date.now() - COPIE.interrT > 240000) copiePreparer(corps).catch(function(){});   // renouvellement silencieux: la lecture en cours utilise encore le jeton valide
     if(COPIE.interr[a] === "copie") return (a === "heures" ? copieHeures(corps) : copieSimple(a)).catch(function(e){ if(!/^(jour|ancienne|vide|vieille)$/.test(String(e && e.message))) COPIE.hors = Date.now() + 60000; return appelDirectGoogle(corps, vu); });
   }
