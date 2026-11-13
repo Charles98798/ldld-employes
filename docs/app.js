@@ -1,4 +1,4 @@
-var APP_PUB = "384";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "385";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -288,8 +288,9 @@ function prechargerLectures(){
   prechargerLectures.t = Date.now();
   var l = [{action:"heures"}, {action:"agenda_mes"}, {action:"rencontre_liste"}, {action:"prefs_lire"}, {action:"entretien_lire"}];
   if(MOI.role === "direction" || MOI.role === "responsable") l = l.concat([{action:"charge_equipe"}, {action:"entretien_lire"}, {action:"parking_lire"}, {action:"equipe_groupes"}, {action:"utilisation"}, {action:"agenda_liste"}]);
-  if(MOI.role === "direction") l = l.concat([{action:"production_lire"}, {action:"employes_etat"}, {action:"emp_donnees"}, {action:"ech_donnees"}, {action:"embauche_donnees"}, {action:"embauche_avantages"}, {action:"pos_donnees"}, {action:"portrait", id:""}]);
+  if(MOI.role === "direction") l = l.concat([{action:"production_lire"}, {action:"employes_etat"}, {action:"ech_donnees"}, {action:"embauche_donnees"}, {action:"embauche_avantages"}, {action:"pos_donnees"}, {action:"portrait", id:""}]);
   var i = 0; function suite(){ if(i >= l.length) return; var c = l[i++]; c.session = sessionGardee(); var e = RCACHE[cleLecture(c)]; ((e && Date.now() - e.t < 150000) ? Promise.resolve() : enArriere(function(){ return appelService(c); }).catch(function(){})).then(suite); }
+  if(MOI.role === "direction"){ setTimeout(suite, 15000); return; }   // Direction: une seule file, 15 s après l'arrivée (les ouvertures de page passent d'abord, le service n'est pas saturé)
   suite(); setTimeout(suite, 300); setTimeout(suite, 600);
 }
 
@@ -378,10 +379,11 @@ function prechargerAgendas(){
   } catch(e){}
 }
 function precharger2(){
-  chercher("heures", {action:"heures"}).catch(function(){});   // les heures en premier: page la plus ouverte, lecture la plus lente
+  var dir = MOI && MOI.role === "direction";   // compte Direction: ni heures, ni tableau de bord à lui (aucune donnée, et ces lectures saturaient le service à l'ouverture)
+  if(!dir) chercher("heures", {action:"heures"}).catch(function(){});   // les heures en premier: page la plus ouverte, lecture la plus lente
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
-  chercher("tableau", {action:"tableau"}).catch(function(){});
-  chercher("tableau_courant", {action:"tableau_courant"}).catch(function(){});
+  if(!dir) chercher("tableau", {action:"tableau"}).catch(function(){});
+  if(!dir) chercher("tableau_courant", {action:"tableau_courant"}).catch(function(){});
   chercher("incendie_texte", {action:"incendie_texte"}).catch(function(){});
   chercher("manuel_texte", {action:"manuel_texte"}).catch(function(){});
   chercher("calendrier", {action:"calendrier"}).catch(function(){});
