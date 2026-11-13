@@ -1,4 +1,4 @@
-var APP_PUB = "372";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "373";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -108,7 +108,7 @@ function filetVide(){
   var plein = c.innerText.replace(/\s+/g, "").length > 0 || !!c.querySelector("input,select,textarea,button,img,svg,canvas,a");
   var m = pg.querySelector(".auto-instant");
   if(plein){ if(m) m.remove(); return; }
-  if(!m){ m = document.createElement("div"); m.className = "bandeau auto-instant"; m.textContent = "▪ UN INSTANT · " + APP_PUB; var r = pg.querySelector("a.retour"); pg.insertBefore(m, r || null); }
+  if(!m){ m = document.createElement("div"); m.className = "bandeau auto-instant"; m.textContent = "▪ UN INSTANT"; var r = pg.querySelector("a.retour"); pg.insertBefore(m, r || null); }
 }
 setInterval(filetVide, 300);
 window.addEventListener("resize", majRetour);
@@ -1104,7 +1104,7 @@ function graphJoursActif(el){
   choisir(bs[bs.length-1]);
 }
 function tableau(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Tableau de bord</h1><div id="tb">'+(VUE.on ? '<div class="bandeau">▪ UN INSTANT · '+APP_PUB+'</div><p class="aide" id="vdiag" style="font-size:11px"></p>' : '')+'</div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Tableau de bord</h1><div id="tb">'+(VUE.on ? '<div class="bandeau">▪ UN INSTANT</div>' : '')+'</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   if(VUE.on){ vd("tableau demandé"); }
   obtenir("tableau", {action:"tableau"}, function(r){
@@ -2615,7 +2615,7 @@ var VUE_PRE = null, VUE_DERNIER = "", VUE_ANCIEN_FIXE = false;
 function cleLectureVue(c, sess){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); o._v = sess; return JSON.stringify(o); }
 // Employé fixe pour les essais de la Direction (Antonio); si le service ne le trouve pas, tirage au hasard comme avant.
 var VDIAG = [], VD0 = 0;   // journal visible (Direction, écran d'attente de « voir comme »): étapes et durées
-function vd(t){ if(!VD0) VD0 = Date.now(); VDIAG.push(((Date.now() - VD0) / 1000).toFixed(1) + " s · " + t); var z = document.getElementById("vdiag"); if(z) z.innerHTML = VDIAG.slice(-12).map(esc).join("<br>"); }
+function vd(t){}   // journal de diagnostic retiré (affichage supprimé)
 function vueTirage(reelle){   // hors de la file d'appels: la file est pleine de préchargements à l'ouverture et retardait « voir comme » de 15 à 25 s
   function va(c){ vd("envoi " + c.action + " " + c.nom); return appelDirectGoogle(c).then(function(r){ vd("réponse " + c.nom + " ok=" + !!(r && r.ok) + (r && r.erreur ? " " + r.erreur : "")); return r; }, function(e){ vd("erreur " + c.nom + " " + (e && e.message)); throw e; }); }
   // La session lecture seule d'Antonio est gardée sur l'appareil de la Direction (10 h): plus de demande au service à chaque ouverture
@@ -2642,7 +2642,7 @@ function vuePreparer(reelle){
 function vueEmploye(i){
   var reelle = VUE.on ? VUE.reel : sessionGardee(), ancien = VUE.on ? VUE.session : null, prec = VUE.nom; VUE_ANCIEN_FIXE = !!VUE.fixe;
   VUE.on = false;
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ UN INSTANT · '+APP_PUB+'</div><p class="aide" id="vdiag" style="font-size:11px"></p></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ UN INSTANT</div></div>';
   VDIAG = []; VD0 = Date.now(); vd("ouverture " + (VUE_PRE ? "(préparé)" : "(non préparé)"));
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); VUE.pend = false; VUE.on = false; menu(); };
   VUE.pend = true;
