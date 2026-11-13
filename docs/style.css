@@ -1000,7 +1000,6 @@ select:not(.act){width:100%;box-sizing:border-box}
 .menu a[data-k]>span:first-child{min-width:0;white-space:nowrap}
 
 /* Connexion: dans le navigateur (pas l'application installée), la barre flottante de Safari recouvre le bas de l'écran; on remonte « LDLD EMPLOYÉS » au-dessus */
-@media (display-mode: browser){.connexion .pied-connexion{bottom:calc(env(safe-area-inset-bottom,0px) + 110px)}}
-@media not all and (display-mode: standalone){.connexion .pied-connexion{bottom:calc(env(safe-area-inset-bottom,0px) + 110px)}}
-@supports (height:100dvh){.connexion{min-height:100dvh}}
+
+@media not all and (display-mode: standalone){.connexion .pied-connexion{bottom:calc(env(safe-area-inset-bottom,0px) + 82px)}}
 @media (min-width:900px){.connexion .pied-connexion{bottom:auto}}
