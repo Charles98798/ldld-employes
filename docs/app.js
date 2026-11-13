@@ -1,4 +1,4 @@
-var APP_PUB = "413";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "414";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -28,6 +28,7 @@ var PICTOS = {
  "Comptes clients": "M3 3h18v18h-18zM7 8h10v2h-10zM7 12h10v2h-10zM7 16h5v2h-5z",
  "Production": "M2 4h6v6h-6zM9 4h6v6h-6zM16 4h6v6h-6zM2 13h20v3h-20zM4 18h4v4h-4zM16 18h4v4h-4z",
  "Contrôle": "M2 2h20v20h-20zM5 5h14v14h-14zM7 12h3v3h-3zM10 15h3v3h-3zM13 9h3v6h-3z",
+ "Prix et soumissions": "M2 11l9-9h11v11l-9 9zM15 5h4v4h-4z",
  "Finances": "M4 1h16v22h-16zM7 4h10v5h-10zM7 12h3v3h-3zM11 12h2v3h-2zM14 12h3v3h-3zM7 17h3v3h-3zM11 17h2v3h-2zM14 17h3v3h-3z",
  "Conseil d'administration": "M5 9h14v6h-14zM6 4h4v3h-4zM14 4h4v3h-4zM6 17h4v3h-4zM14 17h4v3h-4zM2 10h2v4h-2zM20 10h2v4h-2z",
  "Employés": "M3 4h6v6h-6zM15 4h6v6h-6zM3 13h18v8h-18z",
@@ -593,6 +594,7 @@ var ENT = [
  {id:"finances_clients", g:"Finances", l:"Finances · Comptes clients", p:"Comptes clients", d:[0,0,1], v:1, s:1},
  {id:"finances_etats", g:"Finances", l:"Finances · États financiers", p:"États financiers", d:[0,0,1], v:1, s:1},
  {id:"manuel", g:"Documents", l:"Manuel d’employé", p:"Manuel", d:[1,1,1], i:1, f:function(){ section(1); }},
+ {id:"prix_soumissions", g:"Documents", l:"Prix et soumissions", p:"Prix et soumissions", d:[0,0,0], f:function(){ prixSoumissions(); }},
  {id:"plan_incendie", g:"Documents", l:"Plan d’incendie", p:"Plan d'incendie", d:[1,1,1], i:5, f:function(){ section(5); }},
  {id:"utilisation", g:"Contrôle", l:"Utilisation app", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
  {id:"controle", g:"Contrôle", l:"Contrôle", p:"Contrôle", d:[0,0,1], v:1, f:function(){ controleOuvrir(); }}
@@ -1688,6 +1690,59 @@ function groupesFrequence(taches){
   return Object.keys(G).sort(function(a, b){ return (RANG[a] === undefined ? 8 : RANG[a]) - (RANG[b] === undefined ? 8 : RANG[b]); }).map(function(f){ return {f: f.charAt(0).toUpperCase() + f.slice(1), t: G[f]}; });
 }
 // Entretien machinerie : responsables et direction consultent et modifient; l'employé voit seulement ses machines (« Mes entretiens »).
+// Prix et soumissions (Gestionnaire et Direction): lecture seule, texte seulement; service « prix_soumissions » (copie Supabase ensuite).
+function prixSoumissions(){
+  var vue = "liste", rech = "", ouv = {}, d = null;
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Prix et soumissions</h1><div id="psb"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  function fmt(p){ if(typeof p === "number" || /^[\d\s.,]+$/.test(String(p))){ var n = typeof p === "number" ? p : parseFloat(String(p).replace(/\s/g, "").replace(",", ".")); return isFinite(n) ? n.toLocaleString("fr-CA", {maximumFractionDigits: 2}) + " $" : esc(String(p)); } return esc(String(p == null ? "" : p)); }
+  function ok(t){ return !rech || String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").indexOf(rech) >= 0; }
+  function dessiner(){
+    var el = document.getElementById("psb"); if(!el) return;
+    var h = '<div class="tgm"><button type="button" class="tgb'+(vue === "liste" ? " on" : "")+'" data-v="liste">Liste de prix</button><button type="button" class="tgb'+(vue === "soum" ? " on" : "")+'" data-v="soum">Soumissions</button></div>' +
+      '<input class="champ" id="psr" type="search" placeholder="Rechercher" value="'+esc(rech)+'" autocomplete="off">';
+    if(!d){ el.innerHTML = h; return lier(el); }
+    var i, k, n = 0;
+    if(vue === "liste"){
+      var sec = null, tab = "", blocs = [];
+      d.liste.forEach(function(x){
+        if(x.t === "section"){ sec = {t: x.fr, tabs: [], cur: null}; blocs.push(sec); }
+        else if(x.t === "tableau"){ if(!sec){ sec = {t: "", tabs: [], cur: null}; blocs.push(sec); } sec.cur = {t: x.fr, l: []}; sec.tabs.push(sec.cur); }
+        else if(x.t === "ligne"){ if(!sec){ sec = {t: "", tabs: [], cur: null}; blocs.push(sec); } if(!sec.cur){ sec.cur = {t: "", l: []}; sec.tabs.push(sec.cur); } sec.cur.l.push(x); }
+      });
+      blocs.forEach(function(b, bi){
+        var rows = "", nb = 0;
+        b.tabs.forEach(function(t){
+          var ls = t.l.filter(function(x){ return !rech || ok(x.fr) || ok(t.t) || ok(b.t); });
+          if(!ls.length) return;
+          if(t.t) rows += '<div class="pst">'+esc(t.t)+'</div>';
+          ls.forEach(function(x){ nb++; rows += '<div class="psl"><span>'+esc(x.fr)+'</span>'+(x.delai ? '<i>'+esc(String(x.delai))+' j</i>' : "")+'<b>'+fmt(x.prix)+'</b></div>'; });
+        });
+        if(!nb) return; n++;
+        var o = !!rech || ouv["s"+bi];
+        h += '<div class="pss" data-o="s'+bi+'"><span>'+esc(b.t || "Prix")+'</span><b>'+(o ? "−" : "+")+'</b></div>' + (o ? rows : "");
+      });
+    } else {
+      d.soumissions.forEach(function(x, xi){
+        var ls = (x.lignes || []).filter(function(l){ return true; });
+        if(rech && !ok(x.fr) && !ls.some(function(l){ return ok(l.fr); })) return; n++;
+        var o = !!rech && false || ouv["m"+xi];
+        h += '<div class="pss" data-o="m'+xi+'"><span>'+esc(x.fr)+'</span><b>'+(o ? "−" : fmt(x.total))+'</b></div>';
+        if(o){ ls.forEach(function(l){ h += '<div class="psl"><span>'+esc(l.fr)+'</span>'+(l.qte ? '<i>× '+esc(String(l.qte))+'</i>' : "")+'<b>'+(l.sous != null && l.sous !== "" ? fmt(l.sous) : "")+'</b></div>'; }); h += '<div class="psl"><span>Total</span><b>'+fmt(x.total)+'</b></div>'; }
+      });
+    }
+    if(!n) h += '<p class="aide" style="margin-top:14px">Aucun résultat.</p>';
+    el.innerHTML = h; lier(el);
+  }
+  function lier(el){
+    Array.prototype.forEach.call(el.querySelectorAll(".tgb"), function(b){ b.onclick = function(){ vue = b.getAttribute("data-v"); dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll(".pss"), function(b){ b.onclick = function(){ var c = b.getAttribute("data-o"); ouv[c] = !ouv[c]; dessiner(); }; });
+    var r = document.getElementById("psr");
+    if(r) r.oninput = function(){ rech = r.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); var p = r.selectionStart; dessiner(); var r2 = document.getElementById("psr"); if(r2){ r2.focus(); try { r2.setSelectionRange(p, p); } catch(e){} } };
+  }
+  dessiner();
+  obtenir("prix_soumissions", {action: "prix_soumissions"}, function(r){ d = r; dessiner(); }, function(){ var el = document.getElementById("psb"); if(el) el.insertAdjacentHTML("beforeend", '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'); }, true);
+}
 function entretien(){
   if(!entretien.verifie){ entretien.verifie = true; var s0 = sessionGardee(); appelBrut({action:"moi", session:s0}).then(function(r){ entretien.verifie = false; if(r && r.ok && MOI && r.role !== MOI.role){ MOI = r; try { garderMoi(s0, r); } catch(e){} entretien(); } }).catch(function(){ entretien.verifie = false; }); }
   var tous = peutEcrire(), ecr = !!(MOI && (MOI.role === "direction" || /^gestionnaire/.test(String(MOI.poste || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase()))), d = null, vue = "secteur", sel = "non", msg = "", mode = "liste", fiche = null, pick = false, supprime = false;
