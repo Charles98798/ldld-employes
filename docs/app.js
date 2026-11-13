@@ -1,4 +1,4 @@
-var APP_PUB = "416";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "417";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -1026,7 +1026,8 @@ function evaluations(){
     if(!dues.length){
       var auj0 = new Date(); auj0 = new Date(auj0.getFullYear(), auj0.getMonth(), auj0.getDate()), suiv = null;
       r.rencontres.forEach(function(m){ var p = /^(\d{4})-(\d\d)-(\d\d)/.exec(m.date || ""); if(!p || m.terminee) return; var rd = new Date(+p[1], +p[2]-1, +p[3]), dispo = new Date(rd.getFullYear(), rd.getMonth(), rd.getDate()-14); if(rd >= auj0 && (!suiv || dispo < suiv)) suiv = dispo; });
-      el.innerHTML = '<div class="aevide">'+(suiv ? 'Votre prochaine autoévaluation sera disponible le '+(suiv.getDate() === 1 ? "1er" : suiv.getDate())+' '+MOIS_LONGS[suiv.getMonth()]+' '+suiv.getFullYear()+'.' : 'Aucune autoévaluation à remplir pour le moment.')+'</div>';
+      if(!suiv && r.prochaine && r.prochaine.date){ var q = /^(\d{4})-(\d\d)-(\d\d)/.exec(r.prochaine.date); if(q){ var rq = new Date(+q[1], +q[2]-1, +q[3]); if(rq >= auj0) suiv = new Date(rq.getFullYear(), rq.getMonth(), rq.getDate()-14); } }
+      el.innerHTML = '<div class="aevide">'+(suiv ? 'Votre prochaine autoévaluation sera disponible le '+(suiv.getDate() === 1 ? "1er" : suiv.getDate())+' '+MOIS_LONGS[suiv.getMonth()]+' '+suiv.getFullYear()+'.' : 'Votre prochaine autoévaluation sera annoncée prochainement.')+'</div>';
       return;
     }
     if(dues.length === 1){ autoeval(dues[0].rencontre, true, dues[0].date); return; }   // une seule : on l'ouvre directement
