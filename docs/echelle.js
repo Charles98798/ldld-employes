@@ -38,9 +38,13 @@ function echGrille(){
   var n = d.cats.length;
   // Jamais de grille décalée: le nombre de colonnes suit les catégories, et un écart de nombre de valeurs est refusé.
   if(!n || d.maxAvant.length !== n) return '<p class="finnote">Échelle non affichée : les catégories et les valeurs ne correspondent pas. Avisez le support.</p>';
-  var h = '<div class="e5" style="grid-template-columns:34px repeat(' + n + ',minmax(0,1fr));font-size:' + (n > 5 ? 9.5 : 11) + 'px"><div class="h"></div>' + d.cats.map(function(c){ return '<div class="h">' + echEsc(c) + '</div>'; }).join("");
-  d.positions.forEach(function(p){ h += '<div class="l">' + Math.round(p*100) + ' %</div>' + d.maxAvant.map(function(m){ return '<div>' + echFr(echArr(m*(1+t)*p, 2), 2) + '</div>'; }).join(""); });
-  h += '<div class="l mx">Max. base</div>' + d.maxAvant.map(function(m){ return '<div class="mx">' + echFr(m, 2) + '</div>'; }).join("") + '</div>';
+  var np = d.positions.length + 1;
+  var h = '<div class="e5" style="grid-template-columns:58px repeat(' + np + ',minmax(0,1fr));font-size:8.5px;letter-spacing:0"><div class="h"></div>' + d.positions.map(function(p){ return '<div class="h" style="padding:0">' + Math.round(p*100) + '&nbsp;%</div>'; }).join("") + '<div class="h" style="padding:0">Max.<br>base</div>';
+  d.cats.forEach(function(c, k){
+    var m = d.maxAvant[k];
+    h += '<div class="l" style="font-size:8.5px;line-height:1.1;text-align:left">' + echEsc(c) + '</div>' + d.positions.map(function(p){ return '<div style="padding:0">' + echFr(echArr(m*(1+t)*p, 2), 2) + '</div>'; }).join("") + '<div class="mx" style="padding:0">' + echFr(m, 2) + '</div>';
+  });
+  h += '</div>';
   return h;
 }
 function echEcarts(){
