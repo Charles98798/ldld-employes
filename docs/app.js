@@ -1,4 +1,4 @@
-var APP_PUB = "387";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "388";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -118,7 +118,7 @@ var PICTO_DE = ["Messages", "Manuel", "Autoévaluation", "Rémunération", "Tabl
 var ORDRE_MENU = [9, 0, 4, 6, 7, 2, 3, 1, 5, 8];
 
 function demarrage(){
-  app.innerHTML = '<div class="demarrage"><div class="lgx" role="img" aria-label="Lafond Desjardins laboratoire dentaire">'+'<img class="p1" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p2" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p3" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'</div></div>';
+  app.innerHTML = '<div class="demarrage"><div class="lgx" role="img" aria-label="Lafond Desjardins laboratoire dentaire">'+'<img class="p1" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p2" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p3" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<svg class="lgl" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line class="hl" x1="-100" y1="0" x2="200" y2="0"/><line class="hr" x1="-100" y1="26.68" x2="200" y2="26.68"/><line class="hl" x1="-100" y1="53.55" x2="200" y2="53.55"/><line class="vt" x1="0" y1="-200" x2="0" y2="300"/><line class="vb" x1="44.4" y1="-200" x2="44.4" y2="300"/><line class="vt" x1="48.09" y1="-200" x2="48.09" y2="300"/><line class="vb" x1="100" y1="-200" x2="100" y2="300"/></svg>'+'</div></div>';
   MOI_PRE = null; var s0 = sessionGardee();
   if(s0 && !lireMoi(s0)) MOI_PRE = appelService({action:"moi", session:s0});   // demandé pendant l'animation, pas après
   setTimeout(ouvrirSession, 2300);
