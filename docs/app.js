@@ -1,4 +1,4 @@
-var APP_PUB = "400";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "401";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -193,7 +193,7 @@ function copieHeures(corps){
     var r = d.reponse, nu = torontoMaintenant();
     if(!r.ok || r.auj !== nu.date) throw new Error("jour");                                  // la copie date d'un autre jour: on lit Google
     if(typeof r.calcMin !== "number" || typeof r.ajAuj !== "number") throw new Error("ancienne");   // publiée avant l'ajout du moment de calcul: on lit Google
-    if(nu.semaine && nu.min >= 6 * 60 && nu.min <= 19 * 60 && Date.now() - Date.parse(d.maj_t) > 45 * 60000) throw new Error("vieille");   // en journée, la copie est rafraîchie aux 10 à 25 min
+    if(nu.semaine && nu.min >= 6 * 60 && nu.min <= 19 * 60 && Date.now() - Date.parse(d.maj_t) > 180 * 60000) throw new Error("vieille");   // en journée: une copie de moins de 3 h est acceptée (les pointages sont rares); la lecture silencieuse de Google corrige ensuite
     var v = totalJourCopie(r.pointagesAuj || [], r.ajAuj, nu.min); if(v === undefined) throw new Error("format");
     r.minutesAuj = v; (r.cette || []).forEach(function(x){ if(x.date === r.auj) x.min = v; });
     return r;
