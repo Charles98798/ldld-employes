@@ -1,4 +1,4 @@
-var APP_PUB = "380";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "382";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -629,6 +629,13 @@ function menu(){
   vuePreparer(sessionGardee());
 }
 // Aucun nom sur deux lignes: la taille du texte de l'accueil diminue (pour toutes les lignes à la fois) jusqu'à ce que chaque nom tienne sur une seule ligne.
+// Le libellé tient sur une ligne sans toucher l'étiquette verte ni sortir de la tuile.
+function texteTient(a){
+  var lab = a.firstElementChild; if(!lab) return true;
+  var r = document.createRange(); r.selectNodeContents(lab);
+  var fin = r.getBoundingClientRect().right, b = a.querySelector(".nombre"), lim = b ? b.getBoundingClientRect().left - 8 : a.getBoundingClientRect().right;
+  return fin <= lim;
+}
 function ajusterMenu(){
   var m = app.querySelector(".menu.accueil"); if(!m) return;
   var L = Array.prototype.slice.call(m.querySelectorAll("a[data-k]")); if(!L.length) return;
@@ -636,7 +643,7 @@ function ajusterMenu(){
   while(t >= 12 && !ok){
     m.style.setProperty("--ft", t + "px");
     var mn = Math.min.apply(null, L.map(function(a){ return a.offsetHeight; }));
-    ok = L.every(function(a){ return a.offsetHeight <= mn + 6; });
+    ok = L.every(function(a){ return a.offsetHeight <= mn + 6 && texteTient(a); });
     if(!ok) t -= 0.5;
   }
 }
