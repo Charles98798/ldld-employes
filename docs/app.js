@@ -251,7 +251,7 @@ function appelDirectGoogle(corps, vu){
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
 var LECT = {evenements_employe:1, rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1, prix_soumissions:1};
-var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
+var NEUTRE = {absences_equipe:1, tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 // Copie gardée sur l'appareil (affichée tout de suite à l'ouverture, remplacée en silence par la version fraîche). JAMAIS de salaire ni de rémunération (Portrait, Échelle, Positionnement, Embauche, Employé actuel restent en mémoire seulement).
 // Données de l'employé lui-même: toutes les personnes. Données d'équipe: Direction seulement. Tout est effacé à la déconnexion (préfixe ldld-c-).
@@ -502,7 +502,14 @@ function ecranNotifs(){
   document.getElementById("notifPlus").onclick = function(e){ e.preventDefault(); fini(); };
 }
 // Accueil « Aujourd'hui »: rencontres du jour (agenda principal), carré vert devant chaque ligne; rien d'affiché s'il n'y en a pas.
-var AUJ = null;
+var AUJ = null, ABSEQ = [];
+// Absences de l'équipe (Service: absences_equipe, noms de la même équipe seulement). Chaque entrée {nom, jour AAAA-MM-JJ, de, a}: visible de midi la veille ouvrable jusqu'à midi le jour même (heure de Montréal, appliquée par le Service; l'app revérifie la fenêtre).
+function absLignes(){
+  var t = Date.now(), iso = isoJour(new Date()), dem = new Date(); dem.setDate(dem.getDate()+1);
+  return (ABSEQ || []).filter(function(a){ return a && a.nom && a.jour && (!a.de || Date.parse(a.de) <= t) && (!a.a || t < Date.parse(a.a)); }).map(function(a){
+    var q = a.jour === iso ? "aujourd’hui" : a.jour === isoJour(dem) ? "demain" : ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"][new Date(a.jour+"T12:00:00").getDay()];
+    return '<div>Absence '+esc(q)+' · '+esc(a.nom)+'</div>'; });
+}
 function heureFr(d){ var h = d.getHours(), m = d.getMinutes(); return h+" h"+(m ? " "+("0"+m).slice(-2) : ""); }
 function dessinerAujourdhui(){
   var z = document.getElementById("auj"); if(!z) return; var t = new Date(), iso = isoJour(t);
@@ -514,8 +521,9 @@ function dessinerAujourdhui(){
     }
     if(e.journee){ var d1 = String(e.debut).slice(0, 10), d2 = String(e.fin || e.debut).slice(0, 10); return d1 <= iso && (iso < d2 || d1 === d2 && d1 === iso); }
     return isoJour(new Date(e.debut)) === iso && new Date(e.fin || e.debut) >= t; });
-  if(!l.length){ z.innerHTML = ""; return; }
-  z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+l.map(function(e){
+  var ab = absLignes();
+  if(!l.length && !ab.length){ z.innerHTML = ""; return; }
+  z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+ab.join("")+l.map(function(e){
     if(e.journee) return '<div>Journée · '+esc(e.titre || "")+'</div>';
     var d = new Date(e.debut), fait = new Date(e.fin || e.debut) < t;
     return '<div'+(fait ? ' class="fait"' : "")+'>'+heureFr(d)+' · '+esc(String(e.titre || "").trim() || "Sans titre")+'</div>'; }).join("")+'</div>';
@@ -533,6 +541,7 @@ function auj_normalise(liste, jour){
 }
 function chargerAujourdhui(){
   var t = new Date(); t.setHours(0, 0, 0, 0); dessinerAujourdhui();
+  obtenir("absences_equipe", {action:"absences_equipe"}, function(r){ ABSEQ = (r && r.absences) || []; dessinerAujourdhui(); }, function(){}, true);
   var deb = isoJour(lundiDe(t)), plusieurs = roleIdx() >= 1;
   var fin = function(liste, jour){ AUJ = auj_normalise(liste, jour); dessinerAujourdhui(); };
   if(!plusieurs){
