@@ -1,4 +1,4 @@
-var APP_PUB = "410";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "411";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2162,8 +2162,8 @@ function nouveauEmploye(){
 function nouveau(onglet){
   if(!peutEcrire()) return nouveauEmploye();
   onglet = onglet === "reunion" ? "reunion" : "message";
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1>' +
-    '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton choixc" id="ongM" aria-pressed="'+(onglet === "message" ? "true" : "false")+'" style="margin:0;flex:1">Sans événement</button><button type="button" class="bouton choixc" id="ongR" aria-pressed="'+(onglet === "reunion" ? "true" : "false")+'" style="margin:0;flex:1">Avec événement</button></div>' +
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Créer un événement</h1>' +
+    '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton choixc" id="ongM" aria-pressed="'+(onglet === "message" ? "true" : "false")+'" style="margin:0;flex:1">Message seulement</button><button type="button" class="bouton choixc" id="ongR" aria-pressed="'+(onglet === "reunion" ? "true" : "false")+'" style="margin:0;flex:1">Message et événement</button></div>' +
     '<div id="npart"><div class="bandeau">▪ UN INSTANT</div></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); retirerBoutonBas(); responsable(); };
   var dire = function(t){ var e = document.getElementById("ne"); if(e){ e.style.display = "block"; e.textContent = t; } };
@@ -2217,7 +2217,7 @@ function nouveau(onglet){
 }
 // Modifier une réunion créée dans l'application: même formulaire que « Nouveau message · Réunion », déjà rempli.
 function modifierReunion(e){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1><div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Créer un événement</h1><div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   var retour = function(){ retirerBoutonBas(); mesEvenements(); };
   document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); retour(); };
   var dire = function(t){ var x = document.getElementById("ne"); if(x){ x.style.display = "block"; x.textContent = t; } };
@@ -2260,7 +2260,7 @@ function modifierReunion(e){
   }).catch(function(){ document.getElementById("npart").innerHTML = '<div class="bandeau">▪ LISTE INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function mesEvenements(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1><div id="me"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Créer un événement</h1><div id="me"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
   var liste = [], choisi = null, msg = "", mode = "";
   function dessiner(){
