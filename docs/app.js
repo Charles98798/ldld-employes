@@ -1,4 +1,4 @@
-var APP_PUB = "426";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "427";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -203,7 +203,7 @@ function copieHeures(corps){
   });
 }
 // Domaines lus dans la copie (une réponse par employé, même forme que le service). Ligne absente, purgée, en erreur ou trop vieille: Google répond.
-var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1, ech_donnees:1, calendrier:1, rd_chiffres:1, prix_soumissions:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
+var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1, ech_donnees:1, calendrier:1, rd_chiffres:1, prix_soumissions:1, employes_etat:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
 function copieCle(domaine, corps){   // domaines à plusieurs clés: Réunion production (rd_chiffres) = section|département|du|au (la charge ne dépend pas de la période)
   if(domaine !== "rd_chiffres" || !corps) return "";
   var ch = corps.section === "charge";
@@ -2392,10 +2392,23 @@ function suiviCharge(){
       '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, !etat, "se"+k); }).join("")+'</div>' +
       '<div class="etq" style="margin-top:14px">NOTE · OPTIONNELLE</div>' +
       '<textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="width:100%;box-sizing:border-box;margin:4px 0 0;background:#B7B1A5;color:#1D1D1B;border:0;border-radius:0;padding:12px">'+esc(sauvNote)+'</textarea>' +
+      '<button type="button" id="snb" class="bouton" style="margin:8px 0 0;width:100%;white-space:nowrap;font-size:12px;'+(sauvNote.trim() ? "" : "opacity:.5;")+'"'+(sauvNote.trim() ? "" : " disabled")+'>Enregistrer la note seulement</button>' +
       (msg ? '<div class="bandeau" style="margin-top:10px">'+esc(msg)+'</div>' : "");
     el.innerHTML = h;
     ETATS.forEach(function(x, k){ document.getElementById("se"+k).onclick = function(){ lireNote(); etat = x; msg = ""; if(k === 0) enregistrer(); else dessiner(); }; });
     document.getElementById("se2").style.flexGrow = "1.8"; document.getElementById("se0").style.flexGrow = "0.9"; document.getElementById("se1").style.flexGrow = "1";
+    var tx = document.getElementById("snt"), nb = document.getElementById("snb");
+    tx.oninput = function(){ var v = !!tx.value.trim(); nb.disabled = !v; nb.style.opacity = v ? "" : ".5"; };
+    nb.onclick = function(){
+      lireNote(); var t = sauvNote.trim(); if(!t || occupe) return;
+      occupe = true; nb.disabled = true; nb.textContent = "Enregistrement…";
+      appelService({action:"charge_suivi", session:sessionGardee(), nom:p.brut, etat:"Note", note:t}).then(function(r){
+        occupe = false;
+        if(r && r.ok){ p.notes = [{date: isoJour(new Date()), note: t}].concat(p.notes || []); sauvNote = ""; msg = "▪ NOTE ENREGISTRÉE"; }
+        else msg = "▪ NON ENREGISTRÉ · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase();
+        dessiner();
+      }).catch(function(){ occupe = false; msg = "▪ NON ENREGISTRÉ · RÉSEAU"; dessiner(); });
+    };
     document.getElementById("sce").onchange = function(){ i = +this.value; etat = ""; sauvNote = ""; msg = ""; occupe = false; window.scrollTo(0, 0); dessiner(); };
     barre();
   }
@@ -2405,15 +2418,15 @@ function suiviCharge(){
     var bar = document.getElementById("scbar"), b, r;
     if(!bar){
       bar = document.createElement("div"); bar.id = "scbar";
-      bar.innerHTML = '<button type="button" id="scr" class="bouton">Retour</button><button type="button" id="scb" class="bouton"></button>';
+      bar.innerHTML = '<a href="#" id="scr">Retour</a><button type="button" id="scb" class="bouton"></button>';
       document.body.appendChild(bar);
       document.getElementById("tb").classList.add("scbar");
     }
-    bar.style.cssText = "position:fixed;z-index:20;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);display:flex;gap:8px";
-    r = document.getElementById("scr"); r.style.cssText = "flex:1 1 0;min-width:0;margin:0;white-space:nowrap;font-size:12px;padding:14px 4px;background:#8EFF60;color:#1D1D1B";
-    r.onclick = function(){ nettoyer(); responsable(); };
+    bar.style.cssText = "position:fixed;z-index:20;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);display:flex;gap:8px;box-sizing:border-box";
+    r = document.getElementById("scr"); r.style.cssText = "flex:0 0 auto;background:#8EFF60;color:#1D1D1B;text-decoration:none;font-size:13px;letter-spacing:1px;font-weight:600;text-transform:uppercase;padding:14px 18px;white-space:nowrap;display:flex;align-items:center";
+    r.onclick = function(e){ e.preventDefault(); nettoyer(); responsable(); };
     b = document.getElementById("scb");
-    b.style.cssText = "flex:1 1 0;min-width:0;margin:0;white-space:nowrap;font-size:12px;padding:14px 4px;" + (etat && etat !== ETATS[0] ? "" : "opacity:.5");
+    b.style.cssText = "flex:1 1 0;min-width:0;width:auto;margin:0;box-sizing:border-box;white-space:nowrap;font-size:12px;padding:14px 4px;" + (etat && etat !== ETATS[0] ? "" : "opacity:.5");
     b.disabled = !(etat && etat !== ETATS[0]);
     b.textContent = i === liste.length-1 ? "Enregistrer, terminer" : "Enregistrer, suivant";
     b.onclick = enregistrer;
