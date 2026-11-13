@@ -1,4 +1,4 @@
-var APP_PUB = "386";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "387";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -673,10 +673,10 @@ function aeAFaire(){
 }
 function messages(filtre){
   if(typeof filtre === "string") FILTRE_MSG = filtre;
-  var fusion = (!FILTRE_MSG && !VUE.on);
+  var fusion = !FILTRE_MSG;   // même page « Calendrier et messages » pour tous, y compris la vue employé de la Direction (astérisque)
   var titreMsg = fusion ? "Calendrier et messages" : FILTRE_MSG === "envoyes" ? "Historique message" : FILTRE_MSG === "rencontres" ? "Rencontre demandée" : "Message reçu";
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div><div class="etiq">▪ À VENIR</div><div id="aven"></div>' + (peutEcrire() ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '<div class="etiq">▪ REÇUS</div>' : '') + '<div id="liste"></div>' +
-    (peutEcrire() && !FILTRE_MSG ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div><div class="etiq">▪ À VENIR</div><div id="aven"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '<div class="etiq">▪ REÇUS</div>' : '') + '<div id="liste"></div>' +
+    (peutEcrire() && !FILTRE_MSG && !VUE.on ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
   var w = document.getElementById("ecrire"); if(w) w.onclick = function(e){ e.preventDefault(); nouveau("message"); };
   var gr = document.getElementById("grille"); if(gr) gr.onclick = function(e){ e.preventDefault(); nouveau("message"); };
