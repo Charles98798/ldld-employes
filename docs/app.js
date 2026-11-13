@@ -1,4 +1,4 @@
-var APP_PUB = "369";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "370";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -76,7 +76,7 @@ document.addEventListener("click", function(e){
   if(t.closest("a, button") && !t.closest(".bl")){ RETOUR_T = 0; POS_PAGE[clePos()] = lireY(); }
 }, true);
 function decorerTitres(){
-  Array.prototype.forEach.call(app.querySelectorAll(".page:not(.vue) > h1:not([data-pt]), .page:not(.vue) > .pph > h1:not([data-pt]), .page:not(.vue) #pe > h1:not([data-pt]), .page:not(.vue) #ea_app > h1:not([data-pt]), .page:not(.vue) #pt > h1:not([data-pt])"), function(h){
+  Array.prototype.forEach.call(app.querySelectorAll(".page:not(.vue) > h1:not([data-pt]), .page:not(.vue) > .pph > h1:not([data-pt]), .page:not(.vue) #pe > h1:not([data-pt]), .page:not(.vue) #ea_app > h1:not([data-pt]), .page:not(.vue) #pt > h1:not([data-pt]), .page:not(.vue) .pph > h1:not([data-pt])"), function(h){
     h.setAttribute("data-pt", "1");
     // Nouvelle page (titre différent): on repart en haut, sinon le titre reste caché sous l'heure du téléphone
     if(h.textContent !== dernierTitre){ dernierTitre = h.textContent; if(!reprendrePos(dernierTitre)){ window.scrollTo(0, 0); requestAnimationFrame(function(){ window.scrollTo(0, 0); }); setTimeout(function(){ if(lireY() < 140) window.scrollTo(0, 0); }, 350); } }

@@ -979,3 +979,4 @@ select:not(.act) option{color:#1D1D1B;background:#E2E0D6;font-size:16px}
 .ppx .decision select.lock{color:#6E6350!important}
 select:not(.act){width:100%;box-sizing:border-box}
 .rdbar select:not(.act){width:auto}
+.ppx #pp_app .pph{display:none}
