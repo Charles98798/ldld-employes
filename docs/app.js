@@ -1,4 +1,4 @@
-var APP_PUB = "358";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "359";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -289,7 +289,7 @@ function chercher(cle, corps){
   corps.session = sessionGardee();
   return appelService(corps).then(function(r){ if(r && r.ok && !VUE.on){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
 }
-function viderCache(){ CACHE = {}; RCACHE = {}; COPIE = {url:null, jeton:null, exp:0, interr:null, interrT:0, hors:0, prep:null}; precharger.t = 0; MOI_PRE = null; VUE_PRE = null; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
+function viderCache(){ try { localStorage.removeItem("ldld-vue-antonio"); } catch(e){} CACHE = {}; RCACHE = {}; COPIE = {url:null, jeton:null, exp:0, interr:null, interrT:0, hors:0, prep:null}; precharger.t = 0; MOI_PRE = null; VUE_PRE = null; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
 /** Affiche la copie locale (sans écran de chargement) puis remplace en silence si la version a changé. */
 function obtenir(cle, corps, afficher, erreur, majSilencieuse){
   var local = lireCache(cle);
@@ -1082,7 +1082,7 @@ function tableau(){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   if(VUE.on){ vd("tableau demandé"); }
   obtenir("tableau", {action:"tableau"}, function(r){
-    if(VUE.on) vd("tableau reçu ok=" + !!(r && r.ok) + " mois=" + !!(r && r.mois));
+    if(VUE.on){ tableau.reessai = false; } if(VUE.on) vd("tableau reçu ok=" + !!(r && r.ok) + " mois=" + !!(r && r.mois));
     var el = document.getElementById("tb"); if(!el) return;
     if(!r.mois){ el.innerHTML = '<div class="bandeau">▪ PAS DE TABLEAU DE BORD POUR VOTRE POSTE</div>'; return; }
     var ms = r.mois, i = 0;
@@ -1125,7 +1125,7 @@ function tableau(){
         var mo = c.moyennes && c.moyennes[cle]; if(mo && (m.ce === null || m.ce === undefined)) m.ce = mo.ce; if(mo && (m.cn === null || m.cn === undefined)) m.cn = mo.cn; });
       if(document.getElementById("tb")) dessiner();
     }).catch(function(){});
-  }, function(e){ if(VUE.on) vd("tableau échec " + (e && e.message)); var rep = e && e.reponse, el = document.getElementById("tb"); if(!el) return;
+  }, function(e){ if(VUE.on){ vd("tableau échec " + (e && e.message)); if(VUE.fixe && !tableau.reessai){ tableau.reessai = true; try { localStorage.removeItem("ldld-vue-antonio"); } catch(x){} vd("session gardée refusée: nouvelle demande"); var rl = VUE.relancer; VUE.on = false; if(rl) return rl(); } } var rep = e && e.reponse, el = document.getElementById("tb"); if(!el) return;
     el.innerHTML = '<div class="bandeau">▪ '+(rep && rep.erreur ? esc(String(rep.erreur).toUpperCase()) : (MOI && MOI.role === "direction" ? "PAS DE TABLEAU DE BORD POUR CE COMPTE" : "TABLEAU DE BORD INDISPONIBLE · RÉESSAYEZ"))+'</div>'; }, true);
 }
 // Plan du stationnement : cadre de chaque place, en pixels du plan d'origine (2000 x 1416).
@@ -2550,14 +2550,16 @@ function section(i){
   sectionBase(i);
 }
 // Employé au hasard préparé d'avance (Direction): la session lecture seule est demandée au service en arrière-plan dès l'accueil, avec ses heures et son tableau de bord. Le toucher ouvre donc la page tout de suite.
-var VUE_PRE = null, VUE_DERNIER = "";
+var VUE_PRE = null, VUE_DERNIER = "", VUE_ANCIEN_FIXE = false;
 function cleLectureVue(c, sess){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); o._v = sess; return JSON.stringify(o); }
 // Employé fixe pour les essais de la Direction (Antonio); si le service ne le trouve pas, tirage au hasard comme avant.
 var VDIAG = [], VD0 = 0;   // journal visible (Direction, écran d'attente de « voir comme »): étapes et durées
 function vd(t){ if(!VD0) VD0 = Date.now(); VDIAG.push(((Date.now() - VD0) / 1000).toFixed(1) + " s · " + t); var z = document.getElementById("vdiag"); if(z) z.innerHTML = VDIAG.slice(-12).map(esc).join("<br>"); }
 function vueTirage(reelle){   // hors de la file d'appels: la file est pleine de préchargements à l'ouverture et retardait « voir comme » de 15 à 25 s
   function va(c){ vd("envoi " + c.action + " " + c.nom); return appelDirectGoogle(c).then(function(r){ vd("réponse " + c.nom + " ok=" + !!(r && r.ok) + (r && r.erreur ? " " + r.erreur : "")); return r; }, function(e){ vd("erreur " + c.nom + " " + (e && e.message)); throw e; }); }
-  return va({action:"voir_comme", session:reelle, nom:"Antonio"}).then(function(r){ if(r && r.ok) return r; return va({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:""}); });
+  // La session lecture seule d'Antonio est gardée sur l'appareil de la Direction (10 h): plus de demande au service à chaque ouverture
+  try { var g = JSON.parse(localStorage.getItem("ldld-vue-antonio")); if(g && g.reelle === reelle && g.s && Date.now() - g.t < 36000000){ vd("session d'Antonio gardée"); return Promise.resolve({ok:true, session:g.s, nom:g.nom, fixe:true}); } } catch(e){}
+  return va({action:"voir_comme", session:reelle, nom:"Antonio"}).then(function(r){ if(r && r.ok){ r.fixe = true; try { localStorage.setItem("ldld-vue-antonio", JSON.stringify({reelle:reelle, s:r.session, nom:r.nom || "", t:Date.now()})); } catch(e){} return r; } return va({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:""}); });
 }
 function vuePreparer(reelle){
   if(!reelle || VUE_PRE || !MOI || MOI.role !== "direction" || vueComme()) return;
@@ -2577,7 +2579,7 @@ function vuePreparer(reelle){
   VUE_PRE = pre;
 }
 function vueEmploye(i){
-  var reelle = VUE.on ? VUE.reel : sessionGardee(), ancien = VUE.on ? VUE.session : null, prec = VUE.nom;
+  var reelle = VUE.on ? VUE.reel : sessionGardee(), ancien = VUE.on ? VUE.session : null, prec = VUE.nom; VUE_ANCIEN_FIXE = !!VUE.fixe;
   VUE.on = false;
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ UN INSTANT · '+APP_PUB+'</div><p class="aide" id="vdiag" style="font-size:11px"></p></div>';
   VDIAG = []; VD0 = Date.now(); vd("ouverture " + (VUE_PRE ? "(préparé)" : "(non préparé)"));
@@ -2600,16 +2602,16 @@ function vueEmploye(i){
     vd("session reçue ok=" + !!(r && r.ok)); clearTimeout(vueDel); if(!VUE.pend) return;
     VUE.pend = false;
     if(!r || !r.ok){ VUE.on = false; app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ EMPLOYÉ INTROUVABLE · RÉESSAYEZ</div></div>'; document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); }; return; }
-    if(ancien) appelBrut({action:"sortie", session:ancien}).catch(function(){});
-    VUE = {on:true, reel:reelle, session:r.session, nom:r.nom || "", relancer:function(){ vueEmploye(i); }};
+    if(ancien && !VUE_ANCIEN_FIXE) appelBrut({action:"sortie", session:ancien}).catch(function(){});
+    VUE = {on:true, fixe:!!r.fixe, reel:reelle, session:r.session, nom:r.nom || "", relancer:function(){ vueEmploye(i); }};
     VUE_DERNIER = r.nom || "";
     sectionBase(i);
   }).catch(function(e){ vd("échec " + (e && e.message)); VUE.pend = false; VUE.on = false; sectionBase(i); });
 }
 function vueFin(){
   if(!VUE.on) return;
-  var s = VUE.session; VUE = {on:false, reel:null, session:null, nom:"", relancer:null};
-  appelBrut({action:"sortie", session:s}).catch(function(){});
+  var s = VUE.session, f = VUE.fixe; VUE = {on:false, reel:null, session:null, nom:"", relancer:null};
+  if(!f) appelBrut({action:"sortie", session:s}).catch(function(){});
 }
 (function(){
   var cible = document.getElementById("app");
