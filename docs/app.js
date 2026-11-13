@@ -1,4 +1,4 @@
-var APP_PUB = "444";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "445";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -1743,7 +1743,7 @@ function prixSoumissions(){
   }
   function lier(el){
     Array.prototype.forEach.call(el.querySelectorAll(".tgb"), function(b){ b.onclick = function(){ vue = b.getAttribute("data-v"); dessiner(); }; });
-    Array.prototype.forEach.call(el.querySelectorAll(".pss"), function(b){ b.onclick = function(){ var c = b.getAttribute("data-o"); ouv[c] = !ouv[c]; dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll(".pss"), function(b){ b.onclick = function(){ var c = b.getAttribute("data-o"), etait = !!ouv[c]; ouv = {}; ouv[c] = !etait; dessiner(); }; });
     var r = document.getElementById("psr");
     if(r) r.oninput = function(){ rech = r.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); var p = r.selectionStart; dessiner(); var r2 = document.getElementById("psr"); if(r2){ r2.focus(); try { r2.setSelectionRange(p, p); } catch(e){} } };
   }
