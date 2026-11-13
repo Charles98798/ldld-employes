@@ -1,18 +1,26 @@
 // Échelle salariale de l'année suivante (Direction): taux, taux du marché, écart avec le marché, échelle, bonifications.
 // Même logique que l'onglet « Échelle salariale — AAAA » du classeur: échelon = maximum de base de l'an passé × (1 + taux) × position. Calcul local instantané, écriture au classeur en arrière-plan (pont: ech_donnees, ech_enregistrer).
-var ECH = {d: null};
+var ECH = {d: null, pre: null, preT: 0};
+// Préchargement (Direction): la lecture est demandée dès l'accueil; ouverte dans les 3 minutes, la page s'affiche tout de suite.
+function echPrecharger(){
+  if(ECH.pre && Date.now() - ECH.preT < 180000) return;
+  ECH.preT = Date.now();
+  ECH.pre = appelService({action: "ech_donnees", session: sessionGardee()}).catch(function(){ ECH.pre = null; return null; });
+}
 function echEsc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function echArr(v, d){ var f = Math.pow(10, d); return Math.round(v*f + (v >= 0 ? 1e-7 : -1e-7)) / f; }
 function echFr(v, d){ return v == null ? "" : echArr(v, d).toFixed(d).replace(".", ","); }
 function echNum(t){ t = String(t == null ? "" : t).replace(/\s/g, "").replace("$", "").replace("%", "").replace(",", "."); if(t === "") return null; var n = Number(t); return isNaN(n) ? null : n; }
 function echCase(id, v, suf, large){ return '<div class="echc"><input id="' + id + '" inputmode="decimal" autocomplete="off" class="' + (v == null ? "vide" : "") + '" value="' + echEsc(echFr(v, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1")) + '"><u>' + suf + '</u></div>'; }
 function echOuvrir(){
-  app.innerHTML = '<div class="page ppx ech"><h1>Échelle salariale \u2191\u00a0taux</h1><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"></div></div>';
+  app.innerHTML = '<div class="page ppx ech"><h1>Échelle salariale \u2191\u00a0taux</h1><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"><div class="bandeau" id="ech_att">▪ UN INSTANT</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  appelService({action: "ech_donnees", session: sessionGardee()}).then(function(r){
+  var pre = (ECH.pre && Date.now() - ECH.preT < 180000) ? ECH.pre : null; ECH.pre = null;
+  (pre || appelService({action: "ech_donnees", session: sessionGardee()})).then(function(r){
+    if(!document.getElementById("ech_app")) return;
     if(r && r.ok){ ECH.d = r.r; echRendu(); }
-    else document.getElementById("ech_app").innerHTML = '<p class="finnote">' + echEsc((r && r.erreur) || "Échec.") + '</p>';
-  }).catch(function(){ document.getElementById("ech_app").innerHTML = '<p class="finnote">Réseau indisponible.</p>'; });
+    else { var a = document.getElementById("ech_att"); if(a) a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · RÉESSAYEZ"; }
+  }).catch(function(){ var a = document.getElementById("ech_att"); if(a) a.textContent = "▪ RÉSEAU INDISPONIBLE · RÉESSAYEZ"; });
 }
 function echSauver(champ, valeur){
   var et = document.getElementById("ech_etat"); if(et) et.textContent = "Enregistrement…";
