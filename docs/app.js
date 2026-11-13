@@ -1,4 +1,4 @@
-var APP_PUB = "445";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "446";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2148,7 +2148,7 @@ function dateHeure(opts, surChangement){
       if(!S.agCreer){ try { S.agCreer = localStorage.getItem("ldld-ag-creer") || ""; } catch(e){} }
       if(!S.agCreer || !Lc.some(function(x){ return idAg(x) === S.agCreer; })){ var dl = Lc.filter(function(x){ return /ldld/i.test(nomAg(x)); })[0]; if(Lc.length) S.agCreer = dl ? idAg(dl) : idAg(Lc[0]); }
       if(S.agCreer) S.agenda = S.agCreer;
-      h += '<span class="lbl">Créer dans l\'agenda · un seul</span><div style="display:flex;align-items:center;gap:10px;border:2px solid #0d1117;padding:0 12px;height:46px;box-sizing:border-box"><i style="width:12px;height:12px;flex:none;background:'+couleurAg(S.agCreer).f+'"></i><select id="dhcr" style="flex:1;border:0;outline:0;-webkit-appearance:none;appearance:none;border-radius:0;background:transparent;font:inherit;height:42px;color:inherit">'+Lc.map(function(x){ return '<option value="'+esc(idAg(x))+'"'+(idAg(x) === S.agCreer ? " selected" : "")+'>'+esc(nomAg(x))+'</option>'; }).join("")+'</select><span style="pointer-events:none">⌄</span></div><div style="font-size:11px;margin-top:6px">Le courriel d\'invitation est envoyé depuis cet agenda.</div>';
+      h += '<span class="lbl">Créer dans l\'agenda · un seul</span><div style="display:flex;align-items:center;gap:10px"><i style="width:12px;height:12px;flex:none;background:'+couleurAg(S.agCreer).f+'"></i><select id="dhcr" style="flex:1;min-width:0">'+Lc.map(function(x){ return '<option value="'+esc(idAg(x))+'"'+(idAg(x) === S.agCreer ? " selected" : "")+'>'+esc(nomAg(x))+'</option>'; }).join("")+'</select></div><div style="font-size:11px;margin-top:6px">Le courriel d\'invitation est envoyé depuis cet agenda.</div>';
     }
     z.innerHTML = h;
     lierAg(); lierVue(); placerBlocs();
