@@ -56,8 +56,8 @@ function prRendu(d){
     h += prCarte(t[0], v, r, libM);
   });
   h += prCarte("Total", okv ? tv : null, okr ? tr : null, libM);
-  // 03 Employés inactifs (absentéisme + postes vacants)
-  var ina = (an ? an.absent : []).map(function(v, i){ var w = an.vacant[i]; return w === null || w === undefined ? null : (v || 0) + w; });
+  // 03 Employés inactifs (absentéisme seulement; poste vacante retiré le 13 nov.)
+  var ina = (an ? an.absent : []).map(function(v){ return v === null || v === undefined ? null : v; });
   var iv = tous ? prMoyenne(prValeurs(ina, mois)) : prSomme(prValeurs(ina, mois));
   h += '<div class="prs"><span class="num">03</span><span class="lab">Employés inactifs</span></div>' +
     '<div class="prl"><span>'+(tous ? "Moyenne mensuelle" : prCapital(PR_MOIS[PR.m]))+'</span><b>'+(iv === null ? "—" : Math.round(iv))+'</b></div>';
