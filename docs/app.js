@@ -1,4 +1,4 @@
-var APP_PUB = "394";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "395";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -118,10 +118,10 @@ var PICTO_DE = ["Messages", "Manuel", "Autoévaluation", "Rémunération", "Tabl
 var ORDRE_MENU = [9, 0, 4, 6, 7, 2, 3, 1, 5, 8];
 
 function demarrage(){
-  app.innerHTML = '<div class="demarrage"><div class="lgx" role="img" aria-label="Lafond Desjardins laboratoire dentaire">'+'<img class="p1" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p2" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p3" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<svg class="lgl" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line class="hl" x1="0" y1="9.04" x2="70" y2="9.04"/><line class="hr" x1="0" y1="26.72" x2="70" y2="26.72"/><line class="hl" x1="0" y1="44.5" x2="70" y2="44.5"/><line class="hr" x1="0" y1="53.55" x2="70" y2="53.55"/><line class="vt" x1="7.51" y1="0" x2="7.51" y2="70"/><line class="vb" x1="44.45" y1="0" x2="44.45" y2="70"/><line class="vt" x1="48.05" y1="0" x2="48.05" y2="70"/><line class="vb" x1="92.5" y1="0" x2="92.5" y2="70"/></svg>'+'</div></div>';
+  app.innerHTML = '<div class="demarrage"><div class="lgx" role="img" aria-label="Lafond Desjardins laboratoire dentaire">'+'<img class="p1" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p2" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p3" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<svg class="lgl" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line class="hl" x1="0" y1="9.04" x2="95" y2="9.04"/><line class="hr" x1="0" y1="26.72" x2="95" y2="26.72"/><line class="hl" x1="0" y1="44.5" x2="95" y2="44.5"/><line class="hr" x1="0" y1="53.55" x2="95" y2="53.55"/><line class="vt" x1="7.51" y1="0" x2="7.51" y2="95"/><line class="vb" x1="44.45" y1="0" x2="44.45" y2="95"/><line class="vt" x1="48.05" y1="0" x2="48.05" y2="95"/><line class="vb" x1="92.5" y1="0" x2="92.5" y2="95"/></svg>'+'</div></div>';
   MOI_PRE = null; var s0 = sessionGardee();
   if(s0 && !lireMoi(s0)) MOI_PRE = appelService({action:"moi", session:s0});   // demandé pendant l'animation, pas après
-  setTimeout(ouvrirSession, 3300);
+  setTimeout(ouvrirSession, 3900);
 }
 var MOI_PRE = null;
 // Identité gardée sur l'appareil (nom, rôle): le menu s'ouvre à la fin de l'animation, la vérification se fait en silence. Effacée à la déconnexion (préfixe ldld-c-).
