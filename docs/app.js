@@ -1,4 +1,4 @@
-var APP_PUB = "414";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "415";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -561,7 +561,7 @@ var ENT = [
  {id:"messages", g:"Mon travail", h:1, l:"Message reçu", p:"Messages", d:[1,1,1], i:0, f:function(){ section(0); }},
  {id:"tableau_de_bord", g:"Mon travail", h:1, l:"Tableau de bord", p:"Tableau de bord", d:[1,1,1], i:4, f:function(){ section(4); }},
  {id:"calendrier", g:"Mon travail", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
- {id:"rencontre", g:"Mon travail", l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
+ {id:"rencontre", g:"Mon travail", h:1, l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
  {id:"autoevaluation", g:"Mon compte", h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,1,1], i:2, f:function(){ aeEntree(); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
@@ -2678,7 +2678,7 @@ function heures(){
   }
   obtenir("heures", {action:"heures"}, afficherH, function(){ var z = document.getElementById("hz"); if(z) z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
-var VUE_ONGLETS = [9, 0, 4, 2];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
+var VUE_ONGLETS = [9, 0, 4, 2, 7];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
 function estCharles(){ return !!(MOI && /^\s*charles\b/i.test(String(MOI.nom || ""))); }
 function section(i){
   if(MOI && MOI.role === "direction" && !vueComme() && VUE_ONGLETS.indexOf(i) >= 0) return vueEmploye(i);
