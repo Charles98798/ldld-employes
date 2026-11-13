@@ -181,6 +181,25 @@ function rdCommentairesPage(){
   z.innerHTML = '<div class="rdgrid" style="margin-top:12px"><button type="button" class="rdsoft" id="ccadd">Ajouter un commentaire client</button></div><div id="cclist"></div>';
   if(typeof ccFormulaire === "function"){ document.getElementById("ccadd").onclick = function(){ ccFormulaire(); }; ccListePlanif(); }
 }
+// Affichage de la planification: un point de base et un point de discussion de même texte (ou quasi identique) n'apparaissent qu'une fois; les points « retirés » ne s'affichent jamais. Rien n'est supprimé dans les feuilles.
+function rdMots(t){ var m = String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z0-9]+/g) || [], o = {}; m.forEach(function(x){ o[x] = 1; }); return o; }
+function rdMemePoint(a, b){
+  var A = rdMots(a), B = rdMots(b), ka = Object.keys(A), kb = Object.keys(B); if(!ka.length || !kb.length) return false;
+  var c = 0; ka.forEach(function(k){ if(B[k]) c++; });
+  if(c === ka.length && c === kb.length) return true;
+  var mn = Math.min(ka.length, kb.length); return mn >= 3 && c / mn >= 0.8;
+}
+function rdFusionnerPoints(pts, edition){
+  var r = [];
+  (pts || []).forEach(function(p){
+    if(!p || p.etat === "retiré" || p.etat === "retire") return;
+    var i = -1; for(var k = 0; k < r.length; k++){ if(rdMemePoint(r[k].texte, p.texte) && String(p.texte || "").trim()){ i = k; break; } }
+    if(i < 0){ r.push(p); return; }
+    // On garde la version en brouillon (celle qu'on modifie) ou celle en cours de saisie.
+    if(p.id === edition || (r[i].id !== edition && p.prochaine === true && r[i].prochaine !== true)) r[i] = p;
+  });
+  return r;
+}
 var RD_PLAN = null, RD_TMP = 0, RD_TMPMAP = {}, RD_TMPSUPPR = {};
 function rdIdReel(id){ return RD_TMPMAP[id] || id; }
 function rdDiscussion(donnees, edition){
@@ -193,6 +212,7 @@ function rdDiscussion(donnees, edition){
   donnees.points = (donnees.points || []).filter(function(p){ return !(p.tmp && !String(p.texte || "").trim() && p.id !== edition); });
   var pts = donnees.points || [], h = "", fictif = RD_DEMO && !pts.length;
   if(!fictif){ RD_PLAN = donnees; rdSauverLocal(); }
+  pts = rdFusionnerPoints(pts, edition);   // affichage seulement: un même point (base et discussion) n'apparaît qu'une fois, les points retirés jamais
   if(fictif) pts = RD_DEMO_PTS.map(function(p){ return {id: "demo-"+p.n, n: p.n, texte: p.texte, etat: "brouillon", demo: true}; });
   var estDemo = function(id){ return String(id).indexOf("demo-") === 0; };
   if(fictif && !donnees.date) h += '<div class="rddate">Mardi 17 novembre · 9 h 30</div>';
