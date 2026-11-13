@@ -1,4 +1,4 @@
-var APP_PUB = "373";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "457";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -28,6 +28,7 @@ var PICTOS = {
  "Comptes clients": "M3 3h18v18h-18zM7 8h10v2h-10zM7 12h10v2h-10zM7 16h5v2h-5z",
  "Production": "M2 4h6v6h-6zM9 4h6v6h-6zM16 4h6v6h-6zM2 13h20v3h-20zM4 18h4v4h-4zM16 18h4v4h-4z",
  "Contrôle": "M2 2h20v20h-20zM5 5h14v14h-14zM7 12h3v3h-3zM10 15h3v3h-3zM13 9h3v6h-3z",
+ "Prix et soumissions": "M2 2h20v20H2zM5 5v14h14V5zM7 7h10v10H7zM10 10h3v3h-3z",
  "Finances": "M4 1h16v22h-16zM7 4h10v5h-10zM7 12h3v3h-3zM11 12h2v3h-2zM14 12h3v3h-3zM7 17h3v3h-3zM11 17h2v3h-2zM14 17h3v3h-3z",
  "Conseil d'administration": "M5 9h14v6h-14zM6 4h4v3h-4zM14 4h4v3h-4zM6 17h4v3h-4zM14 17h4v3h-4zM2 10h2v4h-2zM20 10h2v4h-2z",
  "Employés": "M3 4h6v6h-6zM15 4h6v6h-6zM3 13h18v8h-18z",
@@ -118,10 +119,11 @@ var PICTO_DE = ["Messages", "Manuel", "Autoévaluation", "Rémunération", "Tabl
 var ORDRE_MENU = [9, 0, 4, 6, 7, 2, 3, 1, 5, 8];
 
 function demarrage(){
-  app.innerHTML = '<div class="demarrage"><div class="lgx" role="img" aria-label="Lafond Desjardins laboratoire dentaire">'+'<img class="p1" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p2" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p3" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'</div></div>';
+  if(!app.querySelector(".demarrage")) app.innerHTML = '<div class="demarrage"><div class="lgx" role="img" aria-label="Lafond Desjardins laboratoire dentaire">'+'<img class="p1" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p2" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<img class="p3" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="">'+'<svg class="lgl" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line class="hl" x1="0" y1="9.04" x2="95" y2="9.04"/><line class="hr" x1="0" y1="26.72" x2="95" y2="26.72"/><line class="hl" x1="0" y1="44.5" x2="95" y2="44.5"/><line class="hr" x1="0" y1="53.55" x2="95" y2="53.55"/><line class="vt" x1="7.51" y1="0" x2="7.51" y2="95"/><line class="vb" x1="44.45" y1="0" x2="44.45" y2="95"/><line class="vt" x1="48.05" y1="0" x2="48.05" y2="95"/><line class="vb" x1="92.5" y1="0" x2="92.5" y2="95"/></svg>'+'</div></div>';   // déjà dessiné par index.html pour apparaître dès l'ouverture
   MOI_PRE = null; var s0 = sessionGardee();
   if(s0 && !lireMoi(s0)) MOI_PRE = appelService({action:"moi", session:s0});   // demandé pendant l'animation, pas après
-  setTimeout(ouvrirSession, 2300);
+  if(s0 && !VUE.on) copiePreparer({session: s0}).catch(function(){});   // la clé d'accès à la copie se prépare pendant l'animation: les lectures de l'accueil partent prêtes
+  setTimeout(ouvrirSession, 3900);
 }
 var MOI_PRE = null;
 // Identité gardée sur l'appareil (nom, rôle): le menu s'ouvre à la fin de l'animation, la vérification se fait en silence. Effacée à la déconnexion (préfixe ldld-c-).
@@ -152,7 +154,9 @@ function suiteAppels(){
 setInterval(suiteAppels, 5000);
 document.addEventListener("visibilitychange", function(){ if(!document.hidden) suiteAppels(); });
 // Copie de lecture (Supabase, par le « guichet »). Seulement les heures, seulement quand l'interrupteur « heures » indique la copie, jamais en vue « employé au hasard », jamais de salaire. Au moindre doute (jeton, réseau, copie vide, vieille, d'un autre jour), la lecture directe de Google prend le relais: jamais de chiffre faux.
-var COPIE = {url:null, jeton:null, exp:0, interr:null, interrT:0, hors:0, prep:null};
+var COPIE_PAR = {};   // un état de copie (clé d'accès, interrupteur) PAR session: « voir comme Antonio » et mon compte gardent chacun le leur, sans repartir de zéro à chaque va-et-vient
+function sessDe(corps){ return corps && corps.session !== undefined ? corps.session : sessionGardee(); }
+function copieEtat(s){ var k = String(s); return COPIE_PAR[k] || (COPIE_PAR[k] = {url:null, jeton:null, exp:0, interr:null, interrT:0, hors:0, prep:null}); }
 function torontoMaintenant(){
   var p = {}; new Intl.DateTimeFormat("en-CA", {timeZone:"America/Toronto", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", weekday:"short", hourCycle:"h23"}).formatToParts(new Date()).forEach(function(x){ p[x.type] = x.value; });
   return {date: p.year + "-" + p.month + "-" + p.day, min: Number(p.hour) * 60 + Number(p.minute), semaine: !/^(Sat|Sun)/.test(p.weekday)};
@@ -169,42 +173,48 @@ function totalJourCopie(pts, aj, now){
   if(n === 1){ var sorties = p.filter(function(x){ return x.s === "sortie"; }).length, fin = sorties ? p[p.length - 1].h : now; if(fin > 780) t = Math.max(0, t - 60); }
   return t + (aj || 0);
 }
-function guichetCopie(corps){
+function guichetCopie(corps, C){
   var ctl = window.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function(){ ctl.abort(); }, 6000) : 0;
-  return fetch(COPIE.url, {method:"POST", headers:{"Content-Type":"application/json", "Authorization":"Bearer " + COPIE.jeton}, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined})
+  return fetch(C.url, {method:"POST", headers:{"Content-Type":"application/json", "Authorization":"Bearer " + C.jeton}, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined})
     .then(function(r){ clearTimeout(t); if(!r.ok) throw new Error("guichet " + r.status); return r.json(); }, function(e){ clearTimeout(t); throw e; });
 }
 function copiePreparer(corps){
-  if(COPIE.jeton && COPIE.exp - Date.now() > 120000 && COPIE.interr && Date.now() - COPIE.interrT < 240000) return Promise.resolve();   // jeton de 5 min: renouvelé en arrière-plan dès qu'il lui reste moins de 2 min
-  if(COPIE.prep) return COPIE.prep;
-  var sessDem = corps && corps.session !== undefined ? corps.session : sessionGardee();
+  var sessDem = sessDe(corps), C = copieEtat(sessDem);
+  if(C.jeton && C.exp - Date.now() > 120000 && C.interr && Date.now() - C.interrT < 240000) return Promise.resolve();   // jeton de 5 min: renouvelé en arrière-plan dès qu'il lui reste moins de 2 min
+  if(C.prep) return C.prep;
   var p = appelDirectGoogle({action:"jeton_copie", session: sessDem}).then(function(r){
     if(!r || !r.ok || !r.jeton || !r.url) throw new Error("jeton");
-    if(COPIE.sess !== undefined && COPIE.sess !== sessDem) throw new Error("session");   // la session a changé pendant la demande: ce jeton n'est plus le bon
-    COPIE.url = r.url; COPIE.jeton = r.jeton; COPIE.exp = r.exp > 1e12 ? r.exp : r.exp * 1000;
-    return guichetCopie({action:"interrupteur"});
-  }).then(function(d){ if(!d || !d.ok) throw new Error("interrupteur"); COPIE.interr = {}; (d.interrupteurs || []).forEach(function(x){ COPIE.interr[x.domaine] = x.source; }); COPIE.interrT = Date.now(); });
-  COPIE.prep = p; var fin = function(){ COPIE.prep = null; }; p.then(fin, fin); return p;
+    C.url = r.url; C.jeton = r.jeton; C.exp = r.exp > 1e12 ? r.exp : r.exp * 1000;
+    return guichetCopie({action:"interrupteur"}, C);
+  }).then(function(d){ if(!d || !d.ok) throw new Error("interrupteur"); C.interr = {}; (d.interrupteurs || []).forEach(function(x){ C.interr[x.domaine] = x.source; }); C.interrT = Date.now(); });
+  C.prep = p; var fin = function(){ C.prep = null; }; p.then(fin, fin); return p;
 }
-function copiePrete(){ return COPIE.jeton && COPIE.exp - Date.now() > 10000 && COPIE.interr && Date.now() - COPIE.interrT < 290000; }
+function copiePrete(C){ return C.jeton && C.exp - Date.now() > 10000 && C.interr && Date.now() - C.interrT < 290000; }
 function copieHeures(corps){
-  return guichetCopie({action:"lire", domaine:"heures", cle:""}).then(function(d){
+  return guichetCopie({action:"lire", domaine:"heures", cle:""}, copieEtat(sessDe(corps))).then(function(d){
     if(!d || !d.ok || d.vide || !d.reponse) throw new Error("vide");
     var r = d.reponse, nu = torontoMaintenant();
     if(!r.ok || r.auj !== nu.date) throw new Error("jour");                                  // la copie date d'un autre jour: on lit Google
     if(typeof r.calcMin !== "number" || typeof r.ajAuj !== "number") throw new Error("ancienne");   // publiée avant l'ajout du moment de calcul: on lit Google
-    if(nu.semaine && nu.min >= 6 * 60 && nu.min <= 19 * 60 && Date.now() - Date.parse(d.maj_t) > 45 * 60000) throw new Error("vieille");   // en journée, la copie est rafraîchie aux 10 à 25 min
+    if(nu.semaine && nu.min >= 6 * 60 && nu.min <= 19 * 60 && Date.now() - Date.parse(d.maj_t) > 180 * 60000) throw new Error("vieille");   // en journée: une copie de moins de 3 h est acceptée (les pointages sont rares); la lecture silencieuse de Google corrige ensuite
     var v = totalJourCopie(r.pointagesAuj || [], r.ajAuj, nu.min); if(v === undefined) throw new Error("format");
     r.minutesAuj = v; (r.cette || []).forEach(function(x){ if(x.date === r.auj) x.min = v; });
     return r;
   });
 }
 // Domaines lus dans la copie (une réponse par employé, même forme que le service). Ligne absente, purgée, en erreur ou trop vieille: Google répond.
-var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
-function copieSimple(domaine){
-  return guichetCopie({action:"lire", domaine:domaine, cle:""}).then(function(d){
+var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1, ech_donnees:1, calendrier:1, rd_chiffres:1, prix_soumissions:1, employes_etat:1, charge_equipe:1, entretien_lire:1, equipe_groupes:1, contacts:1, equipe:1, parking_lire:1, stationnement:1, prefs_lire:1, utilisation:1, onglets_lire:1, production_lire:1, absences_equipe:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
+function copieCle(domaine, corps){   // domaines à plusieurs clés: Réunion production (rd_chiffres) = section|département|du|au (la charge ne dépend pas de la période)
+  if(domaine !== "rd_chiffres" || !corps) return "";
+  var ch = corps.section === "charge";
+  if(!corps.section || !corps.departement || (!ch && (!corps.du || !corps.au))) return null;
+  return corps.section + "|" + corps.departement + "|" + (ch ? "" : corps.du) + "|" + (ch ? "" : corps.au);
+}
+function copieSimple(domaine, corps){
+  var cle = copieCle(domaine, corps); if(cle === null) return Promise.reject(new Error("vide"));
+  return guichetCopie({action:"lire", domaine:domaine, cle:cle}, copieEtat(sessDe(corps))).then(function(d){
     if(!d || !d.ok || d.vide || !d.reponse) throw new Error("vide");
-    var r = d.reponse; if(r.ok === false || r.purge) throw new Error("vide");
+    var r = d.reponse; if(r.ok === false || r.purge || r.attente) throw new Error("vide");
     if(Date.now() - Date.parse(d.maj_t) > 36 * 3600000) throw new Error("vieille");   // publiée au moins une fois par jour (préchauffage et reconstruction de nuit)
     return r;
   });
@@ -212,26 +222,22 @@ function copieSimple(domaine){
 // La copie ne retarde jamais une lecture: tant qu'elle n'est pas prête (jeton + interrupteur), Google répond, et la préparation se fait en arrière-plan.
 function appelDirect(corps, vu){
   var a = corps && corps.action;
-  if(a === "heures" || COPIE_SIMPLE[a]){   // le jeton de la copie appartient à la session qui l'a demandé: si la session change (voir comme, autre employé), on repart de zéro
-    var sess = corps.session !== undefined ? corps.session : sessionGardee();
-    if(COPIE.sess !== undefined && COPIE.sess !== sess){ COPIE.jeton = null; COPIE.exp = 0; COPIE.interr = null; COPIE.interrT = 0; COPIE.prep = null; COPIE.hors = 0; }
-    COPIE.sess = sess;
-  }
-  if((a === "heures" || COPIE_SIMPLE[a]) && Date.now() > COPIE.hors){
-    if(!copiePrete()){
+  var C = copieEtat(sessDe(corps));
+  if((a === "heures" || COPIE_SIMPLE[a]) && Date.now() > C.hors){
+    if(!copiePrete(C)){
       // Copie pas encore prête (jeton + interrupteur, environ 1 s): on l'attend 2,5 s au plus; passé ce délai, ou si elle échoue, Google répond. La première réponse gagne.
       return new Promise(function(ok, ko){
         var fini = false, g = false, tm = 0;
         function google(){ if(g) return; g = true; appelDirectGoogle(corps, vu).then(function(r){ if(!fini){ fini = true; ok(r); } }, function(e){ if(!fini){ fini = true; ko(e); } }); }
         tm = setTimeout(google, 2500);
         copiePreparer(corps).then(function(){
-          if(!(copiePrete() && COPIE.interr[a] === "copie")) throw new Error("nonprete");
-          return a === "heures" ? copieHeures(corps) : copieSimple(a);
-        }).then(function(r){ if(!fini){ fini = true; clearTimeout(tm); ok(r); } }, function(e){ clearTimeout(tm); var m = String(e && e.message); if(!/^(jour|ancienne|vide|vieille|nonprete)$/.test(m)) COPIE.hors = Date.now() + 120000; google(); });
+          if(!(copiePrete(C) && C.interr[a] === "copie")) throw new Error("nonprete");
+          return a === "heures" ? copieHeures(corps) : copieSimple(a, corps);
+        }).then(function(r){ if(!fini){ fini = true; clearTimeout(tm); ok(r); } }, function(e){ clearTimeout(tm); var m = String(e && e.message); if(!/^(jour|ancienne|vide|vieille|nonprete)$/.test(m)) C.hors = Date.now() + 120000; google(); });
       });
     }
-    if(COPIE.exp - Date.now() < 120000 || Date.now() - COPIE.interrT > 240000) copiePreparer(corps).catch(function(){});   // renouvellement silencieux: la lecture en cours utilise encore le jeton valide
-    if(COPIE.interr[a] === "copie") return (a === "heures" ? copieHeures(corps) : copieSimple(a)).catch(function(e){ if(!/^(jour|ancienne|vide|vieille)$/.test(String(e && e.message))) COPIE.hors = Date.now() + 60000; return appelDirectGoogle(corps, vu); });
+    if(C.exp - Date.now() < 120000 || Date.now() - C.interrT > 240000) copiePreparer(corps).catch(function(){});   // renouvellement silencieux: la lecture en cours utilise encore le jeton valide
+    if(C.interr[a] === "copie") return (a === "heures" ? copieHeures(corps) : copieSimple(a, corps)).catch(function(e){ if(!/^(jour|ancienne|vide|vieille)$/.test(String(e && e.message))) C.hors = Date.now() + 60000; return appelDirectGoogle(corps, vu); });
   }
   return appelDirectGoogle(corps, vu);
 }
@@ -244,8 +250,8 @@ function appelDirectGoogle(corps, vu){
 
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
-var LECT = {evenements_employe:1, rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1};
-var NEUTRE = {absences_equipe:1, tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
+var LECT = {evenements_employe:1, rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1, prix_soumissions:1};
+var NEUTRE = {tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 // Copie gardée sur l'appareil (affichée tout de suite à l'ouverture, remplacée en silence par la version fraîche). JAMAIS de salaire ni de rémunération (Portrait, Échelle, Positionnement, Embauche, Employé actuel restent en mémoire seulement).
 // Données de l'employé lui-même: toutes les personnes. Données d'équipe: Direction seulement. Tout est effacé à la déconnexion (préfixe ldld-c-).
@@ -288,8 +294,9 @@ function prechargerLectures(){
   prechargerLectures.t = Date.now();
   var l = [{action:"heures"}, {action:"agenda_mes"}, {action:"rencontre_liste"}, {action:"prefs_lire"}, {action:"entretien_lire"}];
   if(MOI.role === "direction" || MOI.role === "responsable") l = l.concat([{action:"charge_equipe"}, {action:"entretien_lire"}, {action:"parking_lire"}, {action:"equipe_groupes"}, {action:"utilisation"}, {action:"agenda_liste"}]);
-  if(MOI.role === "direction") l = l.concat([{action:"production_lire"}, {action:"employes_etat"}, {action:"emp_donnees"}, {action:"ech_donnees"}, {action:"embauche_donnees"}, {action:"embauche_avantages"}, {action:"pos_donnees"}, {action:"portrait", id:""}]);
+  if(MOI.role === "direction") l = l.concat([{action:"production_lire"}, {action:"employes_etat"}, {action:"ech_donnees"}, {action:"embauche_donnees"}, {action:"embauche_avantages"}, {action:"pos_donnees"}, {action:"portrait", id:""}]);
   var i = 0; function suite(){ if(i >= l.length) return; var c = l[i++]; c.session = sessionGardee(); var e = RCACHE[cleLecture(c)]; ((e && Date.now() - e.t < 150000) ? Promise.resolve() : enArriere(function(){ return appelService(c); }).catch(function(){})).then(suite); }
+  if(MOI.role === "direction"){ setTimeout(suite, 15000); return; }   // Direction: une seule file, 15 s après l'arrivée (les ouvertures de page passent d'abord, le service n'est pas saturé)
   suite(); setTimeout(suite, 300); setTimeout(suite, 600);
 }
 
@@ -300,7 +307,7 @@ function chercher(cle, corps){
   corps.session = sessionGardee();
   return appelService(corps).then(function(r){ if(r && r.ok && !VUE.on){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
 }
-function viderCache(){ try { localStorage.removeItem("ldld-vue-antonio"); } catch(e){} CACHE = {}; RCACHE = {}; COPIE = {url:null, jeton:null, exp:0, interr:null, interrT:0, hors:0, prep:null}; precharger.t = 0; MOI_PRE = null; VUE_PRE = null; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
+function viderCache(){ try { localStorage.removeItem("ldld-vue-antonio"); } catch(e){} CACHE = {}; RCACHE = {}; COPIE_PAR = {}; precharger.t = 0; MOI_PRE = null; VUE_PRE = null; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
 /** Affiche la copie locale (sans écran de chargement) puis remplace en silence si la version a changé. */
 function obtenir(cle, corps, afficher, erreur, majSilencieuse){
   var local = lireCache(cle);
@@ -325,9 +332,8 @@ function pastilleDirection(){
   var a = app.querySelector('a[data-k="rencontres_demandees"]'); if(!a) return;
   var p = a.querySelector(".nombre"); if(p) p.remove();
   var t = a.querySelector(".nbtot"); if(t) t.remove();
-  var m = lireCache("messages"), tot = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && /^Demande de rencontre/.test(x.titre); }).length : 0;
-  t = document.createElement("span"); t.className = "nbtot"; t.textContent = String(tot); a.appendChild(t);
-  if(nbDemandesNeuves()) t.className = "nbtot nombre";   // vert seulement s'il y a du nouveau
+  var n = nbDemandesNeuves();   // comme pour les messages: une étiquette verte seulement s'il y a du nouveau
+  if(n){ var t2 = document.createElement("span"); t2.className = "nombre"; t2.textContent = pastilleTexte(n); a.appendChild(t2); }
 }
 // Une autoévaluation est disponible 14 jours avant la date de la rencontre, jusqu'à ce jour inclus, et seulement si elle n'est pas terminée.
 function aeARemplir(m){
@@ -353,7 +359,6 @@ function aeNonDispo(){
 }
 function aeEntree(){
   var ae = lireCache("ae");
-  if(ae && ae.rencontres && !(MOI && MOI.role === "direction" && !vueComme()) && !ae.rencontres.some(aeARemplir)) return aeNonDispo();
   section(2);
 }
 function pastilleAuto(){
@@ -379,10 +384,11 @@ function prechargerAgendas(){
   } catch(e){}
 }
 function precharger2(){
-  chercher("heures", {action:"heures"}).catch(function(){});   // les heures en premier: page la plus ouverte, lecture la plus lente
+  var dir = MOI && MOI.role === "direction";   // compte Direction: ni heures, ni tableau de bord à lui (aucune donnée, et ces lectures saturaient le service à l'ouverture)
+  if(!dir) chercher("heures", {action:"heures"}).catch(function(){});   // les heures en premier: page la plus ouverte, lecture la plus lente
   chercher("messages", {action:"messages"}).then(pastilleMessages).catch(function(){});
-  chercher("tableau", {action:"tableau"}).catch(function(){});
-  chercher("tableau_courant", {action:"tableau_courant"}).catch(function(){});
+  if(!dir) chercher("tableau", {action:"tableau"}).catch(function(){});
+  if(!dir) chercher("tableau_courant", {action:"tableau_courant"}).catch(function(){});
   chercher("incendie_texte", {action:"incendie_texte"}).catch(function(){});
   chercher("manuel_texte", {action:"manuel_texte"}).catch(function(){});
   chercher("calendrier", {action:"calendrier"}).catch(function(){});
@@ -496,23 +502,20 @@ function ecranNotifs(){
   document.getElementById("notifPlus").onclick = function(e){ e.preventDefault(); fini(); };
 }
 // Accueil « Aujourd'hui »: rencontres du jour (agenda principal), carré vert devant chaque ligne; rien d'affiché s'il n'y en a pas.
-var AUJ = null, ABSEQ = [];
-// Absences de l'équipe (Service: absences_equipe, noms de la même équipe seulement). Chaque entrée {nom, jour AAAA-MM-JJ, de, a}: visible de midi la veille ouvrable jusqu'à midi le jour même (heure de Montréal, appliquée par le Service; l'app revérifie la fenêtre).
-function absLignes(){
-  var t = Date.now(), iso = isoJour(new Date()), dem = new Date(); dem.setDate(dem.getDate()+1);
-  return (ABSEQ || []).filter(function(a){ return a && a.nom && a.jour && (!a.de || Date.parse(a.de) <= t) && (!a.a || t < Date.parse(a.a)); }).map(function(a){
-    var q = a.jour === iso ? "aujourd’hui" : a.jour === isoJour(dem) ? "demain" : ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"][new Date(a.jour+"T12:00:00").getDay()];
-    return '<div>Absence '+esc(q)+' · '+esc(a.nom)+'</div>'; });
-}
+var AUJ = null;
 function heureFr(d){ var h = d.getHours(), m = d.getMinutes(); return h+" h"+(m ? " "+("0"+m).slice(-2) : ""); }
 function dessinerAujourdhui(){
   var z = document.getElementById("auj"); if(!z) return; var t = new Date(), iso = isoJour(t);
+  var apres12 = t.getHours() >= 12, dem = new Date(t); do { dem.setDate(dem.getDate() + 1); } while(dem.getDay() === 0 || dem.getDay() === 6); var isoDem = isoJour(dem);
   var l = (AUJ || []).filter(function(e){
+    if(e.journee && /absent/i.test(String(e.titre || ""))){   // règle des absences: l'avis de la veille apparaît à midi, celui du jour disparaît à midi
+      var a1 = String(e.debut).slice(0, 10), a2 = String(e.fin || e.debut).slice(0, 10), jr = apres12 ? isoDem : iso;
+      return a1 <= jr && (jr < a2 || a1 === a2 && a1 === jr);
+    }
     if(e.journee){ var d1 = String(e.debut).slice(0, 10), d2 = String(e.fin || e.debut).slice(0, 10); return d1 <= iso && (iso < d2 || d1 === d2 && d1 === iso); }
     return isoJour(new Date(e.debut)) === iso && new Date(e.fin || e.debut) >= t; });
-  var ab = absLignes();
-  if(!l.length && !ab.length){ z.innerHTML = ""; return; }
-  z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+ab.join("")+l.map(function(e){
+  if(!l.length){ z.innerHTML = ""; return; }
+  z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+l.map(function(e){
     if(e.journee) return '<div>Journée · '+esc(e.titre || "")+'</div>';
     var d = new Date(e.debut), fait = new Date(e.fin || e.debut) < t;
     return '<div'+(fait ? ' class="fait"' : "")+'>'+heureFr(d)+' · '+esc(String(e.titre || "").trim() || "Sans titre")+'</div>'; }).join("")+'</div>';
@@ -530,13 +533,14 @@ function auj_normalise(liste, jour){
 }
 function chargerAujourdhui(){
   var t = new Date(); t.setHours(0, 0, 0, 0); dessinerAujourdhui();
-  obtenir("absences_equipe", {action:"absences_equipe"}, function(r){ ABSEQ = (r && r.absences) || []; dessinerAujourdhui(); }, function(){}, true);
   var deb = isoJour(lundiDe(t)), plusieurs = roleIdx() >= 1;
   var fin = function(liste, jour){ AUJ = auj_normalise(liste, jour); dessinerAujourdhui(); };
   if(!plusieurs){
     obtenir("evenements_employe", {action:"evenements_employe"}, function(r){ if(r && r.evenements) fin(r.evenements, []); }, function(){}, true);
     return;
   }
+  var cleAuj = "ldld-c-auj-" + deb + "-" + (MOI && MOI.nom || "");   // dernier affichage gardé sur l'appareil: le haut de l'accueil apparaît tout de suite, la lecture reprend en silence
+  try { var g = JSON.parse(localStorage.getItem(cleAuj)); if(g && g.j === isoJour(t) && !AUJ_VU){ AUJ_VU = true; fin(g.l, g.jj); } } catch(e){}
   var lu = DH_CACHE.agendas ? Promise.resolve() : appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.agendas) DH_CACHE.agendas = r.agendas.filter(function(a){ return a.ecriture; }); });
   lu.then(function(){
     var ids = (DH_CACHE.agendas || []).map(function(a){ return a.id; }).slice(0, 8); if(ids.indexOf("primary") < 0) ids.unshift("primary");
@@ -544,9 +548,11 @@ function chargerAujourdhui(){
   }).then(function(r){
     if(!(r && r.ok && r.semaines)) return;
     var tous = [], jj = []; r.semaines.forEach(function(w){ (w.evenements || []).forEach(function(e){ tous.push(e); }); (w.journee || []).forEach(function(e){ jj.push(e); }); });
+    try { localStorage.setItem(cleAuj, JSON.stringify({j: isoJour(t), l: tous, jj: jj})); } catch(e){}
     fin(tous, jj);
   }).catch(function(){});
 }
+var AUJ_VU = false;
 // Accueil unique: chaque entrée a un groupe, un pictogramme et des droits par défaut [employé, responsable, direction].
 // La page Contrôle (Direction) peut changer les droits des entrées non verrouillées; le service refuse aussi l'accès.
 var ENT = [
@@ -554,7 +560,7 @@ var ENT = [
  {id:"messages", g:"Mon travail", h:1, l:"Message reçu", p:"Messages", d:[1,1,1], i:0, f:function(){ section(0); }},
  {id:"tableau_de_bord", g:"Mon travail", h:1, l:"Tableau de bord", p:"Tableau de bord", d:[1,1,1], i:4, f:function(){ section(4); }},
  {id:"calendrier", g:"Mon travail", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
- {id:"rencontre", g:"Mon travail", l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
+ {id:"rencontre", g:"Mon travail", h:1, l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
  {id:"autoevaluation", g:"Mon compte", h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,1,1], i:2, f:function(){ aeEntree(); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
@@ -563,13 +569,13 @@ var ENT = [
  {id:"messages_envoyes", s:1, g:"Équipe", l:"Historique message", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
  {id:"reunion_production", g:"Équipe", l:"Réunion production", p:"Réunion production", d:[1,1,1], f:function(){ rencontreDept(); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
- {id:"employe_actuel", g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
+ {id:"employe_actuel", s:1, g:"Gestion des employés", l:"Employé actuel", p:"Employé actuel", d:[0,0,1], f:function(){ eaOuvrir(); }},
  {id:"positionnement_embauche", g:"Gestion des employés", l:"Position d’embauche", p:"Position d’embauche", n:1, d:[0,0,1], f:function(){ embauchePos(); }},
  {id:"nouvel_employe", g:"Gestion des employés", l:"Contrat d’embauche", p:"Nouvel employé", n:2, d:[0,0,1], v:1, f:function(){ nouvelEmploye(); }},
  {id:"retirer_employe", g:"Gestion des employés", l:"Retirer un employé", p:"Retirer un employé", d:[0,0,1], f:function(){ gestionEmployes(); }},
  {id:"portrait", g:"Gestion des employés", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portrait(); }},
  {id:"suivi_charge", g:"Gestion des employés", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
- {id:"echelle_salariale", g:"Gestion des employés", l:"Échelle salariale", p:"Échelle salariale", d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
+ {id:"echelle_salariale", g:"Gestion des employés", l:"Échelle salariale\u2191taux", p:"Échelle salariale", d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
  {id:"positionnement_employe", g:"Gestion des employés", l:"Position employé", p:"Positionnement employé", d:[0,0,1], f:function(){ posEmpOuvrir(); }},
  {id:"envoi_salarial", g:"Gestion des employés", l:"Envoi salarial", p:"Envoi salarial", d:[0,0,1], v:1, f:function(){ bientot(this); }},
  {id:"stationnement", g:"Installations", l:"Stationnement", p:"Stationnement", d:[0,1,1], f:function(){ attributionPage("place"); }},
@@ -587,10 +593,12 @@ var ENT = [
  {id:"finances_clients", g:"Finances", l:"Finances · Comptes clients", p:"Comptes clients", d:[0,0,1], v:1, s:1},
  {id:"finances_etats", g:"Finances", l:"Finances · États financiers", p:"États financiers", d:[0,0,1], v:1, s:1},
  {id:"manuel", g:"Documents", l:"Manuel d’employé", p:"Manuel", d:[1,1,1], i:1, f:function(){ section(1); }},
+ {id:"prix_soumissions", g:"Documents", l:"Prix et soumissions", p:"Prix et soumissions", d:[0,1,1], f:function(){ prixSoumissions(); }},
  {id:"plan_incendie", g:"Documents", l:"Plan d’incendie", p:"Plan d'incendie", d:[1,1,1], i:5, f:function(){ section(5); }},
  {id:"utilisation", g:"Contrôle", l:"Utilisation app", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
  {id:"controle", g:"Contrôle", l:"Contrôle", p:"Contrôle", d:[0,0,1], v:1, f:function(){ controleOuvrir(); }}
 ];
+var FLECHE_TXT = '<svg viewBox="0 0 24 24" aria-hidden="true" style="width:1.05em;height:1.05em;vertical-align:-.15em;fill:currentColor;margin:0 .05em 0 .2em"><path d="M11 3h2v2h-2zM9 5h6v2H9zM7 7h10v2H7zM10 9h4v10h-4z"/></svg>';
 var ENT_PAR_ID = {}; ENT.forEach(function(x){ ENT_PAR_ID[x.id] = x; });
 var ORDRE_EMPLOYE = ["mes_heures","messages","tableau_de_bord","calendrier","rencontre","autoevaluation","remuneration","manuel","plan_incendie","mon_profil","entretien_machinerie"];
 var DROITS_SERVICE = null;   // {id: true/false} pour mon rôle, lu du service (action onglets_lire); absent = droits par défaut
@@ -620,9 +628,9 @@ function menu(){
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
   vis.forEach(function(x){
     if(grp && x.g !== g){ g = x.g; h += '<div class="gtit">▪ '+esc(g)+'</div>'; }
-    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.id === "messages" ? "Calendrier et messages" : x.l)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(x.n ? '<b class="nc">'+x.n+'</b>' : "")+'</span></a>';
+    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.id === "messages" ? "Calendrier et messages" : x.l).replace("\u2191", FLECHE_TXT)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(x.n ? '<b class="nc">'+x.n+'</b>' : "")+'</span></a>';
   });
-  if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { posEmpPrecharger(); embPrecharger(); } catch(e){} }
+  if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { echPrecharger(); setTimeout(function(){ try { posEmpPrecharger(); embPrecharger(); } catch(e){} }, 4000); } catch(e){} }
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="envg"></div><div id="auj"></div>' + h +
     (vueComme() ? '<a href="#" id="rcommefin">Revenir à mon compte</a>' : '') +
     '<a class="sortie" href="#" id="sortie">Déconnexion</a></div>';
@@ -639,6 +647,13 @@ function menu(){
   vuePreparer(sessionGardee());
 }
 // Aucun nom sur deux lignes: la taille du texte de l'accueil diminue (pour toutes les lignes à la fois) jusqu'à ce que chaque nom tienne sur une seule ligne.
+// Le libellé tient sur une ligne sans toucher l'étiquette verte ni sortir de la tuile.
+function texteTient(a){
+  var lab = a.firstElementChild; if(!lab) return true;
+  var r = document.createRange(); r.selectNodeContents(lab);
+  var fin = r.getBoundingClientRect().right, b = a.querySelector(".nombre"), lim = b ? b.getBoundingClientRect().left - 8 : a.getBoundingClientRect().right;
+  return fin <= lim;
+}
 function ajusterMenu(){
   var m = app.querySelector(".menu.accueil"); if(!m) return;
   var L = Array.prototype.slice.call(m.querySelectorAll("a[data-k]")); if(!L.length) return;
@@ -646,7 +661,7 @@ function ajusterMenu(){
   while(t >= 12 && !ok){
     m.style.setProperty("--ft", t + "px");
     var mn = Math.min.apply(null, L.map(function(a){ return a.offsetHeight; }));
-    ok = L.every(function(a){ return a.offsetHeight <= mn + 6; });
+    ok = L.every(function(a){ return a.offsetHeight <= mn + 6 && texteTient(a); });
     if(!ok) t -= 0.5;
   }
 }
@@ -674,10 +689,10 @@ function aeAFaire(){
 }
 function messages(filtre){
   if(typeof filtre === "string") FILTRE_MSG = filtre;
-  var fusion = (!FILTRE_MSG && !VUE.on);
+  var fusion = !FILTRE_MSG;   // même page « Calendrier et messages » pour tous, y compris la vue employé de la Direction (astérisque)
   var titreMsg = fusion ? "Calendrier et messages" : FILTRE_MSG === "envoyes" ? "Historique message" : FILTRE_MSG === "rencontres" ? "Rencontre demandée" : "Message reçu";
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div><div class="etiq">▪ À VENIR</div><div id="aven"></div>' + (peutEcrire() ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '<div class="etiq">▪ REÇUS</div>' : '') + '<div id="liste"></div>' +
-    (peutEcrire() && !FILTRE_MSG ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div><div class="etiq">▪ À VENIR</div><div id="aven"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '<div class="etiq">▪ REÇUS</div>' : '') + '<div id="liste"></div>' +
+    (peutEcrire() && !FILTRE_MSG && !VUE.on ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
   var w = document.getElementById("ecrire"); if(w) w.onclick = function(e){ e.preventDefault(); nouveau("message"); };
   var gr = document.getElementById("grille"); if(gr) gr.onclick = function(e){ e.preventDefault(); nouveau("message"); };
@@ -1009,7 +1024,13 @@ function evaluations(){
   obtenir("ae", {action:"ae_lire"}, function(r){
     var el = document.getElementById("ev"); if(!el) return;
     var dues = r.rencontres.filter(aeARemplir);   // seulement celles à remplir, jamais les anciennes
-    if(!dues.length){ menu(); aeNonDispo(); return; }
+    if(!dues.length){
+      var auj0 = new Date(); auj0 = new Date(auj0.getFullYear(), auj0.getMonth(), auj0.getDate()), suiv = null;
+      r.rencontres.forEach(function(m){ var p = /^(\d{4})-(\d\d)-(\d\d)/.exec(m.date || ""); if(!p || m.terminee) return; var rd = new Date(+p[1], +p[2]-1, +p[3]), dispo = new Date(rd.getFullYear(), rd.getMonth(), rd.getDate()-14); if(dispo > auj0 && (!suiv || dispo < suiv)) suiv = dispo; });
+      if(!suiv && r.prochaine && r.prochaine.date){ var q = /^(\d{4})-(\d\d)-(\d\d)/.exec(r.prochaine.date); if(q){ var rq = new Date(+q[1], +q[2]-1, +q[3]); var dq = new Date(rq.getFullYear(), rq.getMonth(), rq.getDate()-14); if(dq > auj0) suiv = dq; } }
+      el.innerHTML = '<div class="aevide">'+(suiv ? 'Votre prochaine autoévaluation sera disponible le '+(suiv.getDate() === 1 ? "1er" : suiv.getDate())+' '+MOIS_LONGS[suiv.getMonth()]+' '+suiv.getFullYear()+'.' : 'Votre prochaine autoévaluation sera annoncée prochainement.')+'</div>';
+      return;
+    }
     if(dues.length === 1){ autoeval(dues[0].rencontre, true, dues[0].date); return; }   // une seule : on l'ouvre directement
     el.innerHTML = dues.map(function(m){
       return '<a class="rang" href="#" data-r="'+m.rencontre+'" data-d="'+esc(m.date || "")+'">▪ Autoévaluation · rencontre '+m.rencontre+'<small>'+'Rencontre du '+esc(aeDateTxt(m.date))+'</small></a>'; }).join("");
@@ -1253,6 +1274,7 @@ function controleOuvrir(){
     var h = '<div class="ctg"><span></span>' + noms.map(function(n, k){ return '<b>'+n+'<i style="background:'+CTL_COULEURS[k]+'"></i></b>'; }).join("");
     var g = "";
     ENT.forEach(function(x){
+      if(x.s) return;   // les sous-pages (Conseil · …, Finances · …) suivent le droit de leur onglet d'accueil: aucun contrôle de sous-groupe
       if(x.g !== g){ g = x.g; h += '<div class="ctt">▪ '+esc(g === "Contrôle" ? "Contrôle des onglets" : g)+'</div>'; }
       h += '<span class="ctn">'+esc(x.l)+(x.v ? '<small> · verrouillé</small>' : "")+'</span>';
       for(var k = 0; k < 3; k++){
@@ -1675,6 +1697,59 @@ function groupesFrequence(taches){
   return Object.keys(G).sort(function(a, b){ return (RANG[a] === undefined ? 8 : RANG[a]) - (RANG[b] === undefined ? 8 : RANG[b]); }).map(function(f){ return {f: f.charAt(0).toUpperCase() + f.slice(1), t: G[f]}; });
 }
 // Entretien machinerie : responsables et direction consultent et modifient; l'employé voit seulement ses machines (« Mes entretiens »).
+// Prix et soumissions (Gestionnaire et Direction): lecture seule, texte seulement; service « prix_soumissions » (copie Supabase ensuite).
+function prixSoumissions(){
+  var vue = "liste", rech = "", ouv = {}, d = null;
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Prix et soumissions</h1><div id="psb"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  function fmt(p){ if(typeof p === "number" || /^[\d\s.,]+$/.test(String(p))){ var n = typeof p === "number" ? p : parseFloat(String(p).replace(/\s/g, "").replace(",", ".")); return isFinite(n) ? n.toLocaleString("fr-CA", {maximumFractionDigits: 2}) + " $" : esc(String(p)); } return esc(String(p == null ? "" : p)); }
+  function ok(t){ return !rech || String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").indexOf(rech) >= 0; }
+  function dessiner(){
+    var el = document.getElementById("psb"); if(!el) return;
+    var h = '<div class="tgm"><button type="button" class="tgb'+(vue === "liste" ? " on" : "")+'" data-v="liste">Liste de prix</button><button type="button" class="tgb'+(vue === "soum" ? " on" : "")+'" data-v="soum">Soumissions</button></div>' +
+      '<input class="champ" id="psr" type="search" placeholder="Rechercher" value="'+esc(rech)+'" autocomplete="off">';
+    if(!d){ el.innerHTML = h; return lier(el); }
+    var i, k, n = 0;
+    if(vue === "liste"){
+      var sec = null, tab = "", blocs = [];
+      d.liste.forEach(function(x){
+        if(x.t === "section"){ sec = {t: x.fr, tabs: [], cur: null}; blocs.push(sec); }
+        else if(x.t === "tableau"){ if(!sec){ sec = {t: "", tabs: [], cur: null}; blocs.push(sec); } sec.cur = {t: x.fr, l: []}; sec.tabs.push(sec.cur); }
+        else if(x.t === "ligne"){ if(!sec){ sec = {t: "", tabs: [], cur: null}; blocs.push(sec); } if(!sec.cur){ sec.cur = {t: "", l: []}; sec.tabs.push(sec.cur); } sec.cur.l.push(x); }
+      });
+      blocs.forEach(function(b, bi){
+        var rows = "", nb = 0;
+        b.tabs.forEach(function(t){
+          var ls = t.l.filter(function(x){ return !rech || ok(x.fr) || ok(t.t) || ok(b.t); });
+          if(!ls.length) return;
+          if(t.t) rows += '<div class="pst">'+esc(t.t)+'</div>';
+          ls.forEach(function(x){ nb++; rows += '<div class="psl"><span>'+esc(x.fr)+'</span>'+'<b>'+fmt(x.prix)+'</b>'+'<i class="pd">'+(x.delai ? esc(String(x.delai))+' j' : "")+'</i></div>'; });
+        });
+        if(!nb) return; n++;
+        var o = !!rech || ouv["s"+bi];
+        h += '<div class="pss" data-o="s'+bi+'"><span>'+esc(b.t || "Prix")+'</span><b>'+(o ? "−" : "+")+'</b></div>' + (o ? rows : "");
+      });
+    } else {
+      d.soumissions.forEach(function(x, xi){
+        var ls = (x.lignes || []).filter(function(l){ return true; });
+        if(rech && !ok(x.fr) && !ls.some(function(l){ return ok(l.fr); })) return; n++;
+        var o = !!rech && false || ouv["m"+xi];
+        h += '<div class="pss" data-o="m'+xi+'"><span>'+esc(x.fr)+'</span><b>'+(o ? "−" : fmt(x.total))+'</b></div>';
+        if(o){ ls.forEach(function(l){ h += '<div class="psl"><span>'+esc(l.fr)+'</span>'+(l.qte ? '<i>× '+esc(String(l.qte))+'</i>' : "")+'<b>'+(l.sous != null && l.sous !== "" ? fmt(l.sous) : "")+'</b></div>'; }); h += '<div class="psl"><span>Total</span><b>'+fmt(x.total)+'</b></div>'; }
+      });
+    }
+    if(!n) h += '<p class="aide" style="margin-top:14px">Aucun résultat.</p>';
+    el.innerHTML = h; lier(el);
+  }
+  function lier(el){
+    Array.prototype.forEach.call(el.querySelectorAll(".tgb"), function(b){ b.onclick = function(){ vue = b.getAttribute("data-v"); dessiner(); }; });
+    Array.prototype.forEach.call(el.querySelectorAll(".pss"), function(b){ b.onclick = function(){ var c = b.getAttribute("data-o"), etait = !!ouv[c]; ouv = {}; ouv[c] = !etait; dessiner(); }; });
+    var r = document.getElementById("psr");
+    if(r) r.oninput = function(){ rech = r.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); var p = r.selectionStart; dessiner(); var r2 = document.getElementById("psr"); if(r2){ r2.focus(); try { r2.setSelectionRange(p, p); } catch(e){} } };
+  }
+  dessiner();
+  obtenir("prix_soumissions", {action: "prix_soumissions"}, function(r){ d = r; dessiner(); }, function(){ var el = document.getElementById("psb"); if(el) el.insertAdjacentHTML("beforeend", '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'); }, true);
+}
 function entretien(){
   if(!entretien.verifie){ entretien.verifie = true; var s0 = sessionGardee(); appelBrut({action:"moi", session:s0}).then(function(r){ entretien.verifie = false; if(r && r.ok && MOI && r.role !== MOI.role){ MOI = r; try { garderMoi(s0, r); } catch(e){} entretien(); } }).catch(function(){ entretien.verifie = false; }); }
   var tous = peutEcrire(), ecr = !!(MOI && (MOI.role === "direction" || /^gestionnaire/.test(String(MOI.poste || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase()))), d = null, vue = "secteur", sel = "non", msg = "", mode = "liste", fiche = null, pick = false, supprime = false;
@@ -1817,7 +1892,8 @@ function agendaEstLabo(id){
   return !!a && AGENDAS_LABO.indexOf(nomSimple(a.nom || a.titre || a.summary)) >= 0;
 }
 // Participants: liste « Groupes » et liste « Employés » (choix multiples). Les membres d'un groupe choisi sont en gris pâle dans la liste Employés.
-function participants(personnes, groupes, surChangement, init){
+function participants(personnes, groupes, surChangement, init, extra){
+  extra = extra || {};
   var S = {grp: (init && init.grp) || [], emp: (init && init.emp) || [], ouvert: "", err: false, zone: null, restreint: false};
   var persTous = personnes.map(function(p){ return {c: p.c, nom: nomTitre(p.nom), id: p.id || "", role: p.role || ""}; });
   var pers = persTous, groupesTous = groupes;
@@ -1842,6 +1918,13 @@ function participants(personnes, groupes, surChangement, init){
       h += '<span class="lbl">Groupes · obligatoire</span><div class="'+cl()+'" id="pg"><div>'+(S.grp.length ? chips(S.grp, "g") : '<span class="vide">Choisir un ou plusieurs groupes</span>')+'</div><span style="padding:2px 4px">'+(S.ouvert === "g" ? "▴" : "▾")+'</span></div>';
       if(S.ouvert === "g") h += '<div class="msl">'+groupes.map(function(g){ var on = S.grp.indexOf(g.nom) >= 0; return '<div data-g="'+esc(g.nom)+'"><span class="cb'+(on ? " on" : "")+'">'+(on ? "✓" : "")+'</span>'+esc(g.nom)+'</div>'; }).join("")+'</div>';
     }
+    [["c", "Catégorie", "une catégorie", extra.categories], ["q", "Équipe", "une équipe", extra.equipes]].forEach(function(L){
+      var its = (L[3] || []).map(function(g){ return {nom: g.nom, m: (g.membres || []).filter(function(c){ return pers.some(function(p){ return p.c === c; }); })}; }).filter(function(g){ return g.m.length; });
+      if(!its.length) return;
+      var pris = its.filter(function(g){ return g.m.every(function(c){ return S.emp.indexOf(c) >= 0 || via[c]; }); }).map(function(g){ return g.nom; });
+      h += '<span class="lbl">'+L[1]+'</span><div class="ms" data-lt="'+L[0]+'"><div>'+(pris.length ? esc(pris.join(", ")) : '<span class="vide">Choisir '+L[2]+'</span>')+'</div><span style="padding:2px 4px">'+(S.ouvert === L[0] ? "▴" : "▾")+'</span></div>';
+      if(S.ouvert === L[0]) h += '<div class="msl">'+its.map(function(g){ var on = pris.indexOf(g.nom) >= 0; return '<div data-lm="'+L[0]+'|'+esc(g.nom)+'"><span class="cb'+(on ? " on" : "")+'">'+(on ? "✓" : "")+'</span>'+esc(g.nom)+' ('+g.m.length+')</div>'; }).join("")+'</div>';
+    });
     h += '<span class="lbl">Employés · obligatoire</span><div class="'+cl()+'" id="pe"><div>'+(S.emp.length ? chips(S.emp, "e") : '<span class="vide">'+(vide ? "Choisir un ou plusieurs employés" : "Aucun employé en plus")+'</span>')+'</div><span style="padding:2px 4px">'+(S.ouvert === "e" ? "▴" : "▾")+'</span></div>';
     if(S.ouvert === "e"){
       var toutes = pers.length && pers.every(function(p){ return S.emp.indexOf(p.c) >= 0 || via[p.c]; });
@@ -1853,6 +1936,12 @@ function participants(personnes, groupes, surChangement, init){
     if(n) h += '<div class="resume">'+n+' participant'+(n > 1 ? "s" : "")+' · '+esc(noms().slice(0, 3).join(", ")+(noms().length > 3 ? "…" : ""))+'</div>';
     z.innerHTML = h;
     var pg = document.getElementById("pg"); if(pg) pg.onclick = function(){ S.ouvert = S.ouvert === "g" ? "" : "g"; rendre(); };
+    Array.prototype.forEach.call(z.querySelectorAll("[data-lt]"), function(x){ x.onclick = function(){ var t = x.getAttribute("data-lt"); S.ouvert = S.ouvert === t ? "" : t; rendre(); }; });
+    Array.prototype.forEach.call(z.querySelectorAll("[data-lm]"), function(x){ x.onclick = function(){
+      var kv = x.getAttribute("data-lm").split("|"), src = kv[0] === "c" ? extra.categories : extra.equipes, nom = kv.slice(1).join("|"), g = (src || []).filter(function(q){ return q.nom === nom; })[0]; if(!g) return;
+      var m = membresChoisis(), mem = (g.membres || []).filter(function(c){ return pers.some(function(p){ return p.c === c; }); }), tout = mem.every(function(c){ return S.emp.indexOf(c) >= 0 || m[c]; });
+      if(tout) S.emp = S.emp.filter(function(c){ return mem.indexOf(c) < 0; }); else mem.forEach(function(c){ if(!m[c] && S.emp.indexOf(c) < 0) S.emp.push(c); });
+      changer(); }; });
     document.getElementById("pe").onclick = function(){ S.ouvert = S.ouvert === "e" ? "" : "e"; rendre(); };
     Array.prototype.forEach.call(z.querySelectorAll("[data-r]"), function(x){ x.onclick = function(ev){ ev.stopPropagation();
       var t = x.getAttribute("data-r"), v = x.getAttribute("data-v"), a = t === "g" ? S.grp : S.emp; a.splice(a.indexOf(v), 1); changer(); }; });
@@ -1913,8 +2002,8 @@ function dateHeure(opts, surChangement){
       L.forEach(function(x){
         var a0 = Math.max(7, x.a), f0 = Math.min(19, x.f); if(f0 <= a0) return;
         var c = couleurEv(x.e), d = document.createElement("div"); d.className = "blc";
-        var nl = x.cl.lanes.length, w = col.offsetWidth/nl;
-        d.style.cssText = "display:block;height:auto;position:absolute;pointer-events:none;box-sizing:border-box;overflow:hidden;z-index:2;border:1px solid #cecdc5;padding:1px 2px;font-size:8px;line-height:10px;letter-spacing:0;text-transform:none;text-align:left;overflow-wrap:anywhere;left:"+(col.offsetLeft+w*x.lane)+"px;width:"+w+"px;top:"+(y0+(a0-7)*rh)+"px;height:"+((f0-a0)*rh)+"px;background:"+c.f+";color:"+c.t;
+        var nl = x.cl.lanes.length, w = Math.floor((col.offsetWidth - 2) / nl) - 1;   // plusieurs événements dans la même plage: chacun pleine largeur, posés les uns par-dessus les autres (léger décalage pour les voir tous)
+        d.style.cssText = "display:block;height:auto;position:absolute;pointer-events:none;box-sizing:border-box;overflow:hidden;z-index:2;border:1px solid #cecdc5;padding:1px 2px;font-size:8px;line-height:10px;letter-spacing:0;text-transform:none;text-align:left;overflow-wrap:anywhere;left:"+(col.offsetLeft+1+x.lane*(w+1))+"px;width:"+w+"px;top:"+(y0+(a0-7)*rh)+"px;height:"+((f0-a0)*rh)+"px;background:"+c.f+";color:"+c.t;
         d.innerHTML = '<div style="font-weight:600">'+esc(x.e.titre || "(Sans titre)")+'</div><div>'+heureTxt(new Date(x.e.debut).getHours(), new Date(x.e.debut).getMinutes())+'</div>';
         gs.appendChild(d);
       });
@@ -2045,14 +2134,14 @@ function dateHeure(opts, surChangement){
     if(S.jj.length){
       g += '<div class="h" style="height:auto;min-height:24px">Jour</div>';
       for(k = 0; k < 7; k++){ dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); var lj = jjDe(S.jj, isoJour(dj));
-        g += '<div style="min-width:0;height:auto;min-height:24px;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:visible;gap:2px;padding:2px 1px">'+lj.map(function(e){ var c = couleurEv(e); return '<span style="background:'+c.f+';color:'+c.t+';font-size:8px;line-height:10px;padding:1px 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;text-align:left">'+esc(e.titre)+'</span>'; }).join("")+'</div>'; }
+        g += '<div'+(isoJour(dj) === aujIso ? ' class="ja"' : '')+' style="min-width:0;height:auto;min-height:24px;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:visible;gap:2px;padding:2px 1px">'+lj.map(function(e){ var c = couleurEv(e); return '<span style="background:'+c.f+';color:'+c.t+';font-size:8px;line-height:10px;padding:1px 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;text-align:left">'+esc(e.titre)+'</span>'; }).join("")+'</div>'; }
     }
     for(var hh = 7; hh <= 18; hh++){
       g += '<div class="h">'+hh+' h</div>';
       for(k = 0; k < 7; k++){ dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); ij = isoJour(dj); var pj = ij < aujIso;
         var occE = S.evs.filter(function(e){ var d0 = new Date(e.debut); return isoJour(d0) === ij && d0.getHours() <= hh && new Date(e.fin) > new Date(dj.getFullYear(), dj.getMonth(), dj.getDate(), hh, 0); })[0], occ = !!occE;
         var choisi = ij === S.jour && S.heure && +S.heure.split(":")[0] === hh;
-        g += '<div class="'+(choisi ? "n" : occ && opts.agenda === false ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+'"'+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
+        g += '<div class="'+(choisi ? "n" : occ && opts.agenda === false ? "e" : conge(ij) ? "cl"+conge(ij) : "")+(pj ? " past" : "")+(ij === aujIso ? " ja" : "")+'"'+(pj ? "" : ' data-j="'+ij+'" data-h="'+hh+'"')+'></div>'; }
     }
     h += g + '</div>' + legende();
     if(S.jour && !opts.mois && S.jour >= isoJour(S.lundi) && S.jour <= isoJour(fin)){
@@ -2073,7 +2162,7 @@ function dateHeure(opts, surChangement){
       if(!S.agCreer){ try { S.agCreer = localStorage.getItem("ldld-ag-creer") || ""; } catch(e){} }
       if(!S.agCreer || !Lc.some(function(x){ return idAg(x) === S.agCreer; })){ var dl = Lc.filter(function(x){ return /ldld/i.test(nomAg(x)); })[0]; if(Lc.length) S.agCreer = dl ? idAg(dl) : idAg(Lc[0]); }
       if(S.agCreer) S.agenda = S.agCreer;
-      h += '<span class="lbl">Créer dans l\'agenda · un seul</span><div style="display:flex;align-items:center;gap:10px;border:2px solid #0d1117;padding:0 12px;height:46px;box-sizing:border-box"><i style="width:12px;height:12px;flex:none;background:'+couleurAg(S.agCreer).f+'"></i><select id="dhcr" style="flex:1;border:0;outline:0;-webkit-appearance:none;appearance:none;border-radius:0;background:transparent;font:inherit;height:42px;color:inherit">'+Lc.map(function(x){ return '<option value="'+esc(idAg(x))+'"'+(idAg(x) === S.agCreer ? " selected" : "")+'>'+esc(nomAg(x))+'</option>'; }).join("")+'</select><span style="pointer-events:none">⌄</span></div><div style="font-size:11px;margin-top:6px">Le courriel d\'invitation est envoyé depuis cet agenda.</div>';
+      h += '<span class="lbl">Créer dans l\'agenda · un seul</span><div style="display:flex;align-items:center;gap:10px"><i style="width:12px;height:12px;flex:none;background:'+couleurAg(S.agCreer).f+'"></i><select id="dhcr" style="flex:1;min-width:0">'+Lc.map(function(x){ return '<option value="'+esc(idAg(x))+'"'+(idAg(x) === S.agCreer ? " selected" : "")+'>'+esc(nomAg(x))+'</option>'; }).join("")+'</select></div><div style="font-size:11px;margin-top:6px">Le courriel d\'invitation est envoyé depuis cet agenda.</div>';
     }
     z.innerHTML = h;
     lierAg(); lierVue(); placerBlocs();
@@ -2149,8 +2238,8 @@ function nouveauEmploye(){
 function nouveau(onglet){
   if(!peutEcrire()) return nouveauEmploye();
   onglet = onglet === "reunion" ? "reunion" : "message";
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1>' +
-    '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton choixc" id="ongM" aria-pressed="'+(onglet === "message" ? "true" : "false")+'" style="margin:0;flex:1">Sans événement</button><button type="button" class="bouton choixc" id="ongR" aria-pressed="'+(onglet === "reunion" ? "true" : "false")+'" style="margin:0;flex:1">Avec événement</button></div>' +
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Créer un événement</h1>' +
+    '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton choixc" id="ongM" aria-pressed="'+(onglet === "message" ? "true" : "false")+'" style="margin:0;flex:1">Message seulement</button><button type="button" class="bouton choixc" id="ongR" aria-pressed="'+(onglet === "reunion" ? "true" : "false")+'" style="margin:0;flex:1">Message et événement</button></div>' +
     '<div id="npart"><div class="bandeau">▪ UN INSTANT</div></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); retirerBoutonBas(); responsable(); };
   var dire = function(t){ var e = document.getElementById("ne"); if(e){ e.style.display = "block"; e.textContent = t; } };
@@ -2198,13 +2287,13 @@ function nouveau(onglet){
   var locG = lireCache("equipe_groupes"); if(locG) chercher("equipe_groupes", {action:"equipe_groupes"}).catch(function(){});
   (locG ? Promise.resolve(locG) : chercher("equipe_groupes", {action:"equipe_groupes"})).then(function(r){
     if(!r || !r.ok) throw 0;
-    part = participants(r.personnes, r.groupes || [], majBouton);
+    part = participants(r.personnes, r.groupes || [], majBouton, null, {categories: r.categories, equipes: (r.departements || []).filter(function(d){ return !/gestion/i.test(d.nom); })});
     part.monter(document.getElementById("npart")); dessinerReste();
   }).catch(function(){ document.getElementById("npart").innerHTML = '<div class="bandeau">▪ LISTE INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 // Modifier une réunion créée dans l'application: même formulaire que « Nouveau message · Réunion », déjà rempli.
 function modifierReunion(e){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1><div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Créer un événement</h1><div id="npart"></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   var retour = function(){ retirerBoutonBas(); mesEvenements(); };
   document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); retour(); };
   var dire = function(t){ var x = document.getElementById("ne"); if(x){ x.style.display = "block"; x.textContent = t; } };
@@ -2238,7 +2327,7 @@ function modifierReunion(e){
     var gN = (e.groupes || []).map(nomSimple), iD = e.ids || [];   // sélection enregistrée avec l'événement (numéros LDLD et groupes); sinon, les noms du champ « À »
     (r.groupes || []).forEach(function(g){ if(noms.indexOf(g.nom) >= 0 || gN.indexOf(nomSimple(g.nom)) >= 0) init.grp.push(g.nom); });
     r.personnes.forEach(function(p){ if(noms.indexOf(nomTitre(p.nom)) >= 0 || (p.id && iD.indexOf(p.id) >= 0)) init.emp.push(p.c); });
-    part = participants(r.personnes, r.groupes || [], maj, init);
+    part = participants(r.personnes, r.groupes || [], maj, init, {categories: r.categories, equipes: (r.departements || []).filter(function(d){ return !/gestion/i.test(d.nom); })});
     part.monter(document.getElementById("npart"));
     document.getElementById("nreste").innerHTML = '<div id="ndh"></div><span class="lbl">Sujet · obligatoire</span><input class="bx" id="nsuj" maxlength="120" value="'+esc(sujet)+'">' +
       '<a class="doc" href="#" id="nsup" style="margin-top:14px"><span>▪ Supprimer cette réunion</span></a>';
@@ -2247,7 +2336,7 @@ function modifierReunion(e){
   }).catch(function(){ document.getElementById("npart").innerHTML = '<div class="bandeau">▪ LISTE INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function mesEvenements(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Calendrier \u25aa notification</h1><div id="me"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Créer un événement</h1><div id="me"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
   var liste = [], choisi = null, msg = "", mode = "";
   function dessiner(){
@@ -2299,7 +2388,7 @@ var SC_AGENDAS = null;
 function suiviCharge(){
   app.innerHTML = '<div class="page" id="tb" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi de charge</h1><div id="sc"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  var liste = [], i = 0, etat = "", noteOn = false, planOn = false, msg = "", occupe = false;
+  var liste = [], i = 0, etat = "", noteOn = true, planOn = false, msg = "", occupe = false;
   var dh = null;
   var ETATS = ["Tout va bien", "À surveiller", "Intervention requise"];
   function pc(x){ return x == null ? "—" : Math.round(x*100)+" %"; }
@@ -2309,42 +2398,61 @@ function suiviCharge(){
       '<div class="tl">'+(vide ? '<div class="tgros">\u2014</div>' : '<div class="tgros">'+val+'<small>%</small></div>')+'<div class="tcib">Cible '+c+' % '+(max ? "et \u2212" : "et +")+'</div></div>' +
       '<div class="tbarre"><i style="width:'+Math.min(100, val)+'%"></i><u style="left:'+Math.min(100, c)+'%"></u></div></div>'; }
   function dateCourte(d){ var p = String(d).split("-"); return +p[2]+" "+MOIS_LONGS[+p[1]-1].slice(0,4)+"."; }
-  function bouton(txt, on, rose, id){ return '<button type="button" id="'+id+'" class="bouton" style="margin:0;flex:1;font-size:11px;padding:12px 2px;'+(on ? "" : "background:"+(rose ? "#f4b3c4" : "transparent")+";color:#111;")+'border:1.5px solid var(--tx)">'+txt+'</button>'; }
+  function bouton(txt, on, rose, id){ return '<button type="button" id="'+id+'" class="bouton" style="margin:0;flex:1 1 0;min-width:0;white-space:nowrap;letter-spacing:0;font-size:10px;padding:12px 2px;'+(on ? "" : "background:"+(rose ? "#f4b3c4" : "transparent")+";color:#111;")+'border:1.5px solid var(--tx)">'+txt+'</button>'; }
   function dessiner(){
     var el = document.getElementById("sc"); if(!el) return;
     var p = liste[i], d = p.dernier;
-    var h = '<div class="etiq">\u25aa '+(i+1)+' SUR '+liste.length+'</div><div style="font-size:22px;margin:2px 0 12px">'+esc(p.nom)+'</div>' +
+    var h = '<span class="lbl">Employé</span><select class="bx" id="sce" style="margin-bottom:12px">'+liste.map(function(x, k){ return '<option value="'+k+'"'+(k === i ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
       ''+tuile(p.effectuee, "CHARGE EFFECTUÉE", 0.8, false, "#8D806A")+tuile(p.nonTerminee, "CHARGE NON TERMINÉE", 0.05, true, "#1D1D1B")+tuile(p.objectifs, "OBJECTIFS ATTEINTS", 0.8, false, "#8D806A") +
-      '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente</b>'+(d ? '<div style="margin-bottom:4px">'+dateCourte(d.date)+' · État choisi : <span style="font-weight:600">'+esc(d.etat)+'</span></div>' : "")+(d && d.note ? esc(d.note) : '<span>'+(d ? "Aucune note." : "Aucun suivi précédent.")+'</span>')+'</div>' +
+      '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente</b>'+(d ? '<div style="margin-bottom:4px">'+dateCourte(d.date)+' · État choisi : <span style="font-weight:600">'+esc(d.etat)+'</span></div>' : "")+(d && d.note ? '<div>'+esc(d.note)+'</div>' : (d && !(p.notes && p.notes.length) ? '<span>Aucune note.</span>' : (d ? "" : '<span>Aucun suivi précédent.</span>')))+(p.notes && p.notes.length ? '<div class="etq" style="margin-top:8px">NOTES</div>'+p.notes.map(function(n){ return '<div style="margin-top:2px">'+dateCourte(n.date)+' · '+esc(n.note)+'</div>'; }).join("") : "")+'</div>' +
       '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, !etat, "se"+k); }).join("")+'</div>' +
-      '<div class="etq" style="margin-top:14px">OPTIONNEL</div>' +
-      (noteOn ? '<div style="display:flex;gap:6px;margin-top:4px;align-items:flex-start"><textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="flex:1;margin:0">'+esc(sauvNote)+'</textarea><button type="button" id="snx" class="bouton" aria-label="Fermer la note" style="margin:0;width:40px;flex:none;padding:10px 0;font-size:16px">✕</button></div>'
-        : '<div style="display:flex;gap:6px;margin-top:4px">'+bouton("Inscrire une note", false, false, "sn")+bouton("Planifier une rencontre", planOn, false, "sp")+'</div>') +
-      (planOn ? '<div id="scp"><div id="scdh"></div><span class="lbl">Sujet</span><div class="bx">Suivi de charge · '+esc(p.nom)+'</div></div>' : "") +
+      '<div class="etq" style="margin-top:14px">NOTE · OPTIONNELLE</div>' +
+      '<textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="width:100%;box-sizing:border-box;margin:4px 0 0;background:#B7B1A5;color:#1D1D1B;border:0;border-radius:0;padding:12px">'+esc(sauvNote)+'</textarea>' +
+      '<button type="button" id="snb" class="bouton" style="margin:8px 0 0;width:100%;white-space:nowrap;font-size:12px;'+(sauvNote.trim() ? "" : "opacity:.5;")+'"'+(sauvNote.trim() ? "" : " disabled")+'>Enregistrer la note seulement</button>' +
       (msg ? '<div class="bandeau" style="margin-top:10px">'+esc(msg)+'</div>' : "");
     el.innerHTML = h;
-    ETATS.forEach(function(x, k){ document.getElementById("se"+k).onclick = function(){ lireNote(); etat = x; msg = ""; dessiner(); }; });
-    var bn = document.getElementById("sn"); if(bn) bn.onclick = function(){ noteOn = true; dessiner(); document.getElementById("snt").focus(); };
-    var bx = document.getElementById("snx"); if(bx) bx.onclick = function(){ lireNote(); noteOn = false; dessiner(); };
-    var bp = document.getElementById("sp"); if(bp) bp.onclick = function(){ planOn = !planOn; dh = planOn ? dateHeure({}) : null; dessiner(); };
-    if(planOn) dh.monter(document.getElementById("scdh"));
+    ETATS.forEach(function(x, k){ document.getElementById("se"+k).onclick = function(){ lireNote(); etat = x; msg = ""; if(k === 0) enregistrer(); else dessiner(); }; });
+    document.getElementById("se2").style.flexGrow = "1.8"; document.getElementById("se0").style.flexGrow = "0.9"; document.getElementById("se1").style.flexGrow = "1";
+    var tx = document.getElementById("snt"), nb = document.getElementById("snb");
+    tx.oninput = function(){ var v = !!tx.value.trim(); nb.disabled = !v; nb.style.opacity = v ? "" : ".5"; };
+    nb.onclick = function(){
+      lireNote(); var t = sauvNote.trim(); if(!t || occupe) return;
+      occupe = true; nb.disabled = true; nb.textContent = "Enregistrement…";
+      appelService({action:"charge_suivi", session:sessionGardee(), nom:p.brut, etat:"Note", note:t}).then(function(r){
+        occupe = false;
+        if(r && r.ok){ p.notes = [{date: isoJour(new Date()), note: t}].concat(p.notes || []); sauvNote = ""; msg = "▪ NOTE ENREGISTRÉE"; }
+        else msg = "▪ NON ENREGISTRÉ · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase();
+        dessiner();
+      }).catch(function(){ occupe = false; msg = "▪ NON ENREGISTRÉ · RÉSEAU"; dessiner(); });
+    };
+    document.getElementById("sce").onchange = function(){ i = +this.value; etat = ""; sauvNote = ""; msg = ""; occupe = false; window.scrollTo(0, 0); dessiner(); };
     barre();
   }
   var sauvNote = "";
   function lireNote(){ var t = document.getElementById("snt"); if(t) sauvNote = t.value; }
   function barre(){
-    var b = document.getElementById("scb");
-    if(!b){ b = document.createElement("button"); b.type = "button"; b.id = "scb"; b.className = "bouton"; document.body.appendChild(b); }
-    b.style.cssText = "position:fixed;z-index:20;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);width:auto;margin:0;font-size:13px;padding:13px 18px;" + (etat ? "" : "opacity:.5");
-    b.textContent = i === liste.length-1 ? "Enregistrer et terminer" : "Enregistrer et suivant";
+    var bar = document.getElementById("scbar"), b, r;
+    if(!bar){
+      bar = document.createElement("div"); bar.id = "scbar";
+      bar.innerHTML = '<a href="#" id="scr">Retour</a><button type="button" id="scb" class="bouton"></button>';
+      document.body.appendChild(bar);
+      document.getElementById("tb").classList.add("scbar");
+    }
+    bar.style.cssText = "position:fixed;z-index:20;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);display:flex;gap:8px;box-sizing:border-box";
+    r = document.getElementById("scr"); r.style.cssText = "flex:0 0 auto;background:#8EFF60;color:#1D1D1B;text-decoration:none;font-size:13px;letter-spacing:1px;font-weight:600;text-transform:uppercase;padding:14px 18px;white-space:nowrap;display:flex;align-items:center";
+    r.onclick = function(e){ e.preventDefault(); nettoyer(); responsable(); };
+    b = document.getElementById("scb");
+    b.style.cssText = "flex:1 1 0;min-width:0;width:auto;margin:0;box-sizing:border-box;white-space:nowrap;font-size:12px;padding:14px 4px;" + (etat && etat !== ETATS[0] ? "" : "opacity:.5");
+    b.disabled = !(etat && etat !== ETATS[0]);
+    b.textContent = i === liste.length-1 ? "Enregistrer, terminer" : "Enregistrer, suivant";
     b.onclick = enregistrer;
   }
-  function nettoyer(){ var b = document.getElementById("scb"); if(b) b.remove(); }
+  function nettoyer(){ var b = document.getElementById("scbar"); if(b) b.remove(); var t = document.getElementById("tb"); if(t) t.classList.remove("scbar"); }
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); nettoyer(); responsable(); };
   function suivant(){
     nettoyer();
     if(i >= liste.length-1){ responsable(); return; }
-    i++; etat = ""; noteOn = false; planOn = false; dh = null; sauvNote = ""; msg = ""; occupe = false; window.scrollTo(0, 0); dessiner();
+    i++; etat = ""; noteOn = true; planOn = false; dh = null; sauvNote = ""; msg = ""; occupe = false; window.scrollTo(0, 0); dessiner();
   }
   function enregistrer(){
     if(occupe) return;
@@ -2405,20 +2513,47 @@ function gestionEmployes(){
     Array.prototype.forEach.call(el.querySelectorAll("button[data-k]"), function(b){ b.onclick = function(){ var x = r.inactifs[+b.getAttribute("data-k")]; agir(x.id, x.nom, true); }; });
   }).catch(function(){ var el = document.getElementById("ge"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
+function evoPortrait(p, pctPos, tauxH){
+  var H = (p.historique || []).filter(function(q){ return q && q.pos != null; }).map(function(q){ return {an: q.an, v: q.pos * 100}; });
+  var an0 = new Date().getFullYear(), pn = parseFloat(String(p.position).replace(",", ".")); if(isFinite(pn)) H.push({an: an0, v: Math.abs(pn) <= 2.5 ? pn * 100 : pn});
+  if(p.suivante && p.suivante.pos != null) H.push({an: p.suivante.annee, v: p.suivante.pos * 100, s: true});
+  var S = (p.histSalaire || []).filter(function(q){ return q && q.taux != null; }).map(function(q){ return {an: q.an, v: Number(q.taux), s: q.an > an0}; });
+  if(!H.length && !S.length) return "";
+  function barres(titre, L, fmt){
+    if(!L.length) return "";
+    var mx = Math.max.apply(null, L.map(function(x){ return x.v; })) || 1, mn = Math.min.apply(null, L.map(function(x){ return x.v; }));
+    var h = '<div class="ptk" style="margin-top:14px">'+titre+'</div><div class="pte">' + L.map(function(x){ var hh = 30 + (mx === mn ? 40 : (x.v - mn) / (mx - mn) * 70); return '<div'+(x.an === an0 ? ' class="l"' : "")+' style="height:'+hh+'%'+(x.s ? ';opacity:.55' : '')+'"><span>'+fmt(x.v)+'</span></div>'; }).join("") + '</div><div class="ptq">' + L.map(function(x){ return '<span>'+x.an+(x.s ? (p.suivante && p.suivante.confirme === false ? "<br>proposé" : "<br>confirmé") : "")+'</span>'; }).join("") + '</div>';
+    return h;
+  }
+  return '<div class="ptx">Évolution sur 5 ans</div>' + barres("Position dans l’échelle", H, function(v){ return Math.round(v) + " %"; }) + barres("Taux horaire", S, function(v){ return v.toFixed(2).replace(".", ",") + " $"; });
+}
 function sectionsPortrait(p){
   function pct(x){ return x === null || x === undefined ? "—" : Math.round(x*100)+" %"; }
   var c = p.contribution, ch = p.charge, pa = p.paroles, ci = p.cibles || {}, h = "";
-  h += '<div class="etq" style="margin-top:14px">CONTRIBUTION</div>';
+  h += '<div class="pts"><b>03</b>Contribution</div>';
+  var evs = (p.evaluations || []);
+  function fl(d, pts){ if(d === null || d === undefined || d === 0) return ""; return ' <span class="ptf">'+(d > 0 ? "▲ +" : "▼ −")+String(Math.abs(d)).replace(".", ",")+(pts ? " pt" : "")+'</span>'; }
+  if(evs.length){
+    h += (p.pointage && p.pointage.n > 1 ? '<div class="ptk">Moyenne de '+p.pointage.n+' évaluations</div>' : "") + evs.map(function(q){
+      var e = q.ecart || {}, d = q.date ? q.date : (q.annee + " · rencontre " + q.renc), n = [];
+      if(q.tech != null) n.push("technique " + String(q.tech).replace(".", ",") + fl(e.tech));
+      if(q.auto != null) n.push("autonomie " + String(q.auto).replace(".", ",") + fl(e.auto));
+      if(q.qual != null) n.push("qualité " + String(q.qual).replace(".", ",") + fl(e.qual));
+      if(q.obj != null) n.push("objectifs " + pct(q.obj) + fl(e.obj == null ? null : Math.round(e.obj), true));
+      return '<div class="pte2"><div class="pth"><span>'+esc(String(d))+'</span><b>'+pct(q.resultat)+fl(e.resultat == null ? null : Math.round(e.resultat), true)+'</b></div><div class="ptk" style="text-transform:none;letter-spacing:0">'+n.join(" · ")+'</div><div class="ptz"><i style="width:'+Math.max(0, Math.min(100, Math.round((q.resultat || 0) * 100)))+'%"></i></div></div>';
+    }).join("");
+    if(p.pointage && p.pointage.rows) h += '<div style="margin-top:8px">' + p.pointage.rows.map(function(r){ return '<div class="ptl"><span>'+esc(r.nom)+' ('+r.sur+')</span><b>'+(r.points === null || r.points === undefined ? "—" : String(r.points).replace(".", ","))+'</b></div>'; }).join("") + (p.pointage.total != null ? '<div class="ptl"><span>Total</span><b>'+Math.round(p.pointage.total)+' %</b></div>' : "") + '</div>';
+  } else
   h += c ? '<div style="font-size:28px">'+pct(c.resultat)+'</div>' +
       [["Technique", c.tech], ["Autonomie", c.auto], ["Qualité", c.qual]].filter(function(l){ return l[1] !== null && l[1] !== undefined; })
         .map(function(l){ return '<div class="ligne"><span>▪ '+l[0]+'</span><span>'+esc(String(l[1]).replace(".", ","))+'</span></div>'; }).join("") +
       (c.obj !== null && c.obj !== undefined ? '<div class="ligne"><span>▪ Objectifs</span><span>'+pct(c.obj)+'</span></div>' : "")
     : '<div class="bandeau">▪ AUCUNE APPRÉCIATION CETTE ANNÉE</div>';
-  h += '<div class="etiq" style="margin-top:18px">▪ 02 CHARGE DE TRAVAIL</div>';
+  h += '<div class="pts"><b>05</b>Objectifs et charges</div>';
   h += ch ? [["Charge effectuée", ch.effectuee, "cible "+pct(ci.effectuee)], ["Charge non terminée", ch.nonTerminee, "cible "+pct(ci.nonTerminee)], ["Objectifs atteints", ch.objectifs, "cible "+pct(ci.objectifs)]]
       .map(function(l){ return '<div class="ligne"><span>▪ '+l[0]+' <small>'+l[2]+'</small></span><span>'+pct(l[1])+'</span></div>'; }).join("")
     : '<div class="bandeau">▪ DONNÉES À VENIR</div>';
-  h += '<div class="etiq" style="margin-top:18px">▪ 03 POUR NOTRE DISCUSSION</div>';
+  h += '<div class="pts"><b>04</b>Pour notre discussion</div>';
   h += pa ? [["CE QUI VA BIEN", pa.bien], ["À DÉVELOPPER", pa.developper], ["À ABORDER", pa.aborder]].filter(function(l){ return l[1]; })
       .map(function(l){ return '<div class="etq" style="margin-top:10px">'+l[0]+'</div><div>'+esc(l[1])+'</div>'; }).join("")
     : '<div class="bandeau">▪ AUTOÉVALUATION NON REMPLIE</div>';
@@ -2427,6 +2562,8 @@ function sectionsPortrait(p){
 function portrait(id){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><div id="pt"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  function pctPos(v){ var t = String(v === null || v === undefined ? "" : v).trim(); if(!t) return "—"; var n = parseFloat(t.replace(",", ".")); if(isNaN(n)) return esc(t); if(t.indexOf("%") < 0 && Math.abs(n) <= 2.5) n = n * 100; return Math.round(n) + " %"; }
+  function tauxH(v){ var n = parseFloat(String(v).replace(",", ".")); return isNaN(n) ? esc(String(v)) : n.toFixed(2).replace(".", ",") + " $"; }
   function dollars(n){ return n === null || n === undefined ? "—" : String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")+" $"; }
   appelService({action:"portrait", session:sessionGardee(), id:id || ""}).then(function(r){
     var el = document.getElementById("pt"); if(!el) return;
@@ -2434,14 +2571,24 @@ function portrait(id){
     var p = r.portrait, liste = r.employes, i = liste.map(function(x){ return x.id; }).indexOf(p.id);
     var posNum = parseFloat(String(p.position).replace(",", ".")), ech = p.echelle || [];
     var lignes = [["Salaire de base", p.base], ["Vacances, fériés et maladie", p.conges], ["Boni", p.boni], ["Assurances collectives", p.assurances], ["Cotisation OTPADQ", p.otpadq]];
-    el.innerHTML = '<h1>Portrait d’un employé</h1><div class="etiq">'+esc(p.nom)+'</div><div class="etiq">'+esc(String(p.categorie).toUpperCase())+' · PORTRAIT '+(new Date().getFullYear())+'</div>' +
+    function sec(n, t){ return '<div class="pts"><b>'+n+'</b>'+t+'</div>'; }
+    function lig(l, v){ return '<div class="ptl"><span>'+l+'</span><b>'+v+'</b></div>'; }
+    var cur = null, bas = null, hau = null;
+    if(ech.length){ bas = ech[0]; hau = ech[ech.length-1]; ech.forEach(function(c){ if(parseFloat(String(c.p).replace(",", ".")) === posNum) cur = c; }); }
+    var pn = function(c){ var n = parseFloat(String(c.p).replace(",", ".")); if(Math.abs(n) <= 2.5) n = n * 100; return n; }, lo = bas ? pn(bas) : 0, hi = hau ? pn(hau) : 100, pc = Math.abs(posNum) <= 2.5 ? posNum * 100 : posNum, w = isFinite(pc) && hi > lo ? Math.max(0, Math.min(100, (pc - lo) / (hi - lo) * 100)) : 0;
+    var tot = Number(p.total) || 0, bs = Number(p.base) || 0, cg = Number(p.conges) || 0, au = Math.max(0, tot - bs - cg), pp = function(x){ return tot ? Math.round(x / tot * 100) : 0; };
+    el.innerHTML = '<h1>Portrait d’un employé</h1>' +
       '<select class="champ" id="ps">'+liste.map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id === p.id ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
-      '<div class="aeact" style="margin:0 0 14px"><button type="button" class="bouton" id="pp" style="margin:0"'+(i <= 0 ? " disabled" : "")+'>Précédent</button><button type="button" class="bouton" id="psv" style="margin:0"'+(i >= liste.length-1 ? " disabled" : "")+'>Suivant</button></div>' +
-      '<div class="etiq">▪ 01 OÙ VOUS EN ÊTES</div>' +
-      '<div class="dh"><div style="flex:1"><div class="etq">EXPÉRIENCE</div><div style="font-size:28px">'+(p.experience === null ? "—" : esc(String(p.experience).replace(".", ","))+' <small>ans</small>')+'</div></div><div style="flex:1"><div class="etq">POSITION DANS L\'ÉCHELLE</div><div style="font-size:28px">'+esc(String(p.position).replace("%", "").trim())+' <small>%</small></div></div></div>' +
-      '<div class="etq" style="margin-top:14px">RÉMUNÉRATION GLOBALE</div><div style="font-size:28px">'+dollars(p.total)+'</div>' +
-      lignes.map(function(l){ return '<div class="ligne"><span>▪ '+l[0]+'</span><span>'+dollars(l[1])+'</span></div>'; }).join("") +
-      (ech.length ? '<div class="etiq" style="margin-top:18px">▪ ÉCHELLE SALARIALE — '+esc(String(p.categorie).toUpperCase())+'</div><div style="overflow-x:auto"><table class="gs-t" style="border-collapse:collapse;font-size:12px;width:100%"><tr>'+ech.map(function(c){ var act = parseFloat(String(c.p).replace(",", ".")) === posNum; return '<td style="padding:6px 4px;text-align:center;border:1px solid var(--tx2)'+(act ? ';background:var(--tx);color:var(--noir)' : '')+'">'+esc(String(c.p).replace("%", ""))+'</td>'; }).join("")+'</tr><tr>'+ech.map(function(c){ var act = parseFloat(String(c.p).replace(",", ".")) === posNum; return '<td style="padding:6px 4px;text-align:center;border:1px solid var(--tx2)'+(act ? ';background:var(--tx);color:var(--noir)' : '')+'">'+esc(String(c.t))+'</td>'; }).join("")+'</tr></table></div>' : "") + sectionsPortrait(p);
+      '<div class="ptn"><button type="button" id="pp"'+(i <= 0 ? " disabled" : "")+'>Précédent</button><button type="button" id="psv"'+(i >= liste.length-1 ? " disabled" : "")+'>Suivant</button></div>' +
+      '<div class="ptk">'+esc(String(p.categorie))+' · Portrait '+(new Date().getFullYear())+' · '+(p.experience === null || p.experience === undefined ? "—" : esc(String(p.experience).replace(".", ","))+' ans d’expérience')+'</div>' +
+      sec("01", "Position dans l’échelle") +
+      '<div class="ptk">L’échelle · '+esc(String(p.categorie))+'</div><div class="ptb">Vous êtes à '+pctPos(p.position)+'</div>' +
+      (ech.length ? '<div class="ptr"><i style="width:'+w+'%"></i><em style="left:'+w+'%"></em></div><div class="ptt"><div><div class="ptk">Bas</div><div class="ptv">'+pctPos(bas.p)+'</div><div class="ptd">'+tauxH(bas.t)+' / h</div></div><div class="on"><div class="ptk">Votre position</div><div class="ptv">'+pctPos(p.position)+'</div><div class="ptd">'+(cur ? tauxH(cur.t)+' / h' : "")+'</div></div><div><div class="ptk">Sommet</div><div class="ptv">'+pctPos(hau.p)+'</div><div class="ptd">'+tauxH(hau.t)+' / h</div></div></div>' : "") +
+      evoPortrait(p, pctPos, tauxH) +
+      sec("02", "Rémunération globale") + '<div class="ptb">'+dollars(p.total)+'</div>' +
+      lignes.map(function(l){ return lig(l[0], dollars(l[1])); }).join("") +
+      (tot ? '<div class="ptk" style="margin-top:12px">Répartition de votre rémunération globale</div><div class="ptp"><i style="width:'+pp(bs)+'%;background:#B4AB9B"></i><i style="width:'+pp(cg)+'%;background:#d9cfba"></i><i style="width:'+pp(au)+'%;background:#E3DFD3"></i></div><div class="ptg"><div><s style="background:#B4AB9B"></s>Salaire de base · '+pp(bs)+' %</div><div><s style="background:#d9cfba"></s>Vacances, fériés et maladie · '+pp(cg)+' %</div><div><s style="background:#E3DFD3"></s>Autres avantages · '+pp(au)+' %</div></div>' : "") +
+      sectionsPortrait(p);
     document.getElementById("ps").onchange = function(){ portrait(this.value); };
     var pp = document.getElementById("pp"), sv = document.getElementById("psv");
     if(pp) pp.onclick = function(){ if(i > 0) portrait(liste[i-1].id); };
@@ -2608,14 +2755,9 @@ function heures(){
   }
   obtenir("heures", {action:"heures"}, afficherH, function(){ var z = document.getElementById("hz"); if(z) z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
-var VUE_ONGLETS = [9, 0, 4, 2];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
+var VUE_ONGLETS = [9, 0, 4, 2, 7];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
 function estCharles(){ return !!(MOI && /^\s*charles\b/i.test(String(MOI.nom || ""))); }
 function section(i){
-  if(i === 9 && MOI && MOI.role === "direction" && !estCharles() && !VUE.on){
-    app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes heures</h1>'+carreVert('Données non applicables')+'</div>';
-    document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-    return;
-  }
   if(MOI && MOI.role === "direction" && !vueComme() && VUE_ONGLETS.indexOf(i) >= 0) return vueEmploye(i);
   sectionBase(i);
 }
