@@ -1,4 +1,4 @@
-var APP_PUB = "459";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "460";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2011,8 +2011,8 @@ function dateHeure(opts, surChangement){
       L.forEach(function(x){
         var a0 = Math.max(7, x.a), f0 = Math.min(19, x.f); if(f0 <= a0) return;
         var c = couleurEv(x.e), d = document.createElement("div"); d.className = "blc";
-        var nl = x.cl.lanes.length, pas = nl > 1 ? Math.min(12, Math.floor((col.offsetWidth - 2) * 0.22 / (nl-1))) : 0, w = col.offsetWidth - 2 - (nl-1)*pas;   // plusieurs événements dans la même plage: chacun pleine largeur, posés les uns par-dessus les autres (léger décalage pour les voir tous)
-        d.style.cssText = "display:block;height:auto;position:absolute;pointer-events:none;box-sizing:border-box;overflow:hidden;z-index:"+(2+x.lane)+";border:1px solid #1D1D1B;padding:1px 2px;font-size:8px;line-height:10px;letter-spacing:0;text-transform:none;text-align:left;overflow-wrap:anywhere;left:"+(col.offsetLeft+1+x.lane*pas)+"px;width:"+w+"px;top:"+(y0+(a0-7)*rh)+"px;height:"+((f0-a0)*rh)+"px;background:"+c.f+";color:"+c.t;
+        var w = col.offsetWidth - 2, haut = Math.max((f0-a0)*rh, 24), tp = y0+(a0-7)*rh; if(x.cl.bas !== undefined && tp < x.cl.bas) tp = x.cl.bas; x.cl.bas = tp + haut + 1;   // chevauchement: pleine largeur, empilés l'un sous l'autre, jamais superposés   // plusieurs événements dans la même plage: chacun pleine largeur, posés les uns par-dessus les autres (léger décalage pour les voir tous)
+        d.style.cssText = "display:block;height:auto;position:absolute;pointer-events:none;box-sizing:border-box;overflow:hidden;z-index:2;border:1px solid #cecdc5;padding:1px 2px;font-size:8px;line-height:10px;letter-spacing:0;text-transform:none;text-align:left;overflow-wrap:anywhere;left:"+(col.offsetLeft+1)+"px;width:"+w+"px;top:"+tp+"px;height:"+haut+"px;background:"+c.f+";color:"+c.t;
         d.innerHTML = '<div style="font-weight:600">'+esc(x.e.titre || "(Sans titre)")+'</div><div>'+heureTxt(new Date(x.e.debut).getHours(), new Date(x.e.debut).getMinutes())+'</div>';
         gs.appendChild(d);
       });
