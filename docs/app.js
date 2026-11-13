@@ -1,4 +1,4 @@
-var APP_PUB = "359";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "360";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -200,7 +200,7 @@ function copieHeures(corps){
   });
 }
 // Domaines lus dans la copie (une réponse par employé, même forme que le service). Ligne absente, purgée, en erreur ou trop vieille: Google répond.
-var COPIE_SIMPLE = {charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
+var COPIE_SIMPLE = {tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
 function copieSimple(domaine){
   return guichetCopie({action:"lire", domaine:domaine, cle:""}).then(function(d){
     if(!d || !d.ok || d.vide || !d.reponse) throw new Error("vide");
