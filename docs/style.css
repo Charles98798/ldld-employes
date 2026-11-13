@@ -600,9 +600,9 @@ textarea.bx{min-height:90px;resize:vertical}
 @media (prefers-reduced-motion:no-preference){
   .lgx .p1{animation:lgA .9s cubic-bezier(.2,.8,.2,1) both}
   .lgx .p2{animation:lgB .9s cubic-bezier(.2,.8,.2,1) both}
-  .lgx .p3{animation:lgN .7s ease 1.4s both}
-  .lgl .hl{animation:lgHL 1.25s ease-in-out .02s both}.lgl .hr{animation:lgHR 1.25s ease-in-out .02s both}
-  .lgl .vt{animation:lgVT 1.25s ease-in-out .1s both}.lgl .vb{animation:lgVB 1.25s ease-in-out .1s both}
+  .lgx .p3{animation:lgN .7s ease 2.4s both}
+  .lgl .hl{animation:lgHL 2.2s ease-in-out .02s both}.lgl .hr{animation:lgHR 2.2s ease-in-out .02s both}
+  .lgl .vt{animation:lgVT 2.2s ease-in-out .1s both}.lgl .vb{animation:lgVB 2.2s ease-in-out .1s both}
 }
 .lgl{display:none;position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none}
 .lgl line{stroke:#8EFF60;stroke-width:1;vector-effect:non-scaling-stroke}
