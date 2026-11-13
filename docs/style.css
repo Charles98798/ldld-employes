@@ -998,3 +998,6 @@ select:not(.act){width:100%;box-sizing:border-box}
 /* Accueil: une tuile n'est jamais sur deux lignes, même avec l'étiquette « n nouveaux ». */
 .menu a[data-k] .nombre{white-space:nowrap;flex:0 0 auto;font-size:10px;padding:3px 6px;letter-spacing:.3px}
 .menu a[data-k]>span:first-child{min-width:0;white-space:nowrap}
+
+/* Connexion: dans le navigateur (pas l'application installée), la barre flottante de Safari recouvre le bas de l'écran; on remonte « LDLD EMPLOYÉS » au-dessus */
+@media (display-mode: browser){.connexion .pied-connexion{bottom:calc(env(safe-area-inset-bottom,0px) + 110px)}}
