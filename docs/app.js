@@ -1,4 +1,4 @@
-var APP_PUB = "447";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "448";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2287,7 +2287,7 @@ function nouveau(onglet){
   var locG = lireCache("equipe_groupes"); if(locG) chercher("equipe_groupes", {action:"equipe_groupes"}).catch(function(){});
   (locG ? Promise.resolve(locG) : chercher("equipe_groupes", {action:"equipe_groupes"})).then(function(r){
     if(!r || !r.ok) throw 0;
-    part = participants(r.personnes, r.groupes || [], majBouton, null, {categories: r.categories, equipes: r.equipes});
+    part = participants(r.personnes, r.groupes || [], majBouton, null, {categories: r.categories, equipes: r.departements});
     part.monter(document.getElementById("npart")); dessinerReste();
   }).catch(function(){ document.getElementById("npart").innerHTML = '<div class="bandeau">▪ LISTE INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
@@ -2327,7 +2327,7 @@ function modifierReunion(e){
     var gN = (e.groupes || []).map(nomSimple), iD = e.ids || [];   // sélection enregistrée avec l'événement (numéros LDLD et groupes); sinon, les noms du champ « À »
     (r.groupes || []).forEach(function(g){ if(noms.indexOf(g.nom) >= 0 || gN.indexOf(nomSimple(g.nom)) >= 0) init.grp.push(g.nom); });
     r.personnes.forEach(function(p){ if(noms.indexOf(nomTitre(p.nom)) >= 0 || (p.id && iD.indexOf(p.id) >= 0)) init.emp.push(p.c); });
-    part = participants(r.personnes, r.groupes || [], maj, init, {categories: r.categories, equipes: r.equipes});
+    part = participants(r.personnes, r.groupes || [], maj, init, {categories: r.categories, equipes: r.departements});
     part.monter(document.getElementById("npart"));
     document.getElementById("nreste").innerHTML = '<div id="ndh"></div><span class="lbl">Sujet · obligatoire</span><input class="bx" id="nsuj" maxlength="120" value="'+esc(sujet)+'">' +
       '<a class="doc" href="#" id="nsup" style="margin-top:14px"><span>▪ Supprimer cette réunion</span></a>';
