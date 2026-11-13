@@ -1,4 +1,4 @@
-var APP_PUB = "357";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "358";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2585,7 +2585,17 @@ function vueEmploye(i){
   VUE.pend = true;
   var vueDel = setTimeout(function(){ if(VUE.pend){ VUE.pend = false; VUE.on = false; sectionBase(i); } }, 20000);
   var pre = VUE_PRE; VUE_PRE = null;
-  var pr = (pre && pre.reelle === reelle && Date.now() - pre.t < 3000000) ? pre.p : vueTirage(reelle);
+  var pr;
+  if(pre && pre.reelle === reelle && Date.now() - pre.t < 3000000){
+    // Préparé d'avance: si la réponse n'est pas là après 2,5 s, une demande neuve part et la première réponse gagne
+    pr = new Promise(function(ok, ko){
+      var fini = false, nb = 2;
+      function bon(r){ if(fini) return; if(r && r.ok){ fini = true; ok(r); } else mauvais(); }
+      function mauvais(e){ if(fini) return; if(--nb <= 0){ fini = true; ko(e || new Error("session")); } }
+      pre.p.then(bon, mauvais);
+      setTimeout(function(){ if(!fini){ vd("préparation lente: nouvelle demande"); vueTirage(reelle).then(bon, mauvais); } else nb = 1; }, 2500);
+    });
+  } else pr = vueTirage(reelle);
   pr.then(function(r){
     vd("session reçue ok=" + !!(r && r.ok)); clearTimeout(vueDel); if(!VUE.pend) return;
     VUE.pend = false;
