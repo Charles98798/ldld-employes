@@ -1,4 +1,4 @@
-var APP_PUB = "371";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "372";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -525,7 +525,7 @@ function chargerAujourdhui(){
   var deb = isoJour(lundiDe(t)), plusieurs = roleIdx() >= 1;
   var fin = function(liste, jour){ AUJ = auj_normalise(liste, jour); dessinerAujourdhui(); };
   if(!plusieurs){
-    appelService({action:"agenda_semaine", session:sessionGardee(), debut:deb, agenda:"primary"}).then(function(r){ if(r && r.ok) fin(r.evenements || [], r.journee || []); }).catch(function(){});
+    obtenir("evenements_employe", {action:"evenements_employe"}, function(r){ if(r && r.evenements) fin(r.evenements, []); }, function(){}, true);
     return;
   }
   var lu = DH_CACHE.agendas ? Promise.resolve() : appelService({action:"agenda_liste", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.agendas) DH_CACHE.agendas = r.agendas.filter(function(a){ return a.ecriture; }); });
