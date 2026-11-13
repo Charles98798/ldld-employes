@@ -1,4 +1,4 @@
-var APP_PUB = "373";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "374";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -325,9 +325,8 @@ function pastilleDirection(){
   var a = app.querySelector('a[data-k="rencontres_demandees"]'); if(!a) return;
   var p = a.querySelector(".nombre"); if(p) p.remove();
   var t = a.querySelector(".nbtot"); if(t) t.remove();
-  var m = lireCache("messages"), tot = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && /^Demande de rencontre/.test(x.titre); }).length : 0;
-  t = document.createElement("span"); t.className = "nbtot"; t.textContent = String(tot); a.appendChild(t);
-  if(nbDemandesNeuves()) t.className = "nbtot nombre";   // vert seulement s'il y a du nouveau
+  var n = nbDemandesNeuves();   // comme pour les messages: une étiquette verte seulement s'il y a du nouveau
+  if(n){ var t2 = document.createElement("span"); t2.className = "nombre"; t2.textContent = pastilleTexte(n); a.appendChild(t2); }
 }
 // Une autoévaluation est disponible 14 jours avant la date de la rencontre, jusqu'à ce jour inclus, et seulement si elle n'est pas terminée.
 function aeARemplir(m){
