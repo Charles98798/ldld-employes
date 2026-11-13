@@ -1,4 +1,4 @@
-var APP_PUB = "442";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "443";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -1727,14 +1727,14 @@ function prixSoumissions(){
         });
         if(!nb) return; n++;
         var o = !!rech || ouv["s"+bi];
-        h += '<div class="pss" style="margin-top:44px" data-o="s'+bi+'"><span>'+esc(b.t || "Prix")+'</span><b>'+(o ? "−" : "+")+'</b></div>' + (o ? rows : "");
+        h += '<div class="pss" data-o="s'+bi+'"><span>'+esc(b.t || "Prix")+'</span><b>'+(o ? "−" : "+")+'</b></div>' + (o ? rows : "");
       });
     } else {
       d.soumissions.forEach(function(x, xi){
         var ls = (x.lignes || []).filter(function(l){ return true; });
         if(rech && !ok(x.fr) && !ls.some(function(l){ return ok(l.fr); })) return; n++;
         var o = !!rech && false || ouv["m"+xi];
-        h += '<div class="pss" style="margin-top:30px" data-o="m'+xi+'"><span>'+esc(x.fr)+'</span><b>'+(o ? "−" : fmt(x.total))+'</b></div>';
+        h += '<div class="pss" data-o="m'+xi+'"><span>'+esc(x.fr)+'</span><b>'+(o ? "−" : fmt(x.total))+'</b></div>';
         if(o){ ls.forEach(function(l){ h += '<div class="psl"><span>'+esc(l.fr)+'</span>'+(l.qte ? '<i>× '+esc(String(l.qte))+'</i>' : "")+'<b>'+(l.sous != null && l.sous !== "" ? fmt(l.sous) : "")+'</b></div>'; }); h += '<div class="psl"><span>Total</span><b>'+fmt(x.total)+'</b></div>'; }
       });
     }
