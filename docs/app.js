@@ -1800,7 +1800,7 @@ function participants(personnes, groupes, surChangement, init){
 function dateHeure(opts, surChangement){
   opts = opts || {};
   var auj = new Date(); auj.setHours(0, 0, 0, 0);
-  var S = {lundi: lundiDe(auj), jour: "", heure: "", agenda: "primary", sel: null, agOuvert: false, jj: [], jm: [], vue: (function(){ try { return localStorage.getItem("ldld-cal-vue") === "mois" ? "mois" : "semaine"; } catch(e){ return "semaine"; } })(), mois: new Date(auj.getFullYear(), auj.getMonth(), 1), evm: [],  evs: [], err: false, zone: null, confirme: false, ed: null};
+  var S = {lundi: lundiDe(auj), jour: "", heure: "", agenda: "primary", sel: null, agOuvert: false, jj: [], jm: [], vue: (function(){ try { return localStorage.getItem("ldld-cal-vue") === "mois" ? "mois" : "semaine"; } catch(e){ return "semaine"; } })(), mois: new Date(auj.getFullYear(), auj.getMonth(), 1), evm: [],  evs: [], err: false, zone: null, confirme: false, ed: null, jetonSem: 0};
   if(opts.init && opts.init.jour){ var pi = opts.init.jour.split("-"); S.jour = opts.init.jour; S.heure = opts.init.heure || ""; S.lundi = lundiDe(new Date(+pi[0], +pi[1]-1, +pi[2])); }
   if(opts.agenda !== false && !S.jour){ S.jour = isoJour(auj); }
   function isoDe(d){ return isoJour(d); }
@@ -1885,12 +1885,30 @@ function dateHeure(opts, surChangement){
   }
   function charger(){
     if(opts.mois && S.vue === "mois") return chargerMois();
-    var ids = selAgendas(), reste = ids.length, tous = [], jjw = [], err = "", deb = isoJour(S.lundi), vus = [], vusJ = [];
-    ids.forEach(function(id){ try { var c = JSON.parse(localStorage.getItem("ldld-cs-"+id+"-"+deb) || "null"); if(c) c.forEach(function(e){ e.ag = id; vus.push(e); }); var cj = JSON.parse(localStorage.getItem("ldld-cj-"+id+"-"+deb) || "null"); if(cj) cj.forEach(function(e){ vusJ.push(e); }); } catch(e){} });
-    if(vus.length || vusJ.length){ S.evs = sansDoublon(vus, function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); S.jj = sansDoublon(vusJ, function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); rendre(); }
-    ids.forEach(function(id){
-      appelService({action:"agenda_semaine", session:sessionGardee(), debut:deb, agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); var jn = jjNorm(r, id); jjw = jjw.concat(jn); try { localStorage.setItem("ldld-cs-"+id+"-"+deb, JSON.stringify(r.evenements || [])); localStorage.setItem("ldld-cj-"+id+"-"+deb, JSON.stringify(jn)); } catch(e){} } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0){ S.evs = sansDoublon(tous, function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); S.jj = sansDoublon(jjw, function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); S.erreurSem = err; rendre(); } });
-    });
+    var ids = selAgendas(), deb = isoJour(S.lundi), vus = [], vusJ = [], trouve = false;
+    ids.forEach(function(id){ try { var c = JSON.parse(localStorage.getItem("ldld-cs-"+id+"-"+deb) || "null"); if(c){ trouve = true; c.forEach(function(e){ e.ag = id; vus.push(e); }); } var cj = JSON.parse(localStorage.getItem("ldld-cj-"+id+"-"+deb) || "null"); if(cj){ trouve = true; cj.forEach(function(e){ vusJ.push(e); }); } } catch(e){} });
+    S.evs = sansDoublon(vus, function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); S.jj = sansDoublon(vusJ, function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); rendre();
+    var jeton = ++S.jetonSem;
+    function finSem(){
+      var d2 = isoJour(S.lundi), t2 = [], j2 = [];
+      ids.forEach(function(id){ try { var c = JSON.parse(localStorage.getItem("ldld-cs-"+id+"-"+d2) || "null"); if(c) c.forEach(function(e){ e.ag = id; t2.push(e); }); var cj = JSON.parse(localStorage.getItem("ldld-cj-"+id+"-"+d2) || "null"); if(cj) cj.forEach(function(e){ j2.push(e); }); } catch(e){} });
+      S.evs = sansDoublon(t2, function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); S.jj = sansDoublon(j2, function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); rendre();
+    }
+    function ancien(){
+      var reste = ids.length, tous = [], jjw = [], err = "";
+      ids.forEach(function(id){
+        appelService({action:"agenda_semaine", session:sessionGardee(), debut:deb, agenda:id}).then(function(r){ if(r && r.ok){ (r.evenements || []).forEach(function(e){ e.ag = id; tous.push(e); }); var jn = jjNorm(r, id); jjw = jjw.concat(jn); try { localStorage.setItem("ldld-cs-"+id+"-"+deb, JSON.stringify(r.evenements || [])); localStorage.setItem("ldld-cj-"+id+"-"+deb, JSON.stringify(jn)); } catch(e){} } else err = String((r && r.erreur) || "Agenda indisponible"); }).catch(function(){ err = "Réseau indisponible"; }).then(function(){ if(--reste === 0 && jeton === S.jetonSem){ S.evs = sansDoublon(tous, function(e){ return e.titre+"|"+e.debut+"|"+e.fin; }); S.jj = sansDoublon(jjw, function(e){ return e.titre+"|"+e.d1+"|"+e.d2; }); S.erreurSem = err; rendre(); } });
+      });
+    }
+    if(!ids.length || ids.length > 12) return ancien();
+    // Une seule demande pour la semaine affichée et ses deux voisines: les flèches Précédente/Suivante répondent alors tout de suite depuis l'appareil.
+    var l1 = new Date(S.lundi); l1.setDate(l1.getDate()-7);
+    appelService({action:"agenda_semaines", session:sessionGardee(), agendas:ids, debut:isoJour(l1), nb:3}).then(function(r){
+      if(!(r && r.ok && r.semaines)) return ancien();
+      var err = "";
+      r.semaines.forEach(function(w){ if(w.erreur){ err = String(w.erreur); return; } try { localStorage.setItem("ldld-cs-"+w.agenda+"-"+w.debut, JSON.stringify(w.evenements || [])); localStorage.setItem("ldld-cj-"+w.agenda+"-"+w.debut, JSON.stringify(jjNorm(w, w.agenda))); } catch(e){} });
+      S.erreurSem = err; if(jeton === S.jetonSem) finSem();
+    }).catch(function(){ ancien(); });
   }
   function conge(iso){ return DH_CACHE.conges && DH_CACHE.conges[iso]; }
   function optJours(sel){ var r = "", dd2 = new Date(auj), tr = false;
