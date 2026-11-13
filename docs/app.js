@@ -196,12 +196,23 @@ function copieHeures(corps){
     return r;
   });
 }
+// Domaines lus dans la copie (une réponse par employé, même forme que le service). Ligne absente, purgée, en erreur ou trop vieille: Google répond.
+var COPIE_SIMPLE = {tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1};
+function copieSimple(domaine){
+  return guichetCopie({action:"lire", domaine:domaine, cle:""}).then(function(d){
+    if(!d || !d.ok || d.vide || !d.reponse) throw new Error("vide");
+    var r = d.reponse; if(r.ok === false || r.purge) throw new Error("vide");
+    if(Date.now() - Date.parse(d.maj_t) > 36 * 3600000) throw new Error("vieille");   // publiée au moins une fois par jour (préchauffage et reconstruction de nuit)
+    return r;
+  });
+}
 // La copie ne retarde jamais une lecture: tant qu'elle n'est pas prête (jeton + interrupteur), Google répond, et la préparation se fait en arrière-plan.
 function appelDirect(corps, vu){
-  if(corps && corps.action === "heures" && !VUE.on && !vueComme() && Date.now() > COPIE.hors){
+  var a = corps && corps.action;
+  if((a === "heures" || COPIE_SIMPLE[a]) && !VUE.on && !vueComme() && Date.now() > COPIE.hors){
     if(!copiePrete()){ copiePreparer(corps).catch(function(){ COPIE.hors = Date.now() + 600000; }); return appelDirectGoogle(corps, vu); }
     if(COPIE.exp - Date.now() < 120000 || Date.now() - COPIE.interrT > 240000) copiePreparer(corps).catch(function(){});   // renouvellement silencieux: la lecture en cours utilise encore le jeton valide
-    if(COPIE.interr.heures === "copie") return copieHeures(corps).catch(function(e){ if(!/^(jour|ancienne|vide)$/.test(String(e && e.message))) COPIE.hors = Date.now() + 60000; return appelDirectGoogle(corps, vu); });
+    if(COPIE.interr[a] === "copie") return (a === "heures" ? copieHeures(corps) : copieSimple(a)).catch(function(e){ if(!/^(jour|ancienne|vide|vieille)$/.test(String(e && e.message))) COPIE.hors = Date.now() + 60000; return appelDirectGoogle(corps, vu); });
   }
   return appelDirectGoogle(corps, vu);
 }
@@ -1753,10 +1764,26 @@ function boutonBas(texte, actif, action){
   b.textContent = texte; b.disabled = !actif; b.onclick = action;
 }
 function retirerBoutonBas(){ var b = document.getElementById("btnbas"); if(b) b.remove(); }
+// Agendas du laboratoire: les employés et les groupes peuvent être choisis seulement dans ceux-ci; ailleurs, seulement gestionnaires et Direction.
+var AGENDAS_LABO = ["ldld agenda", "prise couleur", "rencontre contribution"];
+function nomSimple(t){ return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim().toLowerCase(); }
+function agendaEstLabo(id){
+  var L = DH_CACHE.agendas || [], a = L.filter(function(x){ return (x.principal ? "primary" : x.id) === id; })[0];
+  return !!a && AGENDAS_LABO.indexOf(nomSimple(a.nom || a.titre || a.summary)) >= 0;
+}
 // Participants: liste « Groupes » et liste « Employés » (choix multiples). Les membres d'un groupe choisi sont en gris pâle dans la liste Employés.
 function participants(personnes, groupes, surChangement, init){
-  var S = {grp: (init && init.grp) || [], emp: (init && init.emp) || [], ouvert: "", err: false, zone: null};
-  var pers = personnes.map(function(p){ return {c: p.c, nom: nomTitre(p.nom)}; });
+  var S = {grp: (init && init.grp) || [], emp: (init && init.emp) || [], ouvert: "", err: false, zone: null, restreint: false};
+  var persTous = personnes.map(function(p){ return {c: p.c, nom: nomTitre(p.nom), id: p.id || "", role: p.role || ""}; });
+  var pers = persTous, groupesTous = groupes;
+  // Hors des agendas du laboratoire, seuls les gestionnaires et la Direction peuvent être choisis (le service refuse le reste).
+  function okRestreint(p){ return p.role === "responsable" || p.role === "direction"; }
+  function okGroupe(g){ return /^(direction|gestionnaires?)$/i.test(String(g.nom).normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()); }
+  function appliquer(){
+    pers = S.restreint ? persTous.filter(okRestreint) : persTous; groupes = S.restreint ? groupesTous.filter(okGroupe) : groupesTous;
+    S.emp = S.emp.filter(function(c){ return pers.some(function(p){ return p.c === c; }); });
+    S.grp = S.grp.filter(function(n){ return groupes.some(function(g){ return g.nom === n; }); });
+  }
   function membresChoisis(){ var m = {}; groupes.forEach(function(g){ if(S.grp.indexOf(g.nom) >= 0) g.membres.forEach(function(c){ m[c] = (m[c] || []).concat(g.nom); }); }); return m; }
   function tous(){ var m = membresChoisis(), r = Object.keys(m); S.emp.forEach(function(c){ if(r.indexOf(c) < 0) r.push(c); }); return r; }
   function nomDe(c){ var p = pers.filter(function(x){ return x.c === c; })[0]; return p ? p.nom : c; }
@@ -1793,6 +1820,9 @@ function participants(personnes, groupes, surChangement, init){
   return {
     monter: function(zone){ S.zone = zone; rendre(); },
     courriels: tous, noms: noms,
+    ids: function(){ return S.emp.map(function(c){ var p = persTous.filter(function(x){ return x.c === c; })[0]; return p && p.id ? p.id : ""; }).filter(Boolean); },
+    groupes: function(){ return S.grp.slice(); },
+    restreindre: function(oui){ oui = !!oui; if(oui === S.restreint) return; S.restreint = oui; appliquer(); rendre(); if(surChangement) surChangement(); },
     valider: function(){ if(tous().length) return true; S.err = true; rendre(); return false; }
   };
 }
@@ -2005,7 +2035,7 @@ function dateHeure(opts, surChangement){
     document.getElementById("dhp").onclick = function(){ S.lundi.setDate(S.lundi.getDate()-7); charger(); };
     document.getElementById("dhn").onclick = function(){ S.lundi.setDate(S.lundi.getDate()+7); charger(); };
     document.getElementById("dhd").onchange = function(){ S.jour = this.value; S.confirme = false; S.err = false; if(S.jour){ var l = lundiDe(depuis(S.jour)); if(isoJour(l) !== isoJour(S.lundi)){ S.lundi = l; changer(); charger(); return; } } changer(); };
-    var cr = document.getElementById("dhcr"); if(cr) cr.onchange = function(){ S.agCreer = this.value; S.agenda = this.value; try { localStorage.setItem("ldld-ag-creer", this.value); } catch(e){} rendre(); };
+    var cr = document.getElementById("dhcr"); if(cr) cr.onchange = function(){ S.agCreer = this.value; S.agenda = this.value; try { localStorage.setItem("ldld-ag-creer", this.value); } catch(e){} rendre(); if(surChangement) surChangement(); };
     document.getElementById("dhh").onchange = function(){ S.heure = this.value; S.err = false; changer(); };
     Array.prototype.forEach.call(z.querySelectorAll("[data-ed]"), function(c){ c.onclick = function(){ var id = c.getAttribute("data-ed"), e = S.evs.filter(function(x){ return x.id === id; })[0]; if(!e) return;
       if(S.ed && S.ed.id === id){ S.ed = null; } else { var d0 = new Date(e.debut); S.ed = {id: id, jour: isoJour(d0), heure: d0.getHours()+":"+d0.getMinutes(), confirm: false, msg: ""}; } rendre(); }; });
@@ -2084,7 +2114,7 @@ function nouveau(onglet){
     if(t) brouillon.titre = t.value; if(x) brouillon.texte = x.value; if(s) brouillon.sujet = s.value; if(r) brouillon.repeter = r.value; }
   function valide(){ lireChamps(); if(!part || !part.courriels().length) return false;
     return onglet === "message" ? !!(brouillon.titre.trim() && brouillon.texte.trim()) : !!(brouillon.titre.trim() && brouillon.texte.trim() && dh.lire()); }
-  function majBouton(){ var ok = valide(); boutonBas(onglet === "message" ? "Envoyer" : "Planifier", ok, envoyer);
+  function majBouton(){ if(part && onglet === "reunion"){ var qd = dh.lire(); if(qd) part.restreindre((DH_CACHE.agendas || []).length > 0 && !agendaEstLabo(qd.agenda)); } var ok = valide(); boutonBas(onglet === "message" ? "Envoyer" : "Planifier", ok, envoyer);
     [["ntit", brouillon.titre], ["ntxt", brouillon.texte], ["nsuj", brouillon.sujet]].forEach(function(c){ var el = document.getElementById(c[0]); if(el) el.className = "bx"+(c[1].trim() ? "" : " rose"); }); }
   function dessinerReste(){
     var h;
@@ -2110,7 +2140,7 @@ function nouveau(onglet){
     } else {
       var q = dh.lire();
       if(q.conge && !dh.confirme()){ dh.confirme(true); bt.disabled = false; dire("▪ LE LABO EST FERMÉ CE JOUR · TOUCHEZ PLANIFIER POUR CONFIRMER"); return; }
-      appelService({action:"agenda_creer", session:sessionGardee(), agenda:q.agenda, titre:brouillon.titre.trim(), texte:brouillon.texte.trim(), a:part.noms().join(", ").slice(0, 190),
+      appelService({action:"agenda_creer", session:sessionGardee(), agenda:q.agenda, titre:brouillon.titre.trim(), texte:brouillon.texte.trim(), a:part.noms().join(", ").slice(0, 190), ids:part.ids(), groupes:part.groupes(),
         debut:q.date+"T"+q.heure, minutes:30, repeter:brouillon.repeter}).then(function(r){
         if(r && r.ok){ dire("▪ RÉUNION PLANIFIÉE"); setTimeout(function(){ bt.disabled = false; }, 800); }
         else { bt.disabled = false; dire("▪ NON PLANIFIÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
@@ -2147,7 +2177,9 @@ function modifierReunion(e){
   }
   function envoyerMod(portee){
     var q = dh.lire(); var bt = document.getElementById("btnbas"); bt.disabled = true; dire("▪ ENREGISTREMENT…");
-    appelService({action:"agenda_modifier", session:sessionGardee(), id:e.id, portee:portee, titre:sujet.trim(), texte:e.texte || "", a:part.noms().join(", ").slice(0, 190), debut:q.date+"T"+q.heure, minutes:dur}).then(function(r){
+    var nomsChoisis = part.noms().join(", ").slice(0, 190), corpsMod = {action:"agenda_modifier", session:sessionGardee(), id:e.id, portee:portee, titre:sujet.trim(), texte:e.texte || "", a:nomsChoisis, debut:q.date+"T"+q.heure, minutes:dur};
+    if(nomsChoisis !== String(e.a || "")){ corpsMod.ids = part.ids(); corpsMod.groupes = part.groupes(); if(e.ag) corpsMod.agenda = e.ag; }   // la sélection n'est envoyée que si elle a changé
+    appelService(corpsMod).then(function(r){
       if(r && r.ok){ dire("▪ RÉUNION MODIFIÉE"); setTimeout(retour, 1000); } else { bt.disabled = false; dire("▪ NON MODIFIÉE · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
     }).catch(function(){ bt.disabled = false; dire("▪ NON MODIFIÉE · RÉSEAU"); });
   }
