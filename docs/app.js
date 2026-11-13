@@ -1,4 +1,4 @@
-var APP_PUB = "404";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "405";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -201,11 +201,18 @@ function copieHeures(corps){
   });
 }
 // Domaines lus dans la copie (une réponse par employé, même forme que le service). Ligne absente, purgée, en erreur ou trop vieille: Google répond.
-var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1, ech_donnees:1, calendrier:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
-function copieSimple(domaine){
-  return guichetCopie({action:"lire", domaine:domaine, cle:""}).then(function(d){
+var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1, ech_donnees:1, calendrier:1, rd_chiffres:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
+function copieCle(domaine, corps){   // domaines à plusieurs clés: Réunion production (rd_chiffres) = section|département|du|au (la charge ne dépend pas de la période)
+  if(domaine !== "rd_chiffres" || !corps) return "";
+  var ch = corps.section === "charge";
+  if(!corps.section || !corps.departement || (!ch && (!corps.du || !corps.au))) return null;
+  return corps.section + "|" + corps.departement + "|" + (ch ? "" : corps.du) + "|" + (ch ? "" : corps.au);
+}
+function copieSimple(domaine, corps){
+  var cle = copieCle(domaine, corps); if(cle === null) return Promise.reject(new Error("vide"));
+  return guichetCopie({action:"lire", domaine:domaine, cle:cle}).then(function(d){
     if(!d || !d.ok || d.vide || !d.reponse) throw new Error("vide");
-    var r = d.reponse; if(r.ok === false || r.purge) throw new Error("vide");
+    var r = d.reponse; if(r.ok === false || r.purge || r.attente) throw new Error("vide");
     if(Date.now() - Date.parse(d.maj_t) > 36 * 3600000) throw new Error("vieille");   // publiée au moins une fois par jour (préchauffage et reconstruction de nuit)
     return r;
   });
@@ -227,12 +234,12 @@ function appelDirect(corps, vu){
         tm = setTimeout(google, 2500);
         copiePreparer(corps).then(function(){
           if(!(copiePrete() && COPIE.interr[a] === "copie")) throw new Error("nonprete");
-          return a === "heures" ? copieHeures(corps) : copieSimple(a);
+          return a === "heures" ? copieHeures(corps) : copieSimple(a, corps);
         }).then(function(r){ if(!fini){ fini = true; clearTimeout(tm); ok(r); } }, function(e){ clearTimeout(tm); var m = String(e && e.message); if(!/^(jour|ancienne|vide|vieille|nonprete)$/.test(m)) COPIE.hors = Date.now() + 120000; google(); });
       });
     }
     if(COPIE.exp - Date.now() < 120000 || Date.now() - COPIE.interrT > 240000) copiePreparer(corps).catch(function(){});   // renouvellement silencieux: la lecture en cours utilise encore le jeton valide
-    if(COPIE.interr[a] === "copie") return (a === "heures" ? copieHeures(corps) : copieSimple(a)).catch(function(e){ if(!/^(jour|ancienne|vide|vieille)$/.test(String(e && e.message))) COPIE.hors = Date.now() + 60000; return appelDirectGoogle(corps, vu); });
+    if(COPIE.interr[a] === "copie") return (a === "heures" ? copieHeures(corps) : copieSimple(a, corps)).catch(function(e){ if(!/^(jour|ancienne|vide|vieille)$/.test(String(e && e.message))) COPIE.hors = Date.now() + 60000; return appelDirectGoogle(corps, vu); });
   }
   return appelDirectGoogle(corps, vu);
 }
