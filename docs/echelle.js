@@ -15,6 +15,7 @@ function echCase(id, v, suf, large){ return '<div class="echc"><input id="' + id
 function echOuvrir(){
   app.innerHTML = '<div class="page ppx ech"><h1><span style="white-space:nowrap;font-size:.8em;letter-spacing:.04em">Échelle salariale <span style="white-space:nowrap">'+FLECHE_TXT+'taux</span></span></h1><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"><div class="bandeau" id="ech_att">▪ UN INSTANT</div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  var dejaVu = !!ECH.d; if(dejaVu) echRendu();   // déjà lu pendant cette session (mémoire seulement, jamais sur l'appareil): affiché tout de suite, vérifié en silence
   var pre = (ECH.pre && Date.now() - ECH.preT < 180000) ? ECH.pre : null; ECH.pre = null;
   var frais = function(){ return appelService({action: "ech_donnees", session: sessionGardee()}); };
   // Si la lecture préchargée tarde plus de 12 s, on refait une demande neuve (la première continue en arrière-plan).
@@ -23,7 +24,7 @@ function echOuvrir(){
   var garde = new Promise(function(ok){ setTimeout(function(){ if(!fini) ok(frais()); }, 12000); });
   Promise.race([base, garde]).then(function(r){
     if(!document.getElementById("ech_app")) return;
-    if(r && r.ok){ ECH.d = r.r; echRendu(); }
+    if(r && r.ok){ if(dejaVu && (JSON.stringify(r.r) === JSON.stringify(ECH.d) || (document.activeElement && document.activeElement.tagName === "INPUT"))) return; ECH.d = r.r; echRendu(); }
     else { var a = document.getElementById("ech_att"); if(a){ a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = echOuvrir; } }
   }).catch(function(){ var a = document.getElementById("ech_att"); if(a){ a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = echOuvrir; } });
 }
