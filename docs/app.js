@@ -1,4 +1,4 @@
-var APP_PUB = "451";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "452";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2539,10 +2539,10 @@ function sectionsPortrait(p){
       if(q.tech != null) n.push("technique " + String(q.tech).replace(".", ",") + fl(e.tech));
       if(q.auto != null) n.push("autonomie " + String(q.auto).replace(".", ",") + fl(e.auto));
       if(q.qual != null) n.push("qualité " + String(q.qual).replace(".", ",") + fl(e.qual));
-      if(q.obj != null) n.push("objectifs " + pct(q.obj) + fl(e.obj, true));
-      return '<div class="pte2"><div class="pth"><span>'+esc(String(d))+'</span><b>'+pct(q.resultat)+fl(e.resultat, true)+'</b></div><div class="ptk" style="text-transform:none;letter-spacing:0">'+n.join(" · ")+'</div><div class="ptz"><i style="width:'+Math.max(0, Math.min(100, Math.round((q.resultat || 0) * 100)))+'%"></i></div></div>';
+      if(q.obj != null) n.push("objectifs " + pct(q.obj) + fl(e.obj == null ? null : Math.round(e.obj), true));
+      return '<div class="pte2"><div class="pth"><span>'+esc(String(d))+'</span><b>'+pct(q.resultat)+fl(e.resultat == null ? null : Math.round(e.resultat), true)+'</b></div><div class="ptk" style="text-transform:none;letter-spacing:0">'+n.join(" · ")+'</div><div class="ptz"><i style="width:'+Math.max(0, Math.min(100, Math.round((q.resultat || 0) * 100)))+'%"></i></div></div>';
     }).join("");
-    if(p.pointage && p.pointage.rows) h += '<div style="margin-top:8px">' + p.pointage.rows.map(function(r){ return '<div class="ptl"><span>'+esc(r.nom)+' ('+r.sur+')</span><b>'+(r.points === null || r.points === undefined ? "—" : String(r.points).replace(".", ","))+'</b></div>'; }).join("") + (p.pointage.total != null ? '<div class="ptl"><span>Total</span><b>'+String(p.pointage.total).replace(".", ",")+' %</b></div>' : "") + '</div>';
+    if(p.pointage && p.pointage.rows) h += '<div style="margin-top:8px">' + p.pointage.rows.map(function(r){ return '<div class="ptl"><span>'+esc(r.nom)+' ('+r.sur+')</span><b>'+(r.points === null || r.points === undefined ? "—" : String(r.points).replace(".", ","))+'</b></div>'; }).join("") + (p.pointage.total != null ? '<div class="ptl"><span>Total</span><b>'+Math.round(p.pointage.total)+' %</b></div>' : "") + '</div>';
   } else
   h += c ? '<div style="font-size:28px">'+pct(c.resultat)+'</div>' +
       [["Technique", c.tech], ["Autonomie", c.auto], ["Qualité", c.qual]].filter(function(l){ return l[1] !== null && l[1] !== undefined; })
