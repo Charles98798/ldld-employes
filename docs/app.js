@@ -1,4 +1,4 @@
-var APP_PUB = "405";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "406";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -509,7 +509,12 @@ var AUJ = null;
 function heureFr(d){ var h = d.getHours(), m = d.getMinutes(); return h+" h"+(m ? " "+("0"+m).slice(-2) : ""); }
 function dessinerAujourdhui(){
   var z = document.getElementById("auj"); if(!z) return; var t = new Date(), iso = isoJour(t);
+  var apres12 = t.getHours() >= 12, dem = new Date(t); dem.setDate(dem.getDate() + 1); var isoDem = isoJour(dem);
   var l = (AUJ || []).filter(function(e){
+    if(e.journee && /absent/i.test(String(e.titre || ""))){   // règle des absences: l'avis de la veille apparaît à midi, celui du jour disparaît à midi
+      var a1 = String(e.debut).slice(0, 10), a2 = String(e.fin || e.debut).slice(0, 10), jr = apres12 ? isoDem : iso;
+      return a1 <= jr && (jr < a2 || a1 === a2 && a1 === jr);
+    }
     if(e.journee){ var d1 = String(e.debut).slice(0, 10), d2 = String(e.fin || e.debut).slice(0, 10); return d1 <= iso && (iso < d2 || d1 === d2 && d1 === iso); }
     return isoJour(new Date(e.debut)) === iso && new Date(e.fin || e.debut) >= t; });
   if(!l.length){ z.innerHTML = ""; return; }
