@@ -2549,10 +2549,12 @@ function section(i){
 // Employé au hasard préparé d'avance (Direction): la session lecture seule est demandée au service en arrière-plan dès l'accueil, avec ses heures et son tableau de bord. Le toucher ouvre donc la page tout de suite.
 var VUE_PRE = null, VUE_DERNIER = "";
 function cleLectureVue(c, sess){ var o = {}; Object.keys(c).forEach(function(k){ if(k !== "session") o[k] = c[k]; }); o._v = sess; return JSON.stringify(o); }
+// Employé fixe pour les essais de la Direction (Antonio); si le service ne le trouve pas, tirage au hasard comme avant.
+function vueTirage(reelle){ return appelBrut({action:"voir_comme", session:reelle, nom:"Antonio"}).then(function(r){ if(r && r.ok) return r; return appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:""}); }); }
 function vuePreparer(reelle){
   if(!reelle || VUE_PRE || !MOI || MOI.role !== "direction" || vueComme()) return;
   var pre = {reelle: reelle, t: Date.now()};
-  pre.p = enArriere(function(){ return appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:VUE_DERNIER}); }).then(function(r){
+  pre.p = enArriere(function(){ return vueTirage(reelle); }).then(function(r){
     if(r && r.ok){
       [{action:"heures"}, {action:"tableau_courant"}].forEach(function(c){
         var k = cleLectureVue(c, r.session); c.session = r.session;
@@ -2574,7 +2576,7 @@ function vueEmploye(i){
   VUE.pend = true;
   var vueDel = setTimeout(function(){ if(VUE.pend){ VUE.pend = false; VUE.on = false; sectionBase(i); } }, 20000);
   var pre = VUE_PRE; VUE_PRE = null;
-  var pr = (pre && pre.reelle === reelle && Date.now() - pre.t < 3000000) ? pre.p : appelBrut({action:"voir_comme", session:reelle, nom:"hasard", role:"employe", exclure:prec});
+  var pr = (pre && pre.reelle === reelle && Date.now() - pre.t < 3000000) ? pre.p : vueTirage(reelle);
   pr.then(function(r){
     clearTimeout(vueDel); if(!VUE.pend) return;
     VUE.pend = false;
