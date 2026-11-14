@@ -25,7 +25,7 @@ function aepPlanification(){
     var z = document.getElementById("aepz"), f = document.getElementById("aepf"); if(!z || !donnees) return;
     var n = new Date(), auj = n.getFullYear() + "-" + ("0" + (n.getMonth() + 1)).slice(-2) + "-" + ("0" + n.getDate()).slice(-2);
     var fin = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 7), finJ = fin.getFullYear() + "-" + ("0" + (fin.getMonth() + 1)).slice(-2) + "-" + ("0" + fin.getDate()).slice(-2);
-    var liste = (donnees.lignes || []).map(aepNormaliser).filter(function(x){ return x.nom; });
+    var liste = (donnees.lignes || []).map(aepNormaliser).filter(function(x){ return x.nom && !/^direction$/i.test(x.cat.trim()); });
     liste.forEach(function(x){ x.p = aepProchaine(x, auj); x.sansDate = !!x.statut && (!x.d1 || !x.d2); x.verif = /vérifier/i.test(x.statut); });
     var filtres = [
       {k: "tous", t: "Tous", ok: function(){ return true; }},
