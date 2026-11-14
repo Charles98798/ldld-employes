@@ -21,15 +21,16 @@ function aepEtq(j, prochaine, auj){ if(!j) return ""; return '<span class="aepe'
 function aepStatut(x){ return x.d1 && x.d2 ? "2 rencontres" : x.d1 ? "1 rencontre" : "Aucune rencontre"; }
 function aepFmt(j, h){ if(!j) return '<span class="aepv">—</span>'; var q = j.split("-"); return (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1] + " " + q[0] + (aepHeure(h) ? '<small>' + esc(aepHeure(h)) + '</small>' : ''); }
 var MOIS_COURTS_E = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
-function aepFmtC(j, h){ if(!j) return '<span class="aepv">—</span>'; var q = j.split("-"); return (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1] + (aepHeure(h) ? '<small>' + esc(aepHeure(h)) + '</small>' : ''); }
+function aepFmtC(j, h){ if(!j) return '<span class="aepv">—</span>'; var q = j.split("-"); return (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1] + '<small>' + (aepHeure(h) ? esc(aepHeure(h)) : 'Sans heure') + '</small>'; }
 function aepPlanification(){
   app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification évaluation</h1><div id="aepp"></div><div class="aepsec">Tous les employés</div><div class="aepent"><span>Employé</span><span>RDV 1</span><span>RDV 2</span><span>Rencontres</span></div><div id="aepz"></div><div id="aepm" class="aeretat"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  var donnees = null, ouvert = null;
+  var donnees = null, ouvert = null, inactifs = null;
+  function cleN(t){ return String(t || "").trim().toLowerCase(); }
   function auj(){ var n = new Date(); return n.getFullYear() + "-" + ("0" + (n.getMonth() + 1)).slice(-2) + "-" + ("0" + n.getDate()).slice(-2); }
   function msg(t){ var m = document.getElementById("aepm"); if(m) m.textContent = t || ""; }
   function liste(){
-    return (donnees.lignes || []).map(function(e){ var x = aepNormaliser(e); x.id = e.id; x.a1 = e.autoeval1; x.a2 = e.autoeval2; return x; }).filter(function(x){ return x.nom && !/^direction$/i.test(x.cat.trim()); })
+    return (donnees.lignes || []).map(function(e){ var x = aepNormaliser(e); x.id = e.id; x.a1 = e.autoeval1; x.a2 = e.autoeval2; return x; }).filter(function(x){ return x.nom && !/^direction$/i.test(x.cat.trim()) && !(inactifs && (inactifs.id[cleN(x.id)] || inactifs.nom[cleN(x.nom)])); })
       .sort(function(a, b){ return a.nom.localeCompare(b.nom, "fr"); });
   }
   function prochains(L){
@@ -98,6 +99,12 @@ function aepPlanification(){
     }).catch(function(){ msg(""); av.textContent = "Enregistrement impossible. Réessaie."; });
   }
   function erreur(){ var z = document.getElementById("aepz"); if(z){ z.innerHTML = '<div class="bandeau">Planification indisponible pour le moment.</div><button type="button" class="bouton" id="aere">Réessayer</button>'; document.getElementById("aere").onclick = aepPlanification; } }
+  try { appelService({action: "employes_etat", session: sessionGardee()}).then(function(r){
+    if(!r || !r.ok || !r.inactifs) return; inactifs = {id: {}, nom: {}};
+    r.inactifs.forEach(function(q){ inactifs.id[cleN(q.id)] = 1; inactifs.nom[cleN(q.nom)] = 1; });
+    r.actifs && r.actifs.forEach(function(q){ delete inactifs.id[cleN(q.id)]; delete inactifs.nom[cleN(q.nom)]; });
+    if(donnees && !ouvert) afficher();
+  }).catch(function(){}); } catch(e){}
   obtenir("ae_planif", {action: "ae_planif_lire"}, function(r){ if(ouvert) return; donnees = r; afficher(); }, erreur, true);
 }
 
