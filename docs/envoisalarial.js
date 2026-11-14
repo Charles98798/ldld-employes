@@ -65,11 +65,26 @@ function envConfirmer(prets){
   document.getElementById("envnon").onclick = function(){ var d = document.getElementById("envdlg"); if(d) d.remove(); };
   document.getElementById("envoui").onclick = function(){
     if(ENVS.occupe) return; ENVS.occupe = true;
-    var oui = document.getElementById("envoui"), non = document.getElementById("envnon"); oui.disabled = true; if(non) non.disabled = true; oui.textContent = "Envoi en cours";
-    appelService({action: "env_envoyer", session: sessionGardee(), f: {mode: essai ? "essai" : "reel", noms: prets.map(function(e){ return e.nom; }), nombre: n}}).then(function(r){
-      ENVS.occupe = false;
-      if(r && r.ok){ ENVS.msg = "▪ " + (essai ? "ESSAI ENVOYÉ À LA DIRECTION · " : "ENVOYÉ · ") + n + " COURRIEL" + (n > 1 ? "S" : ""); envOuvrir(); }
-      else { var d = document.getElementById("envdlg"); if(d) d.remove(); ENVS.msg = "▪ NON ENVOYÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); envMessage(ENVS.msg); }
-    }).catch(function(){ ENVS.occupe = false; var d = document.getElementById("envdlg"); if(d) d.remove(); ENVS.msg = "▪ RÉPONSE NON REÇUE · VÉRIFIEZ AVANT DE RÉESSAYER"; envMessage(ENVS.msg); });
+    var oui = document.getElementById("envoui"), non = document.getElementById("envnon"); oui.disabled = true; if(non) non.disabled = true;
+    // Envoi par lots de 2: l'écran avance lot par lot avec le compte, et ne propose JAMAIS de refaire l'envoi entier (risque de doublons en mode réel).
+    var mode = essai ? "essai" : "reel", lots = [], i0 = 0, faits = 0;
+    for(; i0 < prets.length; i0 += 2) lots.push(prets.slice(i0, i0 + 2));
+    function progres(){ oui.textContent = "Envoi en cours · " + faits + " sur " + n; }
+    function arret(raison){
+      ENVS.occupe = false; var d = document.getElementById("envdlg"); if(d) d.remove();
+      // L'état réel est relu depuis le serveur: les courriels déjà partis y sont marqués.
+      appelService({action: "env_liste", session: sessionGardee()}).then(function(r){ if(r && r.ok && r.r) ENVS.d = r.r; }).catch(function(){}).then(function(){
+        ENVS.msg = "▪ ENVOI INTERROMPU APRÈS " + faits + " SUR " + n + " · " + raison + " · NE REFAITES PAS L’ENVOI: VÉRIFIEZ LES STATUTS CI-DESSOUS ET ENVOYEZ SEULEMENT CEUX QUI SONT ENCORE PRÊTS";
+        if(document.getElementById("envapp")) envListe(); });
+    }
+    function suite(k){
+      if(k >= lots.length){ ENVS.occupe = false; ENVS.msg = "▪ " + (essai ? "ESSAI ENVOYÉ À LA DIRECTION · " : "ENVOYÉ · ") + n + " COURRIEL" + (n > 1 ? "S" : ""); envOuvrir(); return; }
+      progres();
+      appelService({action: "env_envoyer", session: sessionGardee(), f: {mode: mode, noms: lots[k].map(function(e){ return e.nom; }), nombre: lots[k].length}}).then(function(r){
+        if(r && r.ok){ faits += lots[k].length; suite(k + 1); }
+        else arret(String((r && r.erreur) || "RÉESSAYEZ").toUpperCase());
+      }).catch(function(){ arret("RÉPONSE NON REÇUE"); });
+    }
+    suite(0);
   };
 }

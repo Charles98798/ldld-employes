@@ -149,7 +149,7 @@ function suiteAppels(){
     if(FILE_APPELS[0].bg && APPELS_EN_COURS >= APPELS_MAX - 1) break;
     var x = FILE_APPELS.shift(); APPELS_EN_COURS++;
     (function(x){
-      var v = {t: Date.now(), fini: false, ko: x.ko, ctl: null, a: (x.c && x.c.action) || "?"}; if(x.c && x.c.action === "docusign_envoyer") v.t += 130000; EN_VOL.push(v);
+      var v = {t: Date.now(), fini: false, ko: x.ko, ctl: null, a: (x.c && x.c.action) || "?"}; if(x.c && (x.c.action === "docusign_envoyer" || x.c.action === "env_envoyer")) v.t += 130000; EN_VOL.push(v);
       appelDirect(x.c, function(c){ v.ctl = c; }).then(function(r){ if(!v.fini){ v.fini = true; APPELS_EN_COURS--; x.ok(r); } }, function(e){ if(!v.fini){ v.fini = true; APPELS_EN_COURS--; x.ko(e); } }).then(suiteAppels);
     })(x);
   }
@@ -246,7 +246,7 @@ function appelDirect(corps, vu){
 }
 function appelDirectGoogle(corps, vu){
   var ctl = window.AbortController ? new AbortController() : null; if(vu) vu(ctl);
-  var  t = ctl ? setTimeout(function(){ ctl.abort(); }, corps && corps.action === "docusign_envoyer" ? 170000 : 60000) : 0;   // jamais de « CHARGEMENT… » sans fin
+  var  t = ctl ? setTimeout(function(){ ctl.abort(); }, corps && (corps.action === "docusign_envoyer" || corps.action === "env_envoyer") ? 170000 : 60000) : 0;   // jamais de « CHARGEMENT… » sans fin
   return fetch(URL_SERVICE, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(corps), signal: ctl ? ctl.signal : undefined})
     .then(function(r){ clearTimeout(t); return r.json(); }, function(e){ clearTimeout(t); throw e; });
 }
