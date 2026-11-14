@@ -27,13 +27,15 @@ function invDroitReception(){ return typeof roleIdx === "function" && roleIdx() 
 function invMoisFr(iso){ var m = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"], p = String(iso).split("-"); return p.length === 3 ? (+p[2]) + " " + m[+p[1] - 1] + " " + p[0] : String(iso); }
 function invOnglets(){
   if(!invDroitReception()) return "";
-  var rec = INV.vue === "reception";
-  return '<div style="margin:0 0 12px"><button type="button" class="bouton" id="'+(rec ? "invtsor" : "invtrec")+'" style="width:100%;height:46px;padding:0;margin:0">'+(rec ? "Retour à la sortie" : "Réception")+'</button></div>';
+  var st = 'height:46px;padding:0;margin:0;';
+  if(INV.vue === "reception" || INV.vue === "stocks") return '<div style="margin:0 0 12px"><button type="button" class="bouton" id="invtsor" style="width:100%;'+st+'">Retour à la sortie</button></div>';
+  return '<div style="display:flex;gap:6px;margin:0 0 12px"><button type="button" class="bouton" id="invtrec" style="flex:1;'+st+'">Réception</button><button type="button" class="bouton" id="invtsto" style="flex:1;'+st+'">Gestion des stocks</button></div>';
 }
 function invLierOnglets(){
-  var a = document.getElementById("invtsor"), b = document.getElementById("invtrec");
+  var a = document.getElementById("invtsor"), b = document.getElementById("invtrec"), c = document.getElementById("invtsto");
   if(a) a.onclick = function(){ INV.vue = "sortie"; invListe(); };
   if(b) b.onclick = function(){ INV.vue = "reception"; invReception(); };
+  if(c) c.onclick = function(){ INV.vue = "stocks"; invListe(); };
 }
 function invE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function invNorm(t){ return String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim(); }
@@ -53,13 +55,14 @@ function invOuvrir(){
   invLire().then(function(r){
     if(!document.getElementById("invapp")) return;
     if(!(r && r.ok)){ var a = document.getElementById("invatt"); if(a){ a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = invOuvrir; } return; }
-    INV.d = r; if(!INV.cat) INV.cat = (r.produits[0] || {}).categorie || ""; if(INV.vue === "reception" && invDroitReception()) invReception(); else invListe();
+    INV.d = r; if(!INV.cat) INV.cat = (r.produits[0] || {}).categorie || ""; if(INV.vue === "reception" && invDroitReception()) invReception(); else { if(INV.vue === "stocks" && !invDroitReception()) INV.vue = "sortie"; invListe(); }
   }).catch(function(){ var a = document.getElementById("invatt"); if(a){ a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = invOuvrir; } });
 }
 function invCategories(){ var v = {}, o = []; (INV.d.produits || []).forEach(function(p){ if(!v[p.categorie]){ v[p.categorie] = 1; o.push(p.categorie); } }); return o.sort(function(a, b){ return invNorm(a) < invNorm(b) ? -1 : 1; }); }
 function invListe(){
   var cats = invCategories(), z = document.getElementById("invapp"); if(!z) return;
   var h = invOnglets() + (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : "");
+  if(INV.vue === "stocks") h += '<div style="font-size:13px;color:#6E6350;margin:0 0 4px">Gestion des stocks : choisissez un produit pour inscrire la quantité exacte comptée.</div>';
   h += '<span class="lbl">Catégorie</span><select class="bx" id="invcat" style="background:#8D806A;color:#fff;border-color:#8D806A">'+cats.map(function(c){ return '<option value="'+invE(c)+'"'+(c === INV.cat ? " selected" : "")+'>'+invE(c)+'</option>'; }).join("")+'</select>';
   h += '<span class="lbl">Commence par</span><input class="bx" id="invdeb" autocomplete="off" placeholder="Premières lettres" value="'+invE(INV.debut)+'">';
   h += '<span class="lbl">Produit</span><div id="invprod"></div>';
@@ -72,7 +75,7 @@ function invProduits(){
   var z = document.getElementById("invprod"); if(!z) return;
   var d = invNorm(INV.debut), L = (INV.d.produits || []).filter(function(p){ return p.categorie === INV.cat && (!d || invNorm(p.description).indexOf(d) === 0); });
   z.innerHTML = L.length ? L.map(function(p){ return '<div class="invp" data-i="'+invE(p.id)+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:#DDD9CD;padding:14px;margin:0 0 6px;cursor:pointer"><span style="min-width:0;overflow-wrap:anywhere">'+invE(p.description)+'</span><span style="font-size:12px;color:#6E6350">'+invE(p.stock)+'</span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN PRODUIT</div>';
-  Array.prototype.forEach.call(z.querySelectorAll(".invp"), function(x){ x.onclick = function(){ var p = (INV.d.produits || []).filter(function(q){ return q.id === x.getAttribute("data-i"); })[0]; if(p) invProduit(p); }; });
+  Array.prototype.forEach.call(z.querySelectorAll(".invp"), function(x){ x.onclick = function(){ var p = (INV.d.produits || []).filter(function(q){ return q.id === x.getAttribute("data-i"); })[0]; if(p){ if(INV.vue === "stocks" && invDroitReception()) invCompte(p); else invProduit(p); } }; });
 }
 function invProduit(p){
   var qte = 1, deduire = p.mode !== "commander";
@@ -162,3 +165,33 @@ function invReception(){
     document.getElementById("invao").onclick = function(){ this.disabled = true; invEcrire("inv_annuler_ligne", {id_ligne: i}).then(function(r){ if(r && r.ok){ INV.rec = INV.rec.filter(function(w){ return w.id !== i; }); delete INV.recu[i]; invReception(); } else { m.textContent = "▪ NON ANNULÉE · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); } }).catch(function(){ m.textContent = "▪ NON ANNULÉE · RÉSEAU INDISPONIBLE"; }); };
   }; });
 }
+
+// Gestion des stocks (Gestionnaires et Direction): inscrire la quantité exacte comptée à la main (2 ou 3 fois par année).
+function invCompte(p){
+  var q = p.stock;
+  invPage('<div id="invapp"></div>');
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); invListe2(); };
+  var z = document.getElementById("invapp");
+  function dessiner(msg){
+    var d = q - p.stock, h = (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : "");
+    h += '<span class="lbl">Produit</span><div style="font-size:20px;font-weight:700;overflow-wrap:anywhere">'+invE(p.description)+'</div><div style="font-size:12px;color:#6E6350;margin:4px 0 10px">'+invE(p.categorie)+' · '+invE(p.fournisseur)+'</div>';
+    h += '<div style="background:#DDD9CD;padding:12px"><div style="font-size:12px;color:#6E6350">Stock actuel dans Trak</div><div style="font-size:22px;font-weight:700">'+invE(p.stock)+'</div></div>';
+    h += '<span class="lbl" style="margin-top:18px">Quantité exacte comptée</span><div style="display:flex;align-items:center;gap:14px"><button type="button" class="bouton" id="invmoins" style="width:46px;height:46px;padding:0;margin:0">−</button><span style="font-size:28px;min-width:48px;text-align:center">'+q+'</span><button type="button" class="bouton" id="invplus" style="width:46px;height:46px;padding:0;margin:0">+</button></div>';
+    h += '<div style="font-size:13px;color:#6E6350;margin:10px 0">'+(d === 0 ? "Identique au stock actuel." : "Différence : "+(d > 0 ? "+" : "−")+Math.abs(d)+".")+'</div>';
+    h += '<button type="button" class="bouton" id="invok" style="height:46px;padding:0;margin:8px 0"'+(d === 0 ? " disabled" : "")+'>Enregistrer la quantité</button>';
+    h += '<div class="bandeau" id="invmsg" style="'+(msg ? "" : "display:none;")+'margin-top:8px">'+invE(msg || "")+'</div>';
+    z.innerHTML = h;
+    document.getElementById("invmoins").onclick = function(){ if(q > 0){ q--; dessiner(); } };
+    document.getElementById("invplus").onclick = function(){ if(q < 99999){ q++; dessiner(); } };
+    var ok = document.getElementById("invok");
+    ok.onclick = function(){
+      ok.disabled = true; ok.textContent = "Enregistrement…";
+      invEcrire("inv_compter", {id_produit: p.id, quantite: q}).then(function(r){
+        if(r && r.ok){ if(r.essai) p.stock = q; dessiner(r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : "▪ QUANTITÉ ENREGISTRÉE"); }
+        else dessiner("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase());
+      }).catch(function(){ dessiner("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
+    };
+  }
+  dessiner();
+}
+function invListe2(){ invOuvrir(); }
