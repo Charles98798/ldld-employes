@@ -105,15 +105,15 @@ new MutationObserver(function(){ decorerTitres(); majRetour(); }).observe(app, {
 window.addEventListener("scroll", majRetour, {passive: true});
 document.addEventListener("scroll", majRetour, {passive: true, capture: true});   // le défilement peut venir de body: il ne remonte pas à window
 setInterval(majRetour, 400);
-// Filet général: jamais une page avec seulement son titre. Si rien d'autre n'est affiché, « Un instant » apparaît; il disparaît dès qu'il y a du contenu.
+// Filet général: jamais une page avec seulement son titre. Si rien d'autre n'est affiché, la petite barre d'état apparaît; il disparaît dès qu'il y a du contenu.
 function filetVide(){
-  var pg = app.querySelector(".page"); if(!pg) return;
+  var pg = app.querySelector(".page"); if(!pg || document.getElementById("envbar")) return;   // la barre au milieu (Envoi salarial, Position employé) tient lieu d'attente
   var c = pg.cloneNode(true); Array.prototype.forEach.call(c.querySelectorAll(".bl, a.retour, .auto-instant, h1, .vub, .pph, script, style"), function(x){ x.remove(); });
   var plein = c.innerText.replace(/\s+/g, "").length > 0 || !!c.querySelector("input,select,textarea,button,img,svg,canvas,a");
   var m = pg.querySelector(".auto-instant");
   if(pg.classList.contains("sans-instant")){ if(m) m.remove(); return; }   // Autoévaluation: jamais « Un instant »
   if(plein){ if(m) m.remove(); return; }
-  if(!m){ m = document.createElement("div"); m.className = "bandeau auto-instant"; m.textContent = "▪ UN INSTANT"; var r = pg.querySelector("a.retour"); pg.insertBefore(m, r || null); }
+  if(!m){ m = document.createElement("div"); m.className = "att auto-instant"; m.innerHTML = "<i></i>"; var r = pg.querySelector("a.retour"); pg.insertBefore(m, r || null); }
 }
 setInterval(filetVide, 300);
 window.addEventListener("resize", majRetour);
@@ -1167,7 +1167,7 @@ function graphJoursActif(el){
   choisir(bs[bs.length-1]);
 }
 function tableau(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Tableau de bord</h1><div id="tb">'+(VUE.on ? '<div class="bandeau">▪ UN INSTANT</div>' : '')+'</div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1 class="vert">Tableau de bord</h1><div id="tb">'+(VUE.on ? '<div class="att"><i></i></div>' : '')+'</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   if(VUE.on){ vd("tableau demandé"); }
   obtenir("tableau", {action:"tableau"}, function(r){
@@ -1547,7 +1547,7 @@ function nouvelEmploye(){
     if(!l.length){ vide(); return; }
     z.innerHTML = '<div class="etq">▪ CANDIDATS EN ATTENTE</div>'+l.map(function(c, i){ return '<a class="doc" href="#" data-i="'+i+'"><span>▪ '+esc(((c.v && c.v.prenom) || "")+" "+((c.v && c.v.nom) || ""))+'</span></a>'; }).join("");
     Array.prototype.forEach.call(z.querySelectorAll("[data-i]"), function(q){ q.onclick = function(e){ e.preventDefault(); var c = l[Number(q.getAttribute("data-i"))]; if(q.getAttribute("data-b")) return; q.setAttribute("data-b", "1");
-      var sp = q.querySelector("span"), t0 = sp ? sp.textContent : ""; if(sp) sp.textContent = "▪ OUVERTURE EN COURS";
+      var sp = q.querySelector("span"), t0 = sp ? sp.textContent : ""; q.style.opacity = ".5";
       var pr = NE_BRP[c.id] || appelService({action: "embauche_brouillon", session: sessionGardee(), id: c.id});
       pr.then(function(rr){
         var v = (rr && rr.ok && rr.r && rr.r.valeurs) || null;
@@ -1641,7 +1641,7 @@ function neFormulaire(cand){
     if(c.ty === "liste") return '<div class="etq">▪ DOCUMENTS À APPORTER · 8 AU MAXIMUM</div>' + S.docs.map(function(x, i){ return '<input class="bx '+(x.trim() ? "" : (i ? "beige" : "rose"))+'" data-d="'+i+'" placeholder="Document '+(i + 1)+'" value="'+esc(x)+'">'; }).join("") + (S.docs.length < 8 ? '<div class="aeact"><button type="button" class="bouton lg" id="nedoc">Ajouter un document</button></div>' : "");
     if(c.ty === "bilan") return neBilanResp(S);
     if(c.ty === "resp"){
-      if(!NE_RESP) return '<div class="bandeau">▪ UN INSTANT</div>';
+      if(!NE_RESP) return '<div class="att"><i></i></div>';
       var G = NE_RESP.groupes, g = G[S.rs] || G[0], nb = Object.keys(S.rc).length;
       var h2 = '<div class="nrrow"><select class="bx nrsel" id="rsel">'+G.map(function(x, i){ return '<option value="'+i+'"'+(i === S.rs ? " selected" : "")+'>'+(i + 1)+' / '+G.length+' · '+esc(String(x.groupe).toUpperCase())+'</option>'; }).join("")+'</select><button type="button" class="nrnext" id="rnext"'+(S.rs >= G.length - 1 ? " disabled" : "")+'>→</button></div>';
       if(g.description) h2 += '<div class="nrr nrd" data-rkk="'+g.description.k+'"><span>'+esc(g.description.texte)+'</span><i class="nrc'+(S.rc[g.description.k] ? " on" : "")+'"></i></div>';
@@ -2288,7 +2288,7 @@ function nouveau(onglet){
   onglet = onglet === "reunion" ? "reunion" : "message";
   app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Créer un événement</h1>' +
     '<div class="aeact" style="margin:0 0 6px"><button type="button" class="bouton choixc" id="ongM" aria-pressed="'+(onglet === "message" ? "true" : "false")+'" style="margin:0;flex:1">Message seulement</button><button type="button" class="bouton choixc" id="ongR" aria-pressed="'+(onglet === "reunion" ? "true" : "false")+'" style="margin:0;flex:1">Message et événement</button></div>' +
-    '<div id="npart"><div class="bandeau">▪ UN INSTANT</div></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
+    '<div id="npart"><div class="att"><i></i></div></div><div id="nreste"></div><div class="bandeau" id="ne" style="display:none"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); retirerBoutonBas(); responsable(); };
   var dire = function(t){ var e = document.getElementById("ne"); if(e){ e.style.display = "block"; e.textContent = t; } };
   var part = null, dh = dateHeure({}, function(){ majBouton(); }), brouillon = {titre: "", texte: "", sujet: "", repeter: "aucune"};
@@ -2794,7 +2794,7 @@ function carreVert(t){ return '<div style="margin:18vh 0 0;background:#8EFF60;co
 var VUE_ESSAIS_H = 0;
 function heures(){
   // Vraies heures du logiciel de gestion (pointages de la borne, mises à jour aux 15 minutes). Tout tient sur un écran.
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes heures</h1><div id="hz"><div class="bandeau">'+(MOI && MOI.role === "direction" && !VUE.on ? "▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES" : "▪ UN INSTANT")+'</div></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes heures</h1><div id="hz">'+(MOI && MOI.role === "direction" && !VUE.on ? '<div class="bandeau">▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES</div>' : '<div class="att"><i></i></div>')+'</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   function hm(m){ if(m === null || m === undefined) return "—"; var h = Math.floor(m / 60), n = m % 60; return h + " h " + (n < 10 ? "0" : "") + n; }
   var JOURS = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
@@ -2820,7 +2820,7 @@ function heures(){
   }
   obtenir("heures", {action:"heures"}, afficherH, function(){ var z = document.getElementById("hz"); if(z) z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
   // Délai d'attente: si rien n'est arrivé après 8 s (appels en rafale à l'ouverture), une demande neuve part et la première réponse gagne.
-  setTimeout(function(){ var z = document.getElementById("hz"); if(z && /UN INSTANT/.test(z.textContent)){ chercher("heures", {action:"heures"}).then(function(r){ var z2 = document.getElementById("hz"); if(z2 && /UN INSTANT/.test(z2.textContent)) afficherH(r); }).catch(function(){}); } }, 8000);
+  setTimeout(function(){ var z = document.getElementById("hz"); if(z && !!z.querySelector(".att")){ chercher("heures", {action:"heures"}).then(function(r){ var z2 = document.getElementById("hz"); if(z2 && !!z2.querySelector(".att")) afficherH(r); }).catch(function(){}); } }, 8000);
 }
 var VUE_ONGLETS = [9, 4, 2, 7];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
 function estCharles(){ return !!(MOI && /^\s*charles\b/i.test(String(MOI.nom || ""))); }
@@ -2860,7 +2860,7 @@ function vuePreparer(reelle){
 function vueEmploye(i){
   var reelle = VUE.on ? VUE.reel : sessionGardee(), ancien = VUE.on ? VUE.session : null, prec = VUE.nom; VUE_ANCIEN_FIXE = !!VUE.fixe;
   VUE.on = false;
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="bandeau">▪ UN INSTANT</div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+esc(SECTIONS[i])+'</h1><div class="att"><i></i></div></div>';
   VDIAG = []; VD0 = Date.now(); vd("ouverture " + (VUE_PRE ? "(préparé)" : "(non préparé)"));
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); VUE.pend = false; VUE.on = false; menu(); };
   VUE.pend = true;
@@ -2886,7 +2886,7 @@ function vueEmploye(i){
     VUE_DERNIER = r.nom || "";
     sectionBase(i);
     // Garde-fou: si la page est encore sur « Un instant » après 12 s, on repart à neuf une seule fois (session gardée, mémoire des lectures et file d'appels remises à zéro).
-    (function(n){ setTimeout(function(){ var pg = app.querySelector(".page"); if(!VUE.on || !pg || !/UN INSTANT/.test(pg.textContent)){ vueEmploye.g = 0; return; } if(vueEmploye.g >= 1) return; vueEmploye.g = (vueEmploye.g || 0) + 1; RCACHE = {}; RC_GEN++; COPIE_PAR = {}; try { APPELS_EN_COURS = 0; FILE_APPELS = []; EN_VOL = []; } catch(e){} VUE_PRE = null; vueEmploye(i); }, 12000); })((vueEmploye.n = (vueEmploye.n || 0) + 1));
+    (function(n){ setTimeout(function(){ var pg = app.querySelector(".page"); if(!VUE.on || !pg || !pg.querySelector(".att")){ vueEmploye.g = 0; return; } if(vueEmploye.g >= 1) return; vueEmploye.g = (vueEmploye.g || 0) + 1; RCACHE = {}; RC_GEN++; COPIE_PAR = {}; try { APPELS_EN_COURS = 0; FILE_APPELS = []; EN_VOL = []; } catch(e){} VUE_PRE = null; vueEmploye(i); }, 12000); })((vueEmploye.n = (vueEmploye.n || 0) + 1));
   }).catch(function(e){ vd("échec " + (e && e.message)); VUE.pend = false; VUE.on = false; sectionBase(i); });
 }
 function vueFin(){

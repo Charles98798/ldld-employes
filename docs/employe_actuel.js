@@ -12,12 +12,12 @@ function eaTrier(l){
   });
 }
 function eaOuvrir(nomDebut){
-  app.innerHTML = '<div class="page ppx ea"><a class="retour" href="#" id="retour">Retour</a><div id="ea_app"><h1>Employé actuel</h1><div class="bandeau" id="ea_att">▪ UN INSTANT</div></div></div>';
+  app.innerHTML = '<div class="page ppx ea"><a class="retour" href="#" id="retour">Retour</a><div id="ea_app"><h1>Employé actuel</h1><div class="att" id="ea_att"><i></i></div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   appelService({action: "emp_donnees", session: sessionGardee()}).then(function(r){
     if(r && r.ok){ EA.d = {employes: eaTrier(r.r.employes || [])}; EA.i = 0; if(nomDebut){ EA.d.employes.forEach(function(e, k){ if(String(e.nom).toLowerCase().indexOf(nomDebut) === 0 && EA.i === 0) EA.i = k; }); } eaRendu(); }
-    else { var a = document.getElementById("ea_att"); if(a) a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · RÉESSAYEZ"; }
-  }).catch(function(){ var a = document.getElementById("ea_att"); if(a) a.textContent = "▪ RÉSEAU INDISPONIBLE · RÉESSAYEZ"; });
+    else { var a = document.getElementById("ea_att"); if(a){ a.className = "bandeau"; a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · RÉESSAYEZ"; } }
+  }).catch(function(){ var a = document.getElementById("ea_att"); if(a){ a.className = "bandeau"; a.textContent = "▪ RÉSEAU INDISPONIBLE · RÉESSAYEZ"; } });
 }
 function eaSauver(id, cle, valeur){
   var et = document.getElementById("ea_etat"); if(et) et.textContent = "Enregistrement…";

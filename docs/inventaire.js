@@ -59,13 +59,13 @@ function invPage(corps){
   app.innerHTML = '<div class="page"><h1>Inventaire</h1><a class="retour" href="#" id="retour">Retour</a>'+corps+'</div>';
 }
 function invOuvrir(){
-  invPage('<div id="invapp"><div class="bandeau" id="invatt">▪ UN INSTANT</div></div>');
+  invPage('<div id="invapp"><div class="att" id="invatt"><i></i></div></div>');
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   invLire().then(function(r){
     if(!document.getElementById("invapp")) return;
-    if(!(r && r.ok)){ var a = document.getElementById("invatt"); if(a){ a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = invOuvrir; } return; }
+    if(!(r && r.ok)){ var a = document.getElementById("invatt"); if(a){ a.className = "bandeau"; a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = invOuvrir; } return; }
     INV.d = r; if(!INV.cat) INV.cat = (r.produits[0] || {}).categorie || ""; if(INV.vue === "reception" && invDroitReception()) invReception(); else { if(INV.vue === "stocks" && !invDroitReception()) INV.vue = "sortie"; invListe(); }
-  }).catch(function(){ var a = document.getElementById("invatt"); if(a){ a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = invOuvrir; } });
+  }).catch(function(){ var a = document.getElementById("invatt"); if(a){ a.className = "bandeau"; a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = invOuvrir; } });
 }
 function invCategories(){ var v = {}, o = []; (INV.d.produits || []).forEach(function(p){ if(!v[p.categorie]){ v[p.categorie] = 1; o.push(p.categorie); } }); return o.sort(function(a, b){ return invNorm(a) < invNorm(b) ? -1 : 1; }); }
 function invListe(){

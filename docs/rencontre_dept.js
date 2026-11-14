@@ -127,7 +127,7 @@ function rdPuces(t){
     var m = /^\s*([•▪\-–])\s+(.*)$/.exec(l);
     return m ? '<div class="pu"><span>'+rdE(m[1] === "-" || m[1] === "–" ? "•" : m[1])+'</span><span>'+rdE(m[2])+'</span></div>' : '<div>'+rdE(l)+'</div>'; }).join("");
 }
-function rdMsg(txt){ return '<div class="bandeau">▪ '+rdE(String(txt).toUpperCase())+'</div>'; }
+function rdMsg(txt){ if(/^un instant$/i.test(String(txt))) return '<div class="att"><i></i></div>'; return '<div class="bandeau">▪ '+rdE(String(txt).toUpperCase())+'</div>'; }
 function rdErreur(r){ var e = r && r.erreur ? String(r.erreur) : ""; return rdMsg(e || "Indisponible · réessayez"); }
 function rdTitreDep(){ return "Réunion production"; }   // le département est indiqué par les pastilles
 

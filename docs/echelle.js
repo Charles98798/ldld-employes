@@ -13,7 +13,7 @@ function echFr(v, d){ return v == null ? "" : echArr(v, d).toFixed(d).replace(".
 function echNum(t){ t = String(t == null ? "" : t).replace(/\s/g, "").replace("$", "").replace("%", "").replace(",", "."); if(t === "") return null; var n = Number(t); return isNaN(n) ? null : n; }
 function echCase(id, v, suf, large){ return '<div class="echc"><input id="' + id + '" inputmode="decimal" autocomplete="off" class="' + (v == null ? "vide" : "") + '" value="' + echEsc(echFr(v, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1")) + '"><u>' + suf + '</u></div>'; }
 function echOuvrir(){
-  app.innerHTML = '<div class="page ppx ech"><h1><span style="white-space:nowrap;font-size:.8em;letter-spacing:.04em">Échelle salariale <span style="white-space:nowrap">'+FLECHE_TXT+'taux</span></span></h1><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"><div class="bandeau" id="ech_att">▪ UN INSTANT</div></div></div>';
+  app.innerHTML = '<div class="page ppx ech"><h1><span style="white-space:nowrap;font-size:.8em;letter-spacing:.04em">Échelle salariale <span style="white-space:nowrap">'+FLECHE_TXT+'taux</span></span></h1><a class="retour" href="#" id="retour">Retour</a><div id="ech_app"><div class="att" id="ech_att"><i></i></div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var dejaVu = !!ECH.d; if(dejaVu) echRendu();   // déjà lu pendant cette session (mémoire seulement, jamais sur l'appareil): affiché tout de suite, vérifié en silence
   var pre = (ECH.pre && Date.now() - ECH.preT < 180000) ? ECH.pre : null; ECH.pre = null;
@@ -25,8 +25,8 @@ function echOuvrir(){
   Promise.race([base, garde]).then(function(r){
     if(!document.getElementById("ech_app")) return;
     if(r && r.ok){ if(dejaVu && (JSON.stringify(r.r) === JSON.stringify(ECH.d) || (document.activeElement && document.activeElement.tagName === "INPUT"))) return; ECH.d = r.r; echRendu(); }
-    else { var a = document.getElementById("ech_att"); if(a){ a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = echOuvrir; } }
-  }).catch(function(){ var a = document.getElementById("ech_att"); if(a){ a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = echOuvrir; } });
+    else { var a = document.getElementById("ech_att"); if(a){ a.className = "bandeau"; a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = echOuvrir; } }
+  }).catch(function(){ var a = document.getElementById("ech_att"); if(a){ a.className = "bandeau"; a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = echOuvrir; } });
 }
 function echSauver(champ, valeur){
   var et = document.getElementById("ech_etat"); if(et) et.textContent = "Enregistrement…";
@@ -67,7 +67,7 @@ function echSelLier(){
 }
 function echActuelle(){
   var z = document.getElementById("ech_app");
-  z.innerHTML = echSel() + '<div class="bandeau" id="ech_att">▪ UN INSTANT</div>'; echSelLier();
+  z.innerHTML = echSel() + '<div class="att" id="ech_att"><i></i></div>'; echSelLier();
   var rendre = function(r){
     var E = null; ((r && r.r && r.r.echelles) || (r && r.echelles) || []).forEach(function(e){ if(e.actuelle) E = e; });
     if(!E){ z.innerHTML = echSel() + '<div class="bandeau">▪ ÉCHELLE EN COURS INDISPONIBLE</div>'; echSelLier(); return; }
