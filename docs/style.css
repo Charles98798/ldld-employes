@@ -1085,16 +1085,16 @@ select:not(.act){width:100%;box-sizing:border-box}
 .aepbts{display:flex;flex-wrap:wrap;gap:8px}.aepbts .bouton{width:auto;flex:1 1 30%;margin:0;padding:12px 8px;font-size:14px}.aepsup{background:#9B3B2E;color:#fff}.aepavis{font-size:13px}
 @media (max-width:560px){.aepent{display:none}.aepr{grid-template-columns:1fr 1fr}.aepr .aepn{grid-column:1/-1}.aepr .aeps{grid-column:1/-1}}
 .aepbt3{display:flex;gap:4px;flex-wrap:wrap}.aepn3{font:inherit;font-size:12px;background:#B7B1A5;color:#1D1D1B;border:0;padding:8px;flex:1 1 auto;cursor:pointer}.aepn3.on{background:#8EFF60}
-.aeplst{position:relative;display:block}.aepsel{appearance:none;-webkit-appearance:none;width:100%;font:inherit;font-size:13px;color:#1D1D1B;background:#B7B1A5;border:0;border-radius:0;padding:11px 28px 11px 10px}.aeplst::after{content:"";position:absolute;right:11px;top:50%;width:6px;height:6px;border-right:2px solid #1D1D1B;border-bottom:2px solid #1D1D1B;transform:translateY(-70%) rotate(45deg);pointer-events:none}
 .aere{font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;white-space:nowrap;background:#E9C9C9;color:#1D1D1B}.aere.ok{background:#8EFF60}
 
 /* Planification évaluation: une seule ligne par employé, même format partout */
-.aepent,.aepr{display:grid;grid-template-columns:minmax(0,1fr) 40px 40px 108px;gap:6px;align-items:center}
+.aepent,.aepr{display:grid;grid-template-columns:minmax(0,1fr) 38px 38px 110px;gap:5px;align-items:center}
 .aepent{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#6E6350;padding:0 8px 4px}
 .aepr{padding:7px 8px;font-size:12px;white-space:nowrap}
 .aepr .aepn1{overflow:hidden;text-overflow:ellipsis;font-weight:500;font-size:12px}
 .aepr .aepc{font-size:12px;line-height:1.15;padding:0}.aepr .aepc small{font-size:10px}
-.aepr .aeplst .aepsel{font-size:12px!important;padding:9px 20px 9px 8px!important;height:auto!important;min-height:0!important;letter-spacing:0!important;text-transform:none!important}
 .aepsec{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6E6350;margin:18px 0 8px}
 .aepr .aepedit{white-space:normal}
 #aepp,#aepz,.aepent{max-width:760px}
+/* Planification: liste déroulante du style A de l'app, seulement réduite pour tenir sur une ligne */
+.aepr select.aepsel{min-height:40px;width:100%;font-size:12px!important;padding:0 24px 0 8px!important;background-position:right 8px center!important}
