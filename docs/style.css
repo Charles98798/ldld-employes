@@ -610,10 +610,10 @@ textarea.bx{min-height:90px;resize:vertical}
 .demarrage{position:relative;overflow:hidden}
 @media (prefers-reduced-motion:no-preference){.demarrage .lgl{display:block}}
 @keyframes lgN{from{opacity:0}to{opacity:1}}
-@keyframes lgHL{0%{transform:translateX(-125px)}100%{transform:translateX(230px)}}
-@keyframes lgHR{0%{transform:translateX(230px)}100%{transform:translateX(-125px)}}
-@keyframes lgVT{0%{transform:translateY(-320px)}100%{transform:translateY(420px)}}
-@keyframes lgVB{0%{transform:translateY(420px)}100%{transform:translateY(-320px)}}
+@keyframes lgHL{0%{transform:translateX(calc(-1 * max(125px, 50vw + 140px)))}100%{transform:translateX(max(230px, 50vw + 160px))}}
+@keyframes lgHR{0%{transform:translateX(max(230px, 50vw + 160px))}100%{transform:translateX(calc(-1 * max(125px, 50vw + 140px)))}}
+@keyframes lgVT{0%{transform:translateY(calc(-1 * max(320px, 50vh + 370px)))}100%{transform:translateY(max(420px, 50vh + 140px))}}
+@keyframes lgVB{0%{transform:translateY(max(420px, 50vh + 140px))}100%{transform:translateY(calc(-1 * max(320px, 50vh + 370px)))}}
 @keyframes lgA{from{transform:translateX(-90px);opacity:0}to{transform:none;opacity:1}}
 @keyframes lgB{from{transform:translateX(90px);opacity:0}to{transform:none;opacity:1}}
 @keyframes lgT{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
