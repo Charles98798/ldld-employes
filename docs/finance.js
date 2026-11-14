@@ -1,14 +1,14 @@
 // Finance (Conseil: pourcentages seulement; Finances, Direction: avec montants). Les chiffres viennent de QuickBooks par le service (finance_mensuel), aucun montant dans ce code.
 var FIN_MOIS = ["JANV.","FÉVR.","MARS","AVR.","MAI","JUIN","JUIL.","AOÛT","SEPT.","OCT.","NOV.","DÉC."];
 var FIN_MOIS_LONG = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-var FIN_R = null, FIN_DERNIER = 0, FIN_PERIODE = "A", FIN_TOK = 0, FIN_S = null;
+var FIN_TITRE = "Indicateurs", FIN_R = null, FIN_DERNIER = 0, FIN_PERIODE = "A", FIN_TOK = 0, FIN_S = null;
 function finCharger(ok){
   var tok = ++FIN_TOK, vu = false;
   var tm = setTimeout(function(){ if(tok !== FIN_TOK) return; vu = true;
-    app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>Finance</h1></div><a class="retour" href="#" id="retour">Retour</a></div>';
+    app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>' + FIN_TITRE + '</h1></div><a class="retour" href="#" id="retour">Retour</a></div>';
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); FIN_TOK++; finRetour(); }; }, 250);
   function echec(m){ clearTimeout(tm); if(tok !== FIN_TOK) return;
-    app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>Finance</h1></div><div class="bandeau">▪ ' + m + ' · RÉESSAYEZ</div><a class="retour" href="#" id="retour">Retour</a></div>';
+    app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>' + FIN_TITRE + '</h1></div><div class="bandeau">▪ ' + m + ' · RÉESSAYEZ</div><a class="retour" href="#" id="retour">Retour</a></div>';
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); FIN_TOK++; finRetour(); }; }
   var fini = false;
   function recu(r){
@@ -72,11 +72,12 @@ function finRendu(){
   document.getElementById("fin_corps").innerHTML = h;
 }
 function financeOuvrir(){
+  FIN_TITRE = "Indicateurs";
   finCharger(function(){
     var o = '<option value="A">Année ' + FIN_R.annee + '</option>', i;
     for(i=1;i<=4;i++) if((i-1)*3 <= FIN_DERNIER) o += '<option value="T' + i + '">Trimestre ' + i + '</option>';
     for(i=0;i<=FIN_DERNIER;i++) o += '<option value="M' + i + '">' + FIN_MOIS_LONG[i].charAt(0).toUpperCase() + FIN_MOIS_LONG[i].slice(1) + ' ' + FIN_R.annee + '</option>';
-    app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>Finance</h1></div>' +
+    app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>' + FIN_TITRE + '</h1></div>' +
       '<div class="finsous">' + (FIN_ORIGINE === "finances" ? "Finances" : "Conseil d\'administration") + '</div>' +
       '<select class="finsel" id="fin_sel">' + o + '</select><div id="fin_corps"></div>' +
       '<a class="retour" href="#" id="retour">Retour</a></div>';
@@ -163,9 +164,10 @@ function fgGraphique(type){
 var FG_PAGES = {ratios:["01","Ratios vs objectifs","Marge brute, salaires et achats, en % des ventes"], ventes:["02","Ventes vs an passé","Disponible en 2027"], tres:["03","Trésorerie","Solde de fin de mois et flux net"], cli:["04","Comptes clients","À recevoir selon l'ancienneté de la facture"]};
 function financeGraphique(type){
   var pg = FG_PAGES[type];
+  FIN_TITRE = {ratios: "Ratios par catégorie", ventes: "Ventes vs an passé", tres: "Trésorerie", cli: "Comptes clients"}[type];
   finCharger(function(){
     var sel = (type === "ventes" || type === "cli") ? "" : fgSel();
-    app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>Finance</h1></div><div class="finsous">' + (FIN_ORIGINE === "finances" ? "Finances" : "Conseil d\'administration") + '</div>' +
+    app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>' + FIN_TITRE + '</h1></div><div class="finsous">' + (FIN_ORIGINE === "finances" ? "Finances" : "Conseil d\'administration") + '</div>' +
       '<div class="sect"><span class="num">'+pg[0]+'</span><span class="lab">'+pg[1]+'</span></div><div class="fgdesc">'+pg[2]+'</div>' + sel + fgGraphique(type) +
       '<a class="retour" href="#" id="retour">Retour</a></div>';
     Array.prototype.forEach.call(document.querySelectorAll(".fgsel select"), function(el){
@@ -203,10 +205,10 @@ function financesMenu(){
 }
 // Copie des ratios par catégorie avec les montants (Direction seulement), de janvier à la date des données
 function financesRatios(){
-  FIN_ORIGINE = "finances";
+  FIN_ORIGINE = "finances"; FIN_TITRE = "Ratios par catégorie";
   finCharger(function(){
     var ms = finMois("A");
-    var h = '<div class="page ppx fin"><a class="retour" href="#" id="retour">Retour</a><h1>Ratios</h1><div class="finnote">Pourcentage des ventes et montant, du 1er janvier au ' + finDate() + '</div>';
+    var h = '<div class="page ppx fin"><a class="retour" href="#" id="retour">Retour</a><h1>Ratios par catégorie</h1><div class="finnote">Pourcentage des ventes et montant, du 1er janvier au ' + finDate() + '</div>';
     FIN_S.sections.forEach(function(sec, i){
       h += '<div class="sect"><span class="num">0'+(i+1)+'</span><span class="lab">'+sec.t+'</span></div><div class="fincols m"><span></span><span>%</span><span>MONTANT</span></div>';
       sec.l.forEach(function(l){ h += '<div class="finl m"><span class="n">▪ '+l.n+'</span><span>'+finPct(finRatio(l, ms))+'</span><span>'+finMontant(finSom(l.num, ms))+'</span></div>'; });
