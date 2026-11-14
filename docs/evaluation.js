@@ -51,7 +51,7 @@ function aepPlanification(){
       var h = '<div class="aepl aepr"><span class="aepn">' + esc(x.nom) + '<small>' + esc(x.resp) + '</small></span>' +
         '<button type="button" class="aepc' + (p1 ? ' pas' : '') + '" data-id="' + esc(x.id) + '" data-n="1">' + aepFmt(x.d1, x.h1) + aepEtq(x.d1, x.d1 === pro && !p1, t) + '</button>' +
         '<button type="button" class="aepc' + (p2 ? ' pas' : '') + '" data-id="' + esc(x.id) + '" data-n="2">' + aepFmt(x.d2, x.h2) + aepEtq(x.d2, x.d2 === pro && !p2 && x.d1 !== pro, t) + '</button>' +
-        '<span class="aeps aepbt3">' + [["1", "1 rencontre"], ["2", "2 rencontres"], ["0", "Aucune"]].map(function(q){ var n = x.d1 && x.d2 ? "2" : x.d1 ? "1" : "0"; return '<button type="button" class="aepn3' + (n === q[0] ? ' on' : '') + '" data-id="' + esc(x.id) + '" data-q="' + q[0] + '">' + q[1] + '</button>'; }).join("") + '</span>';
+        '<span class="aeps aeplst"><select class="aepsel" data-id="' + esc(x.id) + '" aria-label="Rencontres de ' + esc(x.nom) + '">' + [["1", "1 rencontre"], ["2", "2 rencontres"], ["0", "Aucune rencontre"]].map(function(q){ var n = x.d1 && x.d2 ? "2" : x.d1 ? "1" : "0"; return '<option value="' + q[0] + '"' + (n === q[0] ? ' selected' : '') + '>' + q[1] + '</option>'; }).join("") + '</select></span>';
       if(ouvert && ouvert.id === x.id){
         var d = ouvert.n === 1 ? x.d1 : x.d2, hh = ouvert.n === 1 ? x.h1 : x.h2;
         h += '<div class="aepedit"><b>Rencontre ' + ouvert.n + '</b><label>Date<input type="date" id="aepd" min="' + t + '" value="' + esc(d) + '"></label><label>Heure<input type="time" id="aeph" value="' + esc(hh || "") + '"></label>' +
@@ -60,8 +60,8 @@ function aepPlanification(){
       return h + '</div>';
     }).join("");
     Array.prototype.forEach.call(z.querySelectorAll("button.aepc"), function(b){ b.onclick = function(){ ouvert = {id: b.getAttribute("data-id"), n: +b.getAttribute("data-n")}; msg(""); afficher(); }; });
-    Array.prototype.forEach.call(z.querySelectorAll("button.aepn3"), function(b){ b.onclick = function(){
-      var id = b.getAttribute("data-id"), q = b.getAttribute("data-q"), x = liste().filter(function(y){ return y.id === id; })[0]; if(!x) return;
+    Array.prototype.forEach.call(z.querySelectorAll("select.aepsel"), function(b){ b.onchange = function(){
+      var id = b.getAttribute("data-id"), q = b.value, x = liste().filter(function(y){ return y.id === id; })[0]; if(!x) return;
       var n = x.d1 && x.d2 ? "2" : x.d1 ? "1" : "0"; if(n === q) return;
       if(q === "2") ouvert = {id: id, n: 2}; else if(q === "1") ouvert = x.d1 ? {id: id, n: 2, retrait: true} : {id: id, n: 1};
       else ouvert = x.d2 ? {id: id, n: 2, retrait: true, puis: x.d1 ? 0 : -1} : {id: id, n: 1, retrait: true};
