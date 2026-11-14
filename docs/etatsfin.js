@@ -138,7 +138,7 @@ function efDessiner(r){
   h += '<a class="retour" href="#" id="retour">Retour</a></div>';
   app.innerHTML = h;
   try { window.scrollTo(0, 0); } catch(e) {}
-  perLier("ef", function(v){ EF_P = v; try { efDessiner(efPeriode()); } catch(e){ efErreur("ERREUR " + String(e && e.message || e).slice(0, 80).toUpperCase()); } });
+  perLier("ef", function(v){ EF_P = v; try { efDessiner(efPeriode()); } catch(e){ efErreur("ERREUR " + String(e && e.message || e).slice(0, 80).toUpperCase()); } }, function(){ return EF_P; });
   Array.prototype.forEach.call(document.querySelectorAll(".efr"), function(r){
     r.onclick = function(){ var o = r.classList.toggle("o"); r.querySelector(".efm").textContent = o ? "\u2212" : "+"; };
   });

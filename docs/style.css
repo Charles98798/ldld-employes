@@ -1062,4 +1062,4 @@ select:not(.act){width:100%;box-sizing:border-box}
 .fin select.finsel{width:100%;box-sizing:border-box;text-align:center;text-align-last:center;-moz-text-align-last:center;padding-left:34px;padding-right:34px}
 .fin .finper{display:grid;grid-template-columns:76px 1fr 1.15fr;gap:4px;margin-bottom:14px}
 .fin .finper select.finsel{width:100%;min-width:0;margin:0;text-align:left;text-align-last:left;font-size:12px!important;padding:0 24px 0 8px!important;background-position:right 8px center!important}
-.fin .finper select.finsel:disabled{opacity:.4}
+.fin .finper select.finsel.inact{opacity:.4}
