@@ -206,7 +206,7 @@ function copieHeures(corps){
   });
 }
 // Domaines lus dans la copie (une réponse par employé, même forme que le service). Ligne absente, purgée, en erreur ou trop vieille: Google répond.
-var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1, ech_donnees:1, calendrier:1, rd_chiffres:1, prix_soumissions:1, employes_etat:1, charge_equipe:1, entretien_lire:1, equipe_groupes:1, contacts:1, equipe:1, parking_lire:1, stationnement:1, prefs_lire:1, utilisation:1, onglets_lire:1, production_lire:1, absences_equipe:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
+var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1, ech_donnees:1, calendrier:1, rd_chiffres:1, prix_soumissions:1, employes_etat:1, charge_equipe:1, entretien_lire:1, equipe_groupes:1, contacts:1, equipe:1, parking_lire:1, stationnement:1, prefs_lire:1, utilisation:1, onglets_lire:1, production_lire:1, absences_equipe:1, inv_lire:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
 function copieCle(domaine, corps){   // domaines à plusieurs clés: Réunion production (rd_chiffres) = section|département|du|au (la charge ne dépend pas de la période)
   if(domaine !== "rd_chiffres" || !corps) return "";
   var ch = corps.section === "charge";
@@ -253,7 +253,7 @@ function appelDirectGoogle(corps, vu){
 
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
-var LECT = {evenements_employe:1, rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1, prix_soumissions:1, ef_donnees:1, finance_mensuel:1};
+var LECT = {inv_lire:1, evenements_employe:1, rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1, prix_soumissions:1, ef_donnees:1, finance_mensuel:1};
 var NEUTRE = {absences_equipe:1, tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 // Copie gardée sur l'appareil (affichée tout de suite à l'ouverture, remplacée en silence par la version fraîche). JAMAIS de salaire ni de rémunération (Portrait, Échelle, Positionnement, Embauche, Employé actuel restent en mémoire seulement).

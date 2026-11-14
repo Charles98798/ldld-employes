@@ -40,7 +40,16 @@ function invLierOnglets(){
 function invE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function invNorm(t){ return String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim(); }
 // Lecture: pour l'instant les produits fictifs (copie, pour que les essais ne modifient pas la liste d'origine).
-function invLire(){ return Promise.resolve({ok: true, fictif: true, produits: INV_FICTIF}); }
+// INV_LECTURE: quand le Service saura répondre à « inv_lire » (copie Supabase alimentée par les vues Trak de Michel, domaine « inv_lire »), passer à true.
+// Forme de la réponse: {ok:true, maj_t, produits:[{id, description, categorie, fournisseur, unite, par, stock, ideal, minimum, mode:"deduire"|"commander"}], reception:[{id, fournisseur, date, code, description, commande, prix}]}. Jamais de prix de vente ni de coût dans produits.
+var INV_LECTURE = false;
+function invLire(){
+  if(!INV_LECTURE) return Promise.resolve({ok: true, fictif: true, produits: INV_FICTIF});
+  return appelService({action: "inv_lire", session: sessionGardee()}).then(function(r){
+    if(r && r.ok && Array.isArray(r.produits)){ INV.rec = (r.reception || []).map(function(x){ return Object.assign({}, x, {prix: x.prix == null ? "" : String(x.prix)}); }); }
+    return r;
+  });
+}
 // Point unique d'écriture. Désactivé: aucune écriture réelle, la réponse simule un succès clairement marqué comme essai.
 function invEcrire(action, corps){
   if(!INV_ECRITURE) return Promise.resolve({ok: true, essai: true});
