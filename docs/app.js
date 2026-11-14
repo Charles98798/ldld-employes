@@ -1,4 +1,4 @@
-var APP_PUB = "514";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "515";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2661,12 +2661,21 @@ function evenementsEmploye(idEl){
       .filter(function(x){ return x.j >= tn; });
     liste.sort(function(a, b){ return a.tri < b.tri ? -1 : a.tri > b.tri ? 1 : 0; });
     if(!liste.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR POUR VOUS</div>'; return; }
-    var h = "", mois = "";
+    var h = "", mois = "", groupes = [];
+    function ts(j){ var q = j.split("-"); return Date.UTC(+q[0], +q[1] - 1, +q[2]) / 86400000; }
     liste.forEach(function(x){
+      var g = groupes[groupes.length - 1], simple = !x.h && !x.d;
+      if(g && simple && g.simple && g.t === x.t && g.fin.slice(0, 7) === x.j.slice(0, 7)){
+        var ecart = ts(x.j) - ts(g.fin), dsem = new Date(ts(g.fin) * 86400000).getUTCDay();
+        if(ecart === 0 || ecart === 1 || (dsem === 5 && ecart === 3)){ g.fin = x.j; return; }
+      }
+      groupes.push({j:x.j, fin:x.j, h:x.h, t:x.t, simple:simple});
+    });
+    groupes.forEach(function(x){
       var mk = x.j.slice(0, 7);
       if(mk !== mois){ mois = mk; h += '<div class="emois">'+esc(MOIS_LONGS[+mk.slice(5, 7) - 1])+' '+mk.slice(0, 4)+'</div>'; }
-      var a = x.j.split("-"), dj = new Date(+a[0], +a[1] - 1, +a[2]).getDay();
-      h += '<div class="eev1'+(x.j === tn ? ' auj' : '')+'"><span class="ej">'+JOURS_COURTS_E[dj]+' '+(+a[2])+'</span><span class="eh">'+esc(x.h)+'</span><span class="et">'+esc(x.t)+'</span></div>';
+      var a = x.j.split("-"), dj = new Date(+a[0], +a[1] - 1, +a[2]).getDay(), jl = x.fin !== x.j ? (+a[2])+" au "+(+x.fin.split("-")[2]) : JOURS_COURTS_E[dj]+" "+(+a[2]);
+      h += '<div class="eev1'+(x.j === tn ? ' auj' : '')+(x.fin !== x.j ? ' grp' : '')+'"><span class="ej">'+jl+'</span><span class="eh">'+esc(x.h)+'</span><span class="et">'+esc(x.t)+'</span></div>';
     });
     el.innerHTML = h;
   }
@@ -2939,16 +2948,3 @@ if("serviceWorker" in navigator){
   window.addEventListener("resize", largeur); window.addEventListener("orientationchange", function(){ setTimeout(largeur, 250); });
   if(window.visualViewport) window.visualViewport.addEventListener("resize", largeur);
 })();
-
-// Diagnostic TEMPORAIRE (Direction seulement): tant qu'une page reste sur « Un instant », affiche les appels en cours et leur âge.
-setInterval(function(){
-  try {
-    var pg = app.querySelector(".page"), d = document.getElementById("diagtmp");
-    var att = pg && MOI && MOI.role === "direction" && /UN INSTANT/.test(pg.textContent) && !app.querySelector(".demarrage");
-    if(!att){ if(d) d.remove(); return; }
-    if(!d){ d = document.createElement("div"); d.id = "diagtmp"; d.style.cssText = "position:fixed;left:12px;right:12px;bottom:90px;font:10px/13px monospace;color:#1D1D1B;background:#B7B1A5;padding:6px;z-index:9999;white-space:pre-wrap;pointer-events:none"; document.body.appendChild(d); }
-    var nu = Date.now();
-    d.textContent = "pub " + APP_PUB + " | en cours " + APPELS_EN_COURS + " | file " + FILE_APPELS.length + " | vue " + (VUE.on ? "oui" : "non") + "\n" +
-      EN_VOL.filter(function(v){ return !v.fini; }).map(function(v){ return v.a + " " + Math.round((nu - v.t)/1000) + "s"; }).join(", ") + "\nfile: " + FILE_APPELS.slice(0, 8).map(function(x){ return (x.c && x.c.action) + (x.bg ? "(ar)" : ""); }).join(", ");
-  } catch(e){}
-}, 1000);
