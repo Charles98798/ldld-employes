@@ -56,6 +56,116 @@ function finPct(v){ return (Math.round(v) === 0 ? 0 : Math.round(v)) + " %"; }
 function finEcart(v){ var n = Math.round(v); return n > 0 ? "+" + n : String(n); }
 function finMontant(v){ return Math.round(v).toLocaleString("fr-CA").replace(/ /g, " ") + " $"; }
 function finDate(){ var d = new Date(FIN_R && FIN_R.maj); if(isNaN(d.getTime())) d = new Date(); return d.getDate() + " " + FIN_MOIS_LONG[d.getMonth()]; }
+var FIN_ML = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+function perDefaut(annee, n){ var d = new Date(); return (String(annee) === String(d.getFullYear()) && n > 0) ? "M" + Math.min(d.getMonth(), n - 1) : "A"; }
+function perHtml(P, annee, n, pre){
+  var m = '<option value="">Tous les mois</option>', t = '<option value="">Tous les trimestres</option>', i;
+  for(i = 0; i < n; i++) m += '<option value="M' + i + '"' + (P === "M" + i ? " selected" : "") + '>' + FIN_ML[i] + '</option>';
+  for(i = 1; i <= 4; i++) if((i - 1) * 3 < n) t += '<option value="T' + i + '"' + (P === "T" + i ? " selected" : "") + '>Trimestre ' + i + '</option>';
+  return '<div class="finper"><select class="finsel" id="' + pre + '_a"><option>' + annee + '</option></select>' +
+    '<select class="finsel" id="' + pre + '_m"' + (P.charAt(0) === "T" ? " disabled" : "") + '>' + m + '</select>' +
+    '<select class="finsel" id="' + pre + '_t"' + (P.charAt(0) === "M" ? " disabled" : "") + '>' + t + '</select></div>';
+}
+function perLier(pre, fn){
+  ["m", "t"].forEach(function(k){ var s = document.getElementById(pre + "_" + k); if(s) s.onchange = function(){ fn(this.value || "A"); }; });
+}
+function finRendu(){
+  var ms = finMois(FIN_PERIODE), h = "";
+  var der = ms.length ? ms[ms.length-1] : null;
+  var cols = '<div class="fincols"><span></span><span></span><span>OBJ.</span><span>ÉCART</span></div>';
+  FIN_S.sections.forEach(function(s, i){
+    h += '<div class="sect"><span class="num">0' + (i+1) + '</span><span class="lab">' + s.t + '</span></div>' + (i === 0 ? cols : '');
+    s.l.forEach(function(l){
+      var moy = ms.length ? finRatio(l, ms) : null;
+      h += '<div class="finl"><span class="n">' + l.n + '</span><span>' + (moy === null ? "—" : finPct(moy)) + '</span>' +
+        '<span class="obj">' + (l.obj === null ? "" : l.obj + " %") + '</span><span>' + (l.obj === null || moy === null ? "" : finEcart(Math.round(moy) - l.obj)) + '</span></div>';
+      if(l.n === "Achat" && FIN_R && FIN_R.achatsFourn && FIN_R.achatsFourn.top && FIN_R.achatsFourn.top.length){
+        var af = FIN_R.achatsFourn;
+        h += '<a class="fglnk" href="#" data-k="achat">Voir les plus gros fournisseurs</a><div class="fgtop" id="fgtop_achat" hidden>';
+        var lst = (FIN_ORIGINE === "conseil") ? af.top.filter(function(x){ return !/atlantis|charles/i.test(String(x[0])); }).slice(0, 15) : af.top;
+        lst.forEach(function(x, i){ h += '<div class="fgtl fgtl3"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (af.total ? finPct(x[1] / af.total * 100) : "") + '</span></div>'; });
+        h += '</div>';
+      }
+    });
+  });
+  h += '<div class="finnote">Données au ' + finDate() + ' · Écart en points</div>';
+  document.getElementById("fin_corps").innerHTML = h;
+  finLiens();
+}
+function finLiens(){   // boutons « Voir les … comptes » (lien souligné vert): ouvre ou referme la liste qui suit
+  Array.prototype.forEach.call(document.querySelectorAll(".fglnk"), function(a){
+    var n = a.getAttribute("data-k") === "achat" ? 15 : 10;
+    a.onclick = function(e){ e.preventDefault(); var d = document.getElementById("fgtop_" + a.getAttribute("data-k")), ouvre = d.hidden; d.hidden = !ouvre; a.textContent = ouvre ? (n === 15 ? "Masquer les fournisseurs" : "Masquer les comptes") : (n === 15 ? "Voir les plus gros fournisseurs" : "Voir les 10 comptes"); }; });
+}
+function finPerChoix(v){ FIN_PERIODE = v; document.querySelector(".finper").outerHTML = perHtml(v, FIN_R.annee, FIN_DERNIER + 1, "fin"); perLier("fin", finPerChoix); finRendu(); }
+function financeOuvrir(){
+  FIN_TITRE = "Indicateurs";
+  finCharger(function(){
+    FIN_PERIODE = perDefaut(FIN_R.annee, FIN_DERNIER + 1);
+    app.innerHTML = '<div class="page ppx fin sans-instant"><div class="pph"><h1>' + FIN_TITRE + '</h1></div><div class="att"><i></i></div><a class="retour" href="#" id="retour">Retour</a></div>';
+    document.getElementById("retour").onclick = function(e){ e.preventDefault(); FIN_TOK++; finRetour(); }; }, 250);
+  function echec(m){ clearTimeout(tm); if(tok !== FIN_TOK) return;
+    app.innerHTML = '<div class="page ppx fin sans-instant"><div class="pph"><h1>' + FIN_TITRE + '</h1></div><div class="bandeau">▪ ' + m + ' · RÉESSAYEZ</div><a class="retour" href="#" id="retour">Retour</a></div>';
+    document.getElementById("retour").onclick = function(e){ e.preventDefault(); FIN_TOK++; finRetour(); }; }
+  var fini = false;
+  function recu(r){
+    if(fini || tok !== FIN_TOK) return;
+    if(r && r.ok && r.mois && r.mois.length){ fini = true; clearTimeout(tm); try { if(typeof efNettoyer === "function") efNettoyer(r); FIN_R = r; finPreparer(r); ok(r); } catch(e){ echec("ERREUR " + String(e && e.message || e).slice(0, 80).toUpperCase()); } }
+    else if(r && r.erreur){ fini = true; echec(String(r.erreur).toUpperCase()); }
+  }
+  appelService({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){});
+  // Si la lecture préchargée traîne dans la file, un appel direct (clic) part après 5 s; au bout de 40 s: message d'erreur
+  setTimeout(function(){ if(!fini && tok === FIN_TOK) appelBrut({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){}); }, 5000);
+  setTimeout(function(){ if(!fini && tok === FIN_TOK){ fini = true; echec("INDISPONIBLE"); } }, 40000);
+}
+function finCodes(r, a, b){ var o = []; Object.keys(r.comptes).forEach(function(k){ if(+k >= a && +k <= b) o.push(r.comptes[k]); }); return o; }
+function finSomme(n, listes){ var t = [], i; for(i=0;i<n;i++){ t[i] = 0; listes.forEach(function(l){ t[i] += (l && l[i]) || 0; }); } return t; }
+function finPreparer(r){
+  var n = r.mois.length, o = r.objectifs || {}, T = r.totaux || {};
+  FIN_DERNIER = n - 1;
+  var ventes = (T["Total des revenus"] || finSomme(n, finCodes(r, 4000, 4999))).slice(0, n);
+  var cout = (T["Total du coût des marchandises vendues"] || finSomme(n, finCodes(r, 5000, 7199)));
+  var marge = ventes.map(function(v, i){ return v - (cout[i] || 0); });
+  var achat = finSomme(n, finCodes(r, 6110, 6200));
+  var cats = [["Fixe", finSomme(n, finCodes(r, 5105, 5290))], ["Acrylique", finSomme(n, finCodes(r, 5405, 5490))], ["Pièce", finSomme(n, finCodes(r, 5305, 5390))], ["Gestion", finSomme(n, finCodes(r, 5705, 5790))]];
+  var sal = finSomme(n, cats.map(function(c){ return c[1]; }));
+  var rep = [["Fixe", finSomme(n, [].concat(finCodes(r, 4100, 4210)))], ["Acrylique", finSomme(n, finCodes(r, 4400, 4410))], ["Pièces", finSomme(n, finCodes(r, 4300, 4300))], ["Ortho", finSomme(n, finCodes(r, 4430, 4430))]];
+  var repTot = finSomme(n, rep.map(function(c){ return c[1]; }));
+  function L(nom, num, den, obj){ return {n: nom, num: num, den: den, obj: (obj === undefined ? null : obj)}; }
+  FIN_S = {ventes: ventes, marge: marge, achat: achat, sal: sal,
+    sections: [
+      {t: "Principaux indicateurs", l: [L("Achat", achat, ventes, o.achat), L("Marge brute", marge, ventes, o.marge), L("Salaires totaux", sal, ventes, o.salaires)]},
+      {t: "Salaire", l: cats.map(function(c){ return L(c[0], c[1], ventes); }).concat([L("Total", sal, ventes, o.salaires)])},
+      {t: "Répartition des ventes", l: rep.map(function(c){ return L(c[0], c[1], repTot); })}]};
+}
+function finSom(a, ms){ var t = 0; ms.forEach(function(m){ t += (a[m] || 0); }); return t; }
+function finRatio(l, ms){ var d = finSom(l.den, ms); return d ? finSom(l.num, ms) / d * 100 : 0; }
+function finMois(p){
+  var r=[], i, a, b;
+  if(p === "A"){ a=0; b=FIN_DERNIER; }
+  else if(p.charAt(0) === "T"){ var q = +p.charAt(1)-1; a = q*3; b = Math.min(q*3+2, FIN_DERNIER); }
+  else { a = b = +p.slice(1); }
+  if(a > FIN_DERNIER) return [];
+  for(i=a;i<=b;i++) r.push(i);
+  return r;
+}
+function finPct(v){ return (Math.round(v) === 0 ? 0 : Math.round(v)) + " %"; }
+function finEcart(v){ var n = Math.round(v); return n > 0 ? "+" + n : String(n); }
+function finMontant(v){ return Math.round(v).toLocaleString("fr-CA").replace(/ /g, " ") + " $"; }
+function finDate(){ var d = new Date(FIN_R && FIN_R.maj); if(isNaN(d.getTime())) d = new Date(); return d.getDate() + " " + FIN_MOIS_LONG[d.getMonth()]; }
+var FIN_ML = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+function perDefaut(annee, n){ var d = new Date(); return (String(annee) === String(d.getFullYear()) && n > 0) ? "M" + Math.min(d.getMonth(), n - 1) : "A"; }
+function perHtml(P, annee, n, pre){
+  var m = '<option value="">Tous les mois</option>', t = '<option value="">Tous les trimestres</option>', i;
+  for(i = 0; i < n; i++) m += '<option value="M' + i + '"' + (P === "M" + i ? " selected" : "") + '>' + FIN_ML[i] + '</option>';
+  for(i = 1; i <= 4; i++) if((i - 1) * 3 < n) t += '<option value="T' + i + '"' + (P === "T" + i ? " selected" : "") + '>Trimestre ' + i + '</option>';
+  return '<div class="finper"><select class="finsel" id="' + pre + '_a"><option>' + annee + '</option></select>' +
+    '<select class="finsel" id="' + pre + '_m"' + (P.charAt(0) === "T" ? " disabled" : "") + '>' + m + '</select>' +
+    '<select class="finsel" id="' + pre + '_t"' + (P.charAt(0) === "M" ? " disabled" : "") + '>' + t + '</select></div>';
+}
+function perLier(pre, fn){
+  ["m", "t"].forEach(function(k){ var s = document.getElementById(pre + "_" + k); if(s) s.onchange = function(){ fn(this.value || "A"); }; });
+}
 function finRendu(){
   var ms = finMois(FIN_PERIODE), h = "";
   var der = ms.length ? ms[ms.length-1] : null;
@@ -92,10 +202,10 @@ function financeOuvrir(){
     for(i=0;i<=FIN_DERNIER;i++) o += '<option value="M' + i + '">' + FIN_MOIS_LONG[i].charAt(0).toUpperCase() + FIN_MOIS_LONG[i].slice(1) + ' ' + FIN_R.annee + '</option>';
     app.innerHTML = '<div class="page ppx fin sans-instant"><div class="pph"><h1>' + FIN_TITRE + '</h1></div>' +
       '<div class="finsous">' + (FIN_ORIGINE === "finances" ? "Finances" : "Conseil d\'administration") + '</div>' +
-      '<select class="finsel" id="fin_sel">' + o + '</select><div id="fin_corps"></div>' +
+      perHtml(FIN_PERIODE, FIN_R.annee, FIN_DERNIER + 1, "fin") + '<div id="fin_corps"></div>' +
       '<a class="retour" href="#" id="retour">Retour</a></div>';
-    FIN_PERIODE = "A"; finRendu();
-    document.getElementById("fin_sel").onchange = function(){ FIN_PERIODE = this.value; finRendu(); };
+    finRendu();
+    perLier("fin", finPerChoix);
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); finRetour(); };
   });
 }

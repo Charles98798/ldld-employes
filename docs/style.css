@@ -1060,3 +1060,6 @@ select:not(.act){width:100%;box-sizing:border-box}
 /* Petite barre d'état d'attente (sans texte): remplace « Un instant » partout. */
 .att{height:8px;background:var(--beige,#d0cdc6);border:1px solid var(--tx2,#6e6350);position:relative;overflow:hidden;margin:18px 0}.att>i{position:absolute;top:0;bottom:0;width:35%;background:#0d1117;animation:attg 1.2s ease-in-out infinite}@keyframes attg{0%{left:-35%}100%{left:100%}}
 .fin select.finsel{width:100%;box-sizing:border-box;text-align:center;text-align-last:center;-moz-text-align-last:center;padding-left:34px;padding-right:34px}
+.fin .finper{display:grid;grid-template-columns:76px 1fr 1.15fr;gap:4px;margin-bottom:14px}
+.fin .finper select.finsel{width:100%;min-width:0;margin:0;text-align:left;text-align-last:left;font-size:12px!important;padding:0 24px 0 8px!important;background-position:right 8px center!important}
+.fin .finper select.finsel:disabled{opacity:.4}

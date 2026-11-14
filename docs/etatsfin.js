@@ -76,12 +76,6 @@ function efPeriode(){
   Object.keys(m.totaux || {}).forEach(function(k){ r.totaux[k] = som(m.totaux[k]); });
   return r;
 }
-function efOptions(r){
-  var o = '<option value="A"' + (EF_P === "A" ? " selected" : "") + '>Année ' + r.annee + '</option>', i, L = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-  for(i = 1; i <= 4; i++) if((i - 1) * 3 < r.nmois) o += '<option value="T' + i + '"' + (EF_P === "T" + i ? " selected" : "") + '>Trimestre ' + i + '</option>';
-  for(i = 0; i < r.nmois; i++) o += '<option value="M' + i + '"' + (EF_P === "M" + i ? " selected" : "") + '>' + L[i].charAt(0).toUpperCase() + L[i].slice(1) + ' ' + r.annee + '</option>';
-  return o;
-}
 function efErreur(msg){
   var a = app.querySelector(".att"); if(!a) return;
   var d = document.createElement("div"); d.className = "bandeau"; d.textContent = msg; a.parentNode.replaceChild(d, a);
@@ -93,7 +87,7 @@ function efOuvrir(){
   function recu(m){
     if(fini || !document.querySelector(".ef")) return;
     var r = m;
-    try { if(m && m.ok && m.comptes){ efNettoyer(m); EF_RAW = m; EF_P = "A"; r = efPeriode(); } } catch(e){ r = {erreur: "ERREUR " + String(e && e.message || e).slice(0, 80)}; }
+    try { if(m && m.ok && m.comptes){ efNettoyer(m); EF_RAW = m; EF_P = perDefaut(m.annee, (m.mois || []).length); r = efPeriode(); } } catch(e){ r = {erreur: "ERREUR " + String(e && e.message || e).slice(0, 80)}; }
     if(r && r.ok){ fini = true; try { efDessiner(r); } catch(e){ efErreur("ERREUR " + String(e && e.message || e).slice(0, 80).toUpperCase()); } }
     else if(r && r.erreur){ fini = true; efErreur(String(r.erreur).toUpperCase() + " · RÉESSAYEZ"); }
   }
@@ -129,7 +123,7 @@ function efDessiner(r){
       '<div class="efl efh"><span></span><span>Montant</span><span>% des ventes</span></div>' + blocs(gs) + (fins || "");
   }
   var h = '<div class="page ppx fin ef sans-instant"><h1>États financiers</h1>' +
-    '<select class="finsel" id="ef_sel">' + efOptions(r) + '</select>' +
+    perHtml(EF_P, r.annee, r.nmois, "ef") +
     '<div class="efres"><div><small>Ventes</small><b>' + efMontant(vt) + '</b></div><div><small>Bénéfice brut</small><b>' + pct(brut) + '</b></div><div><small>Bénéfice net</small><b>' + pct(net) + '</b></div></div>';
   h += section("Ventes", EF_V, ligne("Ventes totales", vt, "eft"));
   h += section("Coût des ventes", EF_C, ligne("Total du coût des ventes", cout, "eft") + ligne("Bénéfice brut", brut, "eft"));
@@ -144,7 +138,7 @@ function efDessiner(r){
   h += '<a class="retour" href="#" id="retour">Retour</a></div>';
   app.innerHTML = h;
   try { window.scrollTo(0, 0); } catch(e) {}
-  document.getElementById("ef_sel").onchange = function(){ EF_P = this.value; try { efDessiner(efPeriode()); } catch(e){ efErreur("ERREUR " + String(e && e.message || e).slice(0, 80).toUpperCase()); } };
+  perLier("ef", function(v){ EF_P = v; try { efDessiner(efPeriode()); } catch(e){ efErreur("ERREUR " + String(e && e.message || e).slice(0, 80).toUpperCase()); } });
   Array.prototype.forEach.call(document.querySelectorAll(".efr"), function(r){
     r.onclick = function(){ var o = r.classList.toggle("o"); r.querySelector(".efm").textContent = o ? "\u2212" : "+"; };
   });
