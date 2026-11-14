@@ -38,7 +38,7 @@ var PICTOS = {
  "Réunion production": "M2 2h20v11h-20zM5 5h14v5h-14zM2 15h20v3h-20zM4 18h3v4h-3zM17 18h3v4h-3z",
  "Retirer un employé": "M2 2h8v8h-8zM1 12h11v10h-11zM14 8.5h9v3h-9z",
  "Nouvel employé": "M2 2h8v8h-8zM1 12h11v10h-11zM17 5h3v3.5h-3zM17 11.5h3v3.5h-3zM14 8.5h9v3h-9z",
- "Envoi salarial": "M2 3h8v8h-8zM14 13h8v8h-8zM17 2h3v3h-3zM14 6h3v3h-3zM11 10h3v3h-3zM8 14h3v3h-3zM5 18h3v3h-3z",
+ "Envoi salarial": "M2 5h20v14h-20zM4 7h16v2h-16zM7 9h10v2h-10zM10 11h4v2h-4z",
  "Utilisation": "M7 4h10v3h-10zM3 7h4v3h-4zM17 7h4v3h-4zM1 10h3v4h-3zM20 10h3v4h-3zM3 14h4v3h-4zM17 14h4v3h-4zM7 17h10v3h-10zM9 9h6v6h-6z",
  "Direction": "M2 3h11v9h-11zM14 9h8v9h-8z",
  "Gestionnaire": "M2 3h11v9h-11zM14 9h8v9h-8z",
