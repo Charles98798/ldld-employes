@@ -147,9 +147,17 @@ function fgGraphique(type){
   }
   var c = R.clients, h = "";
   if(!c) return '<div class="finnote">Aucune donnée de comptes clients.</div>';
-  var tot = c.total || 0, bk = [["0-30 jours", c.courant + c.t30], ["31-60 jours", c.t60], ["61-90 jours", c.t90], ["Plus de 90 jours", c.plus]];
-  bk[0][0] = "Courant et 1-30 jours"; bk[1][0] = "31-60 jours"; bk[2][0] = "61-90 jours";
-  bk.forEach(function(b){ h += '<div class="fgcl"><div class="fgcn"><span>▪ '+b[0]+'</span><span>'+finMontant(b[1])+'</span></div><div class="fgbar"><i style="width:'+(tot ? Math.max(0, Math.round(b[1]/tot*100)) : 0)+'%"></i></div></div>'; });
+  var tot = c.total || 0, tp = c.top || {}, bk = [["Courant et 1-30 jours", c.courant + c.t30, ""], ["31-60 jours", c.t60, "t60"], ["61-90 jours", c.t90, "t90"], ["Plus de 90 jours", c.plus, "plus"]];
+  bk.forEach(function(b){
+    h += '<div class="fgcl"><div class="fgcn"><span>▪ '+b[0]+'</span><span>'+finMontant(b[1])+'</span></div><div class="fgbar"><i style="width:'+(tot ? Math.max(0, Math.round(b[1]/tot*100)) : 0)+'%"></i></div>';
+    var l = b[2] && tp[b[2]];
+    if(l && l.length){
+      h += '<a class="fglnk" href="#" data-k="'+b[2]+'">Voir les 10 comptes</a><div class="fgtop" id="fgtop_'+b[2]+'" hidden>';
+      l.forEach(function(x, i){ h += '<div class="fgtl"><span>'+(i+1)+'. '+String(x[0]).replace(/[<>&]/g, "")+'</span><span>'+finMontant(x[1])+'</span></div>'; });
+      h += '</div>';
+    }
+    h += '</div>';
+  });
   return h + '<div class="finnote">Total à recevoir : '+finMontant(tot)+' · '+(tot ? Math.round(c.plus/tot*100) : 0)+' % depuis plus de 90 jours</div>';
 }
 var FG_PAGES = {ratios:["01","Ratios vs objectifs","Marge brute, salaires et achats, en % des ventes"], ventes:["02","Ventes vs an passé","Disponible en 2027"], tres:["03","Trésorerie","Solde de fin de mois et flux net"], cli:["04","Comptes clients","À recevoir selon l'ancienneté de la facture"]};
@@ -164,6 +172,8 @@ function financeGraphique(type){
       el.onchange = function(){ var k = el.getAttribute("data-k"), v = +el.value; FG.act = k;
         if(k === "M"){ FG.m = v; FG.t = Math.floor(v/3); } else if(k === "T"){ FG.t = v; FG.m = Math.min(v*3+2, FIN_DERNIER); }
         financeGraphique(type); }; });
+    Array.prototype.forEach.call(document.querySelectorAll(".fglnk"), function(a){
+      a.onclick = function(e){ e.preventDefault(); var d = document.getElementById("fgtop_" + a.getAttribute("data-k")), ouvre = d.hidden; d.hidden = !ouvre; a.textContent = ouvre ? "Masquer les comptes" : "Voir les 10 comptes"; }; });
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); finRetour(); };
   });
 }
