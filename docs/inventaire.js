@@ -113,7 +113,7 @@ function invProduit(p){
     if(ok) ok.onclick = function(){
       ok.disabled = true; ok.textContent = "Enregistrement…";
       invEcrire("inv_deduire", {id_produit: p.id, quantite: qte}).then(function(r){
-        if(r && r.ok){ var t = new Date(); INV.sorties.unshift({nom: p.description, q: qte, h: t.getHours()+" h "+("0"+t.getMinutes()).slice(-2)}); if(r.essai) p.stock = p.stock - qte; var mm = r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : "▪ ENREGISTRÉ"; qte = 1; dessiner(mm); }
+        if(r && r.ok){ var t = new Date(); INV.sorties.unshift({nom: p.description, q: qte, h: t.getHours()+" h "+("0"+t.getMinutes()).slice(-2)}); p.stock = p.stock - qte; var mm = r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : "▪ ENREGISTRÉ"; qte = 1; dessiner(mm); }
         else dessiner("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase());
       }).catch(function(){ dessiner("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
     };
@@ -196,7 +196,7 @@ function invCompte(p){
     ok.onclick = function(){
       ok.disabled = true; ok.textContent = "Enregistrement…";
       invEcrire("inv_compter", {id_produit: p.id, quantite: q}).then(function(r){
-        if(r && r.ok){ if(r.essai) p.stock = q; dessiner(r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : "▪ QUANTITÉ ENREGISTRÉE"); }
+        if(r && r.ok){ p.stock = q; dessiner(r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : "▪ QUANTITÉ ENREGISTRÉE"); }
         else dessiner("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase());
       }).catch(function(){ dessiner("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
     };
