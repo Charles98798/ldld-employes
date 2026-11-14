@@ -1,4 +1,4 @@
-var APP_PUB = "506";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "508";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -707,21 +707,22 @@ function messages(filtre){
   NEUFS_VISITE = {};
   var fusion = !FILTRE_MSG;   // même page « Calendrier et messages » pour tous, y compris la vue employé de la Direction (astérisque)
   var titreMsg = fusion ? "Calendrier et messages" : FILTRE_MSG === "envoyes" ? "Historique message" : FILTRE_MSG === "rencontres" ? "Rencontre demandée" : "Message reçu";
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div><div id="neufsb"></div><div class="etiq">▪ CETTE SEMAINE</div><div id="aven"></div><div id="avenb"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '<div class="etiq">▪ REÇUS</div>' : '') + '<div id="liste"></div>' +
-    (peutEcrire() && !FILTRE_MSG && !VUE.on ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '</div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div><div id="neufsb"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '<div id="aven"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '' : '') + '<div id="liste"></div>' +
+    '</div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG === "recus"){ messages(""); } else if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
   var w = document.getElementById("ecrire"); if(w) w.onclick = function(e){ e.preventDefault(); nouveau("message"); };
   var gr = document.getElementById("grille"); if(gr) gr.onclick = function(e){ e.preventDefault(); nouveau("message"); };
-  if(fusion){ evenementsEmploye("aven", "avenb"); aeAFaire(); }
+  
+  if(fusion){ evenementsEmploye("aven"); aeAFaire(); }
   obtenir("messages", {action:"messages"}, function(r){
     if(!document.getElementById("liste")) return;
     MESSAGES = r.messages; var l = lus();
-    var vus = MESSAGES.filter(function(m){ return FILTRE_MSG === "envoyes" ? m.envoye : FILTRE_MSG === "rencontres" ? (!m.envoye && /^Demande de rencontre/.test(m.titre)) : true; });
+    var vus = MESSAGES.filter(function(m){ var t = Date.parse(m.date); return true; }).filter(function(m){ return FILTRE_MSG === "envoyes" ? m.envoye : FILTRE_MSG === "rencontres" ? (!m.envoye && /^Demande de rencontre/.test(m.titre)) : true; });   // les messages restent affichés 30 jours
     function ligne(m, neuf){ return '<a class="lcol'+(neuf ? ' lnv' : '')+'" href="#" data-id="'+esc(m.id)+'"><span>'+dateCourte(m.date)+'</span><span>'+esc(m.titre)+'<small>'+(m.envoye ? 'Envoyé à '+m.nb+' personne'+(m.nb > 1 ? 's' : '') : esc(m.de))+'</small></span><span>'+(m.envoye ? "Envoyé" : (neuf ? '<b class="nvb">Nouveau</b>' : "Lu"))+'</span></a>'; }
     var entete = '<div class="lcol lcolh"><span>Date</span><span>Message</span><span>État</span></div>', nvs = [], reste = [];
-    vus.forEach(function(m){ var neuf = !m.envoye && (l.indexOf(m.id) < 0 || NEUFS_VISITE[m.id]); if(neuf) NEUFS_VISITE[m.id] = 1; (neuf && fusion ? nvs : reste).push({m:m, n:neuf}); });
-    var zn = document.getElementById("neufsb"); if(zn) zn.innerHTML = nvs.length ? '<div class="etiq">▪ NOUVEAUX</div>' + entete + nvs.map(function(x){ return ligne(x.m, true); }).join("") : "";
-    document.getElementById("liste").innerHTML = reste.length ? entete + reste.map(function(x){ return ligne(x.m, x.n); }).join("") : (nvs.length ? "" : '<div class="bandeau">▪ AUCUN MESSAGE</div>');
+    vus.forEach(function(m){ var neuf = !m.envoye && (l.indexOf(m.id) < 0 || NEUFS_VISITE[m.id]); if(neuf) NEUFS_VISITE[m.id] = 1; (fusion ? nvs : reste).push({m:m, n:neuf}); });
+    var zn = document.getElementById("neufsb"); if(zn) zn.innerHTML = '<div class="sect"><span>Messages</span></div>' + (nvs.length ? entete + nvs.map(function(x){ return ligne(x.m, x.n); }).join("") : '<div class="bandeau">▪ AUCUN MESSAGE</div>');
+    document.getElementById("liste").innerHTML = fusion ? "" : (reste.length ? entete + reste.map(function(x){ return ligne(x.m, x.n); }).join("") : '<div class="bandeau">▪ AUCUN MESSAGE</div>');
     Array.prototype.forEach.call(app.querySelectorAll("a[data-id]"), function(a){
       a.onclick = function(e){ e.preventDefault(); detail(a.getAttribute("data-id")); };
     });
@@ -2645,26 +2646,23 @@ var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","ao
 var JOURS_LONGS_E = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"], MOIS_E = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
 function heureFr(t){ var m = /T(\d{2}):(\d{2})/.exec(t || ""); if(!m) return ""; return (+m[1]) + (m[2] === "00" ? " h" : " h " + m[2]); }
 function jourFr(iso){ var a = iso.split("-"), d = new Date(+a[0], +a[1] - 1, +a[2]); return JOURS_LONGS_E[d.getDay()] + " " + (+a[2]) + " " + MOIS_E[+a[1] - 1]; }
-function evenementsEmploye(idEl, idPlus){
+function evenementsEmploye(idEl){
   var tn = torontoMaintenant().date, evs = [], fermes = [];
   function dessiner(){
     var el = document.getElementById(idEl); if(!el) return;
     var liste = evs.map(function(x){ var j = String(x.debut || "").slice(0, 10), h = heureFr(x.debut), f = heureFr(x.fin); return {j:j, h:h ? (f ? h + " à " + f : h) : "", t:x.titre || "", d:x.texte || "", tri:String(x.debut || "")}; })
-      .concat(fermes.map(function(x){ return {j:x.d, h:"Toute la journée", t:x.n || "Laboratoire fermé", d:"", tri:x.d + "T00:00"}; }))
+      .concat(fermes.map(function(x){ return {j:x.d, h:"", t:x.n || "Laboratoire fermé", d:"", tri:x.d + "T00:00"}; }))
       .filter(function(x){ return x.j >= tn; });
     liste.sort(function(a, b){ return a.tri < b.tri ? -1 : a.tri > b.tri ? 1 : 0; });
-    var lim = (function(){ var q = tn.split("-"), z = new Date(+q[0], +q[1]-1, +q[2]+7); return z.getFullYear()+"-"+("0"+(z.getMonth()+1)).slice(-2)+"-"+("0"+z.getDate()).slice(-2); })();
-    var plus = idPlus ? liste.filter(function(x){ return x.j > lim; }) : [];
-    if(idPlus) liste = liste.filter(function(x){ return x.j <= lim; });
-    function rendre(L){ var h = "", cur = "";
-      L.forEach(function(x){
-        if(x.j !== cur){ cur = x.j; h += '<div class="ejour">'+(cur === tn ? "Aujourd'hui · " : "")+esc(jourFr(cur))+'</div>'; }
-        h += '<div class="eev'+(cur === tn ? ' auj' : '')+'"><div class="eh">'+esc(x.h)+'</div><div class="et">'+esc(x.t)+'</div>'+(x.d ? '<div class="ed">'+esc(x.d)+'</div>' : '')+'</div>';
-      });
-      return h; }
-    if(idPlus){ var zp = document.getElementById(idPlus); if(zp) zp.innerHTML = plus.length ? '<div class="etiq">▪ PLUS TARD</div>' + rendre(plus) : ""; }
-    if(!liste.length){ el.innerHTML = '<div class="bandeau">'+(idPlus ? "▪ RIEN CETTE SEMAINE" : "▪ AUCUN ÉVÉNEMENT À VENIR POUR VOUS")+'</div>'; return; }
-    el.innerHTML = rendre(liste);
+    if(!liste.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR POUR VOUS</div>'; return; }
+    var h = "", cur = "", mois = "";
+    liste.forEach(function(x){
+      var mk = x.j.slice(0, 7);
+      if(mk !== mois){ mois = mk; cur = ""; h += '<div class="emois">'+esc(MOIS_LONGS[+mk.slice(5, 7) - 1])+' '+mk.slice(0, 4)+'</div>'; }
+      if(x.j !== cur){ cur = x.j; h += '<div class="ejour">'+(cur === tn ? "Aujourd'hui · " : "")+esc(jourFr(cur))+'</div>'; }
+      h += '<div class="eev'+(cur === tn ? ' auj' : '')+'">'+(x.h ? '<div class="eh">'+esc(x.h)+'</div>' : '')+'<div class="et">'+esc(x.t)+'</div>'+(x.d ? '<div class="ed">'+esc(x.d)+'</div>' : '')+'</div>';
+    });
+    el.innerHTML = h;
   }
   obtenir("evenements_employe", {action:"evenements_employe"}, function(r){
     if(!r || !r.evenements) throw 0;
