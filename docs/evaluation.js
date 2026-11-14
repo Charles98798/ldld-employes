@@ -52,3 +52,79 @@ function aepPlanification(){
   function erreur(){ var z = document.getElementById("aepz"); if(z){ z.innerHTML = '<div class="bandeau">Planification indisponible pour le moment.</div><button type="button" class="bouton" id="aere">Réessayer</button>'; document.getElementById("aere").onclick = aepPlanification; } }
   obtenir("ae_planif", {action: "ae_planif_lire"}, function(r){ donnees = r; afficher(); }, erreur, true);
 }
+
+// ---- Réunion d'auto-évaluation (Service: ae_reunion_lire / ae_reunion_verrou / ae_reunion_ecrire / ae_reunion_actualiser) ----
+// Données par identifiant d'employé (LDLD-###_année_rencontre), sans nom: le nom vient de la planification. Aucun salaire.
+var AER = {cle: "", verrou: null, bat: null, file: [], envoi: false, lectureSeule: true};
+function aerAppel(corps){ corps.session = sessionGardee(); return appelService(corps); }
+function aerArreter(){ if(AER.bat){ clearInterval(AER.bat); AER.bat = null; } }
+function aerLiberer(){ aerArreter(); if(AER.cle && !AER.lectureSeule){ var c = AER.cle; AER.cle = ""; aerAppel({action: "ae_reunion_verrou", op: "liberer", cle: c}).catch(function(){}); } else AER.cle = ""; AER.lectureSeule = true; AER.file = []; }
+function aerHeure(){ var d = new Date(); return d.getHours() + " h " + ("0" + d.getMinutes()).slice(-2); }
+function aerEnvoyer(){
+  if(AER.envoi || !AER.file.length) return; AER.envoi = true;
+  var it = AER.file.shift(), etat = document.getElementById("aeretat");
+  aerAppel({action: "ae_reunion_ecrire", cle: it.cle, addr: it.addr, valeur: it.valeur}).then(function(r){
+    AER.envoi = false;
+    if(!r || !r.ok){ AER.file.unshift(it); if(etat) etat.textContent = "Enregistrement en attente"; setTimeout(aerEnvoyer, 4000); return; }
+    if(etat) etat.textContent = AER.file.length ? "Enregistrement…" : "Enregistré à " + aerHeure();
+    aerEnvoyer();
+  }).catch(function(){ AER.envoi = false; AER.file.unshift(it); if(etat) etat.textContent = "Enregistrement en attente"; setTimeout(aerEnvoyer, 4000); });
+}
+function aerSaisir(addr, valeur){ AER.file.push({cle: AER.cle, addr: addr, valeur: valeur}); var e = document.getElementById("aeretat"); if(e) e.textContent = "Enregistrement…"; aerEnvoyer(); }
+function aerPremier(){
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion d’auto-évaluation</h1><div id="aerz"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); aerLiberer(); menu(); };
+  var noms = {}, z = document.getElementById("aerz");
+  function liste(planif, reun){
+    (planif.lignes || []).forEach(function(l){ if(l.id) noms[l.id] = l.nom; });
+    var v = (reun.rencontres || []).map(function(r){ var p = String(r.cle).split("_"); return {cle: r.cle, id: p[0], annee: p[1], num: p[2], nom: noms[p[0]] || ""}; }).filter(function(x){ return x.nom; });
+    v.sort(function(a, b){ return a.nom < b.nom ? -1 : a.nom > b.nom ? 1 : a.num - b.num; });
+    var bandeau = reun.verrou && reun.verrou.libre === false && !reun.verrou.mien ? '<div class="bandeau">En cours par ' + esc(reun.verrou.par || "un évaluateur") + '. Consultation seulement.</div>' : "";
+    z.innerHTML = bandeau + (v.length ? v.map(function(x){ return '<a href="#" class="aepl" data-c="' + esc(x.cle) + '"><span class="aepn">' + esc(x.nom) + '<small>Rencontre ' + esc(x.num) + ' · ' + esc(x.annee) + '</small></span><span class="aepd">Ouvrir</span></a>'; }).join("") : '<div class="aevide">Aucune rencontre préparée.</div>');
+    Array.prototype.forEach.call(z.querySelectorAll("a[data-c]"), function(a){ a.onclick = function(e){ e.preventDefault(); aerOuvrir(a.getAttribute("data-c"), noms); }; });
+  }
+  function erreur(){ z.innerHTML = '<div class="bandeau">Réunion indisponible pour le moment.</div><button type="button" class="bouton" id="aere">Réessayer</button>'; document.getElementById("aere").onclick = aerPremier; }
+  Promise.all([aerAppel({action: "ae_planif_lire"}), aerAppel({action: "ae_reunion_lire"})]).then(function(a){ if(!a[0] || !a[0].ok || !a[1] || !a[1].ok) throw 0; liste(a[0], a[1]); }).catch(erreur);
+}
+function aerNote(addr, val, ro){ return '<input type="number" inputmode="decimal" class="aein" data-a="' + addr + '" value="' + esc(val === undefined || val === null ? "" : val) + '"' + (ro ? ' disabled' : '') + '>'; }
+function aerTexte(addr, val, ro){ return '<textarea class="aeta" rows="2" data-a="' + addr + '"' + (ro ? ' disabled' : '') + '>' + esc(val || "") + '</textarea>'; }
+function aerOuvrir(cle, noms){
+  aerLiberer();
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion d’auto-évaluation</h1><div id="aerz"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); aerLiberer(); aerPremier(); };
+  var z = document.getElementById("aerz");
+  function erreur(){ z.innerHTML = '<div class="bandeau">Rencontre indisponible pour le moment.</div>'; }
+  aerAppel({action: "ae_reunion_verrou", op: "prendre", cle: cle}).then(function(v){
+    var mien = !!(v && v.ok && v.verrou && v.verrou.mien);
+    AER.cle = cle; AER.lectureSeule = !mien;
+    return aerAppel({action: "ae_reunion_lire", cle: cle}).then(function(r){ if(!r || !r.ok) throw 0; afficher(r, mien, v && v.verrou); });
+  }).catch(erreur);
+  function afficher(r, mien, verrou){
+    var s = r.instantane || {}, ro = !mien, p = String(cle).split("_"), nom = (noms && noms[p[0]]) || "";
+    var h = '<div class="aerh"><b>' + esc(nom) + '</b><small>Rencontre ' + esc(s.rencontre || p[2]) + ' · ' + esc(s.annee || p[1]) + '</small></div>';
+    var par = (r.verrou && r.verrou.par) || (verrou && verrou.par) || "un évaluateur";
+    h += ro ? '<div class="bandeau">En cours par ' + esc(par) + '. Consultation seulement.</div>' : '<div class="aeretat" id="aeretat">Prêt</div>';
+    h += '<div class="emois">Compétences</div>';
+    (s.competences || []).forEach(function(c, i){ var n = 26 + i; h += '<div class="aepl aerb"><span class="aepn">' + esc(c.libelle) + '<small>Évaluateur ' + aerNote("C" + n, c.note_evaluateur, ro) + ' · Employé ' + esc(c.note_employe === undefined || c.note_employe === null ? "" : c.note_employe) + '</small>' + aerTexte("D" + n, c.observation, ro) + '</span></div>'; });
+    h += '<div class="emois">Valeurs</div>';
+    (s.valeurs || []).forEach(function(c, i){ var n = 38 + i; h += '<div class="aepl aerb"><span class="aepn">' + esc(c.libelle) + '<small>Évaluateur ' + aerNote("E" + n, c.note_evaluateur, ro) + '</small>' + aerTexte("I" + n, c.observation, ro) + '</span></div>'; });
+    var ry = s.rythme || {};
+    h += '<div class="emois">Objectifs et charges' + (ry.periode ? ' · ' + esc(ry.periode) : '') + '</div>';
+    (ry.indicateurs || []).forEach(function(c){
+      var ch = c.choix || {}, l = c.ligne, cols = [["G", "Augmentation"], ["I", "Réduction"], ["K", "Maintien"]];
+      h += '<div class="aepl aerb"><span class="aepn">' + esc(c.libelle) + '<small>Cible ' + esc(c.cible === undefined ? "" : c.cible) + ' · Réalisé ' + esc(c.realise === undefined ? "" : c.realise) + '</small><span class="aerch">' +
+        cols.map(function(k){ return '<button type="button" class="aepb' + (ch[k[1].toLowerCase()] || ch[k[0]] ? ' on' : '') + '" data-a="' + k[0] + l + '"' + (ro ? ' disabled' : '') + '>' + k[1] + '</button>'; }).join("") + '</span></span></div>';
+    });
+    var nc = s.nc || {};
+    h += '<div class="emois">Non-conformités</div><div class="aepl"><span class="aepn">' + esc(nc.mois === undefined ? "" : nc.mois) + ' ce mois · ' + esc(nc.n6 === undefined ? "" : nc.n6) + ' sur 6 mois · ' + esc(nc.n12 === undefined ? "" : nc.n12) + ' sur 12 mois<small>' + esc(nc.typeTop || "") + '</small></span></div>';
+    z.innerHTML = h;
+    if(ro) return;
+    Array.prototype.forEach.call(z.querySelectorAll("input[data-a],textarea[data-a]"), function(el){
+      var t; el.oninput = function(){ clearTimeout(t); t = setTimeout(function(){ var v = el.value; aerSaisir(el.getAttribute("data-a"), el.type === "number" ? (v === "" ? "" : +v) : v); }, 700); };
+      el.onblur = function(){ clearTimeout(t); };
+    });
+    Array.prototype.forEach.call(z.querySelectorAll("button[data-a]"), function(b){ b.onclick = function(){ var on = !b.classList.contains("on"); b.classList.toggle("on", on); aerSaisir(b.getAttribute("data-a"), on); }; });
+    AER.bat = setInterval(function(){ aerAppel({action: "ae_reunion_verrou", op: "battre", cle: cle}).then(function(x){ if(x && x.verrou && x.verrou.libre === false && !x.verrou.mien){ aerArreter(); AER.lectureSeule = true; var e = document.getElementById("aeretat"); if(e) e.textContent = "Verrou perdu: consultation seulement"; } }).catch(function(){}); }, 30000);
+  }
+}
+window.addEventListener("pagehide", function(){ if(AER.cle && !AER.lectureSeule) aerLiberer(); });

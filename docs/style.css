@@ -1073,3 +1073,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 .aepl .aepd{font-size:13px;text-align:right;white-space:nowrap}
 .aepl.pas{opacity:.65}
 .aepl.sd{border-left:4px solid #8D806A}
+.aerh{margin:6px 0 10px}.aerh b{font-size:18px;display:block}.aerh small{font-size:13px;color:#6E6350}
+.aeretat{font-size:12px;color:#6E6350;margin:0 0 6px}
+.aerb .aepn small{display:block;font-weight:400}.aein{width:70px;font:inherit;padding:6px;border:0;background:#F5F3EC}.aeta{display:block;width:100%;box-sizing:border-box;margin-top:6px;font:inherit;padding:8px;border:0;background:#F5F3EC;resize:vertical}
+.aerch{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.aerb .aepb:disabled{opacity:.7}
