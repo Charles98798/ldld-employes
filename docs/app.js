@@ -1,4 +1,4 @@
-var APP_PUB = "510";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "511";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -321,7 +321,7 @@ function obtenir(cle, corps, afficher, erreur, majSilencieuse){
 }
 function pastilleMessages(){
   var a = app.querySelector('a[data-i="0"]'); if(!a) return;
-  var m = VUE.on ? VUE_MSG : lireCache("messages"), l = lus(), n = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && l.indexOf(x.id) < 0; }).length : 0;
+  var m = VUE.on ? VUE_MSG : lireCache("messages"), l = lus(), n = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && l.indexOf(x.id) < 0 && !msgPerime(x); }).length : 0;
   var p = a.querySelector(".nombre"); if(p) p.remove();
   if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = pastilleTexte(n); a.appendChild(p); }
   pastilleDirection();
@@ -717,7 +717,7 @@ function messages(filtre){
   obtenir("messages", {action:"messages"}, function(r){
     if(!document.getElementById("liste")) return;
     MESSAGES = r.messages; var l = lus();
-    var vus = MESSAGES.filter(function(m){ var t = Date.parse(m.date); return true; }).filter(function(m){ return FILTRE_MSG === "envoyes" ? m.envoye : FILTRE_MSG === "rencontres" ? (!m.envoye && /^Demande de rencontre/.test(m.titre)) : true; });   // les messages restent affichés 30 jours
+    var vus = MESSAGES.filter(function(m){ return !msgPerime(m); }).filter(function(m){ return FILTRE_MSG === "envoyes" ? m.envoye : FILTRE_MSG === "rencontres" ? (!m.envoye && /^Demande de rencontre/.test(m.titre)) : true; });   // les messages restent affichés 30 jours
     function ligne(m, neuf){ return '<a class="lcol'+(neuf ? ' lnv' : '')+'" href="#" data-id="'+esc(m.id)+'"><span>'+dateCourte(m.date)+'</span><span>'+esc(m.titre)+'<small>'+(m.envoye ? 'Envoyé à '+m.nb+' personne'+(m.nb > 1 ? 's' : '') : (m.de === 'Agenda' ? esc(String(m.texte || '').split('\n').filter(function(z){ return z.trim(); }).slice(0, 2).join(' · ').slice(0, 90) || m.de) : esc(m.de)))+'</small></span><span>'+(m.envoye ? "Envoyé" : (neuf ? '<b class="nvb">Nouveau</b>' : "Lu"))+'</span></a>'; }
     var entete = '<div class="lcol lcolh"><span>Date</span><span>Message</span><span>État</span></div>', nvs = [], reste = [];
     vus.forEach(function(m){ var neuf = !m.envoye && (l.indexOf(m.id) < 0 || NEUFS_VISITE[m.id]); if(neuf) NEUFS_VISITE[m.id] = 1; (fusion ? nvs : reste).push({m:m, n:neuf}); });
@@ -2645,6 +2645,7 @@ var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","ao
 // Calendrier de l'employé: seulement ses événements (titre, jour, heures, description), sans grille ni planification.
 var JOURS_LONGS_E = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"], MOIS_E = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
 function heureFr(t){ var m = /T(\d{2}):(\d{2})/.exec(t || ""); if(!m) return ""; return (+m[1]) + (m[2] === "00" ? " h" : " h " + m[2]); }
+function msgPerime(x){ if(x.de !== "Agenda") return false; var t = Date.parse(x.date); if(isNaN(t)) return false; return Date.now() - t > (/une heure/i.test(x.titre || "") ? 3 : 24) * 3600000; }
 var JOURS_COURTS_E = ["Dim.","Lun.","Mar.","Mer.","Jeu.","Ven.","Sam."];
 function jourFr(iso){ var a = iso.split("-"), d = new Date(+a[0], +a[1] - 1, +a[2]); return JOURS_LONGS_E[d.getDay()] + " " + (+a[2]) + " " + MOIS_E[+a[1] - 1]; }
 function evenementsEmploye(idEl){
