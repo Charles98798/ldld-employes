@@ -1,4 +1,4 @@
-var APP_PUB = "509";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "510";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -718,7 +718,7 @@ function messages(filtre){
     if(!document.getElementById("liste")) return;
     MESSAGES = r.messages; var l = lus();
     var vus = MESSAGES.filter(function(m){ var t = Date.parse(m.date); return true; }).filter(function(m){ return FILTRE_MSG === "envoyes" ? m.envoye : FILTRE_MSG === "rencontres" ? (!m.envoye && /^Demande de rencontre/.test(m.titre)) : true; });   // les messages restent affichés 30 jours
-    function ligne(m, neuf){ return '<a class="lcol'+(neuf ? ' lnv' : '')+'" href="#" data-id="'+esc(m.id)+'"><span>'+dateCourte(m.date)+'</span><span>'+esc(m.titre)+'<small>'+(m.envoye ? 'Envoyé à '+m.nb+' personne'+(m.nb > 1 ? 's' : '') : esc(m.de))+'</small></span><span>'+(m.envoye ? "Envoyé" : (neuf ? '<b class="nvb">Nouveau</b>' : "Lu"))+'</span></a>'; }
+    function ligne(m, neuf){ return '<a class="lcol'+(neuf ? ' lnv' : '')+'" href="#" data-id="'+esc(m.id)+'"><span>'+dateCourte(m.date)+'</span><span>'+esc(m.titre)+'<small>'+(m.envoye ? 'Envoyé à '+m.nb+' personne'+(m.nb > 1 ? 's' : '') : (m.de === 'Agenda' ? esc(String(m.texte || '').split('\n').filter(function(z){ return z.trim(); }).slice(0, 2).join(' · ').slice(0, 90) || m.de) : esc(m.de)))+'</small></span><span>'+(m.envoye ? "Envoyé" : (neuf ? '<b class="nvb">Nouveau</b>' : "Lu"))+'</span></a>'; }
     var entete = '<div class="lcol lcolh"><span>Date</span><span>Message</span><span>État</span></div>', nvs = [], reste = [];
     vus.forEach(function(m){ var neuf = !m.envoye && (l.indexOf(m.id) < 0 || NEUFS_VISITE[m.id]); if(neuf) NEUFS_VISITE[m.id] = 1; (fusion ? nvs : reste).push({m:m, n:neuf}); });
     var zn = document.getElementById("neufsb"); if(zn) zn.innerHTML = '<div class="sect"><span>Messages</span></div>' + (nvs.length ? entete + nvs.map(function(x){ return ligne(x.m, x.n); }).join("") : '<div class="bandeau">▪ AUCUN MESSAGE</div>');
