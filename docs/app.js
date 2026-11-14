@@ -1,4 +1,4 @@
-var APP_PUB = "501";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "504";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2823,7 +2823,7 @@ function vueEmploye(i){
   VDIAG = []; VD0 = Date.now(); vd("ouverture " + (VUE_PRE ? "(préparé)" : "(non préparé)"));
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); VUE.pend = false; VUE.on = false; menu(); };
   VUE.pend = true;
-  var vueDel = setTimeout(function(){ if(VUE.pend){ VUE.pend = false; VUE.on = false; sectionBase(i); } }, 20000);
+  var vueDel = setTimeout(function(){ if(VUE.pend){ VUE.pend = false; VUE.on = false; sectionBase(i); } }, 45000);   // le service peut être lent (9 à 18 s par appel): ne pas retomber en mode Charles trop tôt
   var pre = VUE_PRE; VUE_PRE = null;
   var pr;
   if(pre && pre.reelle === reelle && Date.now() - pre.t < 3000000){
@@ -2845,7 +2845,7 @@ function vueEmploye(i){
     VUE_DERNIER = r.nom || "";
     sectionBase(i);
     // Garde-fou: si la page est encore sur « Un instant » après 12 s, on repart à neuf une seule fois (session gardée, mémoire des lectures et file d'appels remises à zéro).
-    (function(n){ setTimeout(function(){ var pg = app.querySelector(".page"); if(!VUE.on || !pg || !/UN INSTANT/.test(pg.textContent)){ vueEmploye.g = 0; return; } if(vueEmploye.g >= 1) return; vueEmploye.g = (vueEmploye.g || 0) + 1; try { localStorage.removeItem("ldld-vue-antonio"); } catch(e){} RCACHE = {}; RC_GEN++; COPIE_PAR = {}; try { APPELS_EN_COURS = 0; FILE_APPELS = []; EN_VOL = []; } catch(e){} VUE_PRE = null; vueEmploye(i); }, 12000); })((vueEmploye.n = (vueEmploye.n || 0) + 1));
+    (function(n){ setTimeout(function(){ var pg = app.querySelector(".page"); if(!VUE.on || !pg || !/UN INSTANT/.test(pg.textContent)){ vueEmploye.g = 0; return; } if(vueEmploye.g >= 1) return; vueEmploye.g = (vueEmploye.g || 0) + 1; RCACHE = {}; RC_GEN++; COPIE_PAR = {}; try { APPELS_EN_COURS = 0; FILE_APPELS = []; EN_VOL = []; } catch(e){} VUE_PRE = null; vueEmploye(i); }, 12000); })((vueEmploye.n = (vueEmploye.n || 0) + 1));
   }).catch(function(e){ vd("échec " + (e && e.message)); VUE.pend = false; VUE.on = false; sectionBase(i); });
 }
 function vueFin(){
