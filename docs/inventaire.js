@@ -26,10 +26,10 @@ var INV = {cat: "", debut: "", sorties: [], vue: "sortie", recu: {}, ouv: {}};
 function invDroitReception(){ return typeof roleIdx === "function" && roleIdx() >= 1; }
 function invMoisFr(iso){ var m = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"], p = String(iso).split("-"); return p.length === 3 ? (+p[2]) + " " + m[+p[1] - 1] + " " + p[0] : String(iso); }
 function invOnglets(){
-  if(!invDroitReception()) return "";
-  var st = 'height:46px;padding:0;margin:0;';
-  if(INV.vue === "reception" || INV.vue === "stocks") return '<div style="margin:0 0 12px"><button type="button" class="bouton" id="invtsor" style="width:100%;'+st+'">Retour à la sortie</button></div>';
-  return '<div style="display:flex;gap:6px;margin:0 0 12px"><button type="button" class="bouton" id="invtrec" style="flex:1;'+st+'">Réception</button><button type="button" class="bouton" id="invtsto" style="flex:1;'+st+'">Gestion des stocks</button></div>';
+  if(!invDroitReception()) return '<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px">Prise d’inventaire</div>';
+  var v = INV.vue;
+  var st = function(on){ return "flex:1;min-width:0;height:46px;padding:0 4px;margin:0;font-size:12px;" + (on ? "border-bottom:3px solid #8EFF60" : "opacity:.6"); };
+  return '<div style="display:flex;gap:6px;margin:0 0 12px"><button type="button" class="bouton" id="invtsor" style="'+st(v !== "reception" && v !== "stocks")+'">Prise d’inventaire</button><button type="button" class="bouton" id="invtsto" style="'+st(v === "stocks")+'">Gestion des stocks</button><button type="button" class="bouton" id="invtrec" style="'+st(v === "reception")+'">Réception</button></div>';
 }
 function invLierOnglets(){
   var a = document.getElementById("invtsor"), b = document.getElementById("invtrec"), c = document.getElementById("invtsto");
