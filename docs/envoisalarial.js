@@ -8,6 +8,12 @@ function envPuce(statut, libelle){
   var s = String(statut || "");
   return '<span style="font-size:12px;letter-spacing:.06em;color:#6E6350;white-space:nowrap">'+envE(libelle || (s === "Prêt" ? "Confirmé" : s === "Bloqué" ? "Non confirmé" : s))+'</span>';
 }
+// Écarts au contrôle automatique, signalés sur la ligne (texte brique, sobre). Le pont les renvoie dans env_liste: e.ecarts = ["raison courte", ...]; une position avec décimale est aussi détectée ici.
+function envEcarts(e){
+  var L = Array.isArray(e.ecarts) ? e.ecarts.slice() : [];
+  if(e.position != null && /[.,]\d/.test(String(e.position))) L.push("position avec décimale");
+  return L.length ? '<span style="display:block;font-size:12px;color:#B8473A;margin-top:2px;overflow-wrap:anywhere">Écart · '+envE(L.join(" · "))+'</span>' : "";
+}
 function envPage(titre, corps){
   app.innerHTML = '<div class="page"><h1>'+envE(titre)+'</h1><a class="retour" href="#" id="retour">Retour</a>'+corps+'</div>';
 }
@@ -59,7 +65,7 @@ function envListe(){
     var sous = (e.statut === "Bloqué" || /^non concern/i.test(String(e.statut))) ? (e.raison || "") : e.statut === "Envoyé" ? (e.essaiEnvoye ? "essai envoyé" : "envoyé") + (e.raison ? " · " + e.raison : "") : [envFr(e.salaire), e.position != null && e.position !== "" ? "position " + e.position + " %" : ""].filter(Boolean).join(" · ");
     var cochable = e.statut === "Prêt" && !ferme, grise = e.statut === "Prêt" && ferme, coche = cochable && ENVS.coches && ENVS.coches[e.nom];
     var cas = cochable ? '<span class="envcase" data-i="'+i+'" role="checkbox" aria-checked="'+(coche ? "true" : "false")+'" style="flex:none;width:34px;height:34px;box-sizing:border-box;border:2px solid #1D1D1B;background:'+(coche ? "#8EFF60" : "transparent")+';display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;cursor:pointer">'+(coche ? "✓" : "")+'</span>' : grise ? '<span style="flex:none;width:34px;height:34px;box-sizing:border-box;border:2px solid #1D1D1B;opacity:.35"></span>' : '';
-    return '<div class="envl" data-i="'+i+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(189,201,178,.5);padding:12px 14px;margin:0 0 10px;cursor:pointer"><span style="min-width:0;flex:1"><span style="display:block;font-size:16px">'+envE(nomTitre(e.nom))+'</span><span style="display:block;font-size:12px;color:#6E6350;overflow-wrap:anywhere">'+envE(sous)+(e.erreur ? " · " + envE(e.erreur) : "")+'</span></span>'+'<span style="display:flex;align-items:center;gap:10px;flex:none">'+envPuce(e.statut, e.libelle)+cas+'</span></div>';
+    return '<div class="envl" data-i="'+i+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(189,201,178,.5);padding:12px 14px;margin:0 0 10px;cursor:pointer"><span style="min-width:0;flex:1"><span style="display:block;font-size:16px">'+envE(nomTitre(e.nom))+'</span><span style="display:block;font-size:12px;color:#6E6350;overflow-wrap:anywhere">'+envE(sous)+(e.erreur ? " · " + envE(e.erreur) : "")+'</span>'+envEcarts(e)+'<a href="#" class="envapc" data-i="'+i+'" style="display:inline-block;margin-top:6px;font-size:12px;color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:2px;text-underline-offset:3px">Aperçu</a></span>'+'<span style="display:flex;align-items:center;gap:10px;flex:none">'+envPuce(e.statut, e.libelle)+cas+'</span></div>';
   }).join("");
   h += '<div class="bandeau" id="envmsg" style="display:none;margin-top:10px"></div>';
   h += '<button type="button" class="bouton" id="envsend" style="height:46px;padding:0;margin-top:14px"'+(prets.length ? "" : " disabled")+'>Envoyer '+prets.length+' courriel'+(prets.length > 1 ? "s" : "")+'</button>';
@@ -67,14 +73,22 @@ function envListe(){
   envMessage(ENVS.msg);
   Array.prototype.forEach.call(document.querySelectorAll(".envl"), function(x){ x.onclick = function(){ var e = L[+x.getAttribute("data-i")]; if(!e || e.statut !== "Prêt" || ferme) return; ENVS.coches = ENVS.coches || {}; ENVS.coches[e.nom] = !ENVS.coches[e.nom]; envListe(); }; });   // un appui sur la ligne coche ou décoche seulement: jamais d'aperçu depuis cet écran
   Array.prototype.forEach.call(document.querySelectorAll(".envcase"), function(x){ x.onclick = function(ev){ ev.stopPropagation(); var e = L[+x.getAttribute("data-i")]; ENVS.coches = ENVS.coches || {}; ENVS.coches[e.nom] = !ENVS.coches[e.nom]; envListe(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll(".envapc"), function(x){ x.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); envApercu(L[+x.getAttribute("data-i")]); }; });
   var tt = document.getElementById("envtout"); if(tt) tt.onclick = function(ev){ ev.preventDefault(); var tous = prets.length === tousPrets.length; ENVS.coches = {}; if(!tous) tousPrets.forEach(function(e){ ENVS.coches[e.nom] = true; }); envListe(); };
   document.getElementById("envsend").onclick = function(){ if(prets.length) envConfirmer(prets); };
+}
+// Retour de l'aperçu: la liste réapparaît telle quelle (cases cochées gardées), sans relire le serveur.
+function envRetourListe(){
+  if(!ENVS.d){ envOuvrir(); return; }
+  envPage("Envoi salarial", '<div id="envapp"></div>');
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); envBarreRetirer(); retirerBoutonBas(); responsable(); };
+  envListe();
 }
 function envApercu(e){
   if(!e) return;
   envPage(nomTitre(e.nom), '<div id="envapp"></div>');
-  document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); envBarreRetirer(); envOuvrir(); };
-  envBarreOuvrir("Préparation de l’aperçu…", 25000, {reessayer: function(){ envApercu(e); }, apresFermer: envOuvrir});
+  document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); envBarreRetirer(); envRetourListe(); };
+  envBarreOuvrir("Préparation de l’aperçu…", 25000, {apresFermer: envRetourListe});
   appelService({action: "env_apercu", session: sessionGardee(), f: {nom: e.nom}}).then(function(r){
     if(!document.getElementById("envapp")) return;
     if(!(r && r.ok && r.r)){ envBarreFin(false, String((r && r.erreur) || "Échec")); return; }
