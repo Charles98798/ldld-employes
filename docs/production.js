@@ -81,5 +81,5 @@ function productionOuvrir(){
       document.getElementById("prm").onchange = function(){ PR.m = +this.value; dessiner(); };
     }
     dessiner();
-  }, function(){ var el = document.getElementById("pr"); if(el) el.innerHTML = '<div class="bandeau">▪ DONNÉES INDISPONIBLES</div>'; }, true);
+  }, function(){ var el = document.getElementById("pr"); if(el) el.innerHTML = '<div class="bandeau">DONNÉES INDISPONIBLES</div>'; }, true);
 }

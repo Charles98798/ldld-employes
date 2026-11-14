@@ -66,7 +66,7 @@ function efNum(x){
 }
 function efNettoyer(r){ ["comptes", "totaux"].forEach(function(k){ Object.keys(r[k] || {}).forEach(function(c){ if(Array.isArray(r[k][c])) r[k][c] = r[k][c].map(efNum); }); }); ["tresorerie", "margeCredit", "flux"].forEach(function(k){ if(Array.isArray(r[k])) r[k] = r[k].map(efNum); }); return r; }
 function efOuvrir(){
-  app.innerHTML = '<div class="page ppx fin ef"><h1>États financiers</h1><div class="bandeau"></div><a class="retour" href="#" id="retour">Retour</a></div>';
+  app.innerHTML = '<div class="page ppx fin ef sans-instant"><h1>États financiers</h1><div class="bandeau"></div><a class="retour" href="#" id="retour">Retour</a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var fini = false;
   function recu(m){
@@ -79,11 +79,11 @@ function efOuvrir(){
       Object.keys(m.totaux || {}).forEach(function(k){ r.totaux[k] = som(m.totaux[k]); });
     }
     if(r && r.ok){ fini = true; efDessiner(r); }
-    else if(r && r.erreur){ fini = true; app.querySelector(".bandeau").textContent = "▪ " + String(r.erreur).toUpperCase() + " · RÉESSAYEZ"; }
+    else if(r && r.erreur){ fini = true; app.querySelector(".bandeau").textContent = String(r.erreur).toUpperCase() + " · RÉESSAYEZ"; }
   }
   appelService({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){});
   setTimeout(function(){ if(!fini && document.querySelector(".ef")) appelBrut({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){}); }, 5000);   // la lecture préchargée traîne: appel direct
-  setTimeout(function(){ var b = document.querySelector(".ef .bandeau"); if(!fini && b){ fini = true; b.textContent = "▪ INDISPONIBLE · RÉESSAYEZ"; } }, 40000);
+  setTimeout(function(){ var b = document.querySelector(".ef .bandeau"); if(!fini && b){ fini = true; b.textContent = "INDISPONIBLE · RÉESSAYEZ"; } }, 40000);
 }
 function efDessiner(r){
   efConstruire(r);
@@ -112,7 +112,7 @@ function efDessiner(r){
     return '<div class="sect"><span class="num">0' + n + '</span><span class="lab">' + t + '</span></div>' +
       '<div class="efl efh"><span></span><span>' + r.annee + '</span><span>% des ventes</span></div>' + blocs(gs) + (fins || "");
   }
-  var h = '<div class="page ppx fin ef"><h1>États financiers</h1>' +
+  var h = '<div class="page ppx fin ef sans-instant"><h1>États financiers</h1>' +
     '<div class="efsel"><span>' + r.annee + '</span><span>1 janv.</span><span>' + dateFin + '</span></div>' +
     '<div class="efres"><div><small>Ventes</small><b>' + efMontant(vt) + '</b></div><div><small>Bénéfice brut</small><b>' + pct(brut) + '</b></div><div><small>Bénéfice net</small><b>' + pct(net) + '</b></div></div>';
   h += section("Ventes", EF_V, ligne("Ventes totales", vt, "eft"));
