@@ -1747,9 +1747,15 @@ function prixSoumissions(){
         h += '<div class="pss" data-o="s'+bi+'"><span>'+esc(b.t || "Prix")+'</span><b>'+(o ? "−" : "+")+'</b></div>' + (o ? rows : "");
       });
     } else {
-      d.soumissions.forEach(function(x, xi){
+      var FAM = ["Prothèses complètes", "Prothèses partielles", "Couronnes", "Couronnes sur implant", "Autres"], famCour = -1;
+      function famDe(t){ var u = String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); if(/couronne/.test(u)) return /implant/.test(u) ? 3 : 2; if(/partielle/.test(u)) return 1; if(/complete/.test(u)) return 0; return 4; }
+      var ordre = d.soumissions.map(function(x, xi){ return {x: x, xi: xi, f: famDe(x.fr)}; }).sort(function(a, b){ return a.f - b.f || a.xi - b.xi; });
+      ordre.forEach(function(o2){
+        var x = o2.x, xi = o2.xi;
         var ls = (x.lignes || []).filter(function(l){ return true; });
-        if(rech && !ok(x.fr) && !ls.some(function(l){ return ok(l.fr); })) return; n++;
+        if(rech && !ok(x.fr) && !ls.some(function(l){ return ok(l.fr); })) return;
+        if(o2.f !== famCour){ famCour = o2.f; h += '<div class="pst">'+FAM[famCour]+'</div>'; }
+        n++;
         var o = !!rech && false || ouv["m"+xi];
         h += '<div class="pss" data-o="m'+xi+'"><span>'+esc(x.fr)+'</span><b>'+(o ? "−" : fmt(x.total))+'</b></div>';
         if(o){ ls.forEach(function(l){ h += '<div class="psl"><span>'+esc(l.fr)+'</span>'+(l.qte ? '<i>× '+esc(String(l.qte))+'</i>' : "")+'<b>'+(l.sous != null && l.sous !== "" ? fmt(l.sous) : "")+'</b></div>'; }); h += '<div class="psl"><span>Total</span><b>'+fmt(x.total)+'</b></div>'; }
