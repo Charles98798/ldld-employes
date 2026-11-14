@@ -1,7 +1,7 @@
 // Envoi salarial (Direction seulement): liste des employés prêts, aperçu du courriel et du PDF avec contrôle automatique, envoi avec confirmation.
 // Appels au Service (relais vers le pont): env_liste, env_apercu, env_envoyer. JAMAIS de mise en cache ni de copie sur l'appareil (salaires).
 // Le mode « Essai » (tout va à la Direction) est le mode par défaut. Le serveur revérifie le mode, le nombre et les droits; aucun envoi ne part sans un appui sur « Oui, envoyer ».
-var ENVS = {d: null, mode: "essai", sel: null, msg: "", occupe: false};
+var ENVS = {d: null, mode: "reel", sel: null, msg: "", occupe: false};
 function envE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function envFr(v){ var n = Number(String(v == null ? "" : v).replace(/\s/g, "").replace("$", "").replace(",", ".")); if(v === "" || v == null || isNaN(n)) return ""; return n.toFixed(2).replace(".", ",") + " $"; }
 function envPuce(statut, libelle){
@@ -17,7 +17,7 @@ var ENVB = null;
 function envBarreDessiner(){
   var z = document.getElementById("envbarz"), E = ENVB; if(!z || !E) return;
   var p = Math.round(E.etat === "non" ? 0 : E.p), rouge = E.etat === "non";
-  z.innerHTML = '<div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+p+'%;background:#0d1117"></i></div><div style="font-size:30px;font-weight:300;margin:6px 0 10px">'+p+' %</div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:#8EFF60;color:#1D1D1B")+';margin:0 0 6px;cursor:default">▪ '+envE(E.texte)+'</div><div class="aeact" style="margin-top:14px">'+'<button type="button" class="bouton lg" id="envbarf"'+(E.etat === "cours" ? " disabled" : "")+'>Fermer</button></div>';
+  z.innerHTML = '<div style="height:8px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+p+'%;background:#0d1117"></i></div><div style="font-size:20px;font-weight:300;margin:4px 0 8px">'+p+' %</div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:#8EFF60;color:#1D1D1B")+';margin:0 0 4px;cursor:default;font-size:11px;padding:8px 10px;letter-spacing:.08em">▪ '+envE(E.texte)+'</div><div class="aeact" style="margin:10px 0 4px">'+'<button type="button" class="bouton lg" id="envbarf"'+(E.etat === "cours" ? " disabled" : "")+'>Fermer</button></div>';
   var f = document.getElementById("envbarf"); if(f) f.onclick = function(){ if(ENVB && ENVB.etat === "cours") return; var cb = ENVB && ENVB.apresFermer; envBarreRetirer(); if(cb) cb(); };
   var r = document.getElementById("envbarre"); if(r) r.onclick = function(){ var fn = ENVB && ENVB.reessayer; envBarreRetirer(); if(fn) fn(); };
 }
@@ -25,7 +25,7 @@ function envBarreRetirer(){ if(ENVB && ENVB.tick) clearInterval(ENVB.tick); ENVB
 function envBarreOuvrir(texte, duree, opts){
   envBarreRetirer(); opts = opts || {};
   var t0 = Date.now(), E = ENVB = {etat: "cours", p: 0, texte: texte, reel: false, reessayer: opts.reessayer, apresFermer: opts.apresFermer};
-  if(!document.getElementById("envbar")) document.body.insertAdjacentHTML("beforeend", '<div class="pop" id="envbar"><div class="popc"><div id="envbarz"></div></div></div>');
+  if(!document.getElementById("envbar")) document.body.insertAdjacentHTML("beforeend", '<div class="pop" id="envbar"><div class="popc" style="max-width:260px;padding:14px 14px 10px"><div id="envbarz"></div></div></div>');
   E.tick = setInterval(function(){ if(ENVB !== E || E.etat !== "cours") return; if(!E.reel) E.p = 92 * (1 - Math.exp(-(Date.now() - t0) / (duree || 30000))); envBarreDessiner(); }, 400);
   envBarreDessiner();
 }
@@ -49,7 +49,7 @@ function envPrets(){ return envVisibles().filter(function(e){ return e.statut ==
 function envCoches(){ ENVS.coches = ENVS.coches || {}; return envPrets().filter(function(e){ return ENVS.coches[e.nom]; }); }
 function envListe(){
   var d = ENVS.d, L = envVisibles(), ferme = !!(d.fenetre && d.fenetre.ouverte === false), prets = ferme ? [] : envCoches(), tousPrets = ferme ? [] : envPrets(), essai = ENVS.mode === "essai";
-  var h = (ferme ? '<div class="bandeau" style="margin:0 0 12px;cursor:default">▪ '+envE(d.fenetre.message || "Envoi salarial verrouillé")+'</div>' : '') + '<span class="lbl">Mode d’envoi</span><select class="bx" id="envmode"><option value="essai"'+(essai ? " selected" : "")+'>Essai (tout va à Direction)</option><option value="reel"'+(essai ? "" : " selected")+'>Réel (chaque employé)</option></select>';
+  var h = (ferme ? '<div class="bandeau" style="margin:0 0 12px;cursor:default">▪ '+envE(d.fenetre.message || "Envoi salarial verrouillé")+'</div>' : '') + '';
   if(d.annee) h += '<span class="lbl">Année</span><div class="bx" style="border-color:transparent;padding-left:0">'+envE(d.annee)+'</div>';
   h += '<span class="lbl">Employés</span>';
   if(tousPrets.length) h += '<div style="margin:0 0 8px"><a href="#" id="envtout" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:3px;text-underline-offset:4px">'+(prets.length === tousPrets.length ? "Tout décocher" : "Tout cocher")+'</a></div>';
@@ -64,7 +64,6 @@ function envListe(){
   h += '<button type="button" class="bouton" id="envsend" style="height:46px;padding:0;margin-top:14px"'+(prets.length ? "" : " disabled")+'>Envoyer '+prets.length+' courriel'+(prets.length > 1 ? "s" : "")+(essai ? " d’essai" : "")+'</button>';
   document.getElementById("envapp").innerHTML = h;
   envMessage(ENVS.msg);
-  document.getElementById("envmode").onchange = function(){ ENVS.mode = this.value === "reel" ? "reel" : "essai"; envOuvrir(); };
   Array.prototype.forEach.call(document.querySelectorAll(".envl"), function(x){ x.onclick = function(){ envApercu(L[+x.getAttribute("data-i")]); }; });
   Array.prototype.forEach.call(document.querySelectorAll(".envcase"), function(x){ x.onclick = function(ev){ ev.stopPropagation(); var e = L[+x.getAttribute("data-i")]; ENVS.coches = ENVS.coches || {}; ENVS.coches[e.nom] = !ENVS.coches[e.nom]; envListe(); }; });
   var tt = document.getElementById("envtout"); if(tt) tt.onclick = function(ev){ ev.preventDefault(); var tous = prets.length === tousPrets.length; ENVS.coches = {}; if(!tous) tousPrets.forEach(function(e){ ENVS.coches[e.nom] = true; }); envListe(); };
