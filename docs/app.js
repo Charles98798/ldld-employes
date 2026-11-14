@@ -583,6 +583,7 @@ var ENT = [
  {id:"calendrier", g:"Mon travail", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
  {id:"rencontre", g:"Mon travail", h:1, l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
  {id:"autoevaluation", g:"Évaluation", h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,1,1], i:2, f:function(){ aeEntree(); }},
+ {id:"ae_reunion", g:"Évaluation", l:"Réunion d’auto-évaluation", p:"Réunion d’auto-évaluation", d:[0,1,1], f:function(){ aerBientot(); }},
  {id:"ae_planif", g:"Évaluation", l:"Planification des rendez-vous", p:"Planification des rendez-vous d’auto-évaluation", d:[0,1,1], f:function(){ aepPlanification(); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},

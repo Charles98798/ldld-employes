@@ -128,3 +128,9 @@ function aerOuvrir(cle, noms){
   }
 }
 window.addEventListener("pagehide", function(){ if(AER.cle && !AER.lectureSeule) aerLiberer(); });
+
+// Page d'attente: la Réunion n'est pas allumée (chiffrement des notes à terminer). Aucune donnée, aucun appel au Service.
+function aerBientot(){
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion d’auto-évaluation</h1><div class="aevide">Bientôt disponible.</div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+}
