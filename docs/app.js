@@ -1,4 +1,4 @@
-var APP_PUB = "462";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "473";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -639,7 +639,7 @@ function menu(){
     if(grp && x.g !== g){ g = x.g; h += '<div class="gtit">▪ '+esc(g)+'</div>'; }
     h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.id === "messages" ? "Calendrier et messages" : x.l).replace("\u2191", FLECHE_TXT)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(x.n ? '<b class="nc">'+x.n+'</b>' : "")+'</span></a>';
   });
-  if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { echPrecharger(); setTimeout(function(){ try { posEmpPrecharger(); embPrecharger(); } catch(e){} }, 4000); } catch(e){} }
+  if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { echPrecharger(); setTimeout(function(){ try { posEmpPrecharger(); embPrecharger(); } catch(e){} }, 20000); } catch(e){} }
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="envg"></div><div id="auj"></div>' + h +
     (vueComme() ? '<a href="#" id="rcommefin">Revenir à mon compte</a>' : '') +
     '<a class="sortie" href="#" id="sortie">Déconnexion</a></div>';
@@ -2764,6 +2764,8 @@ function heures(){
       '<div class="hcols">'+col("Cette semaine", r.cette || [])+col("Semaine passée", r.passee || [])+'</div>';
   }
   obtenir("heures", {action:"heures"}, afficherH, function(){ var z = document.getElementById("hz"); if(z) z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
+  // Délai d'attente: si rien n'est arrivé après 8 s (appels en rafale à l'ouverture), une demande neuve part et la première réponse gagne.
+  setTimeout(function(){ var z = document.getElementById("hz"); if(z && /UN INSTANT/.test(z.textContent)){ chercher("heures", {action:"heures"}).then(function(r){ var z2 = document.getElementById("hz"); if(z2 && /UN INSTANT/.test(z2.textContent)) afficherH(r); }).catch(function(){}); } }, 8000);
 }
 var VUE_ONGLETS = [9, 0, 4, 2, 7];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
 function estCharles(){ return !!(MOI && /^\s*charles\b/i.test(String(MOI.nom || ""))); }
