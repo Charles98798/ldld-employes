@@ -1048,3 +1048,6 @@ select:not(.act){width:100%;box-sizing:border-box}
 :root{--espace-entete:40px}
 .page .bl{margin-bottom:var(--espace-entete)!important}
 .page .bl + *{margin-top:0!important}
+.gcouloir{margin:6px 0 26px}.gcent,.gcr{display:grid;grid-template-columns:1fr 1fr 34px 1fr 1fr;gap:4px;margin-bottom:4px}.gcent{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.7;text-align:center}
+.gcr b{display:flex;align-items:center;justify-content:center;height:40px;font-weight:400;font-size:14px}.gcr .occ{background:#0D1319;color:#8EFF60}.gcr .lib{background:#B4AB9B;color:#0D1319}
+.gcc{background:repeating-linear-gradient(0deg,transparent 0 6px,#B7B1A5 6px 8px)}
