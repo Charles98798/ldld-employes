@@ -141,6 +141,20 @@ function fgGraphique(type){
   if(type === "ventes"){
     return '<div class="finnote">La comparaison avec l\'an passé sera disponible en 2027. QuickBooks est utilisé depuis le 1er janvier 2026.</div>';
   }
+  if(type === "banque"){
+    var bn = p[1]-p[0]+1, bq = (R.tresorerie || []).slice(p[0], p[1]+1).map(function(v){ return v/1000; }), mg = (R.margeCredit || []).slice(p[0], p[1]+1).map(function(v){ return Math.abs(v)/1000; });
+    if(!bq.length) return '<div class="finnote">Aucune donnée de banque pour cette période.</div>';
+    var hi2 = Math.max.apply(null, bq.concat(mg).concat([1])), lo2 = Math.min.apply(null, bq.concat([0])), rng = hi2-lo2, pas2 = [5,10,25,50,100,250,500].filter(function(q){ return rng/q <= 5; })[0] || 500;
+    hi2 = Math.ceil(hi2/pas2)*pas2; lo2 = Math.floor(lo2/pas2)*pas2;
+    var Lb = 44, bs = 14, hb = 170, yb = function(v){ return bs+(hi2-v)/(hi2-lo2)*hb; }, gb = (W-Lb)/bn, wb = Math.min(14, gb/2-2), q2;
+    for(q2=lo2;q2<=hi2;q2+=pas2) s += '<line x1="'+Lb+'" x2="'+W+'" y1="'+yb(q2)+'" y2="'+yb(q2)+'" stroke="'+(q2 ? "#bdb9ae" : "#0D1319")+'" stroke-width="1"/><text x="0" y="'+(yb(q2)+3)+'">'+q2+' k$</text>';
+    for(i=0;i<bn;i++){ var xb = Lb+i*gb+gb/2, v1 = bq[i], y0 = yb(0), y1 = yb(v1), hm = y0-yb(mg[i]);
+      s += '<rect x="'+(xb-wb-.5)+'" y="'+Math.min(y0,y1)+'" width="'+wb+'" height="'+Math.abs(y1-y0)+'" fill="#0D1319"/>';
+      if(hm > 1) s += '<rect x="'+(xb+1)+'" y="'+(y0-hm+.75)+'" width="'+(wb-1.5)+'" height="'+(hm-1.5)+'" fill="none" stroke="#0D1319" stroke-width="1.5"/>';
+      s += '<text x="'+xb+'" y="'+(bs+hb+16)+'" text-anchor="middle">'+FG_MM[p[0]+i]+'</text>'; }
+    var zb = bn-1, cartesB = '<div class="fgcards"><div><small>EN BANQUE</small><b>'+finMontant(bq[zb]*1000)+'</b></div><div class="g"><small>MARGE UTILISÉE</small><b>'+finMontant(mg[zb]*1000)+'</b></div><div><small>MARGE DISPONIBLE</small><b>— $</b></div></div>';
+    return cartesB + '<svg class="finsvg" viewBox="0 0 '+W+' '+(bs+hb+24)+'">'+s+'</svg><div class="finnote">Plein : solde en banque · Vide : marge de crédit utilisée<br>La marge disponible s\'affichera dès que la limite de la marge sera connue</div>';
+  }
   if(type === "tres"){
     var cn = p[1]-p[0]+1, sol = (R.tresorerie || []).slice(p[0], p[1]+1).map(function(v){ return v/1000; }), fl = (R.flux || []).slice(p[0], p[1]+1).map(function(v){ return v/1000; });
     if(!sol.length) return '<div class="finnote">Aucune donnée de trésorerie pour cette période.</div>';
@@ -171,10 +185,10 @@ function fgGraphique(type){
   });
   return h + '<div class="finnote">Total à recevoir : '+finMontant(tot)+' · '+(tot ? Math.round(c.plus/tot*100) : 0)+' % depuis plus de 90 jours</div>';
 }
-var FG_PAGES = {ratios:["01","Ratios vs objectifs","Marge brute, salaires et achats, en % des ventes"], ventes:["02","Ventes vs an passé","Disponible en 2027"], tres:["03","Trésorerie","Ce qui est entré, ce qui est sorti, chaque mois"], cli:["04","Comptes clients","À recevoir selon l'ancienneté de la facture"]};
+var FG_PAGES = {ratios:["01","Ratios vs objectifs","Marge brute, salaires et achats, en % des ventes"], ventes:["02","Ventes vs an passé","Disponible en 2027"], tres:["03","Trésorerie","Ce qui est entré, ce qui est sorti, chaque mois"], banque:["05","Banque et crédit","Banque et crédit, mois par mois"], cli:["04","Comptes clients","À recevoir selon l'ancienneté de la facture"]};
 function financeGraphique(type){
   var pg = FG_PAGES[type];
-  FIN_TITRE = {ratios: "Ratios par catégorie", ventes: "Ventes vs an passé", tres: "Trésorerie", cli: "Comptes clients"}[type];
+  FIN_TITRE = {ratios: "Ratios par catégorie", ventes: "Ventes vs an passé", tres: "Trésorerie", banque: "Banque et crédit", cli: "Comptes clients"}[type];
   finCharger(function(){
     var sel = (type === "ventes" || type === "cli") ? "" : fgSel();
     app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>' + FIN_TITRE + '</h1></div><div class="finsous">' + (FIN_ORIGINE === "finances" ? "Finances" : "Conseil d\'administration") + '</div>' +
@@ -205,11 +219,11 @@ function financeMenu(){
 function financesMenu(){
   FIN_ORIGINE = "finances";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Finances</h1>' +
-    '<a class="doc" href="#" id="fi5"><span>'+picto("États financiers")+'États financiers</span></a><a class="doc" href="#" id="fi0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fi1"><span>'+picto("Ratios par catégorie")+'Ratios en $</span></a><a class="doc" href="#" id="fi2"><span>'+picto("Ventes vs an passé")+'Ventes vs an passé</span></a><a class="doc" href="#" id="fi3"><span>'+picto("Trésorerie")+'Trésorerie</span></a><a class="doc" href="#" id="fi4"><span>'+picto("Comptes clients")+'Comptes clients</span></a><a class="doc" href="#" id="fi6"><span>'+picto("Top 10 clients")+'Top 10 clients</span></a></div>';
+    '<a class="doc" href="#" id="fi5"><span>'+picto("États financiers")+'États financiers</span></a><a class="doc" href="#" id="fi0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fi1"><span>'+picto("Ratios par catégorie")+'Ratios en $</span></a><a class="doc" href="#" id="fi2"><span>'+picto("Ventes vs an passé")+'Ventes vs an passé</span></a><a class="doc" href="#" id="fi3"><span>'+picto("Trésorerie")+'Trésorerie</span></a><a class="doc" href="#" id="fi7"><span>'+picto("Banque et crédit")+'Banque et crédit</span></a><a class="doc" href="#" id="fi4"><span>'+picto("Comptes clients")+'Comptes clients</span></a><a class="doc" href="#" id="fi6"><span>'+picto("Top 10 clients")+'Top 10 clients</span></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   document.getElementById("fi0").onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeOuvrir(); };
   document.getElementById("fi1").onclick = function(e){ e.preventDefault(); financesRatios(); };
-  [["fi2","ventes"],["fi3","tres"],["fi4","cli"]].forEach(function(a){ document.getElementById(a[0]).onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeGraphique(a[1]); }; });
+  [["fi2","ventes"],["fi3","tres"],["fi7","banque"],["fi4","cli"]].forEach(function(a){ document.getElementById(a[0]).onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeGraphique(a[1]); }; });
   document.getElementById("fi5").onclick = function(e){ e.preventDefault(); efOuvrir(); };
   document.getElementById("fi6").onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeTop10(); };
 }

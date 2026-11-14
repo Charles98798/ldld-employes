@@ -601,6 +601,7 @@ var ENT = [
  {id:"finances_ratios", g:"Finances", l:"Finances · Ratios en $", p:"Ratios par catégorie", d:[0,0,1], v:1, s:1},
  {id:"finances_ventes", g:"Finances", l:"Finances · Ventes vs an passé", p:"Ventes vs an passé", d:[0,0,1], v:1, s:1},
  {id:"finances_tresorerie", g:"Finances", l:"Finances · Trésorerie", p:"Trésorerie", d:[0,0,1], v:1, s:1},
+ {id:"finances_banque", g:"Finances", l:"Finances · Banque et crédit", p:"Banque et crédit", d:[0,0,1], v:1, s:1},
  {id:"finances_clients", g:"Finances", l:"Finances · Comptes clients", p:"Comptes clients", d:[0,0,1], v:1, s:1},
  {id:"finances_top10", g:"Finances", l:"Finances · Top 10 clients", p:"Top 10 clients", d:[0,0,1], v:1, s:1},
  {id:"manuel", g:"Documents", l:"Manuel d’employé", p:"Manuel", d:[1,1,1], i:1, f:function(){ section(1); }},
