@@ -294,7 +294,7 @@ function prechargerLectures(){
   prechargerLectures.t = Date.now();
   var l = [{action:"heures"}, {action:"agenda_mes"}, {action:"rencontre_liste"}, {action:"prefs_lire"}, {action:"entretien_lire"}];
   if(MOI.role === "direction" || MOI.role === "responsable") l = l.concat([{action:"charge_equipe"}, {action:"entretien_lire"}, {action:"parking_lire"}, {action:"equipe_groupes"}, {action:"utilisation"}, {action:"agenda_liste"}]);
-  if(MOI.role === "direction") l = l.concat([{action:"production_lire"}, {action:"employes_etat"}, {action:"ech_donnees"}, {action:"embauche_donnees"}, {action:"embauche_avantages"}, {action:"pos_donnees"}, {action:"portrait", id:""}]);
+  if(MOI.role === "direction") l = l.concat([{action:"production_lire"}, {action:"employes_etat"}, {action:"ech_donnees"}, {action:"embauche_donnees"}, {action:"embauche_avantages"}, {action:"pos_donnees"}, {action:"portrait", id:""}, {action:"ef_donnees"}]);
   var i = 0; function suite(){ if(i >= l.length) return; var c = l[i++]; c.session = sessionGardee(); var e = RCACHE[cleLecture(c)]; ((e && Date.now() - e.t < 150000) ? Promise.resolve() : enArriere(function(){ return appelService(c); }).catch(function(){})).then(suite); }
   if(MOI.role === "direction"){ setTimeout(suite, 15000); return; }   // Direction: une seule file, 15 s après l'arrivée (les ouvertures de page passent d'abord, le service n'est pas saturé)
   suite(); setTimeout(suite, 300); setTimeout(suite, 600);
