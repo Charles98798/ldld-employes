@@ -1,4 +1,4 @@
-var APP_PUB = "486";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "501";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -305,9 +305,10 @@ function prechargerLectures(){
 // Tout est préchargé avant l'arrivée sur la page : copie locale affichée tout de suite, vérification silencieuse ensuite.
 var CACHE = {};
 function lireCache(cle){ if(VUE.on) return null; if(CACHE[cle]) return CACHE[cle]; try { var v = JSON.parse(localStorage.getItem("ldld-c-"+cle)); if(v) CACHE[cle] = v; return v; } catch(e){ return null; } }
+var VUE_MSG = null;   // messages de l'employé affiché en vue « voir comme » (la pastille de l'accueil doit compter les siens, pas les miens)
 function chercher(cle, corps){
   corps.session = sessionGardee();
-  return appelService(corps).then(function(r){ if(r && r.ok && !VUE.on){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
+  return appelService(corps).then(function(r){ if(r && r.ok && VUE.on && cle === "messages") VUE_MSG = r; if(r && r.ok && !VUE.on){ CACHE[cle] = r; try { localStorage.setItem("ldld-c-"+cle, JSON.stringify(r)); } catch(e){} } return r; });
 }
 function viderCache(){ try { localStorage.removeItem("ldld-vue-antonio"); } catch(e){} CACHE = {}; RCACHE = {}; COPIE_PAR = {}; precharger.t = 0; MOI_PRE = null; VUE_PRE = null; try { Object.keys(localStorage).forEach(function(k){ if(k.indexOf("ldld-c-") === 0) localStorage.removeItem(k); }); } catch(e){} }
 /** Affiche la copie locale (sans écran de chargement) puis remplace en silence si la version a changé. */
@@ -320,7 +321,7 @@ function obtenir(cle, corps, afficher, erreur, majSilencieuse){
 }
 function pastilleMessages(){
   var a = app.querySelector('a[data-i="0"]'); if(!a) return;
-  var m = lireCache("messages"), l = lus(), n = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && l.indexOf(x.id) < 0; }).length : 0;
+  var m = VUE.on ? VUE_MSG : lireCache("messages"), l = lus(), n = m && m.messages ? m.messages.filter(function(x){ return !x.envoye && l.indexOf(x.id) < 0; }).length : 0;
   var p = a.querySelector(".nombre"); if(p) p.remove();
   if(n){ p = document.createElement("span"); p.className = "nombre"; p.textContent = pastilleTexte(n); a.appendChild(p); }
   pastilleDirection();
@@ -700,8 +701,10 @@ function aeAFaire(){
   poser();
   chercher("ae", {action:"ae_lire"}).then(poser).catch(function(){});
 }
+var NEUFS_VISITE = {};
 function messages(filtre){
   if(typeof filtre === "string") FILTRE_MSG = filtre;
+  NEUFS_VISITE = {};
   var fusion = !FILTRE_MSG;   // même page « Calendrier et messages » pour tous, y compris la vue employé de la Direction (astérisque)
   var titreMsg = fusion ? "Calendrier et messages" : FILTRE_MSG === "envoyes" ? "Historique message" : FILTRE_MSG === "rencontres" ? "Rencontre demandée" : "Message reçu";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div><div class="etiq">▪ À VENIR</div><div id="aven"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '<div class="etiq">▪ REÇUS</div>' : '') + '<div id="liste"></div>' +
@@ -715,11 +718,12 @@ function messages(filtre){
     MESSAGES = r.messages; var l = lus();
     var vus = MESSAGES.filter(function(m){ return FILTRE_MSG === "envoyes" ? m.envoye : FILTRE_MSG === "rencontres" ? (!m.envoye && /^Demande de rencontre/.test(m.titre)) : true; });
     document.getElementById("liste").innerHTML = vus.length ? '<div class="lcol lcolh"><span>Date</span><span>Message</span><span>État</span></div>' + vus.map(function(m){
-      var neuf = !m.envoye && l.indexOf(m.id) < 0;
+      var neuf = !m.envoye && (l.indexOf(m.id) < 0 || NEUFS_VISITE[m.id]); if(neuf) NEUFS_VISITE[m.id] = 1;
       return '<a class="lcol" href="#" data-id="'+esc(m.id)+'"><span>'+dateCourte(m.date)+'</span><span>'+esc(m.titre)+'<small>'+(m.envoye ? 'Envoyé à '+m.nb+' personne'+(m.nb > 1 ? 's' : '') : esc(m.de))+'</small></span><span>'+(m.envoye ? "Envoyé" : (neuf ? "Nouveau" : "Lu"))+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN MESSAGE</div>';
     Array.prototype.forEach.call(app.querySelectorAll("a[data-id]"), function(a){
       a.onclick = function(e){ e.preventDefault(); detail(a.getAttribute("data-id")); };
     });
+    if(fusion) vus.forEach(function(m){ if(!m.envoye) noterLu(m.id); });   // les nouveaux restent en vert pendant cette visite; la pastille de l'accueil disparaît au retour
   }, function(){ document.getElementById("liste").innerHTML = '<div class="bandeau">▪ MESSAGES INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
 function detail(id){
