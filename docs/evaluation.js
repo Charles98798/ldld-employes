@@ -179,6 +179,7 @@ function aerBientot(){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   function iso(d){ return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
   function afficher(r){
+    if(!(r.lignes || []).some(function(e){ return e.autoeval1 !== undefined || e.autoeval2 !== undefined; })){ document.getElementById("aerl").innerHTML = '<div class="aevide">Bientôt disponible.</div>'; return; }
     var n = new Date(), t = iso(n), f = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 14), fin = iso(f), v = [];
     (r.lignes || []).forEach(function(e){
       var x = aepNormaliser(e); if(!x.nom || /^direction$/i.test(x.cat.trim())) return;
