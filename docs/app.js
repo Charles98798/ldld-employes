@@ -30,7 +30,7 @@ var PICTOS = {
  "Production": "M2 4h6v6h-6zM9 4h6v6h-6zM16 4h6v6h-6zM2 13h20v3h-20zM4 18h4v4h-4zM16 18h4v4h-4z",
  "Top 10 clients": "M5 2h14v10h-14zM11 5h2v6h-2zM2 3h3v6h-3zM19 3h3v6h-3zM10 12h4v6h-4zM6 19h12v3h-12z",
  "Contrôle": "M2 2h20v20h-20zM5 5h14v14h-14zM7 12h3v3h-3zM10 15h3v3h-3zM13 9h3v6h-3z",
- "Prix et soumissions": "M2 2h20v20H2zM5 5v14h14V5zM7 7h10v10H7zM10 10h3v3h-3z",
+ "Prix et soumissions": "M2 5h12v3h3v3h3v2h-3v3h-3v3h-12zM5 10h3v3h-3z",
  "Finances": "M4 1h16v22h-16zM7 4h10v5h-10zM7 12h3v3h-3zM11 12h2v3h-2zM14 12h3v3h-3zM7 17h3v3h-3zM11 17h2v3h-2zM14 17h3v3h-3z",
  "Conseil d'administration": "M5 9h14v6h-14zM6 4h4v3h-4zM14 4h4v3h-4zM6 17h4v3h-4zM14 17h4v3h-4zM2 10h2v4h-2zM20 10h2v4h-2z",
  "Employés": "M3 4h6v6h-6zM15 4h6v6h-6zM3 13h18v8h-18z",
