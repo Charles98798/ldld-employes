@@ -230,7 +230,7 @@ function rdDiscussion(donnees, edition){
   }).join("");
   if(!pts.length && edition !== "nouveau") h += rdMsg("Aucun point pour la prochaine rencontre");
   if(edition === "nouveau") h += '<div class="rdp"><small>Nouveau point</small><textarea class="rdzone" id="rdtx" maxlength="400" rows="3" placeholder="Écrire le point"></textarea></div>';
-  h += '<div class="rdgrid"><button type="button" class="rdsoft" id="rdadd">Ajouter un point</button>'+((MOI && MOI.role === "direction") ? '<button type="button" class="rdsoft" id="rdbase">Modifier les points de base</button>' : '<span></span>')+'<button type="button" class="rdsoft rdpubb" id="rdpub">Publier aux employés</button><button type="button" class="rdsoft" id="rdhist">Historique</button></div>';
+  h += '<div class="rdgrid"><button type="button" class="rdsoft" id="rdadd">Ajouter un point</button>'+(rdPeutPlanifier() ? '<button type="button" class="rdsoft" id="rdbase">Modifier les points de base</button>' : '<span></span>')+'<button type="button" class="rdsoft rdpubb" id="rdpub">Publier aux employés</button><button type="button" class="rdsoft" id="rdhist">Historique</button></div>';
   h += '<div class="rdp" style="margin-top:12px"><small>'+rdE("Dernière publication : " + (donnees.derniere_publication || rdPubLue() || "jamais"))+'</small></div>';
   h += '<div class="rdp"><small style="text-transform:none;letter-spacing:0;font-size:13px;line-height:1.4">Chaque réunion repart des points de base. Vos modifications ci-dessus ne touchent que cette réunion.</small></div><div id="rdm"></div>';
   z.innerHTML = h;
@@ -305,7 +305,7 @@ rdAuto(ta, function(t){ dire("Enregistrement en cours"); if(!reel) return matSil
 var RD_LOC = {}, RD_BDON = null;
 function rdFusion(r){ if(r && r.points) r.points.forEach(function(p){ if(RD_LOC[p.id] !== undefined) p.texte = RD_LOC[p.id]; }); return r; }
 function rdBase(donnees, edition){
-  if(!(MOI && MOI.role === "direction")){ rdPlanif(); return; }
+  if(!rdPeutPlanifier()){ rdPlanif(); return; }
   if(!donnees){
     app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>'+rdMenuHtml("disc")+'<div id="rdz"></div></div>';
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); RD.vue = "discussion"; rdPlanif(); };
