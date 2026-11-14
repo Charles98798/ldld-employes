@@ -18,7 +18,7 @@ function aepProchaine(x, auj){
 }
 function aepHeure(h){ var p = /^(\d{1,2}):(\d\d)/.exec(h || ""); return p && !(+p[1] === 0 && +p[2] === 0) ? (+p[1]) + " h" + (p[2] === "00" ? "" : " " + p[2]) : ""; }
 function aepPlanification(){
-  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification des rencontres</h1><div class="aepf" id="aepf"></div><div id="aepz"></div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification rencontre</h1><div class="aepf" id="aepf"></div><div id="aepz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   var donnees = null;
   function afficher(){
