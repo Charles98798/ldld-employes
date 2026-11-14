@@ -4,7 +4,7 @@ var POS_CACHE = {d: null};
 var POS_FERMER = null;
 function posEmpOuvrir(){
   app.innerHTML = '<div class="page ppx"><a class="retour" href="#" id="retour">Retour</a><h1>Position employé</h1><div id="pp_app" class="sansemp"></div><div class="voile" id="pp_voile"></div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(POS_FERMER) POS_FERMER(); responsable(); };
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(typeof envBarreRetirer === "function") envBarreRetirer(); if(POS_FERMER) POS_FERMER(); responsable(); };
   (function(){
 
   // Pont: les mêmes fonctions du classeur (posDonneesLDLD, posEnregistrerLDLD), appelées par le service de l'application.
@@ -204,12 +204,15 @@ function demarrer(){
 }
 var frais=false;
 function lireFrais(){
+ var barre=!D;   // aucune copie à afficher: petite barre d'état au milieu pendant la lecture (15 à 25 s)
+ if(barre&&typeof envBarreOuvrir==='function')envBarreOuvrir('Lecture des positions…',25000,{apresFermer:function(){if(POS_FERMER)POS_FERMER();responsable()}});
  GS().withSuccessHandler(function(r){
    var id=D&&D.employes[i]?D.employes[i].id:null,sel=$('choix'),choisi=sel?sel.value:'',avant=sel?sel.dataset.classeur:'';
+   if(barre&&typeof envBarreRetirer==='function')envBarreRetirer();
    var deja=!!D;D=r;frais=true;var k=id?D.employes.findIndex(function(e){return e.id===id}):-1;i=k>=0?k:0;
    if(!deja||!$('nom'))demarrer();else{afficher();if(choisi!==avant&&choisi&&[].some.call($('choix').options,function(o){return o.value===choisi})){$('choix').value=choisi;majChoix()}}
    majFrais()})
-  .withFailureHandler(function(e){if(!D){PRE.err=e.message||String(e);demarrer()}else{$('alerte').style.display='block';$('alerte').textContent='Mise à jour impossible : '+(e.message||e)+'. Fermez et rouvrez le positionnement.'}})
+  .withFailureHandler(function(e){if(!D){PRE.err=e.message||String(e);if(barre&&typeof envBarreFin==='function')envBarreFin(false,PRE.err);demarrer()}else{$('alerte').style.display='block';$('alerte').textContent='Mise à jour impossible : '+(e.message||e)+'. Fermez et rouvrez le positionnement.'}})
   .posDonneesLDLD();
 }
 // Tant que la lecture fraîche n'est pas arrivée, on consulte la copie mais on n'enregistre pas.
