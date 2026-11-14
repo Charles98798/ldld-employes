@@ -1,4 +1,4 @@
-var APP_PUB = "504";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "505";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2781,7 +2781,7 @@ function heures(){
   // Délai d'attente: si rien n'est arrivé après 8 s (appels en rafale à l'ouverture), une demande neuve part et la première réponse gagne.
   setTimeout(function(){ var z = document.getElementById("hz"); if(z && /UN INSTANT/.test(z.textContent)){ chercher("heures", {action:"heures"}).then(function(r){ var z2 = document.getElementById("hz"); if(z2 && /UN INSTANT/.test(z2.textContent)) afficherH(r); }).catch(function(){}); } }, 8000);
 }
-var VUE_ONGLETS = [9, 0, 4, 2, 7];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
+var VUE_ONGLETS = [9, 4, 2, 7];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
 function estCharles(){ return !!(MOI && /^\s*charles\b/i.test(String(MOI.nom || ""))); }
 function section(i){
   if(MOI && MOI.role === "direction" && !vueComme() && VUE_ONGLETS.indexOf(i) >= 0) return vueEmploye(i);
