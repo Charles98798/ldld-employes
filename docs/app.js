@@ -1237,7 +1237,8 @@ function planPlace(num){
 }
 function profil(){
   var m = MOI || {};
-  var lignes = [["Nom", m.nom || "", 1], ["Titre", m.poste || "", 1], ["Responsable", m.responsable || ""]];
+  var lignes = [["Nom", m.nom || "", 1], ["Titre", m.poste || "", 1]];
+  if(String(m.responsable || "").trim()) lignes.push(["Responsable", String(m.responsable).trim()]);   // pas de responsable: la ligne n'apparaît pas
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mon profil</h1>' +
     lignes.map(function(l){ return l[2] ? '<div class="ligne pfg"><span>'+esc(l[1])+'</span></div>' : '<div class="ligne pfg"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
     '<div id="stat"></div>' +
