@@ -126,7 +126,7 @@ function efDessiner(r){
   function section(t, gs, fins){
     n++;
     return '<div class="sect"><span class="num">0' + n + '</span><span class="lab">' + t + '</span></div>' +
-      '<div class="efl efh"><span></span><span>' + r.annee + '</span><span>% des ventes</span></div>' + blocs(gs) + (fins || "");
+      '<div class="efl efh"><span></span><span>Montant</span><span>% des ventes</span></div>' + blocs(gs) + (fins || "");
   }
   var h = '<div class="page ppx fin ef sans-instant"><h1>États financiers</h1>' +
     '<select class="finsel" id="ef_sel">' + efOptions(r) + '</select>' +
