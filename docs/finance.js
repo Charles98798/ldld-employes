@@ -12,7 +12,7 @@ function finCharger(ok){
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); FIN_TOK++; finRetour(); }; }
   appelService({action: "finance_mensuel", session: sessionGardee()}).then(function(r){
     if(tok !== FIN_TOK) return;
-    if(r && r.ok && r.mois && r.mois.length){ clearTimeout(tm); FIN_R = r; finPreparer(r); ok(r); }
+    if(r && r.ok && r.mois && r.mois.length){ clearTimeout(tm); if(typeof efNettoyer === "function") efNettoyer(r); FIN_R = r; finPreparer(r); ok(r); }
     else echec(String((r && r.erreur) || "INDISPONIBLE").toUpperCase());
   }).catch(function(){ echec("INDISPONIBLE"); });
 }

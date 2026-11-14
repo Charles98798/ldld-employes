@@ -58,14 +58,20 @@ function efMontant(n){ var s = Math.abs(Math.round(n)).toString().replace(/\B(?=
 function efSomme(sub){ var t = 0; sub.forEach(function(x){ t += Number(x[1]) || 0; }); return t; }
 function efTotal(gs){ var t = 0; gs.forEach(function(g){ t += efSomme(g[1]); }); return t; }
 var EF_MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juill.", "août", "sept.", "oct.", "nov.", "déc."];
-var m_brut = null;
+// Correction des cellules que Google Sheets a lues comme des dates (ex. « 1469.05 » = mai 1469): on retrouve le montant d'origine (année + mois/100).
+function efNum(x){
+  var n = Number(x) || 0;
+  if(Math.abs(n) >= 2e9){ var d = new Date(n + 12 * 3600 * 1000); n = Math.round(d.getUTCFullYear() * 100 + (d.getUTCMonth() + 1)) / 100; }
+  return n;
+}
+function efNettoyer(r){ ["comptes", "totaux"].forEach(function(k){ Object.keys(r[k] || {}).forEach(function(c){ if(Array.isArray(r[k][c])) r[k][c] = r[k][c].map(efNum); }); }); ["tresorerie", "margeCredit", "flux"].forEach(function(k){ if(Array.isArray(r[k])) r[k] = r[k].map(efNum); }); return r; }
 function efOuvrir(){
   app.innerHTML = '<div class="page ppx fin ef"><h1>États financiers</h1><div class="bandeau">▪ CHARGEMENT…</div><a class="retour" href="#" id="retour">Retour</a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   appelService({action: "finance_mensuel", session: sessionGardee()}).then(function(m){
-    var r = m; m_brut = m;
-    if(m && m.ok && m.comptes){   // cumul de janvier à la date des données, chaque cellule convertie en nombre
-      var som = function(a){ var t = 0; (a || []).forEach(function(x){ t += Number(x) || 0; }); return Math.round(t * 100) / 100; };
+    var r = m;
+    if(m && m.ok && m.comptes){ efNettoyer(m);   // cumul de janvier à la date des données, chaque cellule convertie en nombre
+      var som = function(a){ var t = 0; (a || []).forEach(function(x){ t += efNum(x); }); return Math.round(t * 100) / 100; };
       r = {ok: true, annee: m.annee, maj: m.maj, comptes: {}, totaux: {}};
       Object.keys(m.comptes).forEach(function(k){ r.comptes[k] = som(m.comptes[k]); });
       Object.keys(m.totaux || {}).forEach(function(k){ r.totaux[k] = som(m.totaux[k]); });
@@ -117,7 +123,7 @@ function efDessiner(r){
   h += '<div class="sect"><span class="num">0' + n + '</span><span class="lab">Ratios</span></div><div class="efl efh"><span></span><span></span><span>% des ventes</span></div>' +
     [["Salaires / ventes", sal],["Achats / ventes", ach],["Frais généraux / ventes", fgx],["Frais d'administration / ventes", adm],["Frais de vente / ventes", vente],["Bénéfice brut / ventes", brut],["Bénéfice net / ventes", net]].map(function(r){
       return '<div class="efl"><span class="n">' + r[0] + '</span><span></span><span>' + pct(Number(r[1]) || 0) + '</span></div>'; }).join("");
-  h += '<div class="finnote">Publication 470 · diagnostic : sal=' + sal + ' ach=' + ach + ' vt=' + vt + ' cout=' + cout + ' comptes=' + Object.keys(r.comptes || {}).length + ' type5105=' + typeof (r.comptes || {})["5105"] + ' gros=' + Object.keys(r.comptes || {}).filter(function(k){ return Math.abs(Number(r.comptes[k]) || 0) > 1e7; }).map(function(k){ return k + ':' + String(r.comptes[k]).slice(0, 24) + ':' + (m_brut && m_brut.comptes && m_brut.comptes[k] ? JSON.stringify(m_brut.comptes[k]).slice(0, 80) : ''); }).join(' | ') + ' valeur5105=' + String((r.comptes || {})["5105"]).slice(0, 30) + '</div>' + '<a class="retour" href="#" id="retour">Retour</a></div>';
+  h += '<a class="retour" href="#" id="retour">Retour</a></div>';
   app.innerHTML = h;
   Array.prototype.forEach.call(document.querySelectorAll(".efr"), function(r){
     r.onclick = function(){ var o = r.classList.toggle("o"); r.querySelector(".efm").textContent = o ? "\u2212" : "+"; };
