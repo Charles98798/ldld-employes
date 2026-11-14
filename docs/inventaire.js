@@ -15,7 +15,26 @@ var INV_FICTIF = [
   {id: "f10", description: "SAVON À MAINS", categorie: "Entretien ménager", fournisseur: "NETTOPRO", unite: "BOUTEILLE", par: 1, stock: 7, minimum: 2, mode: "deduire"},
   {id: "f11", description: "COURROIE DE POLISSEUSE", categorie: "Pièces de machinerie", fournisseur: "OUTILPRO", unite: "UNITÉ", par: 1, stock: 2, minimum: 1, mode: "deduire"}
 ];
-var INV = {cat: "", debut: "", sorties: []};
+// Réception (Gestionnaires et Direction): lignes de commande en attente, par fournisseur et date. DONNÉES FICTIVES POUR ESSAI (à remplacer par la vue de Michel trak.app_reception).
+var INV_RECEPTION_FICTIF = [
+  {id: "r01", fournisseur: "CENTRAL DENTAL", date: "2026-11-12", code: "2019020", description: "POUDRE ABRASIVE RÉSILIENCE", commande: 4, prix: ""},
+  {id: "r02", fournisseur: "ZIRKONZAHN", date: "2026-11-12", code: "MEAR9514", description: "MÉTAL COCRONIT / 14", commande: 2, prix: ""},
+  {id: "r03", fournisseur: "ZIRKONZAHN", date: "2026-11-12", code: "ZRKC8031A01", description: "ZIRCONE DISPERSIVE 2 - A1 / 16", commande: 2, prix: "390"},
+  {id: "r04", fournisseur: "K DENTAL", date: "2026-11-11", code: "00-65037", description: "FILTRE SARATOGA", commande: 2, prix: ""}
+];
+var INV = {cat: "", debut: "", sorties: [], vue: "sortie", recu: {}, ouv: {}};
+function invDroitReception(){ return typeof roleIdx === "function" && roleIdx() >= 1; }
+function invMoisFr(iso){ var m = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"], p = String(iso).split("-"); return p.length === 3 ? (+p[2]) + " " + m[+p[1] - 1] + " " + p[0] : String(iso); }
+function invOnglets(){
+  if(!invDroitReception()) return "";
+  var rec = INV.vue === "reception";
+  return '<div style="margin:0 0 12px"><button type="button" class="bouton" id="'+(rec ? "invtsor" : "invtrec")+'" style="width:100%;height:46px;padding:0;margin:0">'+(rec ? "Retour à la sortie" : "Réception")+'</button></div>';
+}
+function invLierOnglets(){
+  var a = document.getElementById("invtsor"), b = document.getElementById("invtrec");
+  if(a) a.onclick = function(){ INV.vue = "sortie"; invListe(); };
+  if(b) b.onclick = function(){ INV.vue = "reception"; invReception(); };
+}
 function invE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function invNorm(t){ return String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim(); }
 // Lecture: pour l'instant les produits fictifs (copie, pour que les essais ne modifient pas la liste d'origine).
@@ -34,17 +53,17 @@ function invOuvrir(){
   invLire().then(function(r){
     if(!document.getElementById("invapp")) return;
     if(!(r && r.ok)){ var a = document.getElementById("invatt"); if(a){ a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = invOuvrir; } return; }
-    INV.d = r; if(!INV.cat) INV.cat = (r.produits[0] || {}).categorie || ""; invListe();
+    INV.d = r; if(!INV.cat) INV.cat = (r.produits[0] || {}).categorie || ""; if(INV.vue === "reception" && invDroitReception()) invReception(); else invListe();
   }).catch(function(){ var a = document.getElementById("invatt"); if(a){ a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = invOuvrir; } });
 }
 function invCategories(){ var v = {}, o = []; (INV.d.produits || []).forEach(function(p){ if(!v[p.categorie]){ v[p.categorie] = 1; o.push(p.categorie); } }); return o.sort(function(a, b){ return invNorm(a) < invNorm(b) ? -1 : 1; }); }
 function invListe(){
   var cats = invCategories(), z = document.getElementById("invapp"); if(!z) return;
-  var h = (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : "");
+  var h = invOnglets() + (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : "");
   h += '<span class="lbl">Catégorie</span><select class="bx" id="invcat" style="background:#8D806A;color:#fff;border-color:#8D806A">'+cats.map(function(c){ return '<option value="'+invE(c)+'"'+(c === INV.cat ? " selected" : "")+'>'+invE(c)+'</option>'; }).join("")+'</select>';
   h += '<span class="lbl">Commence par</span><input class="bx" id="invdeb" autocomplete="off" placeholder="Premières lettres" value="'+invE(INV.debut)+'">';
   h += '<span class="lbl">Produit</span><div id="invprod"></div>';
-  z.innerHTML = h;
+  z.innerHTML = h; invLierOnglets();
   document.getElementById("invcat").onchange = function(){ INV.cat = this.value; invProduits(); };
   document.getElementById("invdeb").oninput = function(){ INV.debut = this.value; invProduits(); };
   invProduits();
@@ -97,4 +116,49 @@ function invProduit(p){
     };
   }
   dessiner();
+}
+
+// Réception: une section par fournisseur et date de commande (repliable), puis une ligne par produit: code, description, commandé, reçu, prix (obligatoire), Confirmer et Annuler.
+function invReception(){
+  var z = document.getElementById("invapp"); if(!z) return;
+  if(!INV.rec) INV.rec = INV_RECEPTION_FICTIF.map(function(x){ return Object.assign({}, x); });
+  var L = INV.rec, groupes = [], idx = {};
+  L.forEach(function(x){ var k = x.fournisseur + "|" + x.date; if(idx[k] === undefined){ idx[k] = groupes.length; groupes.push({k: k, f: x.fournisseur, d: x.date, l: []}); } groupes[idx[k]].l.push(x); });
+  groupes.sort(function(a, b){ return a.d < b.d ? 1 : a.d > b.d ? -1 : (a.f < b.f ? -1 : 1); });
+  var h = invOnglets() + '<div style="font-size:12px;color:#6E6350;margin:0 0 8px">Données fictives pour essai</div>';
+  if(!groupes.length) h += '<div class="bandeau">▪ AUCUNE COMMANDE EN ATTENTE</div>';
+  groupes.forEach(function(g){
+    var ouvert = INV.ouv[g.k] !== false;
+    h += '<div class="invg" data-k="'+invE(g.k)+'" style="display:flex;justify-content:space-between;gap:10px;background:#8D806A;color:#fff;padding:12px 14px;margin:12px 0 6px;cursor:pointer"><b style="overflow-wrap:anywhere">'+invE(g.f)+'</b><span style="font-size:12px;white-space:nowrap">'+invE(invMoisFr(g.d))+'</span></div>';
+    if(!ouvert) return;
+    g.l.forEach(function(x){
+      var rc = INV.recu[x.id] || 0, vide = !String(x.prix).trim(), ok = rc > 0 && !vide;
+      h += '<div style="background:#DDD9CD;padding:12px 14px;margin:0 0 6px"><div style="font-size:12px;color:#6E6350">'+invE(x.code)+'</div><div style="overflow-wrap:anywhere;margin:2px 0 8px">'+invE(x.description)+'</div>'
+        + '<div style="font-size:13px;color:#6E6350;margin-bottom:6px">Commandé : '+invE(x.commande)+'</div>'
+        + '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#6E6350">Reçu</span><button type="button" class="bouton invm" data-i="'+invE(x.id)+'" style="width:46px;height:46px;padding:0;margin:0">−</button><span style="font-size:24px;min-width:34px;text-align:center">'+rc+'</span><button type="button" class="bouton invpl" data-i="'+invE(x.id)+'" style="width:46px;height:46px;padding:0;margin:0">+</button></div>'
+        + '<span class="lbl">Prix · obligatoire</span><input class="bx invprix'+(vide ? " rose" : "")+'" data-i="'+invE(x.id)+'" inputmode="decimal" autocomplete="off" value="'+invE(x.prix)+'">'
+        + '<div style="display:flex;gap:8px;margin-top:6px"><button type="button" class="bouton invc" data-i="'+invE(x.id)+'" style="flex:1;height:46px;padding:0;margin:0"'+(ok ? "" : " disabled")+'>Confirmer</button><button type="button" class="bouton inva" data-i="'+invE(x.id)+'" style="flex:1;height:46px;padding:0;margin:0">Annuler</button></div>'
+        + '<div class="bandeau invmsg" data-i="'+invE(x.id)+'" style="display:none;margin-top:8px"></div></div>';
+    });
+  });
+  z.innerHTML = h; invLierOnglets();
+  var ligne = function(id){ return INV.rec.filter(function(q){ return q.id === id; })[0]; };
+  var enr = function(id){ var f = document.querySelector('.invprix[data-i="'+id+'"]'); if(f){ var q = ligne(id); if(q) q.prix = f.value; } };
+  Array.prototype.forEach.call(z.querySelectorAll(".invg"), function(e){ e.onclick = function(){ var k = e.getAttribute("data-k"); INV.ouv[k] = INV.ouv[k] === false; invReception(); }; });
+  Array.prototype.forEach.call(z.querySelectorAll(".invm"), function(e){ e.onclick = function(){ var i = e.getAttribute("data-i"); enr(i); if((INV.recu[i] || 0) > 0) INV.recu[i]--; invReception(); }; });
+  Array.prototype.forEach.call(z.querySelectorAll(".invpl"), function(e){ e.onclick = function(){ var i = e.getAttribute("data-i"); enr(i); INV.recu[i] = (INV.recu[i] || 0) + 1; invReception(); }; });
+  Array.prototype.forEach.call(z.querySelectorAll(".invprix"), function(e){ e.oninput = function(){ var i = e.getAttribute("data-i"), q = ligne(i); if(q) q.prix = e.value; e.className = "bx invprix" + (String(e.value).trim() ? "" : " rose"); var c = z.querySelector('.invc[data-i="'+i+'"]'); if(c) c.disabled = !((INV.recu[i] || 0) > 0 && String(e.value).trim()); }; });
+  Array.prototype.forEach.call(z.querySelectorAll(".invc"), function(e){ e.onclick = function(){
+    var i = e.getAttribute("data-i"), q = ligne(i); if(!q) return; e.disabled = true;
+    invEcrire("inv_recevoir", {id_ligne: i, qte_recue: INV.recu[i] || 0, prix: q.prix}).then(function(r){
+      if(r && r.ok){ INV.rec = INV.rec.filter(function(w){ return w.id !== i; }); delete INV.recu[i]; invReception(); var b = document.createElement("div"); b.className = "bandeau"; b.style.marginTop = "8px"; b.textContent = r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : "▪ RÉCEPTION CONFIRMÉE"; var zz = document.getElementById("invapp"); if(zz) zz.insertBefore(b, zz.firstChild.nextSibling); }
+      else { var m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(m){ m.style.display = "block"; m.textContent = "▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); } e.disabled = false; }
+    }).catch(function(){ var m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(m){ m.style.display = "block"; m.textContent = "▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"; } e.disabled = false; });
+  }; });
+  Array.prototype.forEach.call(z.querySelectorAll(".inva"), function(e){ e.onclick = function(){
+    var i = e.getAttribute("data-i"), m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(!m) return;
+    m.style.display = "block"; m.innerHTML = '<div style="margin-bottom:8px">Annuler cette ligne de commande?</div><div style="display:flex;gap:8px"><button type="button" class="bouton" id="invan" style="flex:1;height:46px;padding:0;margin:0">Non</button><button type="button" class="bouton" id="invao" style="flex:1;height:46px;padding:0;margin:0;background:#B8473A;color:#fff">Oui, annuler</button></div>';
+    document.getElementById("invan").onclick = function(){ m.style.display = "none"; };
+    document.getElementById("invao").onclick = function(){ this.disabled = true; invEcrire("inv_annuler_ligne", {id_ligne: i}).then(function(r){ if(r && r.ok){ INV.rec = INV.rec.filter(function(w){ return w.id !== i; }); delete INV.recu[i]; invReception(); } else { m.textContent = "▪ NON ANNULÉE · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); } }).catch(function(){ m.textContent = "▪ NON ANNULÉE · RÉSEAU INDISPONIBLE"; }); };
+  }; });
 }
