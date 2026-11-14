@@ -144,19 +144,17 @@ function fgGraphique(type){
   if(type === "tres"){
     var cn = p[1]-p[0]+1, sol = (R.tresorerie || []).slice(p[0], p[1]+1).map(function(v){ return v/1000; }), fl = (R.flux || []).slice(p[0], p[1]+1).map(function(v){ return v/1000; });
     if(!sol.length) return '<div class="finnote">Aucune donnée de trésorerie pour cette période.</div>';
-    var mn = Math.min.apply(null, sol), mx = Math.max.apply(null, sol), pas = Math.max(10, Math.ceil((mx-mn)/2/10)*10), lo = Math.floor(mn/pas)*pas, hi = lo + pas*2;
-    if(hi < mx) hi += pas;
-    var d3 = cn > 1 ? (W-60)/(cn-1) : 0, y3 = function(v){ return 10+(hi-v)/(hi-lo)*110; };
-    s += fgAxeY([lo, lo+(hi-lo)/2, hi].map(function(v){ return Math.round(v); }), y3, W, " k$");
-    s += fgLigne(sol,44,d3,y3,"",1.8);
-    s += '<text x="0" y="140" class="fgl">Flux net du mois</text>';
-    var z = 185, bw = Math.min(16, cn > 1 ? d3*0.5 : 16), mf = Math.max.apply(null, fl.map(Math.abs).concat([1]));
-    for(i=0;i<cn;i++){ var f = fl[i] || 0, h2 = Math.abs(f)/mf*30, x = 44+i*d3-bw/2;
-      s += f >= 0 ? '<rect x="'+x+'" y="'+(z-h2)+'" width="'+bw+'" height="'+h2+'" fill="#0D1319"/>' : '<rect x="'+(x+.75)+'" y="'+z+'" width="'+(bw-1.5)+'" height="'+h2+'" fill="none" stroke="#0D1319" stroke-width="1.5"/>';
-      s += '<text x="'+(44+i*d3)+'" y="228" text-anchor="middle">'+FG_MM[p[0]+i]+'</text>'; }
-    s += '<line x1="34" x2="'+W+'" y1="'+z+'" y2="'+z+'" stroke="#0D1319"/>';
-    var mc = (R.margeCredit || [])[p[1]], note = (mc || mc === 0) ? '<br>Marge de crédit utilisée : ' + finMontant(Math.abs(mc)) : '';
-    return '<svg class="finsvg" viewBox="0 0 '+W+' 236">'+s+'</svg><div class="finnote">Ligne : solde de fin de mois · Barre vide : sortie nette' + note + '</div>';
+    var ve = FIN_S.ventes.slice(p[0], p[1]+1).map(function(v){ return v/1000; }), so = ve.map(function(v, k){ return Math.max(0, v-(fl[k] || 0)); });
+    var mxv = Math.max.apply(null, ve.concat(so).concat([1])), pas = [5,10,25,50,100,250,500].filter(function(q){ return mxv/q <= 4; })[0] || 500, hi = Math.ceil(mxv/pas)*pas;
+    var L0 = 44, base = 190, yy = function(v){ return base-v/hi*170; }, gw = (W-L0)/cn, bw = Math.min(14, gw/2-2), k;
+    for(k=0;k<=hi;k+=pas) s += '<line x1="'+L0+'" x2="'+W+'" y1="'+yy(k)+'" y2="'+yy(k)+'" stroke="#bdb9ae" stroke-width="1"/><text x="0" y="'+(yy(k)+3)+'">'+k+' k$</text>';
+    for(i=0;i<cn;i++){ var xc = L0+i*gw+gw/2, he = ve[i]/hi*170, hs = so[i]/hi*170;
+      s += '<rect x="'+(xc-bw-.5)+'" y="'+(base-he)+'" width="'+bw+'" height="'+he+'" fill="#0D1319"/><rect x="'+(xc+1)+'" y="'+(base-hs)+'" width="'+(bw-1.5)+'" height="'+hs+'" fill="none" stroke="#0D1319" stroke-width="1.5"/>';
+      s += '<text x="'+xc+'" y="206" text-anchor="middle">'+FG_MM[p[0]+i]+'</text>'; }
+    s += '<line x1="'+L0+'" x2="'+W+'" y1="'+base+'" y2="'+base+'" stroke="#0D1319"/>';
+    var z = cn-1, mc = (R.margeCredit || [])[p[1]], note = (mc || mc === 0) ? '<br>Marge de crédit utilisée : ' + finMontant(Math.abs(mc)) : '';
+    var cartes = '<div class="fgcards"><div><small>ENTRÉES</small><b>'+finMontant(ve[z]*1000)+'</b></div><div><small>SORTIES</small><b>'+finMontant(so[z]*1000)+'</b></div><div class="g"><small>RESTE</small><b>'+finMontant((fl[z] || 0)*1000)+'</b></div></div>';
+    return cartes + '<svg class="finsvg" viewBox="0 0 '+W+' 214">'+s+'</svg><div class="finnote">Plein : entrées (argent encaissé) · Vide : sorties (argent payé)<br>Solde en banque : ' + finMontant(sol[z]*1000) + note + '</div>';
   }
   var c = R.clients, h = "";
   if(!c) return '<div class="finnote">Aucune donnée de comptes clients.</div>';
@@ -173,7 +171,7 @@ function fgGraphique(type){
   });
   return h + '<div class="finnote">Total à recevoir : '+finMontant(tot)+' · '+(tot ? Math.round(c.plus/tot*100) : 0)+' % depuis plus de 90 jours</div>';
 }
-var FG_PAGES = {ratios:["01","Ratios vs objectifs","Marge brute, salaires et achats, en % des ventes"], ventes:["02","Ventes vs an passé","Disponible en 2027"], tres:["03","Trésorerie","Solde de fin de mois et flux net"], cli:["04","Comptes clients","À recevoir selon l'ancienneté de la facture"]};
+var FG_PAGES = {ratios:["01","Ratios vs objectifs","Marge brute, salaires et achats, en % des ventes"], ventes:["02","Ventes vs an passé","Disponible en 2027"], tres:["03","Trésorerie","Ce qui est entré, ce qui est sorti, chaque mois"], cli:["04","Comptes clients","À recevoir selon l'ancienneté de la facture"]};
 function financeGraphique(type){
   var pg = FG_PAGES[type];
   FIN_TITRE = {ratios: "Ratios par catégorie", ventes: "Ventes vs an passé", tres: "Trésorerie", cli: "Comptes clients"}[type];

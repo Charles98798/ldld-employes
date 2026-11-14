@@ -1034,3 +1034,5 @@ select:not(.act){width:100%;box-sizing:border-box}
 
 .fin .fglnk{display:inline-block;font-size:14px;font-weight:300;color:var(--pn);text-decoration:none;border-bottom:2px solid #8EFF60;padding-bottom:2px;margin-top:10px}.fin .fgtop{margin-top:6px}.fin .fgtop[hidden]{display:none}.fin .fgtl{display:flex;justify-content:space-between;font-size:13px;font-weight:300;color:var(--pg);padding:7px 0 7px 12px}
 .fin .fgtl3{display:grid;grid-template-columns:1fr 92px 44px;gap:4px;text-align:right}.fin .fgtl3 span:first-child{text-align:left}.fin .fgth{font-size:9px;letter-spacing:.14em;padding-bottom:4px}.fin .fgtv{font-size:14px;color:var(--pn);padding-left:0}
+
+.fin .fgcards{display:flex;gap:10px;margin:0 0 20px}.fin .fgcards div{flex:1;background:#B7B1A5;padding:12px 10px;min-width:0}.fin .fgcards .g{background:#8EFF60}.fin .fgcards small{display:block;font-size:9px;letter-spacing:2px;color:#4d4a42}.fin .fgcards b{display:block;font-weight:300;font-size:18px;margin-top:6px;white-space:nowrap}
