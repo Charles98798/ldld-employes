@@ -78,7 +78,7 @@ function aepPlanification(){
     var o = ouvert, d = retrait ? "" : document.getElementById("aepd").value, h = retrait ? "" : document.getElementById("aeph").value, av = document.getElementById("aepav");
     if(!retrait && (!d || !h)){ av.textContent = "Choisis la date et l’heure."; return; }
     if(!retrait && d < auj()){ av.textContent = "Cette date est passée."; return; }
-    msg("Enregistrement…");
+    msg("Enregistrement en cours, jusqu’à 20 secondes. Tu peux continuer.");
     aerAppel({action: "ae_planif_ecrire", id: o.id, rencontre: o.n, date: d, heure: h, confirmer: !!confirmer}).then(function(r){
       if(r && r.ok){
         (donnees.lignes || []).forEach(function(l, i){ if(l.id === o.id && r.ligne) donnees.lignes[i] = r.ligne; });
