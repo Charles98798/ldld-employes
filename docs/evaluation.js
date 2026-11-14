@@ -183,7 +183,7 @@ function aerBientot(){
     var n = new Date(), t = iso(n), f = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 14), fin = iso(f), v = [];
     (r.lignes || []).forEach(function(e){
       var x = aepNormaliser(e); if(!x.nom || /^direction$/i.test(x.cat.trim())) return;
-      [[1, x.d1, x.h1, e.autoeval1], [2, x.d2, x.h2, e.autoeval2]].forEach(function(q){ if(q[1] && q[1] >= t && q[1] <= fin) v.push({j: q[1], h: q[2], nom: x.nom, num: q[0], ok: q[3] === true}); });
+      [[1, x.d1, x.h1, e.autoeval1], [2, x.d2, x.h2, e.autoeval2]].forEach(function(q){ if(q[1] && q[1] >= t && q[1] <= fin) v.push({j: q[1], h: q[2], nom: x.nom, num: q[0], ok: q[3] === true, inconnu: r.autoeval_ok === false}); });
     });
     v.sort(function(a, b){ return a.j < b.j ? -1 : a.j > b.j ? 1 : (a.h || "") < (b.h || "") ? -1 : (a.h || "") > (b.h || "") ? 1 : a.nom.localeCompare(b.nom, "fr"); });
     var ok = v.filter(function(x){ return x.ok; }).length;
@@ -193,7 +193,7 @@ function aerBientot(){
     var h = "", c = "";
     v.forEach(function(x){
       if(x.j !== c){ c = x.j; var q = c.split("-"); h += '<div class="emois">' + esc(JOURS_COURTS_E[new Date(+q[0], +q[1] - 1, +q[2]).getDay()] + " " + (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1]) + '</div>'; }
-      h += '<div class="aepl"><span class="aepn">' + esc(x.nom) + '<small>' + esc((aepHeure(x.h) ? aepHeure(x.h) + ' · ' : '') + 'Rencontre ' + x.num) + '</small></span><span class="aere' + (x.ok ? ' ok' : '') + '">Autoévaluation ' + (x.ok ? 'remplie' : 'non remplie') + '</span></div>';
+      h += '<div class="aepl"><span class="aepn">' + esc(x.nom) + '<small>' + esc((aepHeure(x.h) ? aepHeure(x.h) + ' · ' : '') + 'Rencontre ' + x.num) + '</small></span>' + (x.inconnu ? '' : '<span class="aere' + (x.ok ? ' ok' : '') + '">Autoévaluation ' + (x.ok ? 'remplie' : 'non remplie') + '</span>') + '</div>';
     });
     z.innerHTML = h;
   }
