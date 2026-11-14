@@ -1063,3 +1063,13 @@ select:not(.act){width:100%;box-sizing:border-box}
 .fin .finper{display:grid;grid-template-columns:76px 1fr 1.15fr;gap:4px;margin-bottom:14px}
 .fin .finper select.finsel{width:100%;min-width:0;margin:0;text-align:left;text-align-last:left;font-size:12px!important;padding:0 24px 0 8px!important;background-position:right 8px center!important}
 .fin .finper select.finsel.inact{opacity:.4}
+/* Groupe Évaluation: planification */
+.aepf{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.aepb{background:#B7B1A5;color:#1D1D1B;border:0;padding:10px 12px;font-size:13px;font-family:inherit;cursor:pointer}
+.aepb.on{background:#8EFF60}
+.aepl{display:flex;gap:10px;align-items:center;justify-content:space-between;background:#E3DFD3;color:#1D1D1B;padding:10px 12px;margin:0 0 6px}
+.aepl .aepn{flex:1;min-width:0;font-size:15px;font-weight:500;overflow-wrap:anywhere}
+.aepl .aepn small{display:block;font-size:12px;font-weight:400;opacity:.7;margin-top:2px}
+.aepl .aepd{font-size:13px;text-align:right;white-space:nowrap}
+.aepl.pas{opacity:.65}
+.aepl.sd{border-left:4px solid #8D806A}
