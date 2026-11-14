@@ -71,7 +71,7 @@ function perHtml(P, annee, n, pre){
 function perLier(pre, fn, cur){
   ["m", "t"].forEach(function(k){ var s = document.getElementById(pre + "_" + k); if(s) s.onchange = function(){
     var p = cur(), v = this.value;
-    fn(v === "~" ? p : v ? v : (p.charAt(0) === (k === "m" ? "M" : "T") ? "A" : p));
+    fn(v === "~" ? p : v ? v : "A");
   }; });
 }
 function finRendu(){
