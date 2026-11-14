@@ -1,4 +1,4 @@
-var APP_PUB = "511";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "512";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2645,7 +2645,11 @@ var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","ao
 // Calendrier de l'employé: seulement ses événements (titre, jour, heures, description), sans grille ni planification.
 var JOURS_LONGS_E = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"], MOIS_E = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
 function heureFr(t){ var m = /T(\d{2}):(\d{2})/.exec(t || ""); if(!m) return ""; return (+m[1]) + (m[2] === "00" ? " h" : " h " + m[2]); }
-function msgPerime(x){ if(x.de !== "Agenda") return false; var t = Date.parse(x.date); if(isNaN(t)) return false; return Date.now() - t > (/une heure/i.test(x.titre || "") ? 3 : 24) * 3600000; }
+function msgPerime(x){ if(x.de !== "Agenda") return false; var t = Date.parse(x.date); if(isNaN(t)) return false;
+  var env = new Date(t), uneH = /une heure/i.test(x.titre || ""), jour = new Date(env.getFullYear(), env.getMonth(), env.getDate() + (uneH ? 0 : 1)), hm = -1, r, re = /(\d{1,2}) h(?: (\d{2}))?/g, tx = String(x.texte || "");
+  while((r = re.exec(tx))){ var v = +r[1] * 60 + (r[2] ? +r[2] : 0); if(v > hm) hm = v; }
+  var fin = hm >= 0 ? new Date(jour.getFullYear(), jour.getMonth(), jour.getDate(), 0, hm) : new Date(jour.getFullYear(), jour.getMonth(), jour.getDate() + 1);
+  return Date.now() > fin.getTime(); }
 var JOURS_COURTS_E = ["Dim.","Lun.","Mar.","Mer.","Jeu.","Ven.","Sam."];
 function jourFr(iso){ var a = iso.split("-"), d = new Date(+a[0], +a[1] - 1, +a[2]); return JOURS_LONGS_E[d.getDay()] + " " + (+a[2]) + " " + MOIS_E[+a[1] - 1]; }
 function evenementsEmploye(idEl){
