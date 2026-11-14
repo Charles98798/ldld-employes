@@ -27,6 +27,7 @@ var PICTOS = {
  "Trésorerie": "M4 3h16v4h-16zM2 10h16v4h-16zM6 17h16v4h-16z",
  "Comptes clients": "M3 3h18v18h-18zM7 8h10v2h-10zM7 12h10v2h-10zM7 16h5v2h-5z",
  "Production": "M2 4h6v6h-6zM9 4h6v6h-6zM16 4h6v6h-6zM2 13h20v3h-20zM4 18h4v4h-4zM16 18h4v4h-4z",
+ "Top 10 clients": "M5 2h14v10h-14zM11 5h2v6h-2zM2 3h3v6h-3zM19 3h3v6h-3zM10 12h4v6h-4zM6 19h12v3h-12z",
  "Contrôle": "M2 2h20v20h-20zM5 5h14v14h-14zM7 12h3v3h-3zM10 15h3v3h-3zM13 9h3v6h-3z",
  "Prix et soumissions": "M2 2h20v20H2zM5 5v14h14V5zM7 7h10v10H7zM10 10h3v3h-3z",
  "Finances": "M4 1h16v22h-16zM7 4h10v5h-10zM7 12h3v3h-3zM11 12h2v3h-2zM14 12h3v3h-3zM7 17h3v3h-3zM11 17h2v3h-2zM14 17h3v3h-3z",
