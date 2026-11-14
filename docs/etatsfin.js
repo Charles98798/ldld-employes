@@ -61,7 +61,16 @@ var EF_MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juill.", "aoû
 function efOuvrir(){
   app.innerHTML = '<div class="page ppx fin ef"><h1>États financiers</h1><div class="bandeau">▪ CHARGEMENT…</div><a class="retour" href="#" id="retour">Retour</a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  appelService({action: "ef_donnees", session: sessionGardee()}).then(function(r){
+  appelService({action: "finance_mensuel", session: sessionGardee()}).then(function(m){
+    var r = m;
+    if(m && m.ok && m.comptes){   // cumul de janvier à la date des données, chaque cellule convertie en nombre
+      var som = function(a){ var t = 0; (a || []).forEach(function(x){ t += Number(x) || 0; }); return Math.round(t * 100) / 100; };
+      r = {ok: true, annee: m.annee, maj: m.maj, comptes: {}, totaux: {}};
+      Object.keys(m.comptes).forEach(function(k){ r.comptes[k] = som(m.comptes[k]); });
+      Object.keys(m.totaux || {}).forEach(function(k){ r.totaux[k] = som(m.totaux[k]); });
+    }
+    return r;
+  }).then(function(r){
     if(!document.querySelector(".ef")) return;
     if(r && r.ok) efDessiner(r);
     else app.querySelector(".bandeau").textContent = "▪ " + String((r && r.erreur) || "INDISPONIBLE").toUpperCase() + " · RÉESSAYEZ";
