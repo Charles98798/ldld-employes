@@ -24,9 +24,18 @@ var MOIS_COURTS_E = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", 
 function aepFmtC(j, h){ if(!j) return '<span class="aepv">—</span>'; var q = j.split("-"), n = new Date(), t = n.getFullYear() + "-" + ("0" + (n.getMonth() + 1)).slice(-2) + "-" + ("0" + n.getDate()).slice(-2), fait = j < t;
   return (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1] + '<small>' + (fait ? '<svg class="aepck" viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2"/></svg> fait' : (aepHeure(h) ? esc(aepHeure(h)) : 'Sans heure')) + '</small>'; }
 function aepPlanification(){
-  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification évaluation</h1><div id="aepp"></div><div class="aepsec">Tous les employés</div><div class="aepent"><span>Employé</span><span>RDV 1</span><span>RDV 2</span><span>Rencontres</span></div><div id="aepz"></div><div id="aepm" class="aeretat"></div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification évaluation</h1><div id="aepw" class="aepw"><div class="aepg"><div id="aepp"></div><div class="aepL"><div class="aepsec">Tous les employés</div><div id="aepz"></div></div></div><div id="aepm" class="aeretat"></div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   var donnees = null, ouvert = null, inactifs = null;
+  function grand(){ return innerWidth >= 1000; }
+  var mode = grand();
+  // Grand écran: une seule page en colonnes, mise à l'échelle pour tenir dans la fenêtre sans défilement (comme le Portrait).
+  function ajuster(){ var el = document.getElementById("aepw"); if(!el){ removeEventListener("resize", surtaille); return; }
+    el.style.zoom = 1; el.style.width = ""; if(!grand()) return;
+    el.style.width = "1500px"; var h = el.offsetHeight, haut = el.getBoundingClientRect().top + (window.scrollY || 0), z = Math.min((innerWidth - 64) / 1500, (innerHeight - haut - 8) / h);
+    if(z > 1.8) z = 1.8; if(z < .6) z = 1; el.style.zoom = z; }
+  function surtaille(){ if(!document.getElementById("aepw")){ removeEventListener("resize", surtaille); return; } if(grand() !== mode){ mode = grand(); if(donnees && !ouvert) afficher(); } ajuster(); }
+  addEventListener("resize", surtaille);
   function cleN(t){ return String(t || "").trim().toLowerCase(); }
   function auj(){ var n = new Date(); return n.getFullYear() + "-" + ("0" + (n.getMonth() + 1)).slice(-2) + "-" + ("0" + n.getDate()).slice(-2); }
   function msg(t){ var m = document.getElementById("aepm"); if(m) m.textContent = t || ""; }
@@ -52,7 +61,7 @@ function aepPlanification(){
     var z = document.getElementById("aepz"); if(!z || !donnees) return;
     var L = liste(); document.getElementById("aepp").innerHTML = prochains(L);
     if(!L.length){ z.innerHTML = '<div class="aevide">Aucun employé dans cette liste.</div>'; return; }
-    z.innerHTML = L.map(function(x){
+    function ligne(x){
       var n = x.d1 && x.d2 ? "2" : x.d1 ? "1" : "0";
       var h = '<div class="aepl aepr"><span class="aepn1">' + esc(x.nom) + '</span>' +
         '<button type="button" class="aepc" data-id="' + esc(x.id) + '" data-n="1" aria-label="RDV 1 de ' + esc(x.nom) + '">' + aepFmtC(x.d1, x.h1) + '</button>' +
@@ -64,7 +73,10 @@ function aepPlanification(){
           '<div class="aepbts"><button type="button" class="bouton" id="aeps">Enregistrer</button>' + (d ? '<button type="button" class="bouton aepsup" id="aepr">Retirer</button>' : '') + '<button type="button" class="bouton" id="aepa">Annuler</button></div><div class="aepavis" id="aepav"></div></div>';
       }
       return h + '</div>';
-    }).join("");
+    }
+    var ent = '<div class="aepent"><span>Employé</span><span>RDV 1</span><span>RDV 2</span><span>Rencontres</span></div>';
+    if(grand()){ var k = Math.ceil(L.length / 3) || 1, c = [0, 1, 2].map(function(i){ var q = L.slice(i * k, (i + 1) * k); return q.length ? '<div class="aepcol">' + ent + q.map(ligne).join("") + '</div>' : ''; }); z.innerHTML = c.join(""); }
+    else z.innerHTML = L.map(ligne).join("");
     Array.prototype.forEach.call(z.querySelectorAll("button.aepc"), function(b){ b.onclick = function(){ ouvert = {id: b.getAttribute("data-id"), n: +b.getAttribute("data-n")}; msg(""); afficher(); }; });
     Array.prototype.forEach.call(z.querySelectorAll("select.aepsel"), function(b){ b.onchange = function(){
       var id = b.getAttribute("data-id"), q = b.value, x = liste().filter(function(y){ return y.id === id; })[0]; if(!x) return;
@@ -74,6 +86,7 @@ function aepPlanification(){
       msg(""); afficher();
       if(ouvert.retrait) enregistrer(true, false);
     }; });
+    setTimeout(ajuster, 0);
     if(ouvert){
       document.getElementById("aepa").onclick = function(){ ouvert = null; afficher(); };
       document.getElementById("aeps").onclick = function(){ enregistrer(false, false); };
@@ -190,3 +203,4 @@ function aerBientot(){
   app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div class="aevide">Bientôt disponible.</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
 }
+
