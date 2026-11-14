@@ -66,9 +66,11 @@ function efNum(x){
 }
 function efNettoyer(r){ ["comptes", "totaux"].forEach(function(k){ Object.keys(r[k] || {}).forEach(function(c){ if(Array.isArray(r[k][c])) r[k][c] = r[k][c].map(efNum); }); }); ["tresorerie", "margeCredit", "flux"].forEach(function(k){ if(Array.isArray(r[k])) r[k] = r[k].map(efNum); }); return r; }
 function efOuvrir(){
-  app.innerHTML = '<div class="page ppx fin ef"><h1>États financiers</h1><div class="bandeau">▪ CHARGEMENT…</div><a class="retour" href="#" id="retour">Retour</a></div>';
+  app.innerHTML = '<div class="page ppx fin ef"><h1>États financiers</h1><div class="bandeau"></div><a class="retour" href="#" id="retour">Retour</a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  appelService({action: "finance_mensuel", session: sessionGardee()}).then(function(m){
+  var fini = false;
+  function recu(m){
+    if(fini || !document.querySelector(".ef")) return;
     var r = m;
     if(m && m.ok && m.comptes){ efNettoyer(m);   // cumul de janvier à la date des données, chaque cellule convertie en nombre
       var som = function(a){ var t = 0; (a || []).forEach(function(x){ t += efNum(x); }); return Math.round(t * 100) / 100; };
@@ -76,12 +78,12 @@ function efOuvrir(){
       Object.keys(m.comptes).forEach(function(k){ r.comptes[k] = som(m.comptes[k]); });
       Object.keys(m.totaux || {}).forEach(function(k){ r.totaux[k] = som(m.totaux[k]); });
     }
-    return r;
-  }).then(function(r){
-    if(!document.querySelector(".ef")) return;
-    if(r && r.ok) efDessiner(r);
-    else app.querySelector(".bandeau").textContent = "▪ " + String((r && r.erreur) || "INDISPONIBLE").toUpperCase() + " · RÉESSAYEZ";
-  }).catch(function(){ var b = app.querySelector(".ef .bandeau"); if(b) b.textContent = "▪ INDISPONIBLE · RÉESSAYEZ"; });
+    if(r && r.ok){ fini = true; efDessiner(r); }
+    else if(r && r.erreur){ fini = true; app.querySelector(".bandeau").textContent = "▪ " + String(r.erreur).toUpperCase() + " · RÉESSAYEZ"; }
+  }
+  appelService({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){});
+  setTimeout(function(){ if(!fini && document.querySelector(".ef")) appelBrut({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){}); }, 5000);   // la lecture préchargée traîne: appel direct
+  setTimeout(function(){ var b = document.querySelector(".ef .bandeau"); if(!fini && b){ fini = true; b.textContent = "▪ INDISPONIBLE · RÉESSAYEZ"; } }, 40000);
 }
 function efDessiner(r){
   efConstruire(r);

@@ -5,16 +5,21 @@ var FIN_R = null, FIN_DERNIER = 0, FIN_PERIODE = "A", FIN_TOK = 0, FIN_S = null;
 function finCharger(ok){
   var tok = ++FIN_TOK, vu = false;
   var tm = setTimeout(function(){ if(tok !== FIN_TOK) return; vu = true;
-    app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>Finance</h1></div><div class="bandeau">▪ CHARGEMENT…</div><a class="retour" href="#" id="retour">Retour</a></div>';
+    app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>Finance</h1></div><a class="retour" href="#" id="retour">Retour</a></div>';
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); FIN_TOK++; finRetour(); }; }, 250);
   function echec(m){ clearTimeout(tm); if(tok !== FIN_TOK) return;
     app.innerHTML = '<div class="page ppx fin"><div class="pph"><h1>Finance</h1></div><div class="bandeau">▪ ' + m + ' · RÉESSAYEZ</div><a class="retour" href="#" id="retour">Retour</a></div>';
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); FIN_TOK++; finRetour(); }; }
-  appelService({action: "finance_mensuel", session: sessionGardee()}).then(function(r){
-    if(tok !== FIN_TOK) return;
-    if(r && r.ok && r.mois && r.mois.length){ clearTimeout(tm); if(typeof efNettoyer === "function") efNettoyer(r); FIN_R = r; finPreparer(r); ok(r); }
-    else echec(String((r && r.erreur) || "INDISPONIBLE").toUpperCase());
-  }).catch(function(){ echec("INDISPONIBLE"); });
+  var fini = false;
+  function recu(r){
+    if(fini || tok !== FIN_TOK) return;
+    if(r && r.ok && r.mois && r.mois.length){ fini = true; clearTimeout(tm); if(typeof efNettoyer === "function") efNettoyer(r); FIN_R = r; finPreparer(r); ok(r); }
+    else if(r && r.erreur){ fini = true; echec(String(r.erreur).toUpperCase()); }
+  }
+  appelService({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){});
+  // Si la lecture préchargée traîne dans la file, un appel direct (clic) part après 5 s; au bout de 40 s: message d'erreur
+  setTimeout(function(){ if(!fini && tok === FIN_TOK) appelBrut({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){}); }, 5000);
+  setTimeout(function(){ if(!fini && tok === FIN_TOK){ fini = true; echec("INDISPONIBLE"); } }, 40000);
 }
 function finCodes(r, a, b){ var o = []; Object.keys(r.comptes).forEach(function(k){ if(+k >= a && +k <= b) o.push(r.comptes[k]); }); return o; }
 function finSomme(n, listes){ var t = [], i; for(i=0;i<n;i++){ t[i] = 0; listes.forEach(function(l){ t[i] += (l && l[i]) || 0; }); } return t; }
