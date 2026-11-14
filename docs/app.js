@@ -1,4 +1,4 @@
-var APP_PUB = "508";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "509";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2645,6 +2645,7 @@ var MOIS_LONGS = ["janvier","février","mars","avril","mai","juin","juillet","ao
 // Calendrier de l'employé: seulement ses événements (titre, jour, heures, description), sans grille ni planification.
 var JOURS_LONGS_E = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"], MOIS_E = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
 function heureFr(t){ var m = /T(\d{2}):(\d{2})/.exec(t || ""); if(!m) return ""; return (+m[1]) + (m[2] === "00" ? " h" : " h " + m[2]); }
+var JOURS_COURTS_E = ["Dim.","Lun.","Mar.","Mer.","Jeu.","Ven.","Sam."];
 function jourFr(iso){ var a = iso.split("-"), d = new Date(+a[0], +a[1] - 1, +a[2]); return JOURS_LONGS_E[d.getDay()] + " " + (+a[2]) + " " + MOIS_E[+a[1] - 1]; }
 function evenementsEmploye(idEl){
   var tn = torontoMaintenant().date, evs = [], fermes = [];
@@ -2655,12 +2656,12 @@ function evenementsEmploye(idEl){
       .filter(function(x){ return x.j >= tn; });
     liste.sort(function(a, b){ return a.tri < b.tri ? -1 : a.tri > b.tri ? 1 : 0; });
     if(!liste.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN ÉVÉNEMENT À VENIR POUR VOUS</div>'; return; }
-    var h = "", cur = "", mois = "";
+    var h = "", mois = "";
     liste.forEach(function(x){
       var mk = x.j.slice(0, 7);
-      if(mk !== mois){ mois = mk; cur = ""; h += '<div class="emois">'+esc(MOIS_LONGS[+mk.slice(5, 7) - 1])+' '+mk.slice(0, 4)+'</div>'; }
-      if(x.j !== cur){ cur = x.j; h += '<div class="ejour">'+(cur === tn ? "Aujourd'hui · " : "")+esc(jourFr(cur))+'</div>'; }
-      h += '<div class="eev'+(cur === tn ? ' auj' : '')+'">'+(x.h ? '<div class="eh">'+esc(x.h)+'</div>' : '')+'<div class="et">'+esc(x.t)+'</div>'+(x.d ? '<div class="ed">'+esc(x.d)+'</div>' : '')+'</div>';
+      if(mk !== mois){ mois = mk; h += '<div class="emois">'+esc(MOIS_LONGS[+mk.slice(5, 7) - 1])+' '+mk.slice(0, 4)+'</div>'; }
+      var a = x.j.split("-"), dj = new Date(+a[0], +a[1] - 1, +a[2]).getDay();
+      h += '<div class="eev1'+(x.j === tn ? ' auj' : '')+'"><span class="ej">'+JOURS_COURTS_E[dj]+' '+(+a[2])+'</span><span class="eh">'+esc(x.h)+'</span><span class="et">'+esc(x.t)+'</span></div>';
     });
     el.innerHTML = h;
   }
