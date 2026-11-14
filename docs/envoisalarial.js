@@ -36,7 +36,7 @@ function envOuvrir(){
   envPage("Envoi salarial", '<div id="envapp"></div>');
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); envBarreRetirer(); retirerBoutonBas(); responsable(); };
   envBarreOuvrir("Lecture des salaires…", 30000, {reessayer: envOuvrir, apresFermer: function(){ retirerBoutonBas(); responsable(); }});
-  appelService({action: "env_liste", session: sessionGardee(), f: {mode: ENVS.mode === "reel" ? "reel" : "essai"}}).then(function(r){
+  appelService({action: "env_liste", session: sessionGardee(), }).then(function(r){
     if(!document.getElementById("envapp")) return;
     if(r && r.ok && r.r){ ENVS.d = r.r; envBarreRetirer(); envListe(); }
     else envBarreFin(false, String((r && r.erreur) || "Échec"));
@@ -48,8 +48,8 @@ function envPrets(){ return envVisibles().filter(function(e){ return e.statut ==
 // Cases à cocher: décochées par défaut (rien ne part sans choix). Clé = nom. Seules les lignes Prêt sont cochables.
 function envCoches(){ ENVS.coches = ENVS.coches || {}; return envPrets().filter(function(e){ return ENVS.coches[e.nom]; }); }
 function envListe(){
-  var d = ENVS.d, L = envVisibles(), ferme = !!(d.fenetre && d.fenetre.ouverte === false), prets = ferme ? [] : envCoches(), tousPrets = ferme ? [] : envPrets(), essai = ENVS.mode === "essai";
-  var h = (ferme ? '<div class="bandeau" style="margin:0 0 12px;cursor:default">▪ '+envE(d.fenetre.message || "Envoi salarial verrouillé")+'</div>' : '') + '';
+  var d = ENVS.d, L = envVisibles(), ferme = !!(d.fenetre && d.fenetre.ouverte === false), prets = ferme ? [] : envCoches(), tousPrets = ferme ? [] : envPrets(), essai = d.mode !== "reel";
+  var h = (ferme ? '<div class="bandeau" style="margin:0 0 12px;cursor:default">▪ '+envE(d.fenetre.message || "Envoi salarial verrouillé")+'</div>' : '') + '<div style="font-size:13px;margin:0 0 6px"><span class="lbl" style="display:inline">Mode</span> · '+(d.mode === "reel" ? "Réel, chaque employé" : "Essai, tout va à la Direction")+'</div>';
   if(d.annee) h += '<span class="lbl">Année</span><div class="bx" style="border-color:transparent;padding-left:0">'+envE(d.annee)+'</div>';
   h += '<span class="lbl">Employés</span>';
   if(tousPrets.length) h += '<div style="margin:0 0 8px"><a href="#" id="envtout" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:3px;text-underline-offset:4px">'+(prets.length === tousPrets.length ? "Tout décocher" : "Tout cocher")+'</a></div>';
@@ -88,7 +88,7 @@ function envApercu(e){
   }).catch(function(){ envBarreFin(false, "Réseau indisponible"); });
 }
 function envConfirmer(prets){
-  var essai = ENVS.mode === "essai", n = prets.length, z = document.getElementById("envapp"); if(!z) return;
+  var essai = !(ENVS.d && ENVS.d.mode === "reel"), n = prets.length, z = document.getElementById("envapp"); if(!z) return;
   var noms = prets.map(function(e){ return nomTitre(e.nom); });
   if(document.getElementById("envdlg")) return;   // un seul appui, une seule fenêtre
   // Même composant que « Envoyer le contrat via DocuSign ? » (superposition, .popc, Oui, envoyer / Non).
@@ -105,14 +105,14 @@ function envConfirmer(prets){
     function arret(raison){
       ENVS.occupe = false;
       // L'état réel est relu depuis le serveur: les courriels déjà partis y sont marqués.
-      appelService({action: "env_liste", session: sessionGardee(), f: {mode: ENVS.mode === "reel" ? "reel" : "essai"}}).then(function(r){ if(r && r.ok && r.r) ENVS.d = r.r; }).catch(function(){}).then(function(){
+      appelService({action: "env_liste", session: sessionGardee(), }).then(function(r){ if(r && r.ok && r.r) ENVS.d = r.r; }).catch(function(){}).then(function(){
         envBarreFin(false, "Envoi interrompu après " + faits + " sur " + n + " · " + raison.toLowerCase() + " · Ne refaites pas l’envoi : vérifiez les statuts dans la liste et envoyez seulement ceux qui sont encore confirmés");
         if(ENVB) ENVB.apresFermer = function(){ if(document.getElementById("envapp")) envListe(); }; });
     }
     function suite(k){
       if(k >= lots.length){ ENVS.occupe = false; envBarreFin(true, (essai ? "Essai envoyé à la Direction · " : "Envoyé · ") + n + " courriel" + (n > 1 ? "s" : "")); return; }
       progres();
-      appelService({action: "env_envoyer", session: sessionGardee(), f: {mode: mode, noms: lots[k].map(function(e){ return e.nom; }), nombre: lots[k].length}}).then(function(r){
+      appelService({action: "env_envoyer", session: sessionGardee(), f: {noms: lots[k].map(function(e){ return e.nom; }), nombre: lots[k].length}}).then(function(r){
         if(r && r.ok){ faits += lots[k].length; suite(k + 1); }
         else arret(String((r && r.erreur) || "RÉESSAYEZ").toUpperCase());
       }).catch(function(){ arret("RÉPONSE NON REÇUE"); });
