@@ -116,7 +116,7 @@ function efDessiner(r){
   h += '<div class="sect"><span class="num">0' + n + '</span><span class="lab">Ratios</span></div><div class="efl efh"><span></span><span></span><span>% des ventes</span></div>' +
     [["Salaires / ventes", sal],["Achats / ventes", ach],["Frais généraux / ventes", fgx],["Frais d'administration / ventes", adm],["Frais de vente / ventes", vente],["Bénéfice brut / ventes", brut],["Bénéfice net / ventes", net]].map(function(r){
       return '<div class="efl"><span class="n">' + r[0] + '</span><span></span><span>' + pct(Number(r[1]) || 0) + '</span></div>'; }).join("");
-  h += '<a class="retour" href="#" id="retour">Retour</a></div>';
+  h += '<div class="finnote">Publication 469 · diagnostic : sal=' + sal + ' ach=' + ach + ' vt=' + vt + ' cout=' + cout + ' comptes=' + Object.keys(r.comptes || {}).length + ' type5105=' + typeof (r.comptes || {})["5105"] + ' valeur5105=' + String((r.comptes || {})["5105"]).slice(0, 30) + '</div>' + '<a class="retour" href="#" id="retour">Retour</a></div>';
   app.innerHTML = h;
   Array.prototype.forEach.call(document.querySelectorAll(".efr"), function(r){
     r.onclick = function(){ var o = r.classList.toggle("o"); r.querySelector(".efm").textContent = o ? "\u2212" : "+"; };
