@@ -1,4 +1,4 @@
-var APP_PUB = "476";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "477";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2751,7 +2751,7 @@ function heures(){
     if(!r || !r.ok){ z.innerHTML = '<div class="bandeau">▪ HEURES INDISPONIBLES · RÉESSAYEZ</div>'; return; }
     var vide = !(r.pointagesAuj || []).length && (r.minutesAuj === null || r.minutesAuj === undefined) && !(r.cette || []).some(function(x){ return x.min !== null && x.min !== undefined; }) && !(r.passee || []).some(function(x){ return x.min !== null && x.min !== undefined; });
     if(vide){
-      if(VUE.on && VUE.relancer && (++VUE_ESSAIS_H) <= 4){ VUE.relancer(); return; }
+      if(VUE.on && VUE.relancer && (++VUE_ESSAIS_H) <= 1){ VUE.relancer(); return; }
       z.innerHTML = '<div class="bandeau">▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES</div>'; return;
     }
     VUE_ESSAIS_H = 0;
