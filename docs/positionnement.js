@@ -24,10 +24,10 @@ function money(v){return v==null?'—':arr(v,2).toFixed(2).replace('.',',')+' $'
 function pct(v,d){return v==null?'—':(d?arr(v*100,d).toFixed(d).replace('.',','):arr(v*100,0))+' %'}
 function pctAuto(v){return pct(v)}
 // « Entre 2 positions » : la position stockée a des décimales (le salaire n'est pas exactement sur une position entière). Décimales montrées SEULEMENT dans ce portail.
-function posDec(v){return v==null?'—':(Math.round(v*10000)/100).toFixed(2).replace('.',',')+' %'}
+function posDec(v){return v==null?'—':Math.round(v*100)+' %'}   // jamais de décimale (règle de Charles); le calcul du salaire garde la valeur exacte
 function entre2(v){if(v==null)return null;var P=Math.round(v*10000)/100;if(Math.abs(P-Math.round(P))<0.005)return null;
  var lo=Math.floor(P),hi=Math.ceil(P),t=P<76?'sous le bas de l’échelle (76 %)':(P>100?'entre '+lo+' et '+hi+' · au-dessus du sommet':'entre '+lo+' et '+hi);return {P:P,lo:lo,hi:hi,txt:t}}
-function posAuto(v){if(v==null)return '—';var P=Math.round(v*10000)/100;return Math.abs(P-Math.round(P))<0.005?Math.round(P)+' %':posDec(v)}
+function posAuto(v){return posDec(v)}
 function badge2(v){var q=entre2(v);return q?' <span class="b2">'+esc(q.txt)+'</span>':''}
 function maxCat(e){var r=D.cats[e.cat];return r?r[r.length-1]:null}
 function options(e){var o=[{v:'C',p:e.conserver,t:'Conserver — '+posAuto(e.conserver)}];if(e.conserver==null)return [];
