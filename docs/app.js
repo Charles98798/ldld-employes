@@ -602,6 +602,7 @@ var ENT = [
  {id:"finances_ventes", g:"Finances", l:"Finances · Ventes vs an passé", p:"Ventes vs an passé", d:[0,0,1], v:1, s:1},
  {id:"finances_tresorerie", g:"Finances", l:"Finances · Trésorerie", p:"Trésorerie", d:[0,0,1], v:1, s:1},
  {id:"finances_clients", g:"Finances", l:"Finances · Comptes clients", p:"Comptes clients", d:[0,0,1], v:1, s:1},
+ {id:"finances_top10", g:"Finances", l:"Finances · Top 10 clients", p:"Top 10 clients", d:[0,0,1], v:1, s:1},
  {id:"manuel", g:"Documents", l:"Manuel d’employé", p:"Manuel", d:[1,1,1], i:1, f:function(){ section(1); }},
  {id:"prix_soumissions", g:"Documents", l:"Prix et soumissions", p:"Prix et soumissions", d:[0,1,1], f:function(){ prixSoumissions(); }},
  {id:"plan_incendie", g:"Documents", l:"Plan d’incendie", p:"Plan d'incendie", d:[1,1,1], i:5, f:function(){ section(5); }},

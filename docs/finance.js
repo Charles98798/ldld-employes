@@ -66,10 +66,22 @@ function finRendu(){
       var moy = ms.length ? finRatio(l, ms) : null, dv = der === null ? null : finRatio(l, [der]);
       h += '<div class="finl"><span class="n">▪ ' + l.n + '</span><span>' + (moy === null ? "—" : finPct(moy)) + '</span><span>' + (dv === null ? "—" : finPct(dv)) + '</span>' +
         '<span class="obj">' + (l.obj === null ? "" : l.obj + " %") + '</span><span>' + (l.obj === null || moy === null ? "" : finEcart(Math.round(moy) - l.obj)) + '</span></div>';
+      if(l.n === "Achat" && FIN_R && FIN_R.achatsFourn && FIN_R.achatsFourn.top && FIN_R.achatsFourn.top.length){
+        var af = FIN_R.achatsFourn;
+        h += '<a class="fglnk" href="#" data-k="achat">Voir les 15 plus gros fournisseurs</a><div class="fgtop" id="fgtop_achat" hidden>';
+        af.top.forEach(function(x, i){ h += '<div class="fgtl fgtl3"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (af.total ? finPct(x[1] / af.total * 100) : "") + '</span></div>'; });
+        h += '</div>';
+      }
     });
   });
   h += '<div class="finnote">Données au ' + finDate() + ' · Écart en points</div>';
   document.getElementById("fin_corps").innerHTML = h;
+  finLiens();
+}
+function finLiens(){   // boutons « Voir les … comptes » (lien souligné vert): ouvre ou referme la liste qui suit
+  Array.prototype.forEach.call(document.querySelectorAll(".fglnk"), function(a){
+    var n = a.getAttribute("data-k") === "achat" ? 15 : 10;
+    a.onclick = function(e){ e.preventDefault(); var d = document.getElementById("fgtop_" + a.getAttribute("data-k")), ouvre = d.hidden; d.hidden = !ouvre; a.textContent = ouvre ? (n === 15 ? "Masquer les fournisseurs" : "Masquer les comptes") : (n === 15 ? "Voir les 15 plus gros fournisseurs" : "Voir les 10 comptes"); }; });
 }
 function financeOuvrir(){
   FIN_TITRE = "Indicateurs";
@@ -174,8 +186,7 @@ function financeGraphique(type){
       el.onchange = function(){ var k = el.getAttribute("data-k"), v = +el.value; FG.act = k;
         if(k === "M"){ FG.m = v; FG.t = Math.floor(v/3); } else if(k === "T"){ FG.t = v; FG.m = Math.min(v*3+2, FIN_DERNIER); }
         financeGraphique(type); }; });
-    Array.prototype.forEach.call(document.querySelectorAll(".fglnk"), function(a){
-      a.onclick = function(e){ e.preventDefault(); var d = document.getElementById("fgtop_" + a.getAttribute("data-k")), ouvre = d.hidden; d.hidden = !ouvre; a.textContent = ouvre ? "Masquer les comptes" : "Voir les 10 comptes"; }; });
+    finLiens();
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); finRetour(); };
   });
 }
@@ -196,12 +207,29 @@ function financeMenu(){
 function financesMenu(){
   FIN_ORIGINE = "finances";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Finances</h1>' +
-    '<a class="doc" href="#" id="fi5"><span>'+picto("États financiers")+'États financiers</span></a><a class="doc" href="#" id="fi0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fi1"><span>'+picto("Ratios par catégorie")+'Ratios en $</span></a><a class="doc" href="#" id="fi2"><span>'+picto("Ventes vs an passé")+'Ventes vs an passé</span></a><a class="doc" href="#" id="fi3"><span>'+picto("Trésorerie")+'Trésorerie</span></a><a class="doc" href="#" id="fi4"><span>'+picto("Comptes clients")+'Comptes clients</span></a></div>';
+    '<a class="doc" href="#" id="fi5"><span>'+picto("États financiers")+'États financiers</span></a><a class="doc" href="#" id="fi0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fi1"><span>'+picto("Ratios par catégorie")+'Ratios en $</span></a><a class="doc" href="#" id="fi2"><span>'+picto("Ventes vs an passé")+'Ventes vs an passé</span></a><a class="doc" href="#" id="fi3"><span>'+picto("Trésorerie")+'Trésorerie</span></a><a class="doc" href="#" id="fi4"><span>'+picto("Comptes clients")+'Comptes clients</span></a><a class="doc" href="#" id="fi6"><span>'+picto("Top 10 clients")+'Top 10 clients</span></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   document.getElementById("fi0").onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeOuvrir(); };
   document.getElementById("fi1").onclick = function(e){ e.preventDefault(); financesRatios(); };
   [["fi2","ventes"],["fi3","tres"],["fi4","cli"]].forEach(function(a){ document.getElementById(a[0]).onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeGraphique(a[1]); }; });
   document.getElementById("fi5").onclick = function(e){ e.preventDefault(); efOuvrir(); };
+  document.getElementById("fi6").onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeTop10(); };
+}
+// Top 10 clients (Direction): les 10 clients aux ventes les plus élevées depuis le 1er janvier, avec leur part des ventes
+function financeTop10(){
+  FIN_TITRE = "Top 10 clients"; FIN_ORIGINE = "finances";
+  finCharger(function(r){
+    var vc = r.ventesClients, h = '<div class="page ppx fin"><div class="pph"><h1>Top 10 clients</h1></div><div class="finsous">Finances</div>' +
+      '<div class="sect"><span class="num">01</span><span class="lab">Meilleurs clients</span></div>';
+    if(vc && vc.top && vc.top.length){
+      var tot = finSom(FIN_S.ventes, finMois("A")) || vc.total;
+      h += '<div class="fgdesc">Ventes du 1er janvier au ' + finDate() + '</div><div class="fgtl fgtl3 fgth"><span></span><span>VENTES</span><span>PART</span></div>';
+      vc.top.forEach(function(x, i){ h += '<div class="fgtl fgtl3 fgtv"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (tot ? finPct(x[1] / tot * 100) : "") + '</span></div>'; });
+    } else h += '<div class="finnote">Les ventes par client arrivent dès que QuickBooks les fournit à l\'application.</div>';
+    h += '<a class="retour" href="#" id="retour">Retour</a></div>';
+    app.innerHTML = h;
+    document.getElementById("retour").onclick = function(e){ e.preventDefault(); finRetour(); };
+  });
 }
 // Copie des ratios par catégorie avec les montants (Direction seulement), de janvier à la date des données
 function financesRatios(){
