@@ -1715,8 +1715,7 @@ function prixSoumissions(){
   function ok(t){ return !rech || String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").indexOf(rech) >= 0; }
   function dessiner(){
     var el = document.getElementById("psb"); if(!el) return;
-    var h = '<div class="tgm"><button type="button" class="tgb'+(vue === "liste" ? " on" : "")+'" data-v="liste">Liste de prix</button><button type="button" class="tgb'+(vue === "soum" ? " on" : "")+'" data-v="soum">Soumissions</button></div>' +
-      '<input class="champ" id="psr" type="search" placeholder="Rechercher" value="'+esc(rech)+'" autocomplete="off">';
+    var h = '<div class="tgm"><button type="button" class="tgb'+(vue === "liste" ? " on" : "")+'" data-v="liste">Liste de prix</button><button type="button" class="tgb'+(vue === "soum" ? " on" : "")+'" data-v="soum">Soumissions</button></div>' ;
     if(!d){ el.innerHTML = h; return lier(el); }
     var i, k, n = 0;
     if(vue === "liste"){
@@ -1753,8 +1752,6 @@ function prixSoumissions(){
   function lier(el){
     Array.prototype.forEach.call(el.querySelectorAll(".tgb"), function(b){ b.onclick = function(){ vue = b.getAttribute("data-v"); dessiner(); }; });
     Array.prototype.forEach.call(el.querySelectorAll(".pss"), function(b){ b.onclick = function(){ var c = b.getAttribute("data-o"), etait = !!ouv[c]; ouv = {}; ouv[c] = !etait; dessiner(); }; });
-    var r = document.getElementById("psr");
-    if(r) r.oninput = function(){ rech = r.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); var p = r.selectionStart; dessiner(); var r2 = document.getElementById("psr"); if(r2){ r2.focus(); try { r2.setSelectionRange(p, p); } catch(e){} } };
   }
   dessiner();
   obtenir("prix_soumissions", {action: "prix_soumissions"}, function(r){ d = r; dessiner(); }, function(){ var el = document.getElementById("psb"); if(el) el.insertAdjacentHTML("beforeend", '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'); }, true);
