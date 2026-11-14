@@ -13,7 +13,7 @@ function finCharger(ok){
   var fini = false;
   function recu(r){
     if(fini || tok !== FIN_TOK) return;
-    if(r && r.ok && r.mois && r.mois.length){ fini = true; clearTimeout(tm); if(typeof efNettoyer === "function") efNettoyer(r); FIN_R = r; finPreparer(r); ok(r); }
+    if(r && r.ok && r.mois && r.mois.length){ fini = true; clearTimeout(tm); try { if(typeof efNettoyer === "function") efNettoyer(r); FIN_R = r; finPreparer(r); ok(r); } catch(e){ echec("ERREUR " + String(e && e.message || e).slice(0, 80).toUpperCase()); } }
     else if(r && r.erreur){ fini = true; echec(String(r.erreur).toUpperCase()); }
   }
   appelService({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){});
