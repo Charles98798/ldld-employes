@@ -77,6 +77,10 @@ function efPeriode(){
   Object.keys(m.totaux || {}).forEach(function(k){ r.totaux[k] = som(m.totaux[k]); });
   return r;
 }
+function efErreur(msg){
+  var a = app.querySelector(".att"); if(!a) return;
+  var d = document.createElement("div"); d.className = "bandeau"; d.textContent = msg; a.parentNode.replaceChild(d, a);
+}
 function efOuvrir(){
   app.innerHTML = '<div class="page ppx fin ef sans-instant"><h1>États financiers</h1><div class="att"><i></i></div><a class="retour" href="#" id="retour">Retour</a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
@@ -84,13 +88,13 @@ function efOuvrir(){
   function recu(m){
     if(fini || !document.querySelector(".ef")) return;
     var r = m;
-    if(m && m.ok && m.comptes){ efNettoyer(m); EF_RAW = m; EF_P = "A"; r = efPeriode(); }
-    if(r && r.ok){ fini = true; efDessiner(r); }
-    else if(r && r.erreur){ fini = true; app.querySelector(".bandeau").textContent = String(r.erreur).toUpperCase() + " · RÉESSAYEZ"; }
+    try { if(m && m.ok && m.comptes){ efNettoyer(m); EF_RAW = m; EF_P = "A"; r = efPeriode(); } } catch(e){ r = {erreur: "ERREUR " + String(e && e.message || e).slice(0, 80)}; }
+    if(r && r.ok){ fini = true; try { efDessiner(r); } catch(e){ app.innerHTML = '<div class="page ppx fin ef sans-instant"><h1>États financiers</h1><div class="bandeau">ERREUR ' + String(e && e.message || e).slice(0, 80).toUpperCase() + '</div><a class="retour" href="#" id="retour">Retour</a></div>'; document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); responsable(); }; } }
+    else if(r && r.erreur){ fini = true; efErreur(String(r.erreur).toUpperCase() + " · RÉESSAYEZ"); }
   }
   appelService({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){});
   setTimeout(function(){ if(!fini && document.querySelector(".ef")) appelBrut({action: "finance_mensuel", session: sessionGardee()}).then(recu).catch(function(){}); }, 5000);   // la lecture préchargée traîne: appel direct
-  setTimeout(function(){ var b = document.querySelector(".ef .bandeau"); if(!fini && b){ fini = true; b.textContent = "INDISPONIBLE · RÉESSAYEZ"; } }, 40000);
+  setTimeout(function(){ if(!fini && document.querySelector(".ef")){ fini = true; efErreur("INDISPONIBLE · RÉESSAYEZ"); } }, 40000);
 }
 function efOptions(r){
   var o = '<option value="A"' + (EF_P === "A" ? " selected" : "") + '>Année ' + r.annee + '</option>', i, L = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
