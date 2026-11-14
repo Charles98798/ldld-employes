@@ -36,14 +36,19 @@ function portraitOriginal(idDepart){
     return c.rows.map(function(r){ return '<div><span>'+esc(r[0])+'</span><b'+(r[1] == null ? ' class="manque"' : '')+'>'+(r[1] == null ? "—" : Math.round(r[1]))+' / '+r[2]+'</b></div>'; }).join("") + '<div class="tot"><span>Total</span><b>'+(c.total == null ? "—" : Math.round(c.total)+" %")+'</b></div>'; }
   function optionsListe(){ return '<option value="" disabled>Choisir un employé…</option>' + D.employes.map(function(e, k){ return '<option value="'+k+'">'+esc(e.nom)+'</option>'; }).join(""); }
   function vue(e){ return {pos: e.pos, total: e.total, det: e.det, X: D.echelle, an: D.annee, suiv: false}; }   // photo d'aujourd'hui: aucune année à venir, aucune notion de confirmé
+  // Grand écran: une seule page à 3 colonnes, mise à l'échelle pour tenir dans la fenêtre sans défilement (comme la page web d'origine).
+  function ajuster(){ var el = $("po"); if(!el){ removeEventListener("resize", ajuster); return; }
+    el.style.zoom = 1; el.style.width = ""; if(innerWidth < 1000) return;
+    el.style.width = "1500px"; var h = el.offsetHeight, haut = el.getBoundingClientRect().top + (window.scrollY || 0), z = Math.min((innerWidth - 24) / 1500, (innerHeight - haut - 8) / h);
+    if(z > 1.8) z = 1.8; if(z < .6) z = 1; el.style.zoom = z; }
   function squelette(){
     $("po").innerHTML = '<h1>Portrait d’un employé</h1>' +
-      '<div class="pohd"><img class="pologo" src="icons/icon-192-v6.png" alt="" width="48" height="48"><div class="potitre"><div class="ponom" id="poNom"></div><div class="posous" id="poSous"></div></div></div>' +
-      '<div class="ponav"><select class="champ" id="poListe"></select><div class="ponb"><button type="button" class="pobtn" id="poPrec">Précédent</button><button type="button" class="pobtn noir" id="poSuiv">Suivant</button></div></div>' +
-      '<div class="pos"><span class="n">01</span><span class="l">Position dans l’échelle</span></div><div id="poEch"></div><div id="poEvo"></div>' +
-      '<div class="pos"><span class="n">02</span><span class="l">Rémunération globale</span></div><div id="poRem"></div><div class="poinfo" id="poRemInfo"></div>' +
-      '<div class="pos"><span class="n">03</span><span class="l">Contribution</span><span class="moy" id="poPtsTag"></span></div><div class="pofx" id="poPts"></div>' +
-      '<div class="pos"><span class="n">04</span><span class="l">Pour notre discussion</span></div><div class="poparoles" id="poParoles"></div>' +
+      '<div class="pohead"><div class="pohd"><img class="pologo" src="icons/icon-192-v6.png" alt="" width="48" height="48"><div class="potitre"><div class="ponom" id="poNom"></div><div class="posous" id="poSous"></div></div></div>' +
+      '<div class="ponav"><select class="champ" id="poListe"></select><div class="ponb"><button type="button" class="pobtn" id="poPrec">Précédent</button><button type="button" class="pobtn noir" id="poSuiv">Suivant</button></div></div></div>' +
+      '<div class="potri"><div><div class="pos"><span class="n">01</span><span class="l">Position dans l’échelle</span></div><div id="poEch"></div><div id="poEvo"></div></div>' +
+      '<div><div class="pos"><span class="n">02</span><span class="l">Rémunération globale</span></div><div id="poRem"></div><div class="poinfo" id="poRemInfo"></div></div>' +
+      '<div><div class="pos"><span class="n">03</span><span class="l">Contribution</span><span class="moy" id="poPtsTag"></span></div><div class="pofx" id="poPts"></div>' +
+      '<div class="pos"><span class="n">04</span><span class="l">Pour notre discussion</span></div><div class="poparoles" id="poParoles"></div></div></div>' +
       '<div class="pos"><span class="n">05</span><span class="l">Objectifs et charges</span></div><div id="poCharge"></div><div class="poinfo" id="poChargeInfo"></div>';
     $("poListe").innerHTML = optionsListe();
     $("poListe").onchange = function(){ i = +this.value; afficher(); };
@@ -113,12 +118,13 @@ function portraitOriginal(idDepart){
     var p = e.paroles || {};
     function ligne(t, v){ return '<div><span class="pok">'+t+'</span><span class="t'+(v ? "" : " vide")+'">'+(v ? "« "+esc(v)+" »" : "—")+'</span></div>'; }
     $("poParoles").innerHTML = ligne("Ce qui va bien", p.bien) + ligne("À développer", p.developper) + ligne("À aborder", p.aborder);
+    setTimeout(ajuster, 0);
   }
   appelService({action: "portrait_original", session: sessionGardee()}).then(function(r){
     if(!$("po")) return;
     if(!r || !r.ok || !r.d) throw 0;
     D = r.d; if(!D.employes || !D.employes.length){ $("po").innerHTML = '<h1>Portrait d’un employé</h1><div class="bandeau">▪ AUCUN EMPLOYÉ ACTIF</div>'; return; }
     var k = -1; if(idDepart) D.employes.forEach(function(x, j){ if(x.id === idDepart) k = j; });
-    i = k >= 0 ? k : 0; squelette(); afficher();
+    i = k >= 0 ? k : 0; squelette(); afficher(); ajuster(); addEventListener("resize", ajuster);
   }).catch(function(){ if($("po")) portrait(idDepart); });   // Service sans portrait_original: ancien portrait
 }
