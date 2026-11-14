@@ -1,4 +1,4 @@
-var APP_PUB = "477";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "485";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -143,7 +143,7 @@ var EN_VOL = [];   // appels partis, avec leur heure: si l'appareil les fige (iP
 function suiteAppels(){
   var nu = Date.now();
   EN_VOL = EN_VOL.filter(function(v){ if(!v.fini && nu - v.t > 45000){ v.fini = true; APPELS_EN_COURS = Math.max(0, APPELS_EN_COURS - 1); try { if(v.ctl) v.ctl.abort(); } catch(e){} v.ko(new Error("delai")); return false; } return !v.fini; });
-  while(FILE_APPELS.length && APPELS_EN_COURS < (FILE_APPELS[0].bg ? APPELS_MAX : APPELS_MAX + 4)){   // un clic part toujours, même si les préchargements lents occupent les places
+  while(FILE_APPELS.length && APPELS_EN_COURS < (FILE_APPELS[0].bg ? APPELS_MAX : APPELS_MAX + 12)){   // un clic part toujours, même si les préchargements lents occupent les places
     if(FILE_APPELS[0].bg && APPELS_EN_COURS >= APPELS_MAX - 1) break;
     var x = FILE_APPELS.shift(); APPELS_EN_COURS++;
     (function(x){
