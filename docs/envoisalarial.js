@@ -17,7 +17,7 @@ var ENVB = null;
 function envBarreDessiner(){
   var z = document.getElementById("envbarz"), E = ENVB; if(!z || !E) return;
   var p = Math.round(E.etat === "non" ? 0 : E.p), rouge = E.etat === "non";
-  z.innerHTML = '<div style="height:8px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+p+'%;background:#0d1117"></i></div><div style="font-size:20px;font-weight:300;margin:4px 0 8px">'+p+' %</div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:#8EFF60;color:#1D1D1B")+';margin:0 0 4px;cursor:default;font-size:11px;padding:8px 10px;letter-spacing:.08em">▪ '+envE(E.texte)+'</div><div class="aeact" style="margin:10px 0 4px">'+'<button type="button" class="bouton lg" id="envbarf"'+(E.etat === "cours" ? " disabled" : "")+'>Fermer</button></div>';
+  z.innerHTML = '<div style="height:8px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+p+'%;background:#0d1117"></i></div><div style="font-size:20px;font-weight:300;margin:4px 0 8px">'+p+' %</div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:#8EFF60;color:#1D1D1B")+';margin:0 0 4px;cursor:default;font-size:11px;padding:8px 10px;letter-spacing:.08em">'+envE(E.texte)+'</div><div class="aeact" style="margin:10px 0 4px">'+'<button type="button" class="bouton lg" id="envbarf"'+(E.etat === "cours" ? " disabled" : "")+'>Fermer</button></div>';
   var f = document.getElementById("envbarf"); if(f) f.onclick = function(){ if(ENVB && ENVB.etat === "cours") return; var cb = ENVB && ENVB.apresFermer; envBarreRetirer(); if(cb) cb(); };
   var r = document.getElementById("envbarre"); if(r) r.onclick = function(){ var fn = ENVB && ENVB.reessayer; envBarreRetirer(); if(fn) fn(); };
 }
@@ -54,7 +54,7 @@ function envListe(){
   h += '<span class="lbl">Employés</span>';
   if(tousPrets.length && ferme) h += '<div style="margin:0 0 8px;opacity:.35"><span style="text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:4px">Tout cocher</span></div>';
   else if(tousPrets.length) h += '<div style="margin:0 0 8px"><a href="#" id="envtout" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:3px;text-underline-offset:4px">'+(prets.length === tousPrets.length ? "Tout décocher" : "Tout cocher")+'</a></div>';
-  if(!L.length) h += '<div class="bandeau">▪ AUCUN EMPLOYÉ À ENVOYER</div>';
+  if(!L.length) h += '<div class="bandeau">Aucun EMPLOYÉ À ENVOYER</div>';
   h += L.map(function(e, i){
     var sous = (e.statut === "Bloqué" || /^non concern/i.test(String(e.statut))) ? (e.raison || "") : e.statut === "Envoyé" ? (e.essaiEnvoye ? "essai envoyé" : "envoyé") + (e.raison ? " · " + e.raison : "") : [envFr(e.salaire), e.position != null && e.position !== "" ? "position " + e.position + " %" : ""].filter(Boolean).join(" · ");
     var cochable = e.statut === "Prêt" && !ferme, grise = e.statut === "Prêt" && ferme, coche = cochable && ENVS.coches && ENVS.coches[e.nom];
@@ -65,7 +65,7 @@ function envListe(){
   h += '<button type="button" class="bouton" id="envsend" style="height:46px;padding:0;margin-top:14px"'+(prets.length ? "" : " disabled")+'>Envoyer '+prets.length+' courriel'+(prets.length > 1 ? "s" : "")+'</button>';
   document.getElementById("envapp").innerHTML = h;
   envMessage(ENVS.msg);
-  Array.prototype.forEach.call(document.querySelectorAll(".envl"), function(x){ x.onclick = function(){ envApercu(L[+x.getAttribute("data-i")]); }; });
+  Array.prototype.forEach.call(document.querySelectorAll(".envl"), function(x){ x.onclick = function(){ var e = L[+x.getAttribute("data-i")]; if(!e || e.statut !== "Prêt" || ferme) return; ENVS.coches = ENVS.coches || {}; ENVS.coches[e.nom] = !ENVS.coches[e.nom]; envListe(); }; });   // un appui sur la ligne coche ou décoche seulement: jamais d'aperçu depuis cet écran
   Array.prototype.forEach.call(document.querySelectorAll(".envcase"), function(x){ x.onclick = function(ev){ ev.stopPropagation(); var e = L[+x.getAttribute("data-i")]; ENVS.coches = ENVS.coches || {}; ENVS.coches[e.nom] = !ENVS.coches[e.nom]; envListe(); }; });
   var tt = document.getElementById("envtout"); if(tt) tt.onclick = function(ev){ ev.preventDefault(); var tous = prets.length === tousPrets.length; ENVS.coches = {}; if(!tous) tousPrets.forEach(function(e){ ENVS.coches[e.nom] = true; }); envListe(); };
   document.getElementById("envsend").onclick = function(){ if(prets.length) envConfirmer(prets); };
