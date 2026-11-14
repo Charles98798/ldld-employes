@@ -1,4 +1,4 @@
-var APP_PUB = "475";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "476";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -146,7 +146,7 @@ function suiteAppels(){
     if(FILE_APPELS[0].bg && APPELS_EN_COURS >= APPELS_MAX - 1) break;
     var x = FILE_APPELS.shift(); APPELS_EN_COURS++;
     (function(x){
-      var v = {t: Date.now(), fini: false, ko: x.ko, ctl: null}; if(x.c && x.c.action === "docusign_envoyer") v.t += 130000; EN_VOL.push(v);
+      var v = {t: Date.now(), fini: false, ko: x.ko, ctl: null, a: (x.c && x.c.action) || "?"}; if(x.c && x.c.action === "docusign_envoyer") v.t += 130000; EN_VOL.push(v);
       appelDirect(x.c, function(c){ v.ctl = c; }).then(function(r){ if(!v.fini){ v.fini = true; APPELS_EN_COURS--; x.ok(r); } }, function(e){ if(!v.fini){ v.fini = true; APPELS_EN_COURS--; x.ko(e); } }).then(suiteAppels);
     })(x);
   }
@@ -2914,3 +2914,16 @@ if("serviceWorker" in navigator){
   window.addEventListener("resize", largeur); window.addEventListener("orientationchange", function(){ setTimeout(largeur, 250); });
   if(window.visualViewport) window.visualViewport.addEventListener("resize", largeur);
 })();
+
+// Diagnostic TEMPORAIRE (Direction seulement): tant qu'une page reste sur « Un instant », affiche les appels en cours et leur âge.
+setInterval(function(){
+  try {
+    var pg = app.querySelector(".page"), d = document.getElementById("diagtmp");
+    var att = pg && MOI && MOI.role === "direction" && /UN INSTANT/.test(pg.textContent) && !app.querySelector(".demarrage");
+    if(!att){ if(d) d.remove(); return; }
+    if(!d){ d = document.createElement("div"); d.id = "diagtmp"; d.style.cssText = "position:fixed;left:12px;right:12px;bottom:90px;font:10px/13px monospace;color:#1D1D1B;background:#B7B1A5;padding:6px;z-index:9999;white-space:pre-wrap;pointer-events:none"; document.body.appendChild(d); }
+    var nu = Date.now();
+    d.textContent = "pub " + APP_PUB + " | en cours " + APPELS_EN_COURS + " | file " + FILE_APPELS.length + " | vue " + (VUE.on ? "oui" : "non") + "\n" +
+      EN_VOL.filter(function(v){ return !v.fini; }).map(function(v){ return v.a + " " + Math.round((nu - v.t)/1000) + "s"; }).join(", ") + "\nfile: " + FILE_APPELS.slice(0, 8).map(function(x){ return (x.c && x.c.action) + (x.bg ? "(ar)" : ""); }).join(", ");
+  } catch(e){}
+}, 1000);
