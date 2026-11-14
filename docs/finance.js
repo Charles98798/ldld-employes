@@ -166,9 +166,11 @@ function fgGraphique(type){
       s += '<rect x="'+(xc-bw-.5)+'" y="'+(base-he)+'" width="'+bw+'" height="'+he+'" fill="#0D1319"/><rect x="'+(xc+1)+'" y="'+(base-hs)+'" width="'+(bw-1.5)+'" height="'+hs+'" fill="none" stroke="#0D1319" stroke-width="1.5"/>';
       s += '<text x="'+xc+'" y="206" text-anchor="middle">'+FG_MM[p[0]+i]+'</text>'; }
     s += '<line x1="'+L0+'" x2="'+W+'" y1="'+base+'" y2="'+base+'" stroke="#0D1319"/>';
-    var z = cn-1, mc = (R.margeCredit || [])[p[1]], note = (mc || mc === 0) ? '<br>Marge de crédit utilisée : ' + finMontant(Math.abs(mc)) : '';
-    var cartes = '<div class="fgcards"><div><small>ENTRÉES</small><b>'+finMontant(ve[z]*1000)+'</b></div><div><small>SORTIES</small><b>'+finMontant(so[z]*1000)+'</b></div><div class="g"><small>RESTE</small><b>'+finMontant((fl[z] || 0)*1000)+'</b></div></div>';
-    return cartes + '<svg class="finsvg" viewBox="0 0 '+W+' 214">'+s+'</svg><div class="finnote">Plein : entrées (argent encaissé) · Vide : sorties (argent payé)<br>Solde en banque : ' + finMontant(sol[z]*1000) + note + '</div>';
+    var z = cn-1, a0 = (FG.act === "M") ? p[1] : (FG.act === "T" ? FG.t*3 : 0), a1 = (FG.act === "M") ? p[1] : Math.min(p[1], FG.act === "T" ? FG.t*3+2 : p[1]), se = 0, ss2 = 0, sf = 0, kk;
+    for(kk=a0;kk<=a1;kk++){ se += ve[kk-p[0]] || 0; ss2 += so[kk-p[0]] || 0; sf += fl[kk-p[0]] || 0; }
+    var mc = (R.margeCredit || [])[p[1]], note = (mc || mc === 0) ? '<br>Marge de crédit utilisée : ' + finMontant(Math.abs(mc)) : '';
+    var cartes = '<div class="fgcards"><div><small>VENTES</small><b>'+finMontant(se*1000)+'</b></div><div><small>SORTIES</small><b>'+finMontant(ss2*1000)+'</b></div><div class="g"><small>RESTE</small><b>'+finMontant(sf*1000)+'</b></div></div>';
+    return cartes + '<svg class="finsvg" viewBox="0 0 '+W+' 214">'+s+'</svg><div class="finnote">Plein : ventes du mois · Vide : sorties, calculées pour que le reste égale la variation réelle de la banque<br>Chiffres de la période choisie · Solde en banque : ' + finMontant(sol[z]*1000) + note + '</div>';
   }
   var c = R.clients, h = "";
   if(!c) return '<div class="finnote">Aucune donnée de comptes clients.</div>';
