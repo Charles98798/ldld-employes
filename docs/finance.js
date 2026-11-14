@@ -70,7 +70,7 @@ function finRendu(){
         var af = FIN_R.achatsFourn;
         h += '<a class="fglnk" href="#" data-k="achat">Voir les plus gros fournisseurs</a><div class="fgtop" id="fgtop_achat" hidden>';
         var lst = (FIN_ORIGINE === "conseil") ? af.top.filter(function(x){ return !/atlantis|charles/i.test(String(x[0])); }).slice(0, 15) : af.top;
-        lst.forEach(function(x, i){ h += '<div class="fgtl fgtl3"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (af.total ? finPct(x[1] / af.total * 100) : "") + '</span></div>'; });
+        lst.forEach(function(x, i){ h += '<div class="fgtl fgtl3"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (af.total ? finPct(x[1] / af.total * 100) : "") + '</span></div>'; });
         h += '</div>';
       }
     });
@@ -181,7 +181,7 @@ function fgGraphique(type){
     var l = b[2] && tp[b[2]];
     if(l && l.length){
       h += '<a class="fglnk" href="#" data-k="'+b[2]+'">Voir les 10 comptes</a><div class="fgtop" id="fgtop_'+b[2]+'" hidden>';
-      l.forEach(function(x, i){ h += '<div class="fgtl"><span>'+(i+1)+'. '+String(x[0]).replace(/[<>&]/g, "")+'</span><span>'+finMontant(x[1])+'</span></div>'; });
+      l.forEach(function(x, i){ h += '<div class="fgtl"><span>'+(i+1)+'. '+String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "")+'</span><span>'+finMontant(x[1])+'</span></div>'; });
       h += '</div>';
     }
     h += '</div>';
@@ -239,7 +239,7 @@ function financeTop10(){
     if(vc && vc.top && vc.top.length){
       var tot = finSom(FIN_S.ventes, finMois("A")) || vc.total;
       h += '<div class="fgdesc">Ventes du 1er janvier au ' + finDate() + '</div><div class="fgtl fgtl3 fgth"><span></span><span>VENTES</span><span>PART</span></div>';
-      vc.top.forEach(function(x, i){ h += '<div class="fgtl fgtl3 fgtv"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (tot ? finPct(x[1] / tot * 100) : "") + '</span></div>'; });
+      vc.top.forEach(function(x, i){ h += '<div class="fgtl fgtl3 fgtv"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (tot ? finPct(x[1] / tot * 100) : "") + '</span></div>'; });
     } else h += '<div class="finnote">Les ventes par client arrivent dès que QuickBooks les fournit à l\'application.</div>';
     h += '<a class="retour" href="#" id="retour">Retour</a></div>';
     app.innerHTML = h;
