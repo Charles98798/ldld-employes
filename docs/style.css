@@ -1043,3 +1043,8 @@ select:not(.act){width:100%;box-sizing:border-box}
 
 .eev1{display:grid;grid-template-columns:64px auto minmax(0,1fr);gap:8px;padding:9px 0;border-bottom:1px solid var(--ligne,#BDB8AC);font-size:13px;align-items:baseline}.eev1.auj{border-left:4px solid #8EFF60;padding-left:8px}.eev1 .ej,.eev1 .eh{color:#6E6350}.eev1 .eh:empty{display:none}.eev1 .et{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .eev1.grp{grid-template-columns:78px 0 minmax(0,1fr)}
+
+/* Espacement uniforme sous l'en-tête (flèche + titre), identique sur toutes les pages */
+:root{--espace-entete:40px}
+.page .bl{margin-bottom:var(--espace-entete)!important}
+.page .bl + *{margin-top:0!important}
