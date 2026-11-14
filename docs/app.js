@@ -1,4 +1,4 @@
-var APP_PUB = "540";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "541";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -206,11 +206,12 @@ function copieHeures(corps){
   });
 }
 // Domaines lus dans la copie (une réponse par employé, même forme que le service). Ligne absente, purgée, en erreur ou trop vieille: Google répond.
-var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1, ech_donnees:1, calendrier:1, rd_chiffres:1, rd_planif_lire:1, rd_points_lire:1, rd_capsules_lire:1, rd_commentaires_lire:1, rd_base_lire:1, prix_soumissions:1, employes_etat:1, charge_equipe:1, entretien_lire:1, equipe_groupes:1, contacts:1, equipe:1, parking_lire:1, stationnement:1, prefs_lire:1, utilisation:1, onglets_lire:1, production_lire:1, absences_equipe:1, inv_lire:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
-var RD_ECR_T = 0;   // dernière écriture Réunion production faite ici: la copie se rafraîchit en quelques secondes, on relit chez Google juste après
+var COPIE_SIMPLE = {evenements_employe:1, tableau_courant:1, charges_jours:1, tableau:1, calendrier_labo:1, rencontre_liste:1, ech_donnees:1, calendrier:1, rd_chiffres:1, rd_planif_lire:1, rd_points_lire:1, rd_capsules_lire:1, rd_commentaires_lire:1, rd_base_lire:1, messages:1, ae_lire:1, agenda_liste:1, agenda_mes:1, manuel_texte:1, incendie_texte:1, prix_soumissions:1, employes_etat:1, charge_equipe:1, entretien_lire:1, equipe_groupes:1, contacts:1, equipe:1, parking_lire:1, stationnement:1, prefs_lire:1, utilisation:1, onglets_lire:1, production_lire:1, absences_equipe:1, inv_lire:1};   // tableau_courant retiré le 13 nov. (Tableau de bord bloqué sur « UN INSTANT »): lit Google en attendant la cause
+var RD_ECR_T = 0, ECR_T = 0;   // dernière écriture Réunion production faite ici: la copie se rafraîchit en quelques secondes, on relit chez Google juste après
 function copieCle(domaine, corps){   // domaines à plusieurs clés: Réunion production (rd_chiffres) = section|département|du|au (la charge ne dépend pas de la période)
   if(/^rd_(planif|points|base)_lire$/.test(domaine)) return (corps && corps.departement) ? corps.departement : null;
   if(domaine === "rd_capsules_lire") return "";
+  if(domaine === "ae_lire" && corps && corps.rencontre) return null;   // le détail des réponses individuelles reste en lecture directe
   if(domaine === "rd_commentaires_lire") return (corps && corps.departement) ? corps.departement + "|" + (corps.depuis === "tout" ? "tout" : (corps.depuis ? null : "defaut")) : null;
   if(domaine !== "rd_chiffres" || !corps) return "";
   var ch = corps.section === "charge";
@@ -218,11 +219,11 @@ function copieCle(domaine, corps){   // domaines à plusieurs clés: Réunion pr
   return corps.section + "|" + corps.departement + "|" + (ch ? "" : corps.du) + "|" + (ch ? "" : corps.au);
 }
 function copieSimple(domaine, corps){
-  var cle = copieCle(domaine, corps); if(cle === null || (/^rd_/.test(domaine) && Date.now() - RD_ECR_T < 30000)) return Promise.reject(new Error("vide"));
+  var cle = copieCle(domaine, corps); if(cle === null || (/^rd_/.test(domaine) && Date.now() - RD_ECR_T < 30000) || (/^(messages|agenda_mes|agenda_liste|ae_lire)$/.test(domaine) && Date.now() - ECR_T < 30000)) return Promise.reject(new Error("vide"));
   return guichetCopie({action:"lire", domaine:domaine, cle:cle}, copieEtat(sessDe(corps))).then(function(d){
     if(!d || !d.ok || d.vide || !d.reponse) throw new Error("vide");
     var r = d.reponse; if(r.ok === false || r.purge || r.attente) throw new Error("vide");
-    if(Date.now() - Date.parse(d.maj_t) > 36 * 3600000) throw new Error("vieille");   // publiée au moins une fois par jour (préchauffage et reconstruction de nuit)
+    if(Date.now() - Date.parse(d.maj_t) > (/^(messages|agenda_mes)$/.test(domaine) ? 20 * 60000 : 36 * 3600000)) throw new Error("vieille");   // publiée au moins une fois par jour (préchauffage et reconstruction de nuit)
     return r;
   });
 }
@@ -230,6 +231,7 @@ function copieSimple(domaine, corps){
 function appelDirect(corps, vu){
   var a = corps && corps.action;
   if(a && /^rd_.*_(ecrire|retirer|publier|modifier|presenter|terminer)$/.test(a)) RD_ECR_T = Date.now();
+  if(a && /^(message_employe|rencontre_demande|rencontre_planifier|envoyer|ae_enregistrer|agenda_creer|agenda_modifier|agenda_supprimer)$/.test(a)) ECR_T = Date.now();
   var C = copieEtat(sessDe(corps));
   if((a === "heures" || COPIE_SIMPLE[a]) && Date.now() > C.hors){
     if(!copiePrete(C)){
