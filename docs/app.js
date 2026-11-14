@@ -1,4 +1,4 @@
-var APP_PUB = "543";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "544";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -111,6 +111,7 @@ function filetVide(){
   var c = pg.cloneNode(true); Array.prototype.forEach.call(c.querySelectorAll(".bl, a.retour, .auto-instant, h1, .vub, .pph, script, style"), function(x){ x.remove(); });
   var plein = c.innerText.replace(/\s+/g, "").length > 0 || !!c.querySelector("input,select,textarea,button,img,svg,canvas,a");
   var m = pg.querySelector(".auto-instant");
+  if(pg.classList.contains("sans-instant")){ if(m) m.remove(); return; }   // Autoévaluation: jamais « Un instant »
   if(plein){ if(m) m.remove(); return; }
   if(!m){ m = document.createElement("div"); m.className = "bandeau auto-instant"; m.textContent = "▪ UN INSTANT"; var r = pg.querySelector("a.retour"); pg.insertBefore(m, r || null); }
 }
@@ -1048,8 +1049,11 @@ function salaireNotes(r, k){
 }
 // Étape 5 : évaluations. L'autoévaluation reproduit la page du portail (mêmes 8 onglets, mêmes questions); en essai elle ne lit ni n'enregistre rien.
 function evaluations(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Autoévaluation</h1><div id="ev"></div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Autoévaluation</h1><div id="ev"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  // Garde-fou: si rien n'est affiché après 8 s, on redemande une fois; après 20 s, un message clair avec un bouton Réessayer
+  setTimeout(function(){ var z = document.getElementById("ev"); if(z && !z.innerHTML) chercher("ae", {action:"ae_lire"}).catch(function(){}); }, 8000);
+  setTimeout(function(){ var z = document.getElementById("ev"); if(z && !z.innerHTML){ z.innerHTML = '<div class="bandeau">Autoévaluation indisponible pour le moment.</div><button type="button" class="bouton" id="aere">Réessayer</button>'; document.getElementById("aere").onclick = function(){ evaluations(); }; } }, 20000);
   obtenir("ae", {action:"ae_lire"}, function(r){
     var el = document.getElementById("ev"); if(!el) return;
     var dues = r.rencontres.filter(aeARemplir);   // seulement celles à remplir, jamais les anciennes
@@ -1064,7 +1068,7 @@ function evaluations(){
     el.innerHTML = dues.map(function(m){
       return '<a class="rang" href="#" data-r="'+m.rencontre+'" data-d="'+esc(m.date || "")+'">▪ Autoévaluation · rencontre '+m.rencontre+'<small>'+'Rencontre du '+esc(aeDateTxt(m.date))+'</small></a>'; }).join("");
     Array.prototype.forEach.call(el.querySelectorAll("a[data-r]"), function(a){ a.onclick = function(e){ e.preventDefault(); autoeval(+a.getAttribute("data-r"), false, a.getAttribute("data-d")); }; });
-  }, function(){ document.getElementById("ev").innerHTML = '<div class="bandeau">▪ AUTOÉVALUATION INDISPONIBLE · RÉESSAYEZ</div>'; }, true);
+  }, function(){ var z = document.getElementById("ev"); if(z){ z.innerHTML = '<div class="bandeau">Autoévaluation indisponible pour le moment.</div><button type="button" class="bouton" id="aere">Réessayer</button>'; document.getElementById("aere").onclick = function(){ evaluations(); }; } }, true);
 }
 // Autoévaluation : même fiche et mêmes règles que la page envoyée par courriel (6 étapes). Les réponses vont dans la fiche de l'employé.
 var AE_ETAPES = ["Évaluation des compétences","Valeurs humaines","Connaissances et développement","Rythme et charge de travail","Priorités et engagements","Commentaires de l’employé","Mon expérience au laboratoire","Pour préparer notre rencontre"];
