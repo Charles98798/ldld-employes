@@ -17,40 +17,76 @@ function aepProchaine(x, auj){
   var d = l[l.length - 1]; return {num: d.num, j: d.j, h: d.h, passee: true};
 }
 function aepHeure(h){ var p = /^(\d{1,2}):(\d\d)/.exec(h || ""); return p && !(+p[1] === 0 && +p[2] === 0) ? (+p[1]) + " h" + (p[2] === "00" ? "" : " " + p[2]) : ""; }
+function aepEtq(j, prochaine, auj){ if(!j) return ""; return '<span class="aepe' + (j < auj ? '' : (prochaine ? ' v' : '')) + '">' + (j < auj ? 'Passée' : (prochaine ? 'Prochaine' : 'À venir')) + '</span>'; }
+function aepStatut(x){ return x.d1 && x.d2 ? "2 rencontres" : x.d1 ? "1 rencontre" : "Aucune rencontre"; }
+function aepFmt(j, h){ if(!j) return '<span class="aepv">—</span>'; var q = j.split("-"); return (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1] + " " + q[0] + (aepHeure(h) ? '<small>' + esc(aepHeure(h)) + '</small>' : ''); }
+var MOIS_COURTS_E = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 function aepPlanification(){
-  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification évaluation</h1><div class="aepf" id="aepf"></div><div id="aepz"></div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification évaluation</h1><div class="aepf" id="aepf"></div><div class="aepent"><span>Employé</span><span>RDV 1</span><span>RDV 2</span><span>Statut</span></div><div id="aepz"></div><div id="aepm" class="aeretat"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  var donnees = null;
+  var donnees = null, ouvert = null;
+  function auj(){ var n = new Date(); return n.getFullYear() + "-" + ("0" + (n.getMonth() + 1)).slice(-2) + "-" + ("0" + n.getDate()).slice(-2); }
+  function msg(t){ var m = document.getElementById("aepm"); if(m) m.textContent = t || ""; }
+  function liste(){
+    return (donnees.lignes || []).map(function(e){ var x = aepNormaliser(e); x.id = e.id; x.env1 = !!e.envoi1; x.env2 = !!e.envoi2; return x; }).filter(function(x){ return x.nom && !/^direction$/i.test(x.cat.trim()); })
+      .sort(function(a, b){ return a.nom.localeCompare(b.nom, "fr"); });
+  }
   function afficher(){
     var z = document.getElementById("aepz"), f = document.getElementById("aepf"); if(!z || !donnees) return;
-    var n = new Date(), auj = n.getFullYear() + "-" + ("0" + (n.getMonth() + 1)).slice(-2) + "-" + ("0" + n.getDate()).slice(-2);
-    var fin = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 7), finJ = fin.getFullYear() + "-" + ("0" + (fin.getMonth() + 1)).slice(-2) + "-" + ("0" + fin.getDate()).slice(-2);
-    var liste = (donnees.lignes || []).map(aepNormaliser).filter(function(x){ return x.nom && !/^direction$/i.test(x.cat.trim()); });
-    liste.forEach(function(x){ x.p = aepProchaine(x, auj); x.sansDate = !!x.statut && (!x.d1 || !x.d2); x.verif = /vérifier/i.test(x.statut); });
+    var t = auj(), fin = new Date(); fin.setDate(fin.getDate() + 7); var finJ = fin.getFullYear() + "-" + ("0" + (fin.getMonth() + 1)).slice(-2) + "-" + ("0" + fin.getDate()).slice(-2);
+    var L = liste();
+    L.forEach(function(x){ x.verif = /vérifier/i.test(x.statut); x.futur = [x.d1, x.d2].filter(function(j){ return j && j >= t; }).sort(); });
     var filtres = [
       {k: "tous", t: "Tous", ok: function(){ return true; }},
-      {k: "planifier", t: "À planifier", ok: function(x){ return x.sansDate; }},
-      {k: "semaine", t: "Cette semaine", ok: function(x){ return x.p && !x.p.passee && x.p.j <= finJ; }},
+      {k: "planifier", t: "À planifier", ok: function(x){ return !x.d1; }},
+      {k: "semaine", t: "Cette semaine", ok: function(x){ return x.futur.length && x.futur[0] <= finJ; }},
       {k: "verifier", t: "À vérifier", ok: function(x){ return x.verif; }}
     ];
-    f.innerHTML = filtres.map(function(q){ var c = liste.filter(q.ok).length; return '<button type="button" class="aepb'+(AEP.filtre === q.k ? ' on' : '')+'" data-k="'+q.k+'">'+q.t+' · '+c+'</button>'; }).join("");
-    Array.prototype.forEach.call(f.querySelectorAll("button"), function(b){ b.onclick = function(){ AEP.filtre = b.getAttribute("data-k"); afficher(); }; });
-    var ok = filtres.filter(function(q){ return q.k === AEP.filtre; })[0].ok;
-    var v = liste.filter(ok);
-    v.sort(function(a, b){ var ja = a.p ? a.p.j : "9999", jb = b.p ? b.p.j : "9999"; return ja < jb ? -1 : ja > jb ? 1 : a.nom < b.nom ? -1 : 1; });
+    f.innerHTML = filtres.map(function(q){ var c = L.filter(q.ok).length; return '<button type="button" class="aepb' + (AEP.filtre === q.k ? ' on' : '') + '" data-k="' + q.k + '">' + q.t + ' · ' + c + '</button>'; }).join("");
+    Array.prototype.forEach.call(f.querySelectorAll("button"), function(b){ b.onclick = function(){ AEP.filtre = b.getAttribute("data-k"); ouvert = null; afficher(); }; });
+    var ok = filtres.filter(function(q){ return q.k === AEP.filtre; })[0].ok, v = L.filter(ok);
     if(!v.length){ z.innerHTML = '<div class="aevide">Aucun employé dans cette liste.</div>'; return; }
-    var h = "", mois = "";
-    v.forEach(function(x){
-      var mk = x.p ? x.p.j.slice(0, 7) : "sans";
-      if(mk !== mois){ mois = mk; h += '<div class="emois">'+(mk === "sans" ? "Sans rencontre planifiée" : esc(MOIS_LONGS[+mk.slice(5, 7) - 1])+' '+mk.slice(0, 4))+'</div>'; }
-      var q = x.p ? x.p.j.split("-") : null, jl = q ? JOURS_COURTS_E[new Date(+q[0], +q[1] - 1, +q[2]).getDay()] + " " + (+q[2]) : "";
-      var etat = x.statut || (x.sansDate ? "À planifier" : "");
-      h += '<div class="aepl'+(x.p && x.p.passee ? ' pas' : '')+(x.sansDate ? ' sd' : '')+'"><span class="aepn">'+esc(x.nom)+'<small>'+esc([x.resp, x.p ? 'rencontre '+x.p.num : '', etat].filter(Boolean).join(" · "))+'</small></span><span class="aepd">'+esc(jl)+(aepHeure(x.p && x.p.h) ? '<br>'+esc(aepHeure(x.p.h)) : '')+'</span></div>';
-    });
-    z.innerHTML = h;
+    z.innerHTML = v.map(function(x){
+      var pro = x.futur[0], p1 = x.d1 && x.d1 < t, p2 = x.d2 && x.d2 < t;
+      var h = '<div class="aepl aepr"><span class="aepn">' + esc(x.nom) + '<small>' + esc(x.resp) + '</small></span>' +
+        '<button type="button" class="aepc' + (p1 ? ' pas' : '') + '" data-id="' + esc(x.id) + '" data-n="1">' + aepFmt(x.d1, x.h1) + aepEtq(x.d1, x.d1 === pro && !p1, t) + '</button>' +
+        '<button type="button" class="aepc' + (p2 ? ' pas' : '') + '" data-id="' + esc(x.id) + '" data-n="2">' + aepFmt(x.d2, x.h2) + aepEtq(x.d2, x.d2 === pro && !p2 && x.d1 !== pro, t) + '</button>' +
+        '<span class="aeps">' + esc(aepStatut(x)) + '</span>';
+      if(ouvert && ouvert.id === x.id){
+        var d = ouvert.n === 1 ? x.d1 : x.d2, hh = ouvert.n === 1 ? x.h1 : x.h2;
+        h += '<div class="aepedit"><b>Rencontre ' + ouvert.n + '</b><label>Date<input type="date" id="aepd" min="' + t + '" value="' + esc(d) + '"></label><label>Heure<input type="time" id="aeph" value="' + esc(hh || "") + '"></label>' +
+          '<div class="aepbts"><button type="button" class="bouton" id="aeps">Enregistrer</button>' + (d ? '<button type="button" class="bouton aepsup" id="aepr">Retirer</button>' : '') + '<button type="button" class="bouton" id="aepa">Annuler</button></div><div class="aepavis" id="aepav"></div></div>';
+      }
+      return h + '</div>';
+    }).join("");
+    Array.prototype.forEach.call(z.querySelectorAll("button.aepc"), function(b){ b.onclick = function(){ ouvert = {id: b.getAttribute("data-id"), n: +b.getAttribute("data-n")}; msg(""); afficher(); }; });
+    if(ouvert){
+      document.getElementById("aepa").onclick = function(){ ouvert = null; afficher(); };
+      document.getElementById("aeps").onclick = function(){ enregistrer(false, false); };
+      var r = document.getElementById("aepr"); if(r) r.onclick = function(){ enregistrer(true, false); };
+    }
+  }
+  function enregistrer(retrait, confirmer){
+    var o = ouvert, d = retrait ? "" : document.getElementById("aepd").value, h = retrait ? "" : document.getElementById("aeph").value, av = document.getElementById("aepav");
+    if(!retrait && (!d || !h)){ av.textContent = "Choisis la date et l’heure."; return; }
+    if(!retrait && d < auj()){ av.textContent = "Cette date est passée."; return; }
+    msg("Enregistrement…");
+    aerAppel({action: "ae_planif_ecrire", id: o.id, rencontre: o.n, date: d, heure: h, confirmer: !!confirmer}).then(function(r){
+      if(r && r.ok){
+        (donnees.lignes || []).forEach(function(l, i){ if(l.id === o.id && r.ligne) donnees.lignes[i] = r.ligne; });
+        ouvert = null; msg("Enregistré à " + aerHeure()); afficher(); return;
+      }
+      msg("");
+      if(r && r.confirmation){
+        av.innerHTML = esc(r.message || (r.confirmation === "envoi" ? "Un courriel d’autoévaluation partira dans les 5 minutes." : "Cette rencontre sera retirée de l’agenda.")) + '<div class="aepbts"><button type="button" class="bouton" id="aepok">Confirmer</button></div>';
+        document.getElementById("aepok").onclick = function(){ enregistrer(retrait, true); };
+        return;
+      }
+      av.textContent = (r && r.message) || "Enregistrement impossible. Réessaie.";
+    }).catch(function(){ msg(""); av.textContent = "Enregistrement impossible. Réessaie."; });
   }
   function erreur(){ var z = document.getElementById("aepz"); if(z){ z.innerHTML = '<div class="bandeau">Planification indisponible pour le moment.</div><button type="button" class="bouton" id="aere">Réessayer</button>'; document.getElementById("aere").onclick = aepPlanification; } }
-  obtenir("ae_planif", {action: "ae_planif_lire"}, function(r){ donnees = r; afficher(); }, erreur, true);
+  obtenir("ae_planif", {action: "ae_planif_lire"}, function(r){ if(ouvert) return; donnees = r; afficher(); }, erreur, true);
 }
 
 // ---- Réunion d'auto-évaluation (Service: ae_reunion_lire / ae_reunion_verrou / ae_reunion_ecrire / ae_reunion_actualiser) ----
