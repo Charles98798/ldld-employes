@@ -59,12 +59,12 @@ function finDate(){ var d = new Date(FIN_R && FIN_R.maj); if(isNaN(d.getTime()))
 function finRendu(){
   var ms = finMois(FIN_PERIODE), h = "";
   var der = ms.length ? ms[ms.length-1] : null;
-  var cols = '<div class="fincols"><span></span><span>MOY.</span><span>' + (der === null ? "" : FIN_MOIS[der]) + '</span><span>OBJ.</span><span>ÉCART</span></div>';
+  var cols = '<div class="fincols"><span></span><span></span><span>OBJ.</span><span>ÉCART</span></div>';
   FIN_S.sections.forEach(function(s, i){
     h += '<div class="sect"><span class="num">0' + (i+1) + '</span><span class="lab">' + s.t + '</span></div>' + (i === 0 ? cols : '');
     s.l.forEach(function(l){
-      var moy = ms.length ? finRatio(l, ms) : null, dv = der === null ? null : finRatio(l, [der]);
-      h += '<div class="finl"><span class="n">' + l.n + '</span><span>' + (moy === null ? "—" : finPct(moy)) + '</span><span>' + (dv === null ? "—" : finPct(dv)) + '</span>' +
+      var moy = ms.length ? finRatio(l, ms) : null;
+      h += '<div class="finl"><span class="n">' + l.n + '</span><span>' + (moy === null ? "—" : finPct(moy)) + '</span>' +
         '<span class="obj">' + (l.obj === null ? "" : l.obj + " %") + '</span><span>' + (l.obj === null || moy === null ? "" : finEcart(Math.round(moy) - l.obj)) + '</span></div>';
       if(l.n === "Achat" && FIN_R && FIN_R.achatsFourn && FIN_R.achatsFourn.top && FIN_R.achatsFourn.top.length){
         var af = FIN_R.achatsFourn;
