@@ -63,7 +63,7 @@ function aepPlanification(){
     Array.prototype.forEach.call(z.querySelectorAll("select.aepsel"), function(b){ b.onchange = function(){
       var id = b.getAttribute("data-id"), q = b.value, x = liste().filter(function(y){ return y.id === id; })[0]; if(!x) return;
       var n = x.d1 && x.d2 ? "2" : x.d1 ? "1" : "0"; if(n === q) return;
-      if(q === "2") ouvert = {id: id, n: 2}; else if(q === "1") ouvert = x.d1 ? {id: id, n: 2, retrait: true} : {id: id, n: 1};
+      if(q === "2") ouvert = {id: id, n: x.d1 ? 2 : 1}; else if(q === "1") ouvert = x.d1 ? {id: id, n: 2, retrait: true} : {id: id, n: 1};
       else ouvert = x.d2 ? {id: id, n: 2, retrait: true, puis: x.d1 ? 0 : -1} : {id: id, n: 1, retrait: true};
       msg(""); afficher();
       if(ouvert.retrait) enregistrer(true, false);
