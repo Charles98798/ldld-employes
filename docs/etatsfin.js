@@ -100,7 +100,7 @@ function efDessiner(r){
     var h = "";
     gs.forEach(function(g){
       var t = efSomme(g[1]);
-      h += '<div class="efb"><div class="efl efr"><span class="n"><i class="efm">+</i>' + g[0] + '</span><span></span><span></span></div><div class="efg">';
+      h += '<div class="efb"><div class="efl efr"><span class="n"><i class="efm">+</i>' + g[0] + '</span><span>' + efMontant(t) + '</span><span>' + pct(t) + '</span></div><div class="efg">';
       g[1].forEach(function(x){ h += ligne(x[0], x[1], "efd"); });
       h += ligne("Total " + g[0].charAt(0).toLowerCase() + g[0].slice(1), t, "efd eftb") + '</div></div>';
     });
@@ -127,6 +127,7 @@ function efDessiner(r){
       return '<div class="efl"><span class="n">' + r[0] + '</span><span></span><span>' + pct(Number(r[1]) || 0) + '</span></div>'; }).join("");
   h += '<a class="retour" href="#" id="retour">Retour</a></div>';
   app.innerHTML = h;
+  try { window.scrollTo(0, 0); } catch(e) {}
   Array.prototype.forEach.call(document.querySelectorAll(".efr"), function(r){
     r.onclick = function(){ var o = r.classList.toggle("o"); r.querySelector(".efm").textContent = o ? "\u2212" : "+"; };
   });
