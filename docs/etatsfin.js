@@ -55,7 +55,7 @@ function efConstruire(r){
   ecart(EF_IMP, tt[EF_TOT.IMP], EF_IMP[EF_IMP.length - 1]);
 }
 function efMontant(n){ var s = Math.abs(Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0"); return n < 0 ? "(" + s + ")" : s; }
-function efSomme(sub){ var t = 0; sub.forEach(function(x){ t += x[1]; }); return t; }
+function efSomme(sub){ var t = 0; sub.forEach(function(x){ t += Number(x[1]) || 0; }); return t; }
 function efTotal(gs){ var t = 0; gs.forEach(function(g){ t += efSomme(g[1]); }); return t; }
 var EF_MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juill.", "août", "sept.", "oct.", "nov.", "déc."];
 function efOuvrir(){
@@ -73,7 +73,8 @@ function efDessiner(r){
   var dateFin = d.getDate() + " " + EF_MOIS[d.getMonth()];
   var vt = efTotal(EF_V), cout = efTotal(EF_C), brut = vt - cout, adm = efTotal(EF_A), vente = efTotal(EF_VT), fin = efTotal(EF_F);
   var expl = brut - adm - vente - fin, ar = efTotal(EF_AR), avant = expl + ar, imp = efTotal(EF_IMP), net = avant - imp;
-  var sal = efTotal(EF_C.slice(0, 4)), ach = efSomme(EF_C[4][1]), fgx = efSomme(EF_C[5][1]);
+  function plage(a, b){ var t = 0; Object.keys(r.comptes || {}).forEach(function(k){ if(+k >= a && +k <= b) t += Number(r.comptes[k]) || 0; }); return t; }
+  var sal = plage(5105, 5790), ach = plage(6110, 6200), fgx = cout - sal - ach;
   function pct(n){ return (vt ? Math.round(n / vt * 100) : 0) + " %"; }
   function ligne(lib, n, cl){ return '<div class="efl ' + cl + '"><span class="n">' + lib + '</span><span>' + efMontant(n) + '</span><span>' + pct(n) + '</span></div>'; }
   // Comme le document d'origine: un bloc par titre (ex. Ventes fixe), fermé = titre seulement; ouvert = les comptes, puis le total à la FIN du bloc
@@ -105,7 +106,7 @@ function efDessiner(r){
   n++;
   h += '<div class="sect"><span class="num">0' + n + '</span><span class="lab">Ratios</span></div><div class="efl efh"><span></span><span></span><span>% des ventes</span></div>' +
     [["Salaires / ventes", sal],["Achats / ventes", ach],["Frais généraux / ventes", fgx],["Frais d'administration / ventes", adm],["Frais de vente / ventes", vente],["Bénéfice brut / ventes", brut],["Bénéfice net / ventes", net]].map(function(r){
-      return '<div class="efl"><span class="n">' + r[0] + '</span><span></span><span>' + pct(r[1]) + '</span></div>'; }).join("");
+      return '<div class="efl"><span class="n">' + r[0] + '</span><span></span><span>' + pct(Number(r[1]) || 0) + '</span></div>'; }).join("");
   h += '<a class="retour" href="#" id="retour">Retour</a></div>';
   app.innerHTML = h;
   Array.prototype.forEach.call(document.querySelectorAll(".efr"), function(r){
