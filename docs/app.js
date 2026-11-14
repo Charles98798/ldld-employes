@@ -1,4 +1,4 @@
-var APP_PUB = "566";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "581";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -2571,13 +2571,20 @@ function evoPortrait(p, pctPos, tauxH){
   if(p.suivante && p.suivante.pos != null) H.push({an: p.suivante.annee, v: p.suivante.pos * 100, s: true});
   var S = (p.histSalaire || []).filter(function(q){ return q && q.taux != null; }).map(function(q){ return {an: q.an, v: Number(q.taux), s: q.an > an0}; });
   if(!H.length && !S.length) return "";
-  function barres(titre, L, fmt){
+  function lignes(titre, L, fmt){
     if(!L.length) return "";
-    var mx = Math.max.apply(null, L.map(function(x){ return x.v; })) || 1, mn = Math.min.apply(null, L.map(function(x){ return x.v; }));
-    var h = '<div class="ptk" style="margin-top:14px">'+titre+'</div><div class="pte">' + L.map(function(x){ var hh = 30 + (mx === mn ? 40 : (x.v - mn) / (mx - mn) * 70); return '<div'+(x.an === an0 ? ' class="l"' : "")+' style="height:'+hh+'%'+(x.s ? ';opacity:.55' : '')+'"><span>'+fmt(x.v)+'</span></div>'; }).join("") + '</div><div class="ptq">' + L.map(function(x){ return '<span>'+x.an+(x.s ? (p.suivante && p.suivante.confirme === false ? "<br>proposé" : "<br>confirmé") : "")+'</span>'; }).join("") + '</div>';
-    return h;
+    var ans = [an0-3, an0-2, an0-1, an0, an0+1], W = 300, Hh = 96, X0 = 24, DX = (W - 2*X0) / 4;
+    var pts = ans.map(function(y, k){ var q = null; L.forEach(function(x){ if(x.an === y) q = x; }); return q ? {x: X0 + k*DX, q: q} : null; }).filter(function(z){ return z; });
+    var mx = Math.max.apply(null, pts.map(function(z){ return z.q.v; })), mn = Math.min.apply(null, pts.map(function(z){ return z.q.v; }));
+    pts.forEach(function(z){ z.y = mx === mn ? 40 : 22 + (mx - z.q.v) / (mx - mn) * 44; });
+    var g = '<svg viewBox="0 0 '+W+' '+Hh+'" width="100%" role="img" aria-label="'+titre+'" style="display:block;overflow:visible"><line x1="'+X0+'" y1="78" x2="'+(W-X0)+'" y2="78" stroke="#B7B1A5" stroke-width="1"/>';
+    if(pts.length > 1) g += '<polyline points="'+pts.map(function(z){ return z.x+","+z.y; }).join(" ")+'" fill="none" stroke="#1D1D1B" stroke-width="1.5" stroke-dasharray="3 3"/>';
+    pts.forEach(function(z){ g += '<rect x="'+(z.x-4)+'" y="'+(z.y-4)+'" width="8" height="8" fill="'+(z.q.s ? "#fff" : "#1D1D1B")+'" stroke="#1D1D1B" stroke-width="1.5"/><text x="'+z.x+'" y="'+(z.y-9)+'" text-anchor="middle" font-size="9" fill="#1D1D1B">'+fmt(z.q.v)+'</text>'; });
+    ans.forEach(function(y, k){ g += '<text x="'+(X0 + k*DX)+'" y="90" text-anchor="middle" font-size="8" fill="#6E6350">'+y+'</text>'; });
+    g += '<text x="'+(X0 + 4*DX)+'" y="99" text-anchor="middle" font-size="6" fill="#6E6350">'+(p.suivante && p.suivante.confirme === false ? "proposé" : "confirmé")+'</text></svg>';
+    return '<div class="ptk" style="margin-top:14px">'+titre+'</div>' + g;
   }
-  return '<div class="ptx">Évolution sur 5 ans</div>' + barres("Position dans l’échelle", H, function(v){ return Math.round(v) + " %"; }) + barres("Taux horaire", S, function(v){ return v.toFixed(2).replace(".", ",") + " $"; });
+  return '<div class="ptx">Évolution sur 5 ans</div>' + lignes("Position dans l’échelle", H, function(v){ return Math.round(v) + " %"; }) + lignes("Salaire horaire", S, function(v){ return v.toFixed(2).replace(".", ",") + " $"; });
 }
 function sectionsPortrait(p){
   function pct(x){ return x === null || x === undefined ? "—" : Math.round(x*100)+" %"; }
@@ -2625,17 +2632,19 @@ function portrait(id){
     var lignes = [["Salaire de base", p.base], ["Vacances, fériés et maladie", p.conges], ["Boni", p.boni], ["Assurances collectives", p.assurances], ["Cotisation OTPADQ", p.otpadq]];
     function sec(n, t){ return '<div class="pts"><b>'+n+'</b>'+t+'</div>'; }
     function lig(l, v){ return '<div class="ptl"><span>'+l+'</span><b>'+v+'</b></div>'; }
-    var cur = null, bas = null, hau = null;
+    var cur = null, bas = null, hau = null, tNow = null; (p.histSalaire || []).forEach(function(q){ if(q && q.an === new Date().getFullYear() && q.taux != null) tNow = Number(q.taux); });
     if(ech.length){ bas = ech[0]; hau = ech[ech.length-1]; ech.forEach(function(c){ if(parseFloat(String(c.p).replace(",", ".")) === posNum) cur = c; }); }
     var pn = function(c){ var n = parseFloat(String(c.p).replace(",", ".")); if(Math.abs(n) <= 2.5) n = n * 100; return n; }, lo = bas ? pn(bas) : 0, hi = hau ? pn(hau) : 100, pc = Math.abs(posNum) <= 2.5 ? posNum * 100 : posNum, w = isFinite(pc) && hi > lo ? Math.max(0, Math.min(100, (pc - lo) / (hi - lo) * 100)) : 0;
     var tot = Number(p.total) || 0, bs = Number(p.base) || 0, cg = Number(p.conges) || 0, au = Math.max(0, tot - bs - cg), pp = function(x){ return tot ? Math.round(x / tot * 100) : 0; };
+    var nomEmp = ""; liste.forEach(function(x){ if(x.id === p.id) nomEmp = x.nom; });
     el.innerHTML = '<h1>Portrait d’un employé</h1>' +
+      '<div class="pth0"><img src="icons/icon-192-v6.png" alt="" width="44" height="44"><div><div class="ptnom">'+esc(nomEmp)+'</div><div class="ptk">'+esc(String(p.categorie))+' · Portrait '+(new Date().getFullYear())+'</div></div></div>' +
       '<select class="champ" id="ps">'+liste.map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id === p.id ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
       '<div class="ptn"><button type="button" id="pp"'+(i <= 0 ? " disabled" : "")+'>Précédent</button><button type="button" id="psv"'+(i >= liste.length-1 ? " disabled" : "")+'>Suivant</button></div>' +
-      '<div class="ptk">'+esc(String(p.categorie))+' · Portrait '+(new Date().getFullYear())+' · '+(p.experience === null || p.experience === undefined ? "—" : esc(String(p.experience).replace(".", ","))+' ans d’expérience')+'</div>' +
+      '<div class="ptk">'+(p.experience === null || p.experience === undefined ? "—" : esc(String(p.experience).replace(".", ","))+' ans d’expérience')+'</div>' +
       sec("01", "Position dans l’échelle") +
       '<div class="ptk">L’échelle · '+esc(String(p.categorie))+'</div><div class="ptb">Vous êtes à '+pctPos(p.position)+'</div>' +
-      (ech.length ? '<div class="ptr"><i style="width:'+w+'%"></i><em style="left:'+w+'%"></em></div><div class="ptt"><div><div class="ptk">Bas</div><div class="ptv">'+pctPos(bas.p)+'</div><div class="ptd">'+tauxH(bas.t)+' / h</div></div><div class="on"><div class="ptk">Votre position</div><div class="ptv">'+pctPos(p.position)+'</div><div class="ptd">'+(cur ? tauxH(cur.t)+' / h' : "")+'</div></div><div><div class="ptk">Sommet</div><div class="ptv">'+pctPos(hau.p)+'</div><div class="ptd">'+tauxH(hau.t)+' / h</div></div></div>' : "") +
+      (ech.length ? '<div class="ptr"><i style="width:'+w+'%"></i><em style="left:'+w+'%"></em></div><div class="ptt"><div><div class="ptk">Bas</div><div class="ptv">'+pctPos(bas.p)+'</div><div class="ptd">'+tauxH(bas.t)+' / h</div></div><div class="on"><div class="ptk">Votre position</div><div class="ptv">'+pctPos(p.position)+'</div><div class="ptd">'+(tNow !== null ? tauxH(tNow)+' / h' : (cur ? tauxH(cur.t)+' / h' : ""))+'</div></div><div><div class="ptk">Sommet</div><div class="ptv">'+pctPos(hau.p)+'</div><div class="ptd">'+tauxH(hau.t)+' / h</div></div></div>' : "") +
       evoPortrait(p, pctPos, tauxH) +
       sec("02", "Rémunération globale") + '<div class="ptb">'+dollars(p.total)+'</div>' +
       lignes.map(function(l){ return lig(l[0], dollars(l[1])); }).join("") +

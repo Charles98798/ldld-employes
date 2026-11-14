@@ -1098,3 +1098,5 @@ select:not(.act){width:100%;box-sizing:border-box}
 #aepp,#aepz,.aepent{max-width:760px}
 /* Planification: liste déroulante du style A de l'app, seulement réduite pour tenir sur une ligne */
 .aepr select.aepsel{min-height:40px;width:100%;font-size:12px!important;padding:0 24px 0 8px!important;background-position:right 8px center!important}
+
+.pth0{display:flex;align-items:center;gap:12px;margin:8px 0 10px}.pth0 img{display:block;background:#1D1D1B}.ptnom{font-size:22px;letter-spacing:.08em;text-transform:uppercase;line-height:1.1}
