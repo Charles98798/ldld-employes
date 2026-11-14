@@ -679,7 +679,7 @@ function menu(){
 function texteTient(a){
   var lab = a.firstElementChild; if(!lab) return true;
   var r = document.createRange(); r.selectNodeContents(lab);
-  var fin = r.getBoundingClientRect().right, b = a.querySelector(".nombre"), lim = b ? b.getBoundingClientRect().left - 8 : a.getBoundingClientRect().right;
+  var fin = r.getBoundingClientRect().right, b = a.querySelector(".nombre") || a.querySelector(".nc"), lim = b ? b.getBoundingClientRect().left - 8 : a.getBoundingClientRect().right;
   return fin <= lim;
 }
 function ajusterMenu(){
