@@ -71,7 +71,7 @@ function invCategories(){ var v = {}, o = []; (INV.d.produits || []).forEach(fun
 function invListe(){
   var cats = invCategories(), z = document.getElementById("invapp"); if(!z) return;
   var h = invOnglets() + (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : "");
-  if(INV.vue === "stocks") h += '<div style="font-size:13px;color:#6E6350;margin:0 0 4px">Gestion des stocks : choisissez un produit pour inscrire la quantité exacte comptée.</div>';
+  if(INV.vue === "stocks") h += '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Gestion des stocks : choisissez un produit pour inscrire la quantité exacte comptée.</div>';
   h += '<span class="lbl">Catégorie</span><select class="bx" id="invcat" style="background:#8D806A;color:#fff;border-color:#8D806A">'+cats.map(function(c){ return '<option value="'+invE(c)+'"'+(c === INV.cat ? " selected" : "")+'>'+invE(c)+'</option>'; }).join("")+'</select>';
   h += '<span class="lbl">Commence par</span><input class="bx" id="invdeb" autocomplete="off" placeholder="Premières lettres" value="'+invE(INV.debut)+'">';
   h += '<span class="lbl">Produit</span><div id="invprod"></div>';
@@ -83,7 +83,7 @@ function invListe(){
 function invProduits(){
   var z = document.getElementById("invprod"); if(!z) return;
   var d = invNorm(INV.debut), L = (INV.d.produits || []).filter(function(p){ return p.categorie === INV.cat && (!d || invNorm(p.description).indexOf(d) === 0); });
-  z.innerHTML = L.length ? L.map(function(p){ return '<div class="invp" data-i="'+invE(p.id)+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:#DDD9CD;padding:14px;margin:0 0 6px;cursor:pointer"><span style="min-width:0;overflow-wrap:anywhere">'+invE(p.description)+'</span><span style="font-size:12px;color:#6E6350">'+invE(p.stock)+'</span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN PRODUIT</div>';
+  z.innerHTML = L.length ? L.map(function(p){ return '<div class="invp" data-i="'+invE(p.id)+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(189,201,178,.5);padding:14px;margin:0 0 6px;cursor:pointer"><span style="min-width:0;overflow-wrap:anywhere">'+invE(p.description)+'</span><span style="font-size:12px;color:#6E6350">'+invE(p.stock)+'</span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN PRODUIT</div>';
   Array.prototype.forEach.call(z.querySelectorAll(".invp"), function(x){ x.onclick = function(){ var p = (INV.d.produits || []).filter(function(q){ return q.id === x.getAttribute("data-i"); })[0]; if(p){ if(INV.vue === "stocks" && invDroitReception()) invCompte(p); else invProduit(p); } }; });
 }
 function invProduit(p){
@@ -94,7 +94,7 @@ function invProduit(p){
   function dessiner(msg){
     var reste = p.stock - qte, h = (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : "");
     h += '<span class="lbl">Produit</span><div style="font-size:20px;font-weight:700;overflow-wrap:anywhere">'+invE(p.description)+'</div><div style="font-size:12px;color:#6E6350;margin:4px 0 10px">'+invE(p.categorie)+' · '+invE(p.fournisseur)+(p.par > 1 || p.unite ? ' · '+invE(p.par)+' / '+invE(p.unite) : "")+'</div>';
-    h += '<div style="display:flex;gap:6px"><div style="flex:1;background:#DDD9CD;padding:12px"><div style="font-size:12px;color:#6E6350">En stock</div><div style="font-size:22px;font-weight:700">'+invE(p.stock)+'</div></div><div style="flex:1;background:#DDD9CD;padding:12px"><div style="font-size:12px;color:#6E6350">Minimum</div><div style="font-size:22px;font-weight:700">'+invE(p.minimum)+'</div></div></div>';
+    h += '<div style="display:flex;gap:6px"><div style="flex:1;background:rgba(189,201,178,.5);padding:12px"><div style="font-size:12px;color:#6E6350">En stock</div><div style="font-size:22px;font-weight:700">'+invE(p.stock)+'</div></div><div style="flex:1;background:rgba(189,201,178,.5);padding:12px"><div style="font-size:12px;color:#6E6350">Minimum</div><div style="font-size:22px;font-weight:700">'+invE(p.minimum)+'</div></div></div>';
     if(deduire){
       h += '<span class="lbl" style="margin-top:18px">Quantité utilisée</span><div style="display:flex;align-items:center;gap:14px"><button type="button" class="bouton" id="invmoins" style="width:46px;height:46px;padding:0;margin:0">−</button><span style="font-size:34px;min-width:50px;text-align:center">'+qte+'</span><button type="button" class="bouton" id="invplus" style="width:46px;height:46px;padding:0;margin:0">+</button><span style="font-size:14px;color:#6E6350;text-transform:uppercase">'+invE(p.unite)+'</span></div>';
       h += '<div style="font-size:13px;color:#6E6350;margin:10px 0">'+(reste < 0 ? "Il n’y en a pas assez en stock." : reste < p.minimum ? "Il restera "+reste+" en stock, sous le minimum de "+invE(p.minimum)+"." : reste === p.minimum ? "Il restera "+reste+" en stock, soit le minimum." : "Il restera "+reste+" en stock.")+'</div>';
@@ -104,7 +104,7 @@ function invProduit(p){
     }
     h += '<div class="bandeau" id="invmsg" style="'+(msg ? "" : "display:none;")+'margin-top:8px">'+invE(msg || "")+'</div>';
     var rec = INV.sorties.slice(0, 5);
-    if(rec.length) h += '<span class="lbl" style="margin-top:18px">Vos dernières sorties</span>'+rec.map(function(s){ return '<div style="display:flex;justify-content:space-between;gap:10px;background:#DDD9CD;padding:12px 14px;margin:0 0 6px"><span style="overflow-wrap:anywhere">'+invE(s.nom)+'</span><span style="font-size:12px;color:#6E6350;white-space:nowrap">'+invE(s.q)+' · '+invE(s.h)+'</span></div>'; }).join("");
+    if(rec.length) h += '<span class="lbl" style="margin-top:18px">Vos dernières sorties</span>'+rec.map(function(s){ return '<div style="display:flex;justify-content:space-between;gap:10px;background:rgba(189,201,178,.5);padding:12px 14px;margin:0 0 6px"><span style="overflow-wrap:anywhere">'+invE(s.nom)+'</span><span style="font-size:12px;color:#6E6350;white-space:nowrap">'+invE(s.q)+' · '+invE(s.h)+'</span></div>'; }).join("");
     z.innerHTML = h;
     var m = document.getElementById("invmoins"), pl = document.getElementById("invplus");
     if(m) m.onclick = function(){ if(qte > 1){ qte--; dessiner(); } };
@@ -141,15 +141,14 @@ function invReception(){
   if(!groupes.length) h += '<div class="bandeau">▪ AUCUNE COMMANDE EN ATTENTE</div>';
   groupes.forEach(function(g){
     var ouvert = INV.ouv[g.k] !== false;
-    h += '<div class="invg" data-k="'+invE(g.k)+'" style="display:flex;justify-content:space-between;gap:10px;background:#8D806A;color:#fff;padding:12px 14px;margin:12px 0 6px;cursor:pointer"><b style="overflow-wrap:anywhere">'+invE(g.f)+'</b><span style="font-size:12px;white-space:nowrap">'+invE(invMoisFr(g.d))+'</span></div>';
+    h += '<div class="invg" data-k="'+invE(g.k)+'" style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:30px 0 10px;cursor:pointer"><b style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;overflow-wrap:anywhere">'+invE(g.f)+'</b><span style="font-size:12px;color:#6E6350;white-space:nowrap">'+invE(invMoisFr(g.d))+'</span></div>';
     if(!ouvert) return;
     g.l.forEach(function(x){
       var rc = INV.recu[x.id] || 0, vide = !String(x.prix).trim(), ok = rc > 0 && !vide;
-      h += '<div style="background:#DDD9CD;padding:12px 14px;margin:0 0 6px"><div style="font-size:12px;color:#6E6350">'+invE(x.code)+'</div><div style="overflow-wrap:anywhere;margin:2px 0 8px">'+invE(x.description)+'</div>'
-        + '<div style="font-size:13px;color:#6E6350;margin-bottom:6px">Commandé : '+invE(x.commande)+'</div>'
-        + '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#6E6350">Reçu</span><button type="button" class="bouton invm" data-i="'+invE(x.id)+'" style="width:46px;height:46px;padding:0;margin:0">−</button><span style="font-size:24px;min-width:34px;text-align:center">'+rc+'</span><button type="button" class="bouton invpl" data-i="'+invE(x.id)+'" style="width:46px;height:46px;padding:0;margin:0">+</button></div>'
-        + '<span class="lbl">Prix · obligatoire</span><input class="bx invprix'+(vide ? " rose" : "")+'" data-i="'+invE(x.id)+'" inputmode="decimal" autocomplete="off" value="'+invE(x.prix)+'">'
-        + '<div style="display:flex;gap:8px;margin-top:6px"><button type="button" class="bouton invc" data-i="'+invE(x.id)+'" style="flex:1;height:46px;padding:0;margin:0"'+(ok ? "" : " disabled")+'>Confirmer</button><button type="button" class="bouton inva" data-i="'+invE(x.id)+'" style="flex:1;height:46px;padding:0;margin:0">Annuler</button></div>'
+      h += '<div style="background:rgba(189,201,178,.5);padding:14px 14px 16px;margin:0 0 14px"><div style="overflow-wrap:anywhere">'+invE(x.description)+'</div><div style="font-size:12px;color:#6E6350;margin:2px 0 8px">'+invE(x.code)+' · Commandé : '+invE(x.commande)+'</div>'
+        + '<div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap"><div><span class="lbl" style="margin-top:0">Reçu</span><div style="display:flex;align-items:center;gap:8px"><button type="button" class="bouton invm" data-i="'+invE(x.id)+'" style="width:46px;height:46px;padding:0;margin:0">−</button><span style="font-size:22px;min-width:30px;text-align:center">'+rc+'</span><button type="button" class="bouton invpl" data-i="'+invE(x.id)+'" style="width:46px;height:46px;padding:0;margin:0">+</button></div></div>'
+        + '<div style="flex:1;min-width:110px"><span class="lbl" style="margin-top:0">Prix · obligatoire</span><input class="bx invprix'+(vide ? " rose" : "")+'" data-i="'+invE(x.id)+'" inputmode="decimal" autocomplete="off" value="'+invE(x.prix)+'" style="margin:0;height:46px"></div></div>'
+        + '<div style="display:flex;align-items:center;gap:18px;margin-top:10px"><button type="button" class="bouton invc" data-i="'+invE(x.id)+'" style="width:auto;height:46px;padding:0 22px;margin:0"'+(ok ? "" : " disabled")+'>Confirmer</button><a href="#" class="inva" data-i="'+invE(x.id)+'" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:3px;text-underline-offset:4px">Annuler</a></div>'
         + '<div class="bandeau invmsg" data-i="'+invE(x.id)+'" style="display:none;margin-top:8px"></div></div>';
     });
   });
@@ -167,7 +166,7 @@ function invReception(){
       else { var m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(m){ m.style.display = "block"; m.textContent = "▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); } e.disabled = false; }
     }).catch(function(){ var m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(m){ m.style.display = "block"; m.textContent = "▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"; } e.disabled = false; });
   }; });
-  Array.prototype.forEach.call(z.querySelectorAll(".inva"), function(e){ e.onclick = function(){
+  Array.prototype.forEach.call(z.querySelectorAll(".inva"), function(e){ e.onclick = function(ev){ ev.preventDefault();
     var i = e.getAttribute("data-i"), m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(!m) return;
     m.style.display = "block"; m.innerHTML = '<div style="margin-bottom:8px">Annuler cette ligne de commande?</div><div style="display:flex;gap:8px"><button type="button" class="bouton" id="invan" style="flex:1;height:46px;padding:0;margin:0">Non</button><button type="button" class="bouton" id="invao" style="flex:1;height:46px;padding:0;margin:0;background:#B8473A;color:#fff">Oui, annuler</button></div>';
     document.getElementById("invan").onclick = function(){ m.style.display = "none"; };
@@ -184,7 +183,7 @@ function invCompte(p){
   function dessiner(msg){
     var d = q - p.stock, h = (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : "");
     h += '<span class="lbl">Produit</span><div style="font-size:20px;font-weight:700;overflow-wrap:anywhere">'+invE(p.description)+'</div><div style="font-size:12px;color:#6E6350;margin:4px 0 10px">'+invE(p.categorie)+' · '+invE(p.fournisseur)+'</div>';
-    h += '<div style="background:#DDD9CD;padding:12px"><div style="font-size:12px;color:#6E6350">Stock actuel dans Trak</div><div style="font-size:22px;font-weight:700">'+invE(p.stock)+'</div></div>';
+    h += '<div style="background:rgba(189,201,178,.5);padding:12px"><div style="font-size:12px;color:#6E6350">Stock actuel dans Trak</div><div style="font-size:22px;font-weight:700">'+invE(p.stock)+'</div></div>';
     h += '<span class="lbl" style="margin-top:18px">Quantité exacte comptée</span><div style="display:flex;align-items:center;gap:14px"><button type="button" class="bouton" id="invmoins" style="width:46px;height:46px;padding:0;margin:0">−</button><span style="font-size:28px;min-width:48px;text-align:center">'+q+'</span><button type="button" class="bouton" id="invplus" style="width:46px;height:46px;padding:0;margin:0">+</button></div>';
     h += '<div style="font-size:13px;color:#6E6350;margin:10px 0">'+(d === 0 ? "Identique au stock actuel." : "Différence : "+(d > 0 ? "+" : "−")+Math.abs(d)+".")+'</div>';
     h += '<button type="button" class="bouton" id="invok" style="height:46px;padding:0;margin:8px 0"'+(d === 0 ? " disabled" : "")+'>Enregistrer la quantité</button>';
