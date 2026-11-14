@@ -21,40 +21,44 @@ function aepEtq(j, prochaine, auj){ if(!j) return ""; return '<span class="aepe'
 function aepStatut(x){ return x.d1 && x.d2 ? "2 rencontres" : x.d1 ? "1 rencontre" : "Aucune rencontre"; }
 function aepFmt(j, h){ if(!j) return '<span class="aepv">—</span>'; var q = j.split("-"); return (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1] + " " + q[0] + (aepHeure(h) ? '<small>' + esc(aepHeure(h)) + '</small>' : ''); }
 var MOIS_COURTS_E = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+function aepFmtC(j, h){ if(!j) return '<span class="aepv">—</span>'; var q = j.split("-"); return (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1] + (aepHeure(h) ? '<small>' + esc(aepHeure(h)) + '</small>' : ''); }
 function aepPlanification(){
-  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification évaluation</h1><div class="aepf" id="aepf"></div><div class="aepent"><span>Employé</span><span>RDV 1</span><span>RDV 2</span><span>Rencontres</span></div><div id="aepz"></div><div id="aepm" class="aeretat"></div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification évaluation</h1><div id="aepp"></div><div class="aepsec">Tous les employés</div><div class="aepent"><span>Employé</span><span>RDV 1</span><span>RDV 2</span><span>Rencontres</span></div><div id="aepz"></div><div id="aepm" class="aeretat"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   var donnees = null, ouvert = null;
   function auj(){ var n = new Date(); return n.getFullYear() + "-" + ("0" + (n.getMonth() + 1)).slice(-2) + "-" + ("0" + n.getDate()).slice(-2); }
   function msg(t){ var m = document.getElementById("aepm"); if(m) m.textContent = t || ""; }
   function liste(){
-    return (donnees.lignes || []).map(function(e){ var x = aepNormaliser(e); x.id = e.id; x.env1 = !!e.envoi1; x.env2 = !!e.envoi2; return x; }).filter(function(x){ return x.nom && !/^direction$/i.test(x.cat.trim()); })
+    return (donnees.lignes || []).map(function(e){ var x = aepNormaliser(e); x.id = e.id; x.a1 = e.autoeval1; x.a2 = e.autoeval2; return x; }).filter(function(x){ return x.nom && !/^direction$/i.test(x.cat.trim()); })
       .sort(function(a, b){ return a.nom.localeCompare(b.nom, "fr"); });
   }
+  function prochains(L){
+    var t = auj(), f = new Date(); f.setDate(f.getDate() + 14); var fin = f.getFullYear() + "-" + ("0" + (f.getMonth() + 1)).slice(-2) + "-" + ("0" + f.getDate()).slice(-2), v = [];
+    L.forEach(function(x){ [[1, x.d1, x.h1, x.a1], [2, x.d2, x.h2, x.a2]].forEach(function(q){ if(q[1] && q[1] >= t && q[1] <= fin) v.push({j: q[1], h: q[2], nom: x.nom, num: q[0], ok: q[3] === true, connu: donnees.autoeval_ok !== false && q[3] !== undefined && q[3] !== null}); }); });
+    v.sort(function(a, b){ return a.j < b.j ? -1 : a.j > b.j ? 1 : (a.h || "") < (b.h || "") ? -1 : (a.h || "") > (b.h || "") ? 1 : a.nom.localeCompare(b.nom, "fr"); });
+    var ok = v.filter(function(x){ return x.ok; }).length, tousConnus = v.length && v.every(function(x){ return x.connu; }), h = '<div class="aepsec">14 prochains jours</div>';
+    if(!v.length) return h + '<div class="aevide">Aucune rencontre dans les 14 prochains jours.</div>';
+    h += '<div class="aepf"><span class="aepb">' + v.length + (v.length > 1 ? ' rencontres' : ' rencontre') + '</span>' + (!tousConnus ? '' : '<span class="aepb on">' + ok + (ok > 1 ? ' remplies' : ' remplie') + '</span><span class="aepb">' + (v.length - ok) + (v.length - ok > 1 ? ' non remplies' : ' non remplie') + '</span>') + '</div>';
+    var c = "";
+    v.forEach(function(x){
+      if(x.j !== c){ c = x.j; var q = c.split("-"); h += '<div class="emois">' + esc(JOURS_COURTS_E[new Date(+q[0], +q[1] - 1, +q[2]).getDay()] + " " + (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1]) + '</div>'; }
+      h += '<div class="aepl"><span class="aepn">' + esc(x.nom) + '<small>' + esc((aepHeure(x.h) ? aepHeure(x.h) + ' · ' : '') + 'Rencontre ' + x.num) + '</small></span>' + (x.connu ? '<span class="aere' + (x.ok ? ' ok' : '') + '">Autoévaluation ' + (x.ok ? 'remplie' : 'non remplie') + '</span>' : '') + '</div>';
+    });
+    return h;
+  }
   function afficher(){
-    var z = document.getElementById("aepz"), f = document.getElementById("aepf"); if(!z || !donnees) return;
-    var t = auj(), fin = new Date(); fin.setDate(fin.getDate() + 7); var finJ = fin.getFullYear() + "-" + ("0" + (fin.getMonth() + 1)).slice(-2) + "-" + ("0" + fin.getDate()).slice(-2);
-    var L = liste();
-    L.forEach(function(x){ x.verif = /vérifier/i.test(x.statut); x.futur = [x.d1, x.d2].filter(function(j){ return j && j >= t; }).sort(); });
-    var filtres = [
-      {k: "tous", t: "Tous", ok: function(){ return true; }},
-      {k: "planifier", t: "À planifier", ok: function(x){ return !x.d1; }},
-      {k: "semaine", t: "Cette semaine", ok: function(x){ return x.futur.length && x.futur[0] <= finJ; }},
-      {k: "verifier", t: "À vérifier", ok: function(x){ return x.verif; }}
-    ];
-    f.innerHTML = filtres.map(function(q){ var c = L.filter(q.ok).length; return '<button type="button" class="aepb' + (AEP.filtre === q.k ? ' on' : '') + '" data-k="' + q.k + '">' + q.t + ' · ' + c + '</button>'; }).join("");
-    Array.prototype.forEach.call(f.querySelectorAll("button"), function(b){ b.onclick = function(){ AEP.filtre = b.getAttribute("data-k"); ouvert = null; afficher(); }; });
-    var ok = filtres.filter(function(q){ return q.k === AEP.filtre; })[0].ok, v = L.filter(ok);
-    if(!v.length){ z.innerHTML = '<div class="aevide">Aucun employé dans cette liste.</div>'; return; }
-    z.innerHTML = v.map(function(x){
-      var pro = x.futur[0], p1 = x.d1 && x.d1 < t, p2 = x.d2 && x.d2 < t;
-      var h = '<div class="aepl aepr"><span class="aepn">' + esc(x.nom) + '<small>' + esc(x.resp) + '</small></span>' +
-        '<button type="button" class="aepc' + (p1 ? ' pas' : '') + '" data-id="' + esc(x.id) + '" data-n="1">' + aepFmt(x.d1, x.h1) + aepEtq(x.d1, x.d1 === pro && !p1, t) + '</button>' +
-        '<button type="button" class="aepc' + (p2 ? ' pas' : '') + '" data-id="' + esc(x.id) + '" data-n="2">' + aepFmt(x.d2, x.h2) + aepEtq(x.d2, x.d2 === pro && !p2 && x.d1 !== pro, t) + '</button>' +
-        '<span class="aeps aeplst"><select class="aepsel" data-id="' + esc(x.id) + '" aria-label="Rencontres de ' + esc(x.nom) + '">' + [["1", "1 rencontre"], ["2", "2 rencontres"], ["0", "Aucune rencontre"]].map(function(q){ var n = x.d1 && x.d2 ? "2" : x.d1 ? "1" : "0"; return '<option value="' + q[0] + '"' + (n === q[0] ? ' selected' : '') + '>' + q[1] + '</option>'; }).join("") + '</select></span>';
+    var z = document.getElementById("aepz"); if(!z || !donnees) return;
+    var L = liste(); document.getElementById("aepp").innerHTML = prochains(L);
+    if(!L.length){ z.innerHTML = '<div class="aevide">Aucun employé dans cette liste.</div>'; return; }
+    z.innerHTML = L.map(function(x){
+      var n = x.d1 && x.d2 ? "2" : x.d1 ? "1" : "0";
+      var h = '<div class="aepl aepr"><span class="aepn1">' + esc(x.nom) + '</span>' +
+        '<button type="button" class="aepc" data-id="' + esc(x.id) + '" data-n="1" aria-label="RDV 1 de ' + esc(x.nom) + '">' + aepFmtC(x.d1, x.h1) + '</button>' +
+        '<button type="button" class="aepc" data-id="' + esc(x.id) + '" data-n="2" aria-label="RDV 2 de ' + esc(x.nom) + '">' + aepFmtC(x.d2, x.h2) + '</button>' +
+        '<span class="aeplst"><select class="aepsel" data-id="' + esc(x.id) + '" aria-label="Rencontres de ' + esc(x.nom) + '">' + [["1", "1 rencontre"], ["2", "2 rencontres"], ["0", "Aucune"]].map(function(q){ return '<option value="' + q[0] + '"' + (n === q[0] ? ' selected' : '') + '>' + q[1] + '</option>'; }).join("") + '</select></span>';
       if(ouvert && ouvert.id === x.id){
         var d = ouvert.n === 1 ? x.d1 : x.d2, hh = ouvert.n === 1 ? x.h1 : x.h2;
-        h += '<div class="aepedit"><b>Rencontre ' + ouvert.n + '</b><label>Date<input type="date" id="aepd" min="' + t + '" value="' + esc(d) + '"></label><label>Heure<input type="time" id="aeph" value="' + esc(hh || "") + '"></label>' +
+        h += '<div class="aepedit"><b>Rencontre ' + ouvert.n + '</b><label>Date<input type="date" id="aepd" min="' + auj() + '" value="' + esc(d) + '"></label><label>Heure<input type="time" id="aeph" value="' + esc(hh || "") + '"></label>' +
           '<div class="aepbts"><button type="button" class="bouton" id="aeps">Enregistrer</button>' + (d ? '<button type="button" class="bouton aepsup" id="aepr">Retirer</button>' : '') + '<button type="button" class="bouton" id="aepa">Annuler</button></div><div class="aepavis" id="aepav"></div></div>';
       }
       return h + '</div>';
@@ -173,30 +177,8 @@ function aerOuvrir(cle, noms){
 }
 window.addEventListener("pagehide", function(){ if(AER.cle && !AER.lectureSeule) aerLiberer(); });
 
-// Page 2 « Rencontre d'évaluation »: rencontres des 14 prochains jours avec l'état de l'autoévaluation (rempli ou non, jamais le contenu).
+// Page 2 « Rencontre d'évaluation »: l'évaluateur choisit l'employé puis la fiche sobre s'ouvre (en construction; l'ouverture dépend du chiffrement des notes).
 function aerBientot(){
-  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div class="aepf" id="aerc"></div><div id="aerl"></div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div class="aevide">Bientôt disponible.</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  function iso(d){ return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
-  function afficher(r){
-    if(!(r.lignes || []).some(function(e){ return e.autoeval1 !== undefined || e.autoeval2 !== undefined; })){ document.getElementById("aerl").innerHTML = '<div class="aevide">Bientôt disponible.</div>'; return; }
-    var n = new Date(), t = iso(n), f = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 14), fin = iso(f), v = [];
-    (r.lignes || []).forEach(function(e){
-      var x = aepNormaliser(e); if(!x.nom || /^direction$/i.test(x.cat.trim())) return;
-      [[1, x.d1, x.h1, e.autoeval1], [2, x.d2, x.h2, e.autoeval2]].forEach(function(q){ if(q[1] && q[1] >= t && q[1] <= fin) v.push({j: q[1], h: q[2], nom: x.nom, num: q[0], ok: q[3] === true, inconnu: r.autoeval_ok === false}); });
-    });
-    v.sort(function(a, b){ return a.j < b.j ? -1 : a.j > b.j ? 1 : (a.h || "") < (b.h || "") ? -1 : (a.h || "") > (b.h || "") ? 1 : a.nom.localeCompare(b.nom, "fr"); });
-    var ok = v.filter(function(x){ return x.ok; }).length;
-    document.getElementById("aerc").innerHTML = '<span class="aepb">' + v.length + (v.length > 1 ? ' rencontres' : ' rencontre') + '</span><span class="aepb on">' + ok + (ok > 1 ? ' remplies' : ' remplie') + '</span><span class="aepb">' + (v.length - ok) + (v.length - ok > 1 ? ' non remplies' : ' non remplie') + '</span>';
-    var z = document.getElementById("aerl");
-    if(!v.length){ z.innerHTML = '<div class="aevide">Aucune rencontre dans les 14 prochains jours.</div>'; return; }
-    var h = "", c = "";
-    v.forEach(function(x){
-      if(x.j !== c){ c = x.j; var q = c.split("-"); h += '<div class="emois">' + esc(JOURS_COURTS_E[new Date(+q[0], +q[1] - 1, +q[2]).getDay()] + " " + (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1]) + '</div>'; }
-      h += '<div class="aepl"><span class="aepn">' + esc(x.nom) + '<small>' + esc((aepHeure(x.h) ? aepHeure(x.h) + ' · ' : '') + 'Rencontre ' + x.num) + '</small></span>' + (x.inconnu ? '' : '<span class="aere' + (x.ok ? ' ok' : '') + '">Autoévaluation ' + (x.ok ? 'remplie' : 'non remplie') + '</span>') + '</div>';
-    });
-    z.innerHTML = h;
-  }
-  function erreur(){ var z = document.getElementById("aerl"); if(z){ z.innerHTML = '<div class="bandeau">Rencontres indisponibles pour le moment.</div><button type="button" class="bouton" id="aere">Réessayer</button>'; document.getElementById("aere").onclick = aerBientot; } }
-  obtenir("ae_planif", {action: "ae_planif_lire"}, afficher, erreur, true);
 }
