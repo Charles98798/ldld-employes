@@ -4,7 +4,7 @@
 var RD = {dep: "", choisi: false, vue: "discussion"};
 var RD_DEPS = ["Acrylique", "Fixe", "Pièce"];
 // DONNÉES FICTIVES (à retirer dès les vraies données de Trak): mettre RD_DEMO à false pour tout enlever d'un geste. Les vraies données remplacent le fictif automatiquement.
-var RD_DEMO = true;
+var RD_DEMO = false;
 var RD_DEMO_PTS = [{n:1, texte:"Charge de travail du mois passé et des 5 prochains jours"}, {n:2, texte:"Répartition du travail entre les équipes"}, {n:3, texte:"Formation du mois : horaire et inscriptions"}, {n:4, texte:"Questions de l’équipe"}];
 var RD_DEMO_CAPS = {titre:"Capsule du mois · Charge et fonctionnement", points:["Balancement de la charge deux fois par jour, à 8 h et à 13 h", "Consulter le tableau de charge avant de commencer", "Signaler tout écart à son responsable"]};
 function rdDemoSection(cle){
