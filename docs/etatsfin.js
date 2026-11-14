@@ -66,7 +66,7 @@ function efNum(x){
 }
 function efNettoyer(r){ ["comptes", "totaux"].forEach(function(k){ Object.keys(r[k] || {}).forEach(function(c){ if(Array.isArray(r[k][c])) r[k][c] = r[k][c].map(efNum); }); }); ["tresorerie", "margeCredit", "flux"].forEach(function(k){ if(Array.isArray(r[k])) r[k] = r[k].map(efNum); }); return r; }
 function efOuvrir(){
-  app.innerHTML = '<div class="page ppx fin ef sans-instant"><h1>États financiers</h1><div class="bandeau"></div><a class="retour" href="#" id="retour">Retour</a></div>';
+  app.innerHTML = '<div class="page ppx fin ef sans-instant"><h1>États financiers</h1><div class="att"><i></i></div><a class="retour" href="#" id="retour">Retour</a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var fini = false;
   function recu(m){

@@ -5,7 +5,7 @@ var FIN_TITRE = "Indicateurs", FIN_R = null, FIN_DERNIER = 0, FIN_PERIODE = "A",
 function finCharger(ok){
   var tok = ++FIN_TOK, vu = false;
   var tm = setTimeout(function(){ if(tok !== FIN_TOK) return; vu = true;
-    app.innerHTML = '<div class="page ppx fin sans-instant"><div class="pph"><h1>' + FIN_TITRE + '</h1></div><a class="retour" href="#" id="retour">Retour</a></div>';
+    app.innerHTML = '<div class="page ppx fin sans-instant"><div class="pph"><h1>' + FIN_TITRE + '</h1></div><div class="att"><i></i></div><a class="retour" href="#" id="retour">Retour</a></div>';
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); FIN_TOK++; finRetour(); }; }, 250);
   function echec(m){ clearTimeout(tm); if(tok !== FIN_TOK) return;
     app.innerHTML = '<div class="page ppx fin sans-instant"><div class="pph"><h1>' + FIN_TITRE + '</h1></div><div class="bandeau">▪ ' + m + ' · RÉESSAYEZ</div><a class="retour" href="#" id="retour">Retour</a></div>';

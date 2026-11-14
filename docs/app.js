@@ -1049,11 +1049,11 @@ function salaireNotes(r, k){
 }
 // Étape 5 : évaluations. L'autoévaluation reproduit la page du portail (mêmes 8 onglets, mêmes questions); en essai elle ne lit ni n'enregistre rien.
 function evaluations(){
-  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Autoévaluation</h1><div id="ev"></div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Autoévaluation</h1><div id="ev"><div class="att"><i></i></div></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   // Garde-fou: si rien n'est affiché après 8 s, on redemande une fois; après 20 s, un message clair avec un bouton Réessayer
-  setTimeout(function(){ var z = document.getElementById("ev"); if(z && !z.innerHTML) chercher("ae", {action:"ae_lire"}).catch(function(){}); }, 8000);
-  setTimeout(function(){ var z = document.getElementById("ev"); if(z && !z.innerHTML){ z.innerHTML = '<div class="bandeau">Autoévaluation indisponible pour le moment.</div><button type="button" class="bouton" id="aere">Réessayer</button>'; document.getElementById("aere").onclick = function(){ evaluations(); }; } }, 20000);
+  setTimeout(function(){ var z = document.getElementById("ev"); if(z && (!z.innerHTML || z.querySelector(".att"))) chercher("ae", {action:"ae_lire"}).catch(function(){}); }, 8000);
+  setTimeout(function(){ var z = document.getElementById("ev"); if(z && (!z.innerHTML || z.querySelector(".att"))){ z.innerHTML = '<div class="bandeau">Autoévaluation indisponible pour le moment.</div><button type="button" class="bouton" id="aere">Réessayer</button>'; document.getElementById("aere").onclick = function(){ evaluations(); }; } }, 20000);
   obtenir("ae", {action:"ae_lire"}, function(r){
     var el = document.getElementById("ev"); if(!el) return;
     var dues = r.rencontres.filter(aeARemplir);   // seulement celles à remplir, jamais les anciennes
