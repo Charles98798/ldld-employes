@@ -5,8 +5,8 @@ var ENVS = {d: null, mode: "reel", sel: null, msg: "", occupe: false};
 function envE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function envFr(v){ var n = Number(String(v == null ? "" : v).replace(/\s/g, "").replace("$", "").replace(",", ".")); if(v === "" || v == null || isNaN(n)) return ""; return n.toFixed(2).replace(".", ",") + " $"; }
 function envPuce(statut, libelle){
-  var s = String(statut || ""), st = s === "Prêt" ? "background:#8EFF60;color:#1D1D1B" : s === "Envoyé" ? "background:#8D806A;color:#fff" : /^non concern/i.test(s) ? "background:#BDC9B2;color:#6E6350;border:1px solid #8D806A" : "background:#B7B1A5;color:#1D1D1B";
-  return '<span style="'+st+';font-size:12px;padding:3px 8px;white-space:nowrap">'+envE(libelle || (s === "Prêt" ? "Confirmé" : s === "Bloqué" ? "Non confirmé" : s))+'</span>';
+  var s = String(statut || "");
+  return '<span style="font-size:12px;letter-spacing:.06em;color:#6E6350;white-space:nowrap">'+envE(libelle || (s === "Prêt" ? "Confirmé" : s === "Bloqué" ? "Non confirmé" : s))+'</span>';
 }
 function envPage(titre, corps){
   app.innerHTML = '<div class="page"><h1>'+envE(titre)+'</h1><a class="retour" href="#" id="retour">Retour</a>'+corps+'</div>';
@@ -49,7 +49,7 @@ function envPrets(){ return envVisibles().filter(function(e){ return e.statut ==
 function envCoches(){ ENVS.coches = ENVS.coches || {}; return envPrets().filter(function(e){ return ENVS.coches[e.nom]; }); }
 function envListe(){
   var d = ENVS.d, L = envVisibles(), ferme = !!(d.fenetre && d.fenetre.ouverte === false), prets = ferme ? [] : envCoches(), tousPrets = ferme ? [] : envPrets(), essai = d.mode !== "reel";
-  var h = (ferme ? '<div class="bandeau" style="margin:0 0 12px;cursor:default">▪ '+envE(d.fenetre.message || "Envoi salarial verrouillé")+'</div>' : '') + '<div style="font-size:13px;margin:0 0 6px"><span class="lbl" style="display:inline">Mode</span> · '+(d.mode === "reel" ? "Réel, chaque employé" : "Essai, tout va à la Direction")+'</div>';
+  var h = (ferme ? '<div style="font-size:13px;color:#6E6350;margin:0 0 12px">'+envE(d.fenetre.message || "Envoi salarial verrouillé")+'</div>' : '') + '';
   if(d.annee) h += '<span class="lbl">Année</span><div class="bx" style="border-color:transparent;padding-left:0">'+envE(d.annee)+'</div>';
   h += '<span class="lbl">Employés</span>';
   if(tousPrets.length) h += '<div style="margin:0 0 8px"><a href="#" id="envtout" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:3px;text-underline-offset:4px">'+(prets.length === tousPrets.length ? "Tout décocher" : "Tout cocher")+'</a></div>';
@@ -58,10 +58,10 @@ function envListe(){
     var sous = (e.statut === "Bloqué" || /^non concern/i.test(String(e.statut))) ? (e.raison || "") : e.statut === "Envoyé" ? (e.essaiEnvoye ? "essai envoyé" : "envoyé") + (e.raison ? " · " + e.raison : "") : [envFr(e.salaire), e.position != null && e.position !== "" ? "position " + e.position + " %" : ""].filter(Boolean).join(" · ");
     var cochable = e.statut === "Prêt" && !ferme, coche = cochable && ENVS.coches && ENVS.coches[e.nom];
     var cas = cochable ? '<span class="envcase" data-i="'+i+'" role="checkbox" aria-checked="'+(coche ? "true" : "false")+'" style="flex:none;width:34px;height:34px;box-sizing:border-box;border:2px solid #1D1D1B;background:'+(coche ? "#8EFF60" : "transparent")+';display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;cursor:pointer">'+(coche ? "✓" : "")+'</span>' : '';
-    return '<div class="envl" data-i="'+i+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:#BDC9B2;padding:12px 14px;margin:0 0 8px;cursor:pointer"><span style="min-width:0;flex:1"><span style="display:block;font-size:16px">'+envE(nomTitre(e.nom))+'</span><span style="display:block;font-size:12px;color:#6E6350;overflow-wrap:anywhere">'+envE(sous)+(e.erreur ? " · " + envE(e.erreur) : "")+'</span></span>'+'<span style="display:flex;align-items:center;gap:10px;flex:none">'+envPuce(e.statut, e.libelle)+cas+'</span></div>';
+    return '<div class="envl" data-i="'+i+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(189,201,178,.5);padding:12px 14px;margin:0 0 10px;cursor:pointer"><span style="min-width:0;flex:1"><span style="display:block;font-size:16px">'+envE(nomTitre(e.nom))+'</span><span style="display:block;font-size:12px;color:#6E6350;overflow-wrap:anywhere">'+envE(sous)+(e.erreur ? " · " + envE(e.erreur) : "")+'</span></span>'+'<span style="display:flex;align-items:center;gap:10px;flex:none">'+envPuce(e.statut, e.libelle)+cas+'</span></div>';
   }).join("");
   h += '<div class="bandeau" id="envmsg" style="display:none;margin-top:10px"></div>';
-  h += '<button type="button" class="bouton" id="envsend" style="height:46px;padding:0;margin-top:14px"'+(prets.length ? "" : " disabled")+'>Envoyer '+prets.length+' courriel'+(prets.length > 1 ? "s" : "")+(essai ? " d’essai" : "")+'</button>';
+  h += '<button type="button" class="bouton" id="envsend" style="height:46px;padding:0;margin-top:14px"'+(prets.length ? "" : " disabled")+'>Envoyer '+prets.length+' courriel'+(prets.length > 1 ? "s" : "")+'</button>';
   document.getElementById("envapp").innerHTML = h;
   envMessage(ENVS.msg);
   Array.prototype.forEach.call(document.querySelectorAll(".envl"), function(x){ x.onclick = function(){ envApercu(L[+x.getAttribute("data-i")]); }; });
@@ -92,7 +92,7 @@ function envConfirmer(prets){
   var noms = prets.map(function(e){ return nomTitre(e.nom); });
   if(document.getElementById("envdlg")) return;   // un seul appui, une seule fenêtre
   // Même composant que « Envoyer le contrat via DocuSign ? » (superposition, .popc, Oui, envoyer / Non).
-  document.body.insertAdjacentHTML("beforeend", '<div class="pop" id="envdlg"><div class="popc"><div class="popt">Envoyer '+n+' courriel'+(n > 1 ? "s" : "")+' ?</div><div class="popd"><div>Mode : '+(essai ? "Essai (tout va à la Direction)" : "Réel (chaque employé)")+'</div><div>Courriel et PDF Rémunération globale</div>'+(essai ? "" : "<div>Cet envoi ne se reprend pas</div>")+'</div><div class="aeact"><button type="button" class="bouton" id="envoui">Oui, envoyer</button><button type="button" class="bouton lg" id="envnon">Non</button></div></div></div>');
+  document.body.insertAdjacentHTML("beforeend", '<div class="pop" id="envdlg"><div class="popc"><div class="popt">Envoyer '+n+' courriel'+(n > 1 ? "s" : "")+' ?</div><div class="popd"><div>'+(essai ? "Cet envoi ira à la Direction seulement" : "Chaque employé reçoit son courriel")+'</div><div>Courriel et PDF Rémunération globale</div>'+(essai ? "" : "<div>Cet envoi ne se reprend pas</div>")+'</div><div class="aeact"><button type="button" class="bouton" id="envoui">Oui, envoyer</button><button type="button" class="bouton lg" id="envnon">Non</button></div></div></div>');
   document.getElementById("envnon").onclick = function(){ var d = document.getElementById("envdlg"); if(d) d.remove(); };
   document.getElementById("envoui").onclick = function(){
     if(ENVS.occupe) return; ENVS.occupe = true;
