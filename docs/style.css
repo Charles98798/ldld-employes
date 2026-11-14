@@ -1104,3 +1104,5 @@ select:not(.act){width:100%;box-sizing:border-box}
 .aepr .aepn1{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.2}
 .aepr{white-space:normal}
 .aepr .aepc{white-space:nowrap}
+
+.aepck{display:inline-block;width:11px;height:11px;vertical-align:-1px;margin-right:3px;color:#1D1D1B}

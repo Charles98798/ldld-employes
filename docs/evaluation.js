@@ -21,7 +21,8 @@ function aepEtq(j, prochaine, auj){ if(!j) return ""; return '<span class="aepe'
 function aepStatut(x){ return x.d1 && x.d2 ? "2 rencontres" : x.d1 ? "1 rencontre" : "Aucune rencontre"; }
 function aepFmt(j, h){ if(!j) return '<span class="aepv">—</span>'; var q = j.split("-"); return (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1] + " " + q[0] + (aepHeure(h) ? '<small>' + esc(aepHeure(h)) + '</small>' : ''); }
 var MOIS_COURTS_E = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
-function aepFmtC(j, h){ if(!j) return '<span class="aepv">—</span>'; var q = j.split("-"); return (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1] + '<small>' + (aepHeure(h) ? esc(aepHeure(h)) : 'Sans heure') + '</small>'; }
+function aepFmtC(j, h){ if(!j) return '<span class="aepv">—</span>'; var q = j.split("-"), n = new Date(), t = n.getFullYear() + "-" + ("0" + (n.getMonth() + 1)).slice(-2) + "-" + ("0" + n.getDate()).slice(-2), fait = j < t;
+  return (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1] + '<small>' + (fait ? '<svg class="aepck" viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2"/></svg> fait' : (aepHeure(h) ? esc(aepHeure(h)) : 'Sans heure')) + '</small>'; }
 function aepPlanification(){
   app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification évaluation</h1><div id="aepp"></div><div class="aepsec">Tous les employés</div><div class="aepent"><span>Employé</span><span>RDV 1</span><span>RDV 2</span><span>Rencontres</span></div><div id="aepz"></div><div id="aepm" class="aeretat"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
