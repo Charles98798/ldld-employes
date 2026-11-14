@@ -18,7 +18,7 @@ var PICTOS = {
  "Contacts": "M7 1h10v22h-10zM9 4h6v13h-6zM10.5 19h3v2h-3z",
  "Messages envoyés": "M4 4h18v3h-18zM4 7h3v9h-3zM19 7h3v9h-3zM4 16h18v3h-18zM7 7h3v3h-3zM10 10h3v3h-3zM13 10h3v3h-3zM16 7h3v3h-3zM0 5h3v3h-3zM0 10h3v3h-3zM0 15h3v3h-3z",
  "Rencontres demandées": "M9 5h6v6h-6zM7 12h10v10h-10zM18 2h3v10h-3z",
- "Entretien machinerie": "M2 19h20v3h-20zM3 9h4v10h-4zM9 9h6v10h-6zM17 4h4v15h-4zM4 3h3v6h-3zM15 9h2v3h-2z",
+ "Entretien machinerie": "M9 2h4v10h-4zM4 12h14v4h-14zM4 17h3v5h-3zM8 17h3v5h-3zM12 17h3v5h-3zM16 17h2v5h-2z",
  "Positionnement employé": "M4 4h16v3h-16zM4 17h16v3h-16zM4 7h3v10h-3zM17 7h3v10h-3zM10 0h4v4h-4zM10 20h4v4h-4zM0 10h4v4h-4zM20 10h4v4h-4zM10 10h4v4h-4z",
  "Échelle salariale": "M2 3h20v4h-20zM2 9h4v3h-4zM8 9h4v3h-4zM14 9h4v3h-4zM19 9h3v12h-3zM2 14h4v3h-4zM8 14h4v3h-4zM14 14h4v3h-4zM2 19h4v2h-4zM8 19h4v2h-4zM14 19h4v2h-4z",
  "Indicateurs": "M2 2h20v20h-20zM5 5h14v14h-14zM8 8h8v8h-8zM11 11h2v2h-2z",
