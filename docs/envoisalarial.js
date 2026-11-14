@@ -48,16 +48,17 @@ function envPrets(){ return envVisibles().filter(function(e){ return e.statut ==
 // Cases à cocher: décochées par défaut (rien ne part sans choix). Clé = nom. Seules les lignes Prêt sont cochables.
 function envCoches(){ ENVS.coches = ENVS.coches || {}; return envPrets().filter(function(e){ return ENVS.coches[e.nom]; }); }
 function envListe(){
-  var d = ENVS.d, L = envVisibles(), ferme = !!(d.fenetre && d.fenetre.ouverte === false), prets = ferme ? [] : envCoches(), tousPrets = ferme ? [] : envPrets(), essai = d.mode !== "reel";
+  var d = ENVS.d, L = envVisibles(), ferme = !!(d.fenetre && d.fenetre.ouverte === false), prets = ferme ? [] : envCoches(), tousPrets = envPrets(), essai = d.mode !== "reel";
   var h = (ferme ? '<div style="font-size:13px;color:#6E6350;margin:0 0 12px">'+envE(d.fenetre.message || "Envoi salarial verrouillé")+'</div>' : '') + '';
   if(d.annee) h += '<span class="lbl">Année</span><div class="bx" style="border-color:transparent;padding-left:0">'+envE(d.annee)+'</div>';
   h += '<span class="lbl">Employés</span>';
-  if(tousPrets.length) h += '<div style="margin:0 0 8px"><a href="#" id="envtout" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:3px;text-underline-offset:4px">'+(prets.length === tousPrets.length ? "Tout décocher" : "Tout cocher")+'</a></div>';
+  if(tousPrets.length && ferme) h += '<div style="margin:0 0 8px;opacity:.35"><span style="text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:4px">Tout cocher</span></div>';
+  else if(tousPrets.length) h += '<div style="margin:0 0 8px"><a href="#" id="envtout" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:3px;text-underline-offset:4px">'+(prets.length === tousPrets.length ? "Tout décocher" : "Tout cocher")+'</a></div>';
   if(!L.length) h += '<div class="bandeau">▪ AUCUN EMPLOYÉ À ENVOYER</div>';
   h += L.map(function(e, i){
     var sous = (e.statut === "Bloqué" || /^non concern/i.test(String(e.statut))) ? (e.raison || "") : e.statut === "Envoyé" ? (e.essaiEnvoye ? "essai envoyé" : "envoyé") + (e.raison ? " · " + e.raison : "") : [envFr(e.salaire), e.position != null && e.position !== "" ? "position " + e.position + " %" : ""].filter(Boolean).join(" · ");
-    var cochable = e.statut === "Prêt" && !ferme, coche = cochable && ENVS.coches && ENVS.coches[e.nom];
-    var cas = cochable ? '<span class="envcase" data-i="'+i+'" role="checkbox" aria-checked="'+(coche ? "true" : "false")+'" style="flex:none;width:34px;height:34px;box-sizing:border-box;border:2px solid #1D1D1B;background:'+(coche ? "#8EFF60" : "transparent")+';display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;cursor:pointer">'+(coche ? "✓" : "")+'</span>' : '';
+    var cochable = e.statut === "Prêt" && !ferme, grise = e.statut === "Prêt" && ferme, coche = cochable && ENVS.coches && ENVS.coches[e.nom];
+    var cas = cochable ? '<span class="envcase" data-i="'+i+'" role="checkbox" aria-checked="'+(coche ? "true" : "false")+'" style="flex:none;width:34px;height:34px;box-sizing:border-box;border:2px solid #1D1D1B;background:'+(coche ? "#8EFF60" : "transparent")+';display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;cursor:pointer">'+(coche ? "✓" : "")+'</span>' : grise ? '<span style="flex:none;width:34px;height:34px;box-sizing:border-box;border:2px solid #1D1D1B;opacity:.35"></span>' : '';
     return '<div class="envl" data-i="'+i+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(189,201,178,.5);padding:12px 14px;margin:0 0 10px;cursor:pointer"><span style="min-width:0;flex:1"><span style="display:block;font-size:16px">'+envE(nomTitre(e.nom))+'</span><span style="display:block;font-size:12px;color:#6E6350;overflow-wrap:anywhere">'+envE(sous)+(e.erreur ? " · " + envE(e.erreur) : "")+'</span></span>'+'<span style="display:flex;align-items:center;gap:10px;flex:none">'+envPuce(e.statut, e.libelle)+cas+'</span></div>';
   }).join("");
   h += '<div class="bandeau" id="envmsg" style="display:none;margin-top:10px"></div>';
