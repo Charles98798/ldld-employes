@@ -43,7 +43,7 @@ var PICTOS = {
  "Direction": "M2 3h11v9h-11zM14 9h8v9h-8z",
  "Gestionnaire": "M2 3h11v9h-11zM14 9h8v9h-8z",
  "Suivi de charge": "M11 2h2v18h-2zM3 5h18v2h-18zM2 8h7v5h-7zM15 8h7v5h-7zM6 20h12v2h-12z",
- "Stationnement": "M2 2h20v20h-20zM5 5h14v14h-14zM11 5h2v14h-2z",
+ "Stationnement": "M10 2h12v12h-12zM2 7h7v7h-7zM2 17h3v5h-3zM8 17h3v5h-3zM14 17h3v5h-3zM19 17h3v5h-3z",
  "Casier": "M2 2h20v20h-20zM4 4h4v7h-4zM4 13h4v7h-4zM10 4h4v7h-4zM10 13h4v7h-4zM16 4h4v7h-4zM16 13h4v7h-4z",
  "États financiers": "M3 2h18v20h-18zM6 5h12v2h-12zM6 9h5v2h-5zM13 9h5v2h-5zM6 13h5v2h-5zM13 13h5v2h-5z",
  "Finance": "M2 2h2v20h-2zM2 20h20v2h-20zM6 16 L10 11 L14 14 L21 5 L21 9 L14 18 L10 15 L6 19z",
