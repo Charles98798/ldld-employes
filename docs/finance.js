@@ -82,7 +82,7 @@ function finRendu(){
 function finLiens(){   // boutons « Voir les … comptes » (lien souligné vert): ouvre ou referme la liste qui suit
   Array.prototype.forEach.call(document.querySelectorAll(".fglnk"), function(a){
     var n = a.getAttribute("data-k") === "achat" ? 15 : 10;
-    a.onclick = function(e){ e.preventDefault(); var d = document.getElementById("fgtop_" + a.getAttribute("data-k")), ouvre = d.hidden; d.hidden = !ouvre; a.textContent = ouvre ? (n === 15 ? "Masquer les fournisseurs" : "Masquer les comptes") : (n === 15 ? "Voir les 15 plus gros fournisseurs" : "Voir les 10 comptes"); }; });
+    a.onclick = function(e){ e.preventDefault(); var d = document.getElementById("fgtop_" + a.getAttribute("data-k")), ouvre = d.hidden; d.hidden = !ouvre; a.textContent = ouvre ? (n === 15 ? "Masquer les fournisseurs" : "Masquer les comptes") : (n === 15 ? "Voir les plus gros fournisseurs" : "Voir les 10 comptes"); }; });
 }
 function financeOuvrir(){
   FIN_TITRE = "Indicateurs";
