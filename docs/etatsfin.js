@@ -65,6 +65,23 @@ function efNum(x){
   return n;
 }
 function efNettoyer(r){ ["comptes", "totaux"].forEach(function(k){ Object.keys(r[k] || {}).forEach(function(c){ if(Array.isArray(r[k][c])) r[k][c] = r[k][c].map(efNum); }); }); ["tresorerie", "margeCredit", "flux"].forEach(function(k){ if(Array.isArray(r[k])) r[k] = r[k].map(efNum); }); return r; }
+var EF_RAW = null, EF_P = "A";
+function efPeriode(){
+  var m = EF_RAW, n = (m.mois || []).length || 1, a = 0, b = n - 1, p = EF_P;
+  if(p.charAt(0) === "T"){ a = (+p.charAt(1) - 1) * 3; b = Math.min(a + 2, n - 1); }
+  else if(p.charAt(0) === "M"){ a = b = Math.min(+p.slice(1), n - 1); }
+  var som = function(arr){ var t = 0, i; for(i = a; i <= b; i++) t += efNum((arr || [])[i]); return Math.round(t * 100) / 100; };
+  var r = {ok: true, annee: m.annee, maj: m.maj, comptes: {}, totaux: {}, nmois: n};
+  Object.keys(m.comptes).forEach(function(k){ r.comptes[k] = som(m.comptes[k]); });
+  Object.keys(m.totaux || {}).forEach(function(k){ r.totaux[k] = som(m.totaux[k]); });
+  return r;
+}
+function efOptions(r){
+  var o = '<option value="A"' + (EF_P === "A" ? " selected" : "") + '>Année ' + r.annee + '</option>', i, L = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  for(i = 1; i <= 4; i++) if((i - 1) * 3 < r.nmois) o += '<option value="T' + i + '"' + (EF_P === "T" + i ? " selected" : "") + '>Trimestre ' + i + '</option>';
+  for(i = 0; i < r.nmois; i++) o += '<option value="M' + i + '"' + (EF_P === "M" + i ? " selected" : "") + '>' + L[i].charAt(0).toUpperCase() + L[i].slice(1) + ' ' + r.annee + '</option>';
+  return o;
+}
 function efErreur(msg){
   var a = app.querySelector(".att"); if(!a) return;
   var d = document.createElement("div"); d.className = "bandeau"; d.textContent = msg; a.parentNode.replaceChild(d, a);
@@ -76,12 +93,7 @@ function efOuvrir(){
   function recu(m){
     if(fini || !document.querySelector(".ef")) return;
     var r = m;
-    if(m && m.ok && m.comptes){ efNettoyer(m);   // cumul de janvier à la date des données, chaque cellule convertie en nombre
-      var som = function(a){ var t = 0; (a || []).forEach(function(x){ t += efNum(x); }); return Math.round(t * 100) / 100; };
-      r = {ok: true, annee: m.annee, maj: m.maj, comptes: {}, totaux: {}};
-      Object.keys(m.comptes).forEach(function(k){ r.comptes[k] = som(m.comptes[k]); });
-      Object.keys(m.totaux || {}).forEach(function(k){ r.totaux[k] = som(m.totaux[k]); });
-    }
+    try { if(m && m.ok && m.comptes){ efNettoyer(m); EF_RAW = m; EF_P = "A"; r = efPeriode(); } } catch(e){ r = {erreur: "ERREUR " + String(e && e.message || e).slice(0, 80)}; }
     if(r && r.ok){ fini = true; try { efDessiner(r); } catch(e){ efErreur("ERREUR " + String(e && e.message || e).slice(0, 80).toUpperCase()); } }
     else if(r && r.erreur){ fini = true; efErreur(String(r.erreur).toUpperCase() + " · RÉESSAYEZ"); }
   }
@@ -117,7 +129,7 @@ function efDessiner(r){
       '<div class="efl efh"><span></span><span>' + r.annee + '</span><span>% des ventes</span></div>' + blocs(gs) + (fins || "");
   }
   var h = '<div class="page ppx fin ef sans-instant"><h1>États financiers</h1>' +
-    '<div class="efsel"><span>' + r.annee + '</span><span>1 janv.</span><span>' + dateFin + '</span></div>' +
+    '<select class="finsel" id="ef_sel">' + efOptions(r) + '</select>' +
     '<div class="efres"><div><small>Ventes</small><b>' + efMontant(vt) + '</b></div><div><small>Bénéfice brut</small><b>' + pct(brut) + '</b></div><div><small>Bénéfice net</small><b>' + pct(net) + '</b></div></div>';
   h += section("Ventes", EF_V, ligne("Ventes totales", vt, "eft"));
   h += section("Coût des ventes", EF_C, ligne("Total du coût des ventes", cout, "eft") + ligne("Bénéfice brut", brut, "eft"));
@@ -132,6 +144,7 @@ function efDessiner(r){
   h += '<a class="retour" href="#" id="retour">Retour</a></div>';
   app.innerHTML = h;
   try { window.scrollTo(0, 0); } catch(e) {}
+  document.getElementById("ef_sel").onchange = function(){ EF_P = this.value; try { efDessiner(efPeriode()); } catch(e){ efErreur("ERREUR " + String(e && e.message || e).slice(0, 80).toUpperCase()); } };
   Array.prototype.forEach.call(document.querySelectorAll(".efr"), function(r){
     r.onclick = function(){ var o = r.classList.toggle("o"); r.querySelector(".efm").textContent = o ? "\u2212" : "+"; };
   });
