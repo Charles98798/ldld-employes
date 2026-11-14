@@ -678,7 +678,7 @@ function menu(){
 // Le libellé tient sur une ligne sans toucher l'étiquette verte ni sortir de la tuile.
 function texteTient(a){
   var lab = a.firstElementChild; if(!lab) return true;
-  var r = document.createRange(); r.selectNodeContents(lab);
+  var r = document.createRange(); r.selectNodeContents(lab); var nc0 = lab.querySelector(".nc"); if(nc0) r.setEndBefore(nc0);
   var fin = r.getBoundingClientRect().right, b = a.querySelector(".nombre") || a.querySelector(".nc"), lim = b ? b.getBoundingClientRect().left - 8 : a.getBoundingClientRect().right;
   return fin <= lim;
 }
