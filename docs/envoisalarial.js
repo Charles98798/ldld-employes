@@ -12,15 +12,35 @@ function envPage(titre, corps){
   app.innerHTML = '<div class="page"><h1>'+envE(titre)+'</h1><a class="retour" href="#" id="retour">Retour</a>'+corps+'</div>';
 }
 function envMessage(t){ var z = document.getElementById("envmsg"); if(z){ z.style.display = t ? "block" : "none"; z.textContent = t || ""; } }
+// Barre d'état au milieu de l'écran (même barre noire et même pourcentage que l'envoi du contrat). Le bouton Fermer reste désactivé tant que le travail n'est pas terminé ou en échec.
+var ENVB = null;
+function envBarreDessiner(){
+  var z = document.getElementById("envbarz"), E = ENVB; if(!z || !E) return;
+  var p = Math.round(E.etat === "non" ? 0 : E.p), rouge = E.etat === "non";
+  z.innerHTML = '<div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+p+'%;background:#0d1117"></i></div><div style="font-size:30px;font-weight:300;margin:6px 0 10px">'+p+' %</div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:#8EFF60;color:#1D1D1B")+';margin:0 0 6px;cursor:default">▪ '+envE(E.texte)+'</div><div class="aeact" style="margin-top:14px">'+'<button type="button" class="bouton lg" id="envbarf"'+(E.etat === "cours" ? " disabled" : "")+'>Fermer</button></div>';
+  var f = document.getElementById("envbarf"); if(f) f.onclick = function(){ if(ENVB && ENVB.etat === "cours") return; var cb = ENVB && ENVB.apresFermer; envBarreRetirer(); if(cb) cb(); };
+  var r = document.getElementById("envbarre"); if(r) r.onclick = function(){ var fn = ENVB && ENVB.reessayer; envBarreRetirer(); if(fn) fn(); };
+}
+function envBarreRetirer(){ if(ENVB && ENVB.tick) clearInterval(ENVB.tick); ENVB = null; var d = document.getElementById("envbar"); if(d) d.remove(); }
+function envBarreOuvrir(texte, duree, opts){
+  envBarreRetirer(); opts = opts || {};
+  var t0 = Date.now(), E = ENVB = {etat: "cours", p: 0, texte: texte, reel: false, reessayer: opts.reessayer, apresFermer: opts.apresFermer};
+  if(!document.getElementById("envbar")) document.body.insertAdjacentHTML("beforeend", '<div class="pop" id="envbar"><div class="popc"><div id="envbarz"></div></div></div>');
+  E.tick = setInterval(function(){ if(ENVB !== E || E.etat !== "cours") return; if(!E.reel) E.p = 92 * (1 - Math.exp(-(Date.now() - t0) / (duree || 30000))); envBarreDessiner(); }, 400);
+  envBarreDessiner();
+}
+function envBarreP(p, texte){ if(!ENVB) return; ENVB.reel = true; ENVB.p = p; if(texte) ENVB.texte = texte; envBarreDessiner(); }
+function envBarreFin(ok, texte){ if(!ENVB) return; if(ENVB.tick) clearInterval(ENVB.tick); ENVB.etat = ok ? "ok" : "non"; ENVB.p = ok ? 100 : 0; ENVB.texte = texte; envBarreDessiner(); }
 function envOuvrir(){
   ENVS.sel = null; ENVS.msg = ""; ENVS.coches = {};
-  envPage("Envoi salarial", '<div id="envapp"><div class="bandeau" id="envatt">▪ UN INSTANT</div></div>');
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); retirerBoutonBas(); responsable(); };
+  envPage("Envoi salarial", '<div id="envapp"></div>');
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); envBarreRetirer(); retirerBoutonBas(); responsable(); };
+  envBarreOuvrir("Lecture des salaires…", 30000, {reessayer: envOuvrir, apresFermer: function(){ retirerBoutonBas(); responsable(); }});
   appelService({action: "env_liste", session: sessionGardee(), f: {mode: ENVS.mode === "reel" ? "reel" : "essai"}}).then(function(r){
     if(!document.getElementById("envapp")) return;
-    if(r && r.ok && r.r){ ENVS.d = r.r; envListe(); }
-    else { var a = document.getElementById("envatt"); if(a){ a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = envOuvrir; } }
-  }).catch(function(){ var a = document.getElementById("envatt"); if(a){ a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = envOuvrir; } });
+    if(r && r.ok && r.r){ ENVS.d = r.r; envBarreRetirer(); envListe(); }
+    else envBarreFin(false, String((r && r.erreur) || "Échec"));
+  }).catch(function(){ envBarreFin(false, "Réseau indisponible"); });
 }
 // Une personne supprimée (introuvable dans la feuille d'envoi) n'est plus affichée.
 function envVisibles(){ return ((ENVS.d && ENVS.d.employes) || []).filter(function(e){ return !/^direction$/i.test(String(e.categorie || e.role || "")) && !(e.statut === "Bloqué" && /introuvable|inactif|inactive|parti|départ|depart|supprim/i.test(String(e.raison || ""))); }); }
@@ -28,15 +48,15 @@ function envPrets(){ return envVisibles().filter(function(e){ return e.statut ==
 // Cases à cocher: décochées par défaut (rien ne part sans choix). Clé = nom. Seules les lignes Prêt sont cochables.
 function envCoches(){ ENVS.coches = ENVS.coches || {}; return envPrets().filter(function(e){ return ENVS.coches[e.nom]; }); }
 function envListe(){
-  var d = ENVS.d, L = envVisibles(), prets = envCoches(), tousPrets = envPrets(), essai = ENVS.mode === "essai";
-  var h = '<span class="lbl">Mode d’envoi</span><select class="bx" id="envmode"><option value="essai"'+(essai ? " selected" : "")+'>Essai (tout va à Direction)</option><option value="reel"'+(essai ? "" : " selected")+'>Réel (chaque employé)</option></select>';
+  var d = ENVS.d, L = envVisibles(), ferme = !!(d.fenetre && d.fenetre.ouverte === false), prets = ferme ? [] : envCoches(), tousPrets = ferme ? [] : envPrets(), essai = ENVS.mode === "essai";
+  var h = (ferme ? '<div class="bandeau" style="margin:0 0 12px;cursor:default">▪ '+envE(d.fenetre.message || "Envoi salarial verrouillé")+'</div>' : '') + '<span class="lbl">Mode d’envoi</span><select class="bx" id="envmode"><option value="essai"'+(essai ? " selected" : "")+'>Essai (tout va à Direction)</option><option value="reel"'+(essai ? "" : " selected")+'>Réel (chaque employé)</option></select>';
   if(d.annee) h += '<span class="lbl">Année</span><div class="bx" style="border-color:transparent;padding-left:0">'+envE(d.annee)+'</div>';
   h += '<span class="lbl">Employés</span>';
   if(tousPrets.length) h += '<div style="margin:0 0 8px"><a href="#" id="envtout" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:3px;text-underline-offset:4px">'+(prets.length === tousPrets.length ? "Tout décocher" : "Tout cocher")+'</a></div>';
   if(!L.length) h += '<div class="bandeau">▪ AUCUN EMPLOYÉ À ENVOYER</div>';
   h += L.map(function(e, i){
     var sous = (e.statut === "Bloqué" || /^non concern/i.test(String(e.statut))) ? (e.raison || "") : e.statut === "Envoyé" ? (e.essaiEnvoye ? "essai envoyé" : "envoyé") + (e.raison ? " · " + e.raison : "") : [envFr(e.salaire), e.position != null && e.position !== "" ? "position " + e.position + " %" : ""].filter(Boolean).join(" · ");
-    var cochable = e.statut === "Prêt", coche = cochable && ENVS.coches && ENVS.coches[e.nom];
+    var cochable = e.statut === "Prêt" && !ferme, coche = cochable && ENVS.coches && ENVS.coches[e.nom];
     var cas = cochable ? '<span class="envcase" data-i="'+i+'" role="checkbox" aria-checked="'+(coche ? "true" : "false")+'" style="flex:none;width:34px;height:34px;box-sizing:border-box;border:2px solid #1D1D1B;background:'+(coche ? "#8EFF60" : "transparent")+';display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;cursor:pointer">'+(coche ? "✓" : "")+'</span>' : '';
     return '<div class="envl" data-i="'+i+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:#BDC9B2;padding:12px 14px;margin:0 0 8px;cursor:pointer"><span style="min-width:0;flex:1"><span style="display:block;font-size:16px">'+envE(nomTitre(e.nom))+'</span><span style="display:block;font-size:12px;color:#6E6350;overflow-wrap:anywhere">'+envE(sous)+(e.erreur ? " · " + envE(e.erreur) : "")+'</span></span>'+'<span style="display:flex;align-items:center;gap:10px;flex:none">'+envPuce(e.statut, e.libelle)+cas+'</span></div>';
   }).join("");
@@ -52,11 +72,13 @@ function envListe(){
 }
 function envApercu(e){
   if(!e) return;
-  envPage(nomTitre(e.nom), '<div id="envapp"><div class="bandeau" id="envatt">▪ APERÇU EN PRÉPARATION · QUELQUES SECONDES</div></div>');
-  document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); envOuvrir(); };
+  envPage(nomTitre(e.nom), '<div id="envapp"></div>');
+  document.getElementById("retour").onclick = function(ev){ ev.preventDefault(); envBarreRetirer(); envOuvrir(); };
+  envBarreOuvrir("Préparation de l’aperçu…", 25000, {reessayer: function(){ envApercu(e); }, apresFermer: envOuvrir});
   appelService({action: "env_apercu", session: sessionGardee(), f: {nom: e.nom}}).then(function(r){
     if(!document.getElementById("envapp")) return;
-    if(!(r && r.ok && r.r)){ var a = document.getElementById("envatt"); if(a){ a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = function(){ envApercu(e); }; } return; }
+    if(!(r && r.ok && r.r)){ envBarreFin(false, String((r && r.erreur) || "Échec")); return; }
+    envBarreRetirer();
     var p = r.r, c = p.controle || {}, ligne = function(t, ok, oui){ return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:#BDC9B2;padding:12px 14px;margin:0 0 8px"><span>'+envE(t)+'</span><span style="'+(ok ? "background:#8EFF60;color:#1D1D1B" : "background:#B8473A;color:#fff")+';font-size:12px;padding:3px 8px">'+envE(ok ? oui : "Écart")+'</span></div>'; };
     var h = '<span class="lbl">Courriel (aperçu)</span><div style="background:#BDC9B2;padding:12px 14px;margin:0 0 8px"><div style="font-size:15px;overflow-wrap:anywhere">Objet : '+envE(p.objet || "")+'</div><div style="font-size:12px;color:#6E6350;margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere">'+envE(p.corps || "")+'</div></div>';
     h += '<span class="lbl">Pièce jointe</span><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:#BDC9B2;padding:12px 14px;margin:0 0 8px"><span style="overflow-wrap:anywhere">'+envE(p.pdfNom || "")+'</span>'+(p.pdfBase64 ? '<button type="button" class="bouton" id="envpdf" style="width:auto;height:46px;padding:0 14px;margin:0">PDF</button>' : "")+'</div>';
@@ -64,7 +86,7 @@ function envApercu(e){
     document.getElementById("envapp").innerHTML = h;
     var b = document.getElementById("envpdf");
     if(b) b.onclick = function(){ try { var bin = atob(p.pdfBase64), u = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); var url = URL.createObjectURL(new Blob([u], {type: "application/pdf"})); window.open(url, "_blank"); } catch(x){} };
-  }).catch(function(){ var a = document.getElementById("envatt"); if(a){ a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = function(){ envApercu(e); }; } });
+  }).catch(function(){ envBarreFin(false, "Réseau indisponible"); });
 }
 function envConfirmer(prets){
   var essai = ENVS.mode === "essai", n = prets.length, z = document.getElementById("envapp"); if(!z) return;
@@ -75,20 +97,21 @@ function envConfirmer(prets){
   document.getElementById("envnon").onclick = function(){ var d = document.getElementById("envdlg"); if(d) d.remove(); };
   document.getElementById("envoui").onclick = function(){
     if(ENVS.occupe) return; ENVS.occupe = true;
-    var oui = document.getElementById("envoui"), non = document.getElementById("envnon"); oui.disabled = true; if(non) non.disabled = true;
+    var dlg0 = document.getElementById("envdlg"); if(dlg0) dlg0.remove();
     // Envoi par lots de 2: l'écran avance lot par lot avec le compte, et ne propose JAMAIS de refaire l'envoi entier (risque de doublons en mode réel).
     var mode = essai ? "essai" : "reel", lots = [], i0 = 0, faits = 0;
     for(; i0 < prets.length; i0 += 2) lots.push(prets.slice(i0, i0 + 2));
-    function progres(){ oui.textContent = "Envoi en cours · " + faits + " sur " + n; }
+    envBarreOuvrir("Envoi en cours · 0 sur " + n, 60000, {apresFermer: envOuvrir});
+    function progres(){ envBarreP(Math.round(faits / n * 92), "Envoi en cours · " + faits + " sur " + n); }
     function arret(raison){
-      ENVS.occupe = false; var d = document.getElementById("envdlg"); if(d) d.remove();
+      ENVS.occupe = false;
       // L'état réel est relu depuis le serveur: les courriels déjà partis y sont marqués.
       appelService({action: "env_liste", session: sessionGardee(), f: {mode: ENVS.mode === "reel" ? "reel" : "essai"}}).then(function(r){ if(r && r.ok && r.r) ENVS.d = r.r; }).catch(function(){}).then(function(){
-        ENVS.msg = "▪ ENVOI INTERROMPU APRÈS " + faits + " SUR " + n + " · " + raison + " · NE REFAITES PAS L’ENVOI: VÉRIFIEZ LES STATUTS CI-DESSOUS ET ENVOYEZ SEULEMENT CEUX QUI SONT ENCORE PRÊTS";
-        if(document.getElementById("envapp")) envListe(); });
+        envBarreFin(false, "Envoi interrompu après " + faits + " sur " + n + " · " + raison.toLowerCase() + " · Ne refaites pas l’envoi : vérifiez les statuts dans la liste et envoyez seulement ceux qui sont encore confirmés");
+        if(ENVB) ENVB.apresFermer = function(){ if(document.getElementById("envapp")) envListe(); }; });
     }
     function suite(k){
-      if(k >= lots.length){ ENVS.occupe = false; ENVS.msg = "▪ " + (essai ? "ESSAI ENVOYÉ À LA DIRECTION · " : "ENVOYÉ · ") + n + " COURRIEL" + (n > 1 ? "S" : ""); envOuvrir(); return; }
+      if(k >= lots.length){ ENVS.occupe = false; envBarreFin(true, (essai ? "Essai envoyé à la Direction · " : "Envoyé · ") + n + " courriel" + (n > 1 ? "s" : "")); return; }
       progres();
       appelService({action: "env_envoyer", session: sessionGardee(), f: {mode: mode, noms: lots[k].map(function(e){ return e.nom; }), nombre: lots[k].length}}).then(function(r){
         if(r && r.ok){ faits += lots[k].length; suite(k + 1); }
