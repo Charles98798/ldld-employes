@@ -1,4 +1,4 @@
-var APP_PUB = "586";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
+var APP_PUB = "588";   // numéro de publication, affiché sur les écrans « Un instant » pour savoir quelle version tourne
 // Défilement: selon l'appareil, c'est la fenêtre ou le corps de la page qui défile; on lit et on règle les deux.
 function lireY(){ return Math.max(window.scrollY || 0, document.body ? document.body.scrollTop : 0, document.documentElement.scrollTop || 0); }
 (function(){ var st = window.scrollTo.bind(window); window.scrollTo = function(x, y){ try{ st(x, y); }catch(e){} if(typeof y === "number" && document.body){ document.body.scrollTop = y; document.documentElement.scrollTop = y; } }; })();
@@ -643,10 +643,12 @@ function entreesVisibles(){
   if(!peutEcrire()){ var o = ORDRE_EMPLOYE; l.sort(function(a, b){ var x = o.indexOf(a.id), y = o.indexOf(b.id); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); }); }
   return l;
 }
+var LIEN_AUTO = location.hash === "#autoevaluation";
 function menu(){
   vueFin();
   var dejaDemande = false; try { dejaDemande = localStorage.getItem("ldld-notif-demande") === "1"; } catch(e){}
   if(notifPossible() && !dejaDemande && Notification.permission === "default") return ecranNotifs();
+  if(LIEN_AUTO && MOI){ LIEN_AUTO = false; try { history.replaceState(null, "", location.pathname + location.search); } catch(e){} return aeEntree(); }   // lien du courriel (#autoevaluation): après la connexion habituelle, on ouvre directement la 1re page de l’autoévaluation
   if(notifPossible() && Notification.permission === "granted" && !menu.abonne){ menu.abonne = true; abonnerNotifs().catch(function(){}); }
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger(); setTimeout(prechargerLectures, 400);
