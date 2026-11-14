@@ -5,7 +5,7 @@ var ENVS = {d: null, mode: "essai", sel: null, msg: "", occupe: false};
 function envE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function envFr(v){ var n = Number(String(v == null ? "" : v).replace(/\s/g, "").replace("$", "").replace(",", ".")); if(v === "" || v == null || isNaN(n)) return ""; return n.toFixed(2).replace(".", ",") + " $"; }
 function envPuce(statut){
-  var s = String(statut || ""), st = s === "Prêt" ? "background:#8EFF60;color:#1D1D1B" : s === "Envoyé" ? "background:#8D806A;color:#fff" : "background:#B7B1A5;color:#1D1D1B";
+  var s = String(statut || ""), st = s === "Prêt" ? "background:#8EFF60;color:#1D1D1B" : s === "Envoyé" ? "background:#8D806A;color:#fff" : /^non concern/i.test(s) ? "background:#BDC9B2;color:#6E6350;border:1px solid #8D806A" : "background:#B7B1A5;color:#1D1D1B";
   return '<span style="'+st+';font-size:12px;padding:3px 8px;white-space:nowrap">'+envE(s)+'</span>';
 }
 function envPage(titre, corps){
@@ -22,15 +22,17 @@ function envOuvrir(){
     else { var a = document.getElementById("envatt"); if(a){ a.textContent = "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"; a.onclick = envOuvrir; } }
   }).catch(function(){ var a = document.getElementById("envatt"); if(a){ a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = envOuvrir; } });
 }
-function envPrets(){ return ((ENVS.d && ENVS.d.employes) || []).filter(function(e){ return e.statut === "Prêt"; }); }
+// Une personne supprimée (introuvable dans la feuille d'envoi) n'est plus affichée.
+function envVisibles(){ return ((ENVS.d && ENVS.d.employes) || []).filter(function(e){ return !(e.statut === "Bloqué" && /introuvable/i.test(String(e.raison || ""))); }); }
+function envPrets(){ return envVisibles().filter(function(e){ return e.statut === "Prêt"; }); }
 function envListe(){
-  var d = ENVS.d, L = d.employes || [], prets = envPrets(), essai = ENVS.mode === "essai";
+  var d = ENVS.d, L = envVisibles(), prets = envPrets(), essai = ENVS.mode === "essai";
   var h = '<span class="lbl">Mode d’envoi</span><select class="bx" id="envmode"><option value="essai"'+(essai ? " selected" : "")+'>Essai (tout va à Direction)</option><option value="reel"'+(essai ? "" : " selected")+'>Réel (chaque employé)</option></select>';
   if(d.annee) h += '<span class="lbl">Année</span><div class="bx" style="border-color:transparent;padding-left:0">'+envE(d.annee)+'</div>';
   h += '<span class="lbl">Employés</span>';
   if(!L.length) h += '<div class="bandeau">▪ AUCUN EMPLOYÉ À ENVOYER</div>';
   h += L.map(function(e, i){
-    var sous = e.statut === "Bloqué" ? (e.raison || "") : e.statut === "Envoyé" ? (e.essaiEnvoye ? "essai envoyé" : "envoyé") + (e.raison ? " · " + e.raison : "") : [envFr(e.salaire), e.position != null && e.position !== "" ? "position " + e.position + " %" : ""].filter(Boolean).join(" · ");
+    var sous = (e.statut === "Bloqué" || /^non concern/i.test(String(e.statut))) ? (e.raison || "") : e.statut === "Envoyé" ? (e.essaiEnvoye ? "essai envoyé" : "envoyé") + (e.raison ? " · " + e.raison : "") : [envFr(e.salaire), e.position != null && e.position !== "" ? "position " + e.position + " %" : ""].filter(Boolean).join(" · ");
     return '<div class="envl" data-i="'+i+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:#BDC9B2;padding:12px 14px;margin:0 0 8px;cursor:pointer"><span style="min-width:0"><span style="display:block;font-size:16px">'+envE(nomTitre(e.nom))+'</span><span style="display:block;font-size:12px;color:#6E6350;overflow-wrap:anywhere">'+envE(sous)+(e.erreur ? " · " + envE(e.erreur) : "")+'</span></span>'+envPuce(e.statut)+'</div>';
   }).join("");
   h += '<div class="bandeau" id="envmsg" style="display:none;margin-top:10px"></div>';
