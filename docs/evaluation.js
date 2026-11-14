@@ -18,7 +18,7 @@ function aepProchaine(x, auj){
 }
 function aepHeure(h){ var p = /^(\d{1,2}):(\d\d)/.exec(h || ""); return p && !(+p[1] === 0 && +p[2] === 0) ? (+p[1]) + " h" + (p[2] === "00" ? "" : " " + p[2]) : ""; }
 function aepPlanification(){
-  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification des rendez-vous d’auto-évaluation</h1><div class="aepf" id="aepf"></div><div id="aepz"></div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Planification des rencontres</h1><div class="aepf" id="aepf"></div><div id="aepz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   var donnees = null;
   function afficher(){
@@ -72,7 +72,7 @@ function aerEnvoyer(){
 }
 function aerSaisir(addr, valeur){ AER.file.push({cle: AER.cle, addr: addr, valeur: valeur}); var e = document.getElementById("aeretat"); if(e) e.textContent = "Enregistrement…"; aerEnvoyer(); }
 function aerPremier(){
-  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion d’auto-évaluation</h1><div id="aerz"></div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div id="aerz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); aerLiberer(); menu(); };
   var noms = {}, z = document.getElementById("aerz");
   function liste(planif, reun){
@@ -90,7 +90,7 @@ function aerNote(addr, val, ro){ return '<input type="number" inputmode="decimal
 function aerTexte(addr, val, ro){ return '<textarea class="aeta" rows="2" data-a="' + addr + '"' + (ro ? ' disabled' : '') + '>' + esc(val || "") + '</textarea>'; }
 function aerOuvrir(cle, noms){
   aerLiberer();
-  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion d’auto-évaluation</h1><div id="aerz"></div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div id="aerz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); aerLiberer(); aerPremier(); };
   var z = document.getElementById("aerz");
   function erreur(){ z.innerHTML = '<div class="bandeau">Rencontre indisponible pour le moment.</div>'; }
@@ -131,6 +131,6 @@ window.addEventListener("pagehide", function(){ if(AER.cle && !AER.lectureSeule)
 
 // Page d'attente: la Réunion n'est pas allumée (chiffrement des notes à terminer). Aucune donnée, aucun appel au Service.
 function aerBientot(){
-  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Réunion d’auto-évaluation</h1><div class="aevide">Bientôt disponible.</div></div>';
+  app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div class="aevide">Bientôt disponible.</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
 }
