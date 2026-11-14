@@ -54,7 +54,7 @@ function envListe(){
   h += '<span class="lbl">Employés</span>';
   if(tousPrets.length && ferme) h += '<div style="margin:0 0 8px;opacity:.35"><span style="text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:4px">Tout cocher</span></div>';
   else if(tousPrets.length) h += '<div style="margin:0 0 8px"><a href="#" id="envtout" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:3px;text-underline-offset:4px">'+(prets.length === tousPrets.length ? "Tout décocher" : "Tout cocher")+'</a></div>';
-  if(!L.length) h += '<div class="bandeau">Aucun EMPLOYÉ À ENVOYER</div>';
+  if(!L.length) h += '<div class="bandeau">Aucun employé à envoyer</div>';
   h += L.map(function(e, i){
     var sous = (e.statut === "Bloqué" || /^non concern/i.test(String(e.statut))) ? (e.raison || "") : e.statut === "Envoyé" ? (e.essaiEnvoye ? "essai envoyé" : "envoyé") + (e.raison ? " · " + e.raison : "") : [envFr(e.salaire), e.position != null && e.position !== "" ? "position " + e.position + " %" : ""].filter(Boolean).join(" · ");
     var cochable = e.statut === "Prêt" && !ferme, grise = e.statut === "Prêt" && ferme, coche = cochable && ENVS.coches && ENVS.coches[e.nom];
