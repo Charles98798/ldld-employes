@@ -1183,3 +1183,5 @@ select:not(.act){width:100%;box-sizing:border-box}
 .ca .pret{margin:0;font-size:14px;background:rgba(0,0,0,.06);padding:10px 12px;user-select:text;-webkit-user-select:text}
 .ca #ca{display:grid;gap:0 12px;grid-template-columns:1fr}
 @media (min-width:900px){.ca #ca{grid-template-columns:1fr 1fr;align-items:start}}
+.ca .cacops{display:grid;grid-template-columns:1fr;gap:0 12px}
+@media (min-width:600px){.ca .cacops{grid-template-columns:1fr 1fr}}
