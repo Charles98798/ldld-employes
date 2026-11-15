@@ -1357,3 +1357,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 .bx.rose,.ms.rose,.tl .rose,.ech .echc input.vide,.ea .fld input.vide,select.rose,select:not(.act).rose,.rvacc select.rose,.revt.rose,.rvo .revt.rose,.rvo .rose input,.rvo .rose-c,.rvo .rosef,.ppx #pp_app.sansemp #liste,.ppx .decision select:not(.act),.po .pofx b.manque,.ppx .fx b.manque,.revn.rose .revb:not(.on),.rvo .revn.rose .revb:not(.on),.rvo .puces.rose .puce:not(.choisie){background:#fff!important;color:var(--encre);box-shadow:inset 0 -3px 0 var(--vert)!important;border-color:#B4AB9B}
 .bx.rose::placeholder,.pe .bx.rose::placeholder,.rvo .rose input::placeholder,.tl .rose::placeholder{color:#8b8579;opacity:1}
 .aere{background:transparent;box-shadow:inset 0 -3px 0 var(--vert)}.aere.ok{box-shadow:none}
+
+/* Connexion: TEAM + trait vert + EMPLOYÉS LDLD (15 nov, choix A) */
+.pied-connexion .trait{display:block;width:50%;height:4px;background:var(--vert);margin:12px 0 0}
+.pied-connexion .emp{letter-spacing:.45em;font-size:13px;margin-top:14px}

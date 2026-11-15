@@ -457,7 +457,7 @@ function connexion(message){
   app.innerHTML = '<div class="connexion"><div class="logo lgx" role="img" aria-label="Lafond Desjardins"><img class="p1" src="assets/LDLD_logo_complet_blanc_transparent.png" alt=""><img class="p2" src="assets/LDLD_logo_complet_blanc_transparent.png" alt=""><img class="p3" src="assets/LDLD_logo_complet_blanc_transparent.png" alt=""></div>' +
     '<div class="formc"><label class="etq" for="courriel">▪ COURRIEL</label><input class="champ ligne3" id="courriel" type="email" inputmode="email" autocomplete="email" placeholder="nom@exemple.com">' +
     '<button class="bouton" id="envoi">Recevoir mon code</button></div>' +
-    '<p class="aide" id="msg">'+(message||"")+'</p><div class="pied-connexion"><span class="ldld"><b>L</b><b>D</b><b>L</b><b>D</b></span><span class="emp"><b>E</b><b>M</b><b>P</b><b>L</b><b>O</b><b>Y</b><b>É</b><b>S</b></span></div></div>';
+    '<p class="aide" id="msg">'+(message||"")+'</p><div class="pied-connexion"><span class="ldld"><b>T</b><b>E</b><b>A</b><b>M</b></span><i class="trait"></i><span class="emp" style="display:block">EMPLOYÉS LDLD</span></div></div>';
   document.getElementById("envoi").onclick = function(){
     var c = document.getElementById("courriel").value.trim().toLowerCase(), msg = document.getElementById("msg");
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c)){ msg.textContent = "Entrez votre courriel."; return; }
