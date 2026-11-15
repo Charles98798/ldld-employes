@@ -541,7 +541,8 @@ function dessinerAujourdhui(){
   z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+ab.join("")+l.map(function(e){
     if(e.journee) return '<div>Journée · '+esc(e.titre || "")+'</div>';
     var d = new Date(e.debut), fait = new Date(e.fin || e.debut) < t;
-    return '<div'+(fait ? ' class="fait"' : "")+'>'+heureFr(d)+' · '+esc(String(e.titre || "").trim() || "Sans titre")+'</div>'; }).join("")+'</div>';
+    var hh = d.getHours(), mm = d.getMinutes();   // l'heure vient de la date locale: heureFr() attend un texte ISO et rendait un vide
+    return '<div'+(fait ? ' class="fait"' : "")+'>'+hh+(mm ? ' h '+(mm < 10 ? "0" : "")+mm : ' h')+' · '+esc(String(e.titre || "").trim() || "Sans titre")+'</div>'; }).join("")+'</div>';
 }
 function auj_normalise(liste, jour){
   // Tous les événements du jour, une seule fois chacun: clé = uid Google s'il existe, sinon horaire + titre; on garde la ligne qui a un titre.
