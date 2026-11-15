@@ -47,6 +47,7 @@ var PICTOS = {
  "Inventaire": "M2 2h20v20h-20zM4.4 4.4h15.2v15.2h-15.2zM9 5.5h6v4.7h-6zM5.5 12h6v6h-6zM12.5 12h6v6h-6z",
  "Planification évaluation": "M2 4h20v18h-20zM4.4 9h15.2v11h-15.2zM6 2h3v4h-3zM15 2h3v4h-3zM13 12h5v5h-5z",
  "Rencontre d’évaluation": "M2 3h3v18h-3zM5 11h5v3h-5zM8 14h2v7h-2zM19 3h3v18h-3zM14 11h5v3h-5zM14 14h2v7h-2z",
+ "Clé annuelle": "M2 7h9v9h-9zM5 10h3v3h-3zM11 10h11v3h-11zM15 13h2v4h-2zM19 13h3v3h-3z",
  "Casier": "M2 2h20v20h-20zM4 4h4v7h-4zM4 13h4v7h-4zM10 4h4v7h-4zM10 13h4v7h-4zM16 4h4v7h-4zM16 13h4v7h-4z",
  "États financiers": "M3 2h18v20h-18zM6 5h12v2h-12zM6 9h5v2h-5zM13 9h5v2h-5zM6 13h5v2h-5zM13 13h5v2h-5z",
  "Finance": "M2 2h2v20h-2zM2 20h20v2h-20zM6 16 L10 11 L14 14 L21 5 L21 9 L14 18 L10 15 L6 19z",
