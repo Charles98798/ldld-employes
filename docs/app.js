@@ -726,7 +726,7 @@ function messages(filtre){
   NEUFS_VISITE = {};
   var fusion = !FILTRE_MSG;   // même page « Calendrier et messages » pour tous, y compris la vue employé de la Direction (astérisque)
   var titreMsg = fusion ? "Calendrier et messages" : FILTRE_MSG === "envoyes" ? "Historique message" : FILTRE_MSG === "rencontres" ? "Rencontre demandée" : "Message reçu";
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div><div id="neufsb"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="ecrire">▪ Écrire un message</a>' : '') + '<div id="aven"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '' : '') + '<div id="liste"></div>' +
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div>' + (peutEcrire() && !VUE.on ? '<button type="button" class="bouton" id="ecrire" style="height:46px;padding:0;margin:0 0 14px;font-weight:700">Écrire aux employés</button>' : '') + '<div id="neufsb"></div><div id="aven"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '' : '') + '<div id="liste"></div>' +
     '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG === "recus"){ messages(""); } else if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
   var w = document.getElementById("ecrire"); if(w) w.onclick = function(e){ e.preventDefault(); nouveau("message"); };
