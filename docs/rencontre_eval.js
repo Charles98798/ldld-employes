@@ -283,7 +283,7 @@ var REV_EMPLOYES = [["Camille Roy","Acrylique",true,true,"17 nov. 2026",true],["
 // liste: [nom, catégorie, rencontre 1 faite, rencontre 2 prévue, date, autoévaluation complétée]. Tous les employés sont proposés.
 function revChoix(liste, ouvrir, annee, evaluateur){
   var sel = -1, renc = 1;
-  app.innerHTML = '<div class="accueil on" id="rvacc"></div>';
+  app.innerHTML = '<div class="rvacc on" id="rvacc"></div>';
   function dessiner(){
     var ok = sel >= 0, e = ok ? liste[sel] : null, r2 = ok && e[2] && e[3], mots = ok ? e[0].trim().split(/\s+/) : [], prenom = mots.slice(0, -1).join(" ") || mots[0] || "", nom = mots.length > 1 ? mots[mots.length - 1] : "";
     var h = '<div class="haut"><img class="logo" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div style="text-align:right">Appréciation<br>de la contribution<br><span style="color:#B4AB9B">' + esc(annee) + "</span></div></div>";

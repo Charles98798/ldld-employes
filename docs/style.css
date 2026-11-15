@@ -1325,35 +1325,35 @@ select:not(.act){width:100%;box-sizing:border-box}
 }
 .rvo .nc-ch svg{max-height:190px;width:100%}
 /* Accueil de la rencontre: copie de la page web d'origine */
-.accueil{position:fixed;inset:0;background:#fff;z-index:30;font-family:Inter,'Helvetica Neue',Arial,sans-serif;font-weight:300;color:#000;animation:entre .4s}
-.accueil .haut{position:absolute;top:34px;left:44px;right:44px;display:flex;justify-content:space-between;align-items:flex-start;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;line-height:1.5}
-.accueil .logo{width:150px;height:auto;display:block;filter:invert(1)}
-.accueil .centre{position:absolute;left:44px;right:44px;top:52%;transform:translateY(-50%)}
-.accueil .nom{font-size:52px;letter-spacing:2px;text-transform:uppercase;line-height:1.05;color:#000}
-.accueil .nom span{display:block}.accueil .nom span+span{padding-left:1.9em}
-.accueil .renc{margin-top:18px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B4AB9B}
-.accueil .bas{position:absolute;left:44px;right:44px;bottom:38px;padding-top:18px;border-top:1px solid #B4AB9B;display:flex;align-items:flex-end;gap:28px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
-.accueil select{font:300 13px Inter,Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;border:0;border-bottom:1px solid #B4AB9B;background:transparent;border-radius:0;padding:4px 0;width:260px;color:#000;min-height:0;height:auto}
-.accueil select.rose{background:#fff;padding-left:6px}
-.accueil .lienR{background:none;border:0;padding:4px 0;font:300 11px Inter,Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#B4AB9B;cursor:pointer;border-bottom:1px solid transparent;border-radius:0;min-height:0;width:auto}
-.accueil .lienR.on{color:#000;border-bottom-color:#000}
-.accueil .lab{color:#B4AB9B;margin-bottom:4px}
-.accueil .go{margin-left:auto;background:#000;color:#fff;border:0;border-radius:0;padding:14px 30px;font:400 12px Inter,Arial,sans-serif;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;min-height:0;width:auto}
-.accueil .go:disabled{opacity:.3}
-.accueil .doc{position:absolute;right:44px;bottom:8px;background:none;border:0;padding:2px 0;font:300 9.5px Inter,Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#B4AB9B;cursor:pointer;min-height:0;width:auto}
+.rvacc{position:fixed;inset:0;background:#fff;z-index:30;font-family:Inter,'Helvetica Neue',Arial,sans-serif;font-weight:300;color:#000;animation:entre .4s}
+.rvacc .haut{position:absolute;top:34px;left:44px;right:44px;display:flex;justify-content:space-between;align-items:flex-start;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;line-height:1.5}
+.rvacc .logo{width:150px;height:auto;display:block;filter:invert(1)}
+.rvacc .centre{position:absolute;left:44px;right:44px;top:52%;transform:translateY(-50%)}
+.rvacc .nom{font-size:52px;letter-spacing:2px;text-transform:uppercase;line-height:1.05;color:#000}
+.rvacc .nom span{display:block}.rvacc .nom span+span{padding-left:1.9em}
+.rvacc .renc{margin-top:18px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B4AB9B}
+.rvacc .bas{position:absolute;left:44px;right:44px;bottom:38px;padding-top:18px;border-top:1px solid #B4AB9B;display:flex;align-items:flex-end;gap:28px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+.rvacc select{font:300 13px Inter,Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;border:0;border-bottom:1px solid #B4AB9B;background:transparent;border-radius:0;padding:4px 0;width:260px;color:#000;min-height:0;height:auto}
+.rvacc select.rose{background:#fff;padding-left:6px}
+.rvacc .lienR{background:none;border:0;padding:4px 0;font:300 11px Inter,Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#B4AB9B;cursor:pointer;border-bottom:1px solid transparent;border-radius:0;min-height:0;width:auto}
+.rvacc .lienR.on{color:#000;border-bottom-color:#000}
+.rvacc .lab{color:#B4AB9B;margin-bottom:4px}
+.rvacc .go{margin-left:auto;background:#000;color:#fff;border:0;border-radius:0;padding:14px 30px;font:400 12px Inter,Arial,sans-serif;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;min-height:0;width:auto}
+.rvacc .go:disabled{opacity:.3}
+.rvacc .doc{position:absolute;right:44px;bottom:8px;background:none;border:0;padding:2px 0;font:300 9.5px Inter,Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#B4AB9B;cursor:pointer;min-height:0;width:auto}
 @media (max-width:999px){
-.accueil .haut{top:calc(max(env(safe-area-inset-top,0px),47px) + 8px);left:20px;right:20px}
-.accueil .logo{width:110px}
-.accueil .centre{left:20px;right:20px}.accueil .nom{font-size:34px}
-.accueil .bas{left:20px;right:20px;bottom:calc(30px + env(safe-area-inset-bottom,0px));flex-wrap:wrap;gap:16px}
-.accueil select{width:100%;font-size:15px;padding:8px 0}.accueil .bas>div:first-child{width:100%}
-.accueil .go{width:100%;margin-left:0;padding:16px}
-.accueil .lienR{font-size:13px;padding:8px 4px}
-.accueil .doc{right:20px;bottom:calc(8px + env(safe-area-inset-bottom,0px))}}
-.accueil select{background-color:transparent!important}.accueil select.rose{background-color:#fff!important}
+.rvacc .haut{top:calc(max(env(safe-area-inset-top,0px),47px) + 8px);left:20px;right:20px}
+.rvacc .logo{width:110px}
+.rvacc .centre{left:20px;right:20px}.rvacc .nom{font-size:34px}
+.rvacc .bas{left:20px;right:20px;bottom:calc(30px + env(safe-area-inset-bottom,0px));flex-wrap:wrap;gap:16px}
+.rvacc select{width:100%;font-size:15px;padding:8px 0}.rvacc .bas>div:first-child{width:100%}
+.rvacc .go{width:100%;margin-left:0;padding:16px}
+.rvacc .lienR{font-size:13px;padding:8px 4px}
+.rvacc .doc{right:20px;bottom:calc(8px + env(safe-area-inset-bottom,0px))}}
+.rvacc select{background-color:transparent!important}.rvacc select.rose{background-color:#fff!important}
 
 /* Champs obligatoires (15 nov 2026): vide = fond blanc + soulignement vert 3 px, invite grise; rempli = se fond dans l'ensemble (pas de boîte blanche, filet 1 px #B4AB9B, texte noir). Plus de rose. */
 .bx:not(select),.ms,.tl input,.ech .echc input,.ea .fld input{background:transparent;border:1px solid #B4AB9B;color:var(--encre)}
-.bx.rose,.ms.rose,.tl .rose,.ech .echc input.vide,.ea .fld input.vide,select.rose,select:not(.act).rose,.accueil select.rose,.revt.rose,.rvo .revt.rose,.rvo .rose input,.rvo .rose-c,.rvo .rosef,.ppx #pp_app.sansemp #liste,.ppx .decision select:not(.act),.po .pofx b.manque,.ppx .fx b.manque,.revn.rose .revb:not(.on),.rvo .revn.rose .revb:not(.on),.rvo .puces.rose .puce:not(.choisie){background:#fff!important;color:var(--encre);box-shadow:inset 0 -3px 0 var(--vert)!important;border-color:#B4AB9B}
+.bx.rose,.ms.rose,.tl .rose,.ech .echc input.vide,.ea .fld input.vide,select.rose,select:not(.act).rose,.rvacc select.rose,.revt.rose,.rvo .revt.rose,.rvo .rose input,.rvo .rose-c,.rvo .rosef,.ppx #pp_app.sansemp #liste,.ppx .decision select:not(.act),.po .pofx b.manque,.ppx .fx b.manque,.revn.rose .revb:not(.on),.rvo .revn.rose .revb:not(.on),.rvo .puces.rose .puce:not(.choisie){background:#fff!important;color:var(--encre);box-shadow:inset 0 -3px 0 var(--vert)!important;border-color:#B4AB9B}
 .bx.rose::placeholder,.pe .bx.rose::placeholder,.rvo .rose input::placeholder,.tl .rose::placeholder{color:#8b8579;opacity:1}
 .aere{background:transparent;box-shadow:inset 0 -3px 0 var(--vert)}.aere.ok{box-shadow:none}
