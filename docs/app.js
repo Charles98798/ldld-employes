@@ -2786,7 +2786,10 @@ function rencontre(){
     function pastilles(id, liste, cle, valeur){
       return '<div class="chx" id="'+id+'">'+liste.map(function(x){ var v = valeur(x), t = typeof x === "string" ? x : x.nom; return '<button type="button" data-v="'+esc(v)+'" aria-pressed="'+(choix[cle] === v ? "true" : "false")+'">'+esc(t)+'</button>'; }).join("")+'</div>';
     }
-    el.innerHTML = '<div class="etiq">▪ AVEC QUI</div>'+pastilles("pr", r.responsables, "resp", function(x){ return x.c; })+
+    var avecRole = r.responsables.every(function(x){ return x.role; });   // le Service donne le rôle: deux listes (Gestionnaires, Direction); sans rôle, anciens boutons
+    function listeRole(id, titre, gens){ return gens.length ? '<select class="champ" id="'+id+'" style="flex:1;min-width:0"><option value="">'+titre+'</option>'+gens.map(function(x){ return '<option value="'+esc(x.c)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' : ""; }
+    var qui = avecRole ? '<div style="display:flex;gap:12px">'+listeRole("pg", "Gestionnaires", r.responsables.filter(function(x){ return x.role !== "direction"; }))+listeRole("pd", "Direction", r.responsables.filter(function(x){ return x.role === "direction"; }))+'</div>' : pastilles("pr", r.responsables, "resp", function(x){ return x.c; });
+    el.innerHTML = '<div class="etiq">▪ AVEC QUI</div>'+qui+
       '<div class="etiq">▪ SUJET</div>'+pastilles("ps", r.sujets, "sujet", function(x){ return x; })+
       '<div class="etiq">▪ MESSAGE (FACULTATIF)</div><textarea class="champ zone" id="rt" maxlength="1000" placeholder="Quelques mots…"></textarea>'+
       '<button class="bouton" id="renv">Envoyer</button><div class="bandeau" id="retat" style="display:none"></div>';
@@ -2795,6 +2798,7 @@ function rencontre(){
       Array.prototype.forEach.call(bs, function(b){ b.onclick = function(){ choix[cle] = b.getAttribute("data-v"); Array.prototype.forEach.call(bs, function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); }); }; });
     }
     lier("pr", "resp"); lier("ps", "sujet");
+    if(avecRole){ var sg = document.getElementById("pg"), sd = document.getElementById("pd"); [[sg, sd], [sd, sg]].forEach(function(p){ if(p[0]) p[0].onchange = function(){ choix.resp = p[0].value; if(p[1]) p[1].value = ""; }; }); }
     var etat = document.getElementById("retat");
     function dire(t){ etat.style.display = "block"; etat.textContent = t; }
     document.getElementById("renv").onclick = function(){
