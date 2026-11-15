@@ -74,6 +74,7 @@ function perLier(pre, fn, cur){
     fn(v === "~" ? p : v ? v : "A");
   }; });
 }
+var FIN_NONACHAT = /atlantis|charles desjardins|elise desjardins|ville de laval|hydro|empire vie|menagez|digitad|vw credit|porsche|vantyx|cpa|amerix|paysagiste|montrealsoft|videotron|bell canada|google|intuit|telus|docusign|energir|saaq|notaire|fcei|caisse desjardins|studio harrison|lima charlie|poste/i;
 function finRendu(){
   var ms = finMois(FIN_PERIODE), h = "";
   var der = ms.length ? ms[ms.length-1] : null;
@@ -87,7 +88,8 @@ function finRendu(){
       if(l.n === "Achat" && FIN_R && FIN_R.achatsFourn && FIN_R.achatsFourn.top && FIN_R.achatsFourn.top.length){
         var af = FIN_R.achatsFourn;
         h += '<a class="fglnk" href="#" data-k="achat">Voir les plus gros fournisseurs</a><div class="fgtop" id="fgtop_achat" hidden>';
-        var lst = (FIN_ORIGINE === "conseil") ? af.top.filter(function(x){ return !/atlantis|charles/i.test(String(x[0])); }).slice(0, 15) : af.top;
+        var lst = af.top.filter(function(x){ return !FIN_NONACHAT.test(String(x[0]).normalize("NFD").replace(/[\u0300-\u036f]/g, "")); }).slice(0, 15), totAch = 0;
+        FIN_S.achat.forEach(function(v){ totAch += v || 0; }); if(totAch > 0) af = {total: totAch, top: af.top};
         lst.forEach(function(x, i){ h += '<div class="fgtl fgtl3"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (af.total ? finPct(x[1] / af.total * 100) : "") + '</span></div>'; });
         h += '</div>';
       }
