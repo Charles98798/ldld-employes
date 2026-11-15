@@ -16,6 +16,7 @@ var PICTOS = {
  "Mon profil": "M8 2h8v8h-8zM4 12h16v10h-16z",
  "Nouveau message": "M2 3h20v3h-20zM2 6h3v9h-3zM19 6h3v9h-3zM2 15h20v3h-20zM5 18h4v4h-4zM8 8h8v2h-8zM8 11h5v2h-5z",
  "Contacts": "M7 1h10v22h-10zM9 4h6v13h-6zM10.5 19h3v2h-3z",
+ "Notre équipe": "M7 1h10v22h-10zM9 4h6v13h-6zM10.5 19h3v2h-3z",
  "Messages envoyés": "M4 4h18v3h-18zM4 7h3v9h-3zM19 7h3v9h-3zM4 16h18v3h-18zM7 7h3v3h-3zM10 10h3v3h-3zM13 10h3v3h-3zM16 7h3v3h-3zM0 5h3v3h-3zM0 10h3v3h-3zM0 15h3v3h-3z",
  "Rencontres demandées": "M9 5h6v6h-6zM7 12h10v10h-10zM18 2h3v10h-3z",
  "Entretien machinerie": "M9 2h4v10h-4zM4 12h14v4h-14zM4 17h3v5h-3zM8 17h3v5h-3zM12 17h3v5h-3zM16 17h2v5h-2z",
@@ -591,7 +592,7 @@ var ENT = [
  {id:"autoevaluation", g:"Évaluation", v:1, h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,0,0], i:2, f:function(){ aeEntree(); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
- {id:"contacts", g:"Équipe", l:"Contact", p:"Contacts", d:[0,1,1], f:function(){ contactsResp(); }},
+ {id:"contacts", g:"Équipe", l:"Notre équipe", p:"Notre équipe", d:[0,1,1], f:function(){ contactsResp(); }},
  {id:"messages_envoyes", s:1, g:"Équipe", l:"Historique message", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
  {id:"reunion_production", g:"Équipe", l:"Réunion production", p:"Réunion production", d:[1,1,1], f:function(){ rencontreDept(); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
@@ -1289,7 +1290,7 @@ function prefsNotifs(){
   appelService({action:"prefs_lire", session:sessionGardee()}).then(function(r){ if(r && r.ok && r.prefs && document.getElementById("prefs")){ etat = r.prefs; dessiner(); } }).catch(function(){});
 }
 // Page Responsable (responsables et direction seulement; le service refuse les autres) : Contacts cliquables (appel, texto, courriel).
-var PICTO_RESP = {rn:"Nouveau message", rsc:"Suivi de charge", rc:"Contacts", rs:"Stationnement", rk:"Casier", rme:"Messages envoyés", rrd:"Rencontres demandées", re:"Entretien machinerie", rpo:"Portrait d’un employé", rpe:"Positionnement", rpm:"Positionnement", rec:"Échelle salariale", rcf:"Conseil d'administration", rfi:"Finances", rem:"Employés", rea:"Employé actuel", rut:"Utilisation"};
+var PICTO_RESP = {rn:"Nouveau message", rsc:"Suivi de charge", rc:"Notre équipe", rs:"Stationnement", rk:"Casier", rme:"Messages envoyés", rrd:"Rencontres demandées", re:"Entretien machinerie", rpo:"Portrait d’un employé", rpe:"Positionnement", rpm:"Positionnement", rec:"Échelle salariale", rcf:"Conseil d'administration", rfi:"Finances", rem:"Employés", rea:"Employé actuel", rut:"Utilisation"};
 function iconesResp(){
   Object.keys(PICTO_RESP).forEach(function(id){
     var a = document.getElementById(id), sp = a && a.querySelector("span"); if(!sp) return;
@@ -2663,7 +2664,7 @@ function portrait(id){
 }
 function chiffresTel(t){ var d = String(t || "").replace(/\D/g, ""); return d.length === 10 ? "+1"+d : (d.length === 11 && d[0] === "1" ? "+"+d : d); }
 function contactsResp(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contact</h1><input class="champ" id="cq" placeholder="Rechercher" autocomplete="off"><div class="ctl" id="ctl"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Notre équipe</h1><input class="champ" id="cq" placeholder="Rechercher" autocomplete="off"><div class="ctl" id="ctl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var liste = [];
   function dessiner(){
