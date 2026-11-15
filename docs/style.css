@@ -1168,3 +1168,18 @@ select:not(.act){width:100%;box-sizing:border-box}
 @media (max-width:999px){.revw{padding-bottom:70px}.revnav{position:fixed;left:0;right:0;bottom:0;margin:0;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:#CFCDC6;z-index:5}}
 @media (min-width:1000px){.revg>.sp2{grid-column:span 2}.revdeux{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;align-items:start}}
 .revbn{background:#1D1D1B;color:#EDEBE4;font-size:12px;padding:9px 11px;margin:0 0 10px}
+/* Clé annuelle (Direction): cartes sobres, boutons 46 px #B7B1A5, retrait en rouge brique; grand écran sur deux colonnes, téléphone empilé. */
+.ca .carte{background:rgba(255,255,255,.28);padding:16px 18px;margin:0 0 12px}
+.ca .etq{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#8D806A;margin:0 0 6px}
+.ca .gros{font-size:22px;font-weight:500;margin:0}
+.ca .aide{font-size:13px;color:#8D806A;margin:6px 0 0}
+.ca .btn{display:block;width:100%;min-height:46px;border:0;background:#B7B1A5;color:#1D1D1B;font:500 14px Archivo,sans-serif;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-top:12px}
+.ca .btn.sup{background:#a33a2b;color:#fff}.ca .btn[disabled]{opacity:.45;cursor:default}
+.ca .ligne{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-top:1px solid #b4b1a9}.ca .ligne:first-of-type{border-top:0}
+.ca .pt{flex:none;width:22px;height:22px;border:2px solid #8D806A;display:flex;align-items:center;justify-content:center;font-size:13px}
+.ca .ok .pt{background:#8EFF60;border-color:#1D1D1B;color:#1D1D1B}.ca .en .pt{border-color:#1D1D1B}
+.ca .cadre{outline:2px solid #1D1D1B;outline-offset:-2px}.ca .alerte{outline:2px solid #a33a2b;outline-offset:-2px}
+.ca .champ{display:block;width:100%;box-sizing:border-box;min-height:46px;border:1px solid #b4b1a9;background:transparent;color:inherit;font:500 18px Archivo,sans-serif;letter-spacing:.2em;text-align:center;margin-top:8px}
+.ca .pret{margin:0;font-size:14px;background:rgba(0,0,0,.06);padding:10px 12px;user-select:text;-webkit-user-select:text}
+.ca #ca{display:grid;gap:0 12px;grid-template-columns:1fr}
+@media (min-width:900px){.ca #ca{grid-template-columns:1fr 1fr;align-items:start}}
