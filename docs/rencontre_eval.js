@@ -98,7 +98,7 @@ function revOuvrir(D, acces){
       return '<p class="note">' + esc(g("A7")) + '</p><div class="carte"><div class="grand">' + esc(D.employe || "—") + "</div><div>Rencontre " + esc(D.rencontre) + " · Année " + esc(D.annee) + (D.categorie ? " · " + esc(D.categorie) : "") + '</div><div class="petit">' + esc(g("A33")) + "</div></div>" +
         '<p class="note">Pour changer d’employé ou de rencontre, choisissez-le dans la feuille (cases B4 et D8), attendez le chargement, puis rouvrez la rencontre.</p>' +
         '<div class="deux"><div><div class="bloc-lab">Date de la rencontre</div>' + date("B6", true) + '</div><div><div class="bloc-lab">Évaluateur</div><div class="ev">' + esc(D.evaluateur || "—") + "</div></div></div>" +
-        '<p class="note" style="margin-top:12px">Cliquez sur une note pour l’enregistrer. Une case rose reste à remplir. Le contour noir montre la note que l’employé s’est donnée.</p>';
+        '<p class="note" style="margin-top:12px">Cliquez sur une note pour l’enregistrer. Une case soulignée en vert reste à remplir. Le contour noir montre la note que l’employé s’est donnée.</p>';
     },
     2: function(){
       var kPond = (Number(r("B30")) * 100) / 20, T = g("D30").split(/\n/).map(function(x){ return x.trim(); }).filter(Boolean), L = [], ok = false;

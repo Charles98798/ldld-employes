@@ -113,7 +113,7 @@ function portraitOriginal(idDepart){
     if(D.gestion.absent) inf = D.gestion.erreur || "Les chiffres arriveront avec l’export quotidien de Gestion LDLD."; else if(!g) inf = "Aucune donnée dans Gestion LDLD pour cet employé.";
     else { inf = (g.du && g.au ? "Période exportée par Gestion LDLD : du "+jour(g.du)+" au "+jour(g.au) : "Gestion LDLD.");
       if(g.du && g.au){ var d1 = new Date(g.du.slice(0, 10) + "T12:00:00"), d2 = new Date(g.au.slice(0, 10) + "T12:00:00"); if(!g.ok && (Math.abs(d1 - pa[0]) > 3 * 864e5 || Math.abs(d2 - pa[1]) > 3 * 864e5)) al = "La période exportée ne suit pas la règle des 6 mois moins 2 semaines : les chiffres ci-dessus sont à vérifier avec Gestion LDLD."; } }
-    $("poChargeInfo").innerHTML = "▪ " + esc(regle) + (inf ? "<br>▪ " + esc(inf) : "") + (al ? '<br><span style="background:#f4b3c4;padding:2px 6px;color:#000000">'+esc(al)+'</span>' : "");
+    $("poChargeInfo").innerHTML = "▪ " + esc(regle) + (inf ? "<br>▪ " + esc(inf) : "") + (al ? '<br><span style="background:#fff;padding:2px 6px;color:#000000">'+esc(al)+'</span>' : "");
     if(/^(administratif|gestionnaire|expert)/i.test(e.cat || "")){ $("poCharge").innerHTML = '<div class="poinfo">Pas de tableau de bord pour ce poste.</div>'; $("poChargeInfo").innerHTML = ""; }
     var p = e.paroles || {};
     function ligne(t, v){ return '<div><span class="pok">'+t+'</span><span class="t'+(v ? "" : " vide")+'">'+(v ? "« "+esc(v)+" »" : "—")+'</span></div>'; }
