@@ -172,8 +172,8 @@ function fgGraphique(type){
       s += '<rect x="'+(xb-wb-.5)+'" y="'+Math.min(y0,y1)+'" width="'+wb+'" height="'+Math.abs(y1-y0)+'" fill="#000000"/>';
       if(hm > 1) s += '<rect x="'+(xb+1)+'" y="'+(y0-hm+.75)+'" width="'+(wb-1.5)+'" height="'+(hm-1.5)+'" fill="none" stroke="#000000" stroke-width="1.5"/>';
       s += '<text x="'+xb+'" y="'+(bs+hb+16)+'" text-anchor="middle">'+FG_MM[p[0]+i]+'</text>'; }
-    var zb = bn-1, cartesB = '<div class="fgcards"><div><small>EN BANQUE</small><b>'+finMontant(bq[zb]*1000)+'</b></div><div class="g"><small>MARGE UTILISÉE</small><b>'+finMontant(mg[zb]*1000)+'</b></div><div><small>MARGE DISPONIBLE</small><b>— $</b></div></div>';
-    return cartesB + '<svg class="finsvg" viewBox="0 0 '+W+' '+(bs+hb+24)+'">'+s+'</svg><div class="finnote">Plein : solde en banque · Vide : marge de crédit utilisée<br>La marge disponible s\'affichera dès que la limite de la marge sera connue</div>';
+    var zb = bn-1, cartesB = '<div class="fgcards"><div><small>EN BANQUE</small><b>'+finMontant(bq[zb]*1000)+'</b></div><div class="g"><small>MARGE UTILISÉE</small><b>'+finMontant(mg[zb]*1000)+'</b></div><div><small>MARGE DISPONIBLE</small><b>'+finMontant(Math.max(0, 500000 - mg[zb]*1000))+'</b></div></div>';
+    return cartesB + '<svg class="finsvg" viewBox="0 0 '+W+' '+(bs+hb+24)+'">'+s+'</svg><div class="finnote">Plein : solde en banque · Vide : marge de crédit utilisée<br>Marge disponible : limite de 500 000 $ moins la marge utilisée</div>';
   }
   if(type === "tres"){
     var cn = p[1]-p[0]+1, sol = (R.tresorerie || []).slice(p[0], p[1]+1).map(function(v){ return v/1000; }), fl = (R.flux || []).slice(p[0], p[1]+1).map(function(v){ return v/1000; });
