@@ -1361,3 +1361,6 @@ select:not(.act){width:100%;box-sizing:border-box}
 /* Connexion: TEAM + trait vert + EMPLOYÉS LDLD (15 nov, choix A) */
 .pied-connexion .trait{display:block;width:50%;height:4px;background:var(--vert);margin:12px 0 0}
 .pied-connexion .emp{letter-spacing:.45em;font-size:13px;margin-top:14px}
+/* Connexion: hauteur stable. 100vh sur iPhone = fenêtre avec barre Safari réduite; barre ouverte, le bloc du bas descendait sous l'écran. svh = fenêtre avec la barre ouverte (toujours visible), dvh en priorité si connu. */
+@supports (height:100svh){.connexion{min-height:100svh}}
+@media (min-width:900px){.connexion{min-height:100vh}@supports (height:100svh){.connexion{min-height:100svh}}}
