@@ -279,9 +279,8 @@ notes:{C26:{em:7},C27:{em:8},C28:{em:8},E38:{em:9},E39:{em:7},E40:{em:8},E41:{em
 nc:{ok:true,mois:[2,1,0,3,1,2,1,0,2,1,0,2].map((n,i)=>({label:"JFMAMJJASOND"[i],n})),n6:6,n12:15,typeTop:"Retouche",detail:[{d:"3 nov.",cat:"Acrylique",dos:"D-4521",type:"Retouche",com:"Teinte"},{d:"20 oct.",cat:"Acrylique",dos:"D-4488",type:"Retouche",com:""}]}};
 // Écran de départ: page d'accueil de la page web d'origine (rAccueil), reproduite à l'identique.
 var REV_EMPLOYES = [["Camille Roy","Acrylique",true,true,"17 nov. 2026",true],["Julien Tremblay","Céramique",false,true,"24 nov. 2026",true],["Sophie Gagnon","Finition",true,false,"2 déc. 2026",true],["Marc Lavoie","Modélisation",false,true,"—",false],["Isabelle Côté","Administratif",false,false,"9 déc. 2026",false],["Nadia Bergeron","Acrylique",true,true,"15 déc. 2026",true]];
-// liste: [nom, catégorie, rencontre 1 faite, rencontre 2 prévue, date, autoévaluation complétée]; seuls les employés dont l'autoévaluation est complétée sont proposés.
+// liste: [nom, catégorie, rencontre 1 faite, rencontre 2 prévue, date, autoévaluation complétée]. Tous les employés sont proposés.
 function revChoix(liste, ouvrir, annee, evaluateur){
-  liste = liste.filter(function(e){ return e[5]; });
   var sel = -1, renc = 1;
   app.innerHTML = '<div class="accueil on" id="rvacc"></div>';
   function dessiner(){
