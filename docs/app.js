@@ -2899,6 +2899,7 @@ function vueEmploye(i){
     if(ancien && !VUE_ANCIEN_FIXE) appelBrut({action:"sortie", session:ancien}).catch(function(){});
     VUE = {on:true, fixe:!!r.fixe, reel:reelle, session:r.session, nom:r.nom || "", relancer:function(){ vueEmploye(i); }};
     VUE_DERNIER = r.nom || "";
+    try { copiePreparer({session: r.session}).catch(function(){}); } catch(e){}   // accès à la copie de cette session préparé dès l'ouverture (jeton + interrupteur), pour que la première lecture ne retombe pas sur Google
     sectionBase(i);
     // Garde-fou: si la page est encore sur « Un instant » après 12 s, on repart à neuf une seule fois (session gardée, mémoire des lectures et file d'appels remises à zéro).
     (function(n){ setTimeout(function(){ var pg = app.querySelector(".page"); if(!VUE.on || !pg || !pg.querySelector(".att")){ vueEmploye.g = 0; return; } if(vueEmploye.g >= 1) return; vueEmploye.g = (vueEmploye.g || 0) + 1; RCACHE = {}; RC_GEN++; COPIE_PAR = {}; try { APPELS_EN_COURS = 0; FILE_APPELS = []; EN_VOL = []; } catch(e){} VUE_PRE = null; vueEmploye(i); }, 12000); })((vueEmploye.n = (vueEmploye.n || 0) + 1));
