@@ -592,7 +592,6 @@ var ENT = [
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
  {id:"contacts", g:"Équipe", l:"Contact", p:"Contacts", d:[0,1,1], f:function(){ contactsResp(); }},
- {id:"nouveau_message", g:"Équipe", l:"Créer un événement", p:"Nouveau message", d:[0,1,1], f:function(){ nouveau("message"); }},
  {id:"messages_envoyes", s:1, g:"Équipe", l:"Historique message", p:"Messages envoyés", d:[0,1,1], f:function(){ messages("envoyes"); }},
  {id:"reunion_production", g:"Équipe", l:"Réunion production", p:"Réunion production", d:[1,1,1], f:function(){ rencontreDept(); }},
  {id:"rencontres_demandees", g:"Équipe", l:"Rencontre demandée", p:"Rencontres demandées", d:[0,1,1], f:function(){ messages("rencontres"); }},
@@ -726,9 +725,10 @@ function messages(filtre){
   NEUFS_VISITE = {};
   var fusion = !FILTRE_MSG;   // même page « Calendrier et messages » pour tous, y compris la vue employé de la Direction (astérisque)
   var titreMsg = fusion ? "Calendrier et messages" : FILTRE_MSG === "envoyes" ? "Historique message" : FILTRE_MSG === "rencontres" ? "Rencontre demandée" : "Message reçu";
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div>' + (peutEcrire() && !VUE.on ? '<button type="button" class="bouton" id="ecrire" style="height:46px;padding:0;margin:0 0 14px;font-weight:700">Écrire aux employés</button>' : '') + '<div id="neufsb"></div><div id="aven"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '' : '') + '<div id="liste"></div>' +
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titreMsg+'</h1>' + (fusion ? '<div id="afaire"></div>' + (peutEcrire() && !VUE.on ? '<div style="display:flex;gap:8px;margin:0 0 14px"><button type="button" class="bouton" id="ecrire" style="height:46px;padding:0 4px;margin:0;flex:1;min-width:0;font-weight:700">Écrire aux employés</button><button type="button" class="bouton" id="creerev" style="height:46px;padding:0 4px;margin:0;flex:1;min-width:0;font-weight:700">Créer un événement</button></div>' : '') + '<div id="neufsb"></div><div id="aven"></div>' + (peutEcrire() && !VUE.on ? '<a class="rang" href="#" id="grille">▪ Voir la grille de la semaine · Semaine | Mois</a>' : '') + '' : '') + '<div id="liste"></div>' +
     '</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(FILTRE_MSG === "recus"){ messages(""); } else if(FILTRE_MSG){ FILTRE_MSG = ""; responsable(); } else menu(); };
+  var ce = document.getElementById("creerev"); if(ce) ce.onclick = function(e){ e.preventDefault(); nouveau("reunion"); };
   var w = document.getElementById("ecrire"); if(w) w.onclick = function(e){ e.preventDefault(); nouveau("message"); };
   var gr = document.getElementById("grille"); if(gr) gr.onclick = function(e){ e.preventDefault(); nouveau("message"); };
   
