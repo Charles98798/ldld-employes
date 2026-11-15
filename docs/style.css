@@ -1324,15 +1324,30 @@ select:not(.act){width:100%;box-sizing:border-box}
 .rvo .xpp{text-align:left}
 }
 .rvo .nc-ch svg{max-height:190px;width:100%}
-.rvch h2{font-size:15px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;margin:4px 0 10px}
-.rvch .rvcols{display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
-.rvch .rvq{width:100%;box-sizing:border-box;font:inherit;font-size:14px;padding:9px 10px;border:0;border-bottom:1px solid #d8d3ca;background:#f6f3ee;border-radius:0;color:#000}
-.rvch .rvlst{margin-top:8px;max-height:430px;overflow:auto}
-.rvch .rvem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 8px;border-bottom:1px solid #ece8e1;font-size:14px;cursor:pointer;min-height:46px}
-.rvch .rvem small{display:block;font-size:11px;color:#8f877a;letter-spacing:.5px}
-.rvch .rvem.on{background:#000;color:#fff}.rvch .rvem.on small{color:#b4ab9b}
-.rvch .rvpt{font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border:1px solid #000;white-space:nowrap}.rvch .rvem.on .rvpt{border-color:#fff}
-.rvch .rvpt.ok{background:#3BEC65;border-color:#3BEC65;color:#000}
-.rvch .rvgo{display:block;width:100%;margin-top:14px;padding:12px 10px}
-.rvch .deux .rvb{padding:12px 10px}
-@media (max-width:999px){.rvch .rvcols{grid-template-columns:1fr}.rvch .rvlst{max-height:300px}}
+/* Accueil de la rencontre: copie de la page web d'origine */
+.accueil{position:fixed;inset:0;background:#fff;z-index:30;font-family:Inter,'Helvetica Neue',Arial,sans-serif;font-weight:300;color:#000;animation:entre .4s}
+.accueil .haut{position:absolute;top:34px;left:44px;right:44px;display:flex;justify-content:space-between;align-items:flex-start;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;line-height:1.5}
+.accueil .logo{width:150px;height:auto;display:block;filter:invert(1)}
+.accueil .centre{position:absolute;left:44px;right:44px;top:52%;transform:translateY(-50%)}
+.accueil .nom{font-size:52px;letter-spacing:2px;text-transform:uppercase;line-height:1.05;color:#000}
+.accueil .nom span{display:block}.accueil .nom span+span{padding-left:1.9em}
+.accueil .renc{margin-top:18px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#B4AB9B}
+.accueil .bas{position:absolute;left:44px;right:44px;bottom:38px;padding-top:18px;border-top:1px solid #B4AB9B;display:flex;align-items:flex-end;gap:28px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+.accueil select{font:300 13px Inter,Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;border:0;border-bottom:1px solid #B4AB9B;background:transparent;border-radius:0;padding:4px 0;width:260px;color:#000;min-height:0;height:auto}
+.accueil select.rose{background:#f4b3c4;padding-left:6px}
+.accueil .lienR{background:none;border:0;padding:4px 0;font:300 11px Inter,Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#B4AB9B;cursor:pointer;border-bottom:1px solid transparent;border-radius:0;min-height:0;width:auto}
+.accueil .lienR.on{color:#000;border-bottom-color:#000}
+.accueil .lab{color:#B4AB9B;margin-bottom:4px}
+.accueil .go{margin-left:auto;background:#000;color:#fff;border:0;border-radius:0;padding:14px 30px;font:400 12px Inter,Arial,sans-serif;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;min-height:0;width:auto}
+.accueil .go:disabled{opacity:.3}
+.accueil .doc{position:absolute;right:44px;bottom:8px;background:none;border:0;padding:2px 0;font:300 9.5px Inter,Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#B4AB9B;cursor:pointer;min-height:0;width:auto}
+@media (max-width:999px){
+.accueil .haut{top:calc(max(env(safe-area-inset-top,0px),47px) + 8px);left:20px;right:20px}
+.accueil .logo{width:110px}
+.accueil .centre{left:20px;right:20px}.accueil .nom{font-size:34px}
+.accueil .bas{left:20px;right:20px;bottom:calc(30px + env(safe-area-inset-bottom,0px));flex-wrap:wrap;gap:16px}
+.accueil select{width:100%;font-size:15px;padding:8px 0}.accueil .bas>div:first-child{width:100%}
+.accueil .go{width:100%;margin-left:0;padding:16px}
+.accueil .lienR{font-size:13px;padding:8px 4px}
+.accueil .doc{right:20px;bottom:calc(8px + env(safe-area-inset-bottom,0px))}}
+.accueil select{background-color:transparent!important}.accueil select.rose{background-color:#f4b3c4!important}

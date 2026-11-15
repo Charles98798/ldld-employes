@@ -277,36 +277,31 @@ A100:"Préparer la rencontre",A101:"Ce dont je suis le plus fier",A104:"Ce que j
 r:{B6:"2026-11-17",B26:.3,B27:.3,B28:.4,B29:.2,B30:.2,C30:13,C26:8,C27:7,C28:8,C29:.85,E38:9,E39:8,E40:8,E41:9,E42:9,D26:"Très bonne maîtrise des étapes de finition.",D27:"Demande de l’aide au bon moment.",E59:"39",E60:"88",E61:"7",C56:"du 1 mai 2026 au 31 oct. 2026",A76:"Très motivé.",E71:"Formation coloration",E93:5,E94:4,E95:3,E96:5,E97:5,E98:4,A102:"La finition des pièces.",A105:"Plus de formation."},
 notes:{C26:{em:7},C27:{em:8},C28:{em:8},E38:{em:9},E39:{em:7},E40:{em:8},E41:{em:9},E42:{em:9}},rythme:["Augmentation","","Maintien","Maintien"],gx:{ok:true,ch:40,semaines:24,dCE:"88 · 90 · 85 · 86 · 92 · 87",dCN:"7 · 6 · 8 · 5 · 9 · 7",dObj:"80 · 78 · 82 · 75 · 79 · 76"},
 nc:{ok:true,mois:[2,1,0,3,1,2,1,0,2,1,0,2].map((n,i)=>({label:"JFMAMJJASOND"[i],n})),n6:6,n12:15,typeTop:"Retouche",detail:[{d:"3 nov.",cat:"Acrylique",dos:"D-4521",type:"Retouche",com:"Teinte"},{d:"20 oct.",cat:"Acrylique",dos:"D-4488",type:"Retouche",com:""}]}};
-// Écran de départ: choix de l'employé puis de la rencontre (même parcours que la page d'origine, mode SALAIRE).
-var REV_EMPLOYES = [["Camille Roy","Acrylique",true,true,"17 nov. 2026"],["Julien Tremblay","Céramique",false,true,"24 nov. 2026"],["Sophie Gagnon","Finition",true,false,"2 déc. 2026"],["Marc Lavoie","Modélisation",false,true,"—"],["Isabelle Côté","Administratif",false,false,"9 déc. 2026"],["Nadia Bergeron","Acrylique",true,true,"15 déc. 2026"]];
-// liste: [nom, catégorie, rencontre 1 faite, rencontre 2 prévue, date]; ouvrir(nom, rencontre) charge la rencontre choisie.
-function revChoix(liste, ouvrir, avis){
-  var sel = 0, renc = 1;
-  app.innerHTML = '<div class="page sans-instant rvpage"><a class="retour" href="#" id="rcret">Retour</a><h1>Rencontre d’évaluation</h1><div class="rvo rvch"><h2>Choisir la rencontre</h2>' + (avis ? '<p class="note">' + esc(avis) + "</p>" : "") + '<div class="rvcols"><div><div class="bloc-lab">Employé</div><input type="text" id="rcq" class="rvq" placeholder="Rechercher un nom" autocomplete="off"><div class="rvlst" id="rcl"></div></div><div id="rcd"></div></div></div></div>';
-  document.getElementById("rcret").onclick = function(e){ e.preventDefault(); menu(); };
-  function lst(){
-    var q = document.getElementById("rcq").value.toLowerCase(), h = "";
-    liste.forEach(function(e, i){ if(e[0].toLowerCase().indexOf(q) < 0) return; h += '<div class="rvem' + (i === sel ? " on" : "") + '" data-i="' + i + '"><div>' + esc(e[0]) + "<small>" + esc(e[1]) + '</small></div><span class="rvpt' + (e[2] ? " ok" : "") + '">' + (e[2] ? "Rencontre 1 faite" : "Rencontre 1 à faire") + "</span></div>"; });
-    document.getElementById("rcl").innerHTML = h || '<div class="vide">Aucun employé trouvé.</div>';
+// Écran de départ: page d'accueil de la page web d'origine (rAccueil), reproduite à l'identique.
+var REV_EMPLOYES = [["Camille Roy","Acrylique",true,true,"17 nov. 2026",true],["Julien Tremblay","Céramique",false,true,"24 nov. 2026",true],["Sophie Gagnon","Finition",true,false,"2 déc. 2026",true],["Marc Lavoie","Modélisation",false,true,"—",false],["Isabelle Côté","Administratif",false,false,"9 déc. 2026",false],["Nadia Bergeron","Acrylique",true,true,"15 déc. 2026",true]];
+// liste: [nom, catégorie, rencontre 1 faite, rencontre 2 prévue, date, autoévaluation complétée]; seuls les employés dont l'autoévaluation est complétée sont proposés.
+function revChoix(liste, ouvrir, annee, evaluateur){
+  liste = liste.filter(function(e){ return e[5]; });
+  var sel = -1, renc = 1;
+  app.innerHTML = '<div class="accueil on" id="rvacc"></div>';
+  function dessiner(){
+    var ok = sel >= 0, e = ok ? liste[sel] : null, r2 = ok && e[2] && e[3], mots = ok ? e[0].trim().split(/\s+/) : [], prenom = mots.slice(0, -1).join(" ") || mots[0] || "", nom = mots.length > 1 ? mots[mots.length - 1] : "";
+    var h = '<div class="haut"><img class="logo" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div style="text-align:right">Appréciation<br>de la contribution<br><span style="color:#B4AB9B">' + esc(annee) + "</span></div></div>";
+    if(ok) h += '<div class="centre"><div class="nom"><span>' + esc(prenom) + "</span><span>" + esc(nom) + '</span></div><div class="renc">Rencontre ' + renc + (evaluateur ? " — " + esc(evaluateur) : "") + "</div></div>";
+    h += '<div class="bas"><div><div class="lab">Employé</div><select id="accEmp"' + (ok ? "" : ' class="rose"') + '><option value="" disabled' + (ok ? "" : " selected") + ">Choisir un employé</option>" + liste.map(function(x, i){ return "<option value=\"" + i + "\"" + (ok && i === sel ? " selected" : "") + ">" + esc(x[0]) + "</option>"; }).join("") + "</select></div>";
+    if(ok) h += '<div><div class="lab">Rencontre</div>' + [1, 2].filter(function(n){ return n === 1 || r2; }).map(function(n){ return '<button type="button" class="lienR' + (renc === n ? " on" : "") + '" data-accr="' + n + '">0' + n + "</button>"; }).join("&nbsp;&nbsp;&nbsp;") + "</div>";
+    h += '<button type="button" class="go" id="accGo"' + (ok ? "" : " disabled") + '>Ouvrir la rencontre</button></div><button type="button" class="doc" id="accRet">Retour</button>';
+    var a = document.getElementById("rvacc"); a.innerHTML = h;
+    document.getElementById("accEmp").onchange = function(){ var v = document.getElementById("accEmp").value; if(v === "") return; sel = +v; renc = 1; dessiner(); };
+    Array.prototype.forEach.call(a.querySelectorAll("[data-accr]"), function(b){ b.onclick = function(){ renc = +b.getAttribute("data-accr"); dessiner(); }; });
+    document.getElementById("accGo").onclick = function(){ if(sel >= 0) ouvrir(liste[sel][0], renc); };
+    document.getElementById("accRet").onclick = function(){ menu(); };
   }
-  function det(){
-    var e = liste[sel], deux = e[2] && e[3];
-    document.getElementById("rcd").innerHTML = '<div class="bloc-lab">Employé choisi</div><div class="carte"><div class="grand">' + esc(e[0]) + "</div><div>" + esc(e[1]) + ' · Année 2026</div><div class="petit">Date prévue : ' + esc(e[4]) + '</div></div><div class="bloc-lab">Rencontre</div><div class="deux"><button type="button" class="rvb' + (renc === 1 ? " noir" : "") + '" data-r="1">Rencontre 1</button><button type="button" class="rvb' + (renc === 2 ? " noir" : "") + '" data-r="2"' + (deux ? "" : " disabled") + ">Rencontre 2</button></div>" + (deux ? "" : '<p class="note" style="margin-top:10px">La rencontre 2 s’ouvre quand la rencontre 1 est faite et qu’une seconde est prévue.</p>') + '<button type="button" class="rvb noir rvgo" id="rcgo">Commencer la rencontre ' + renc + "</button>";
-  }
-  var w = app.querySelector(".rvch");
-  w.addEventListener("input", function(e){ if(e.target.id === "rcq") lst(); });
-  w.addEventListener("click", function(e){
-    var m = e.target.closest ? e.target.closest(".rvem") : null;
-    if(m){ sel = +m.getAttribute("data-i"); renc = 1; lst(); det(); return; }
-    var b = e.target.closest ? e.target.closest("button") : null; if(!b || b.disabled) return;
-    if(b.hasAttribute("data-r")){ renc = +b.getAttribute("data-r"); det(); }
-    else if(b.id === "rcgo") ouvrir(liste[sel][0], renc);
-  });
-  lst(); det();
+  dessiner();
 }
 function revApercu(){
   revChoix(REV_EMPLOYES, function(nom, renc){
     var D = JSON.parse(JSON.stringify(REV_FICTIF)); D.employe = nom; D.rencontre = renc; revOuvrir(D);
     var b = document.createElement("div"); b.className = "revbn"; b.textContent = "Aperçu avec des données fictives. Rien n’est enregistré."; var w = document.getElementById("revw"); if(w) w.insertBefore(b, w.firstChild);
-  }, "Aperçu avec des données fictives. Rien n’est enregistré.");
+  }, 2026, "Reinaldo");
 }
