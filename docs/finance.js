@@ -74,7 +74,7 @@ function perLier(pre, fn, cur){
     fn(v === "~" ? p : v ? v : "A");
   }; });
 }
-var FIN_NONACHAT = /atlantis|charles desjardins|elise desjardins|ville de laval|hydro|empire vie|menagez|digitad|vw credit|porsche|vantyx|cpa|amerix|paysagiste|montrealsoft|videotron|bell canada|google|intuit|telus|docusign|energir|saaq|notaire|fcei|caisse desjardins|studio harrison|lima charlie|poste/i;
+var FIN_NONACHAT = /atlantis|elise desjardins|ville de laval|hydro|empire vie|menagez|digitad|vw credit|porsche|vantyx|cpa|amerix|paysagiste|montrealsoft|videotron|bell canada|google|intuit|telus|docusign|energir|saaq|notaire|fcei|caisse desjardins|studio harrison|lima charlie|poste/i;
 function finRendu(){
   var ms = finMois(FIN_PERIODE), h = "";
   var der = ms.length ? ms[ms.length-1] : null;
