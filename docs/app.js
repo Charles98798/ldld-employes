@@ -265,7 +265,7 @@ function appelDirectGoogle(corps, vu){
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
 var LECT = {inv_lire:1, evenements_employe:1, rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1, prix_soumissions:1, ef_donnees:1, finance_mensuel:1};
-var NEUTRE = {portrait_original:1, absences_equipe:1, tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
+var NEUTRE = {rencontre_eval_liste:1, rencontre_eval_lire:1, rencontre_eval_ecrire:1, rencontre_eval_verrou:1, portrait_original:1, absences_equipe:1, tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 // Copie gardée sur l'appareil (affichée tout de suite à l'ouverture, remplacée en silence par la version fraîche). JAMAIS de salaire ni de rémunération (Portrait, Échelle, Positionnement, Embauche, Employé actuel restent en mémoire seulement).
 // Données de l'employé lui-même: toutes les personnes. Données d'équipe: Direction seulement. Tout est effacé à la déconnexion (préfixe ldld-c-).
@@ -587,7 +587,7 @@ var ENT = [
  {id:"calendrier", g:"Mon travail", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
  {id:"rencontre", g:"Mon travail", h:1, l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
  {id:"ae_planif", g:"Évaluation", l:"Planification évaluation", p:"Planification évaluation", n:1, d:[0,1,1], f:function(){ aepPlanification(); }},
- {id:"ae_reunion", g:"Évaluation", l:"Rencontre d’évaluation", p:"Rencontre d’évaluation", n:2, d:[0,1,1], f:function(){ revApercu(); }},
+ {id:"ae_reunion", g:"Évaluation", l:"Rencontre d’évaluation", p:"Rencontre d’évaluation", n:2, d:[0,1,1], f:function(){ revDemarrer(); }},
  {id:"autoevaluation", g:"Évaluation", v:1, h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,0,0], i:2, f:function(){ aeEntree(); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},

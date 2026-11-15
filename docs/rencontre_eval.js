@@ -1,6 +1,7 @@
 // Rencontre d'évaluation: parcours en 12 étapes, reproduction de la page web d'origine (ÉVALUATIONS, rencontreHtmlLDLD_).
 // Cellulaire: une étape à la fois, sections l'une sous l'autre. Grand écran: une page par étape, mise à l'échelle sans défilement.
 // Couche d'accès isolée (revAcces): lire/écrire une case. Branchée plus tard sur la copie chiffrée; fictive tant que l'EFVP n'est pas acceptée.
+var REV_FIN = null;
 var revAcces = {
   ecrire: function(adresse, valeur){ return Promise.resolve({ok: true}); }
 };
@@ -253,7 +254,7 @@ function revOuvrir(D, acces){
     ajuster();
   }
   function aller(n){ if(n < 1 || n > 12) return; vus[etape] = true; etape = n; majEtape(false); window.scrollTo(0, 0); }
-  function revFermer(){ removeEventListener("resize", ajuster); fermerBareme(); menu(); }
+  function revFermer(){ removeEventListener("resize", ajuster); fermerBareme(); if(typeof REV_FIN === "function"){ var f = REV_FIN; REV_FIN = null; f(); } menu(); }
   // Grand écran: une page par étape, mise à l'échelle pour tenir dans la fenêtre sans défilement.
   function ajuster(){ var el = document.getElementById("revw"); if(!el){ removeEventListener("resize", ajuster); return; }
     el.style.zoom = 1; el.style.width = ""; if(innerWidth < 1000) return;
@@ -297,6 +298,27 @@ function revChoix(liste, ouvrir, annee, evaluateur){
     document.getElementById("accRet").onclick = function(){ menu(); };
   }
   dessiner();
+}
+// Branchement sur le Service (actions rencontre_eval_*): inerte tant que le Service répond « Non disponible. » (aperçu fictif dans ce cas).
+function revSvc(corps){ corps.session = sessionGardee(); return appelService(corps); }
+function revDemarrer(){
+  revSvc({action: "rencontre_eval_liste"}).then(function(r){
+    var L = r && r.ok ? (r.liste || r.employes || r.donnees) : null;
+    if(!L || !L.length) return revApercu();
+    var liste = L.map(function(e){ return [e.nom, e.categorie || "", !!e.r1Faite, e.r2Prevue !== false, e.datePrevue || "—", !!e.autoevalOk]; });
+    revChoix(liste, function(nom, renc){
+      revSvc({action: "rencontre_eval_verrou", op: "prendre", nom: nom, rencontre: renc}).then(function(v){
+        if(!v || !v.ok){ alert((v && (v.erreur || v.message)) || "Une autre personne a la rencontre ouverte. Réessaie plus tard."); return; }
+        return revSvc({action: "rencontre_eval_lire", nom: nom, rencontre: renc}).then(function(d){
+          var D = d && d.ok ? (d.D || d.d || d.donnees || d) : null;
+          if(!D || !D.g){ revSvc({action: "rencontre_eval_verrou", op: "liberer"}); alert("Chargement impossible. Réessaie."); return; }
+          var bat = setInterval(function(){ revSvc({action: "rencontre_eval_verrou", op: "battre"}).catch(function(){}); }, 30000);
+          REV_FIN = function(){ clearInterval(bat); revSvc({action: "rencontre_eval_verrou", op: "liberer"}).catch(function(){}); };
+          revOuvrir(D, {ecrire: function(adresse, valeur){ return revSvc({action: "rencontre_eval_ecrire", nom: nom, rencontre: renc, adresse: adresse, valeur: valeur, cle: D.cle}).then(function(x){ if(!x || !x.ok) throw new Error((x && (x.erreur || x.message)) || "refus"); return x; }); }});
+        });
+      }).catch(function(){ alert("Connexion impossible. Réessaie."); });
+    }, new Date().getFullYear(), "");
+  }).catch(function(){ revApercu(); });
 }
 function revApercu(){
   revChoix(REV_EMPLOYES, function(nom, renc){
