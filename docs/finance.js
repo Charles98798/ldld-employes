@@ -75,6 +75,19 @@ function perLier(pre, fn, cur){
   }; });
 }
 var FIN_NONACHAT = /atlantis|elise desjardins|ville de laval|hydro|empire vie|menagez|digitad|vw credit|porsche|vantyx|cpa|amerix|paysagiste|montrealsoft|videotron|bell canada|google|intuit|telus|docusign|energir|saaq|notaire|fcei|caisse desjardins|studio harrison|lima charlie|poste|courrier dentaire/i;
+var FIN_T = null;
+function finSans(s){ return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+function finTopsCharger(apres){
+  if(FIN_T){ apres(); return; }
+  try { appelService({action: "finance_tops", session: sessionGardee()}).then(function(r){ if(r && r.ok !== false && (r.ventesClientsMois || r.achatsFournMois)){ FIN_T = r; apres(); } }).catch(function(){}); } catch(e){}
+}
+function finTopMois(t, ms, exclure, n){
+  if(!t || !t.lignes || !ms.length) return null;
+  var out = [];
+  t.lignes.forEach(function(l){ var s = 0; ms.forEach(function(m){ s += Number((l[1] || [])[m]) || 0; }); if(s > 0 && !(exclure && exclure.test(finSans(l[0])))) out.push([l[0], s]); });
+  out.sort(function(a, b){ return b[1] - a[1]; });
+  return out.slice(0, n);
+}
 function finRendu(){
   var ms = finMois(FIN_PERIODE), h = "";
   var der = ms.length ? ms[ms.length-1] : null;
@@ -88,9 +101,10 @@ function finRendu(){
       if(l.n === "Achat" && FIN_R && FIN_R.achatsFourn && FIN_R.achatsFourn.top && FIN_R.achatsFourn.top.length){
         var af = FIN_R.achatsFourn;
         h += '<a class="fglnk" href="#" data-k="achat">Voir les plus gros fournisseurs</a><div class="fgtop" id="fgtop_achat" hidden>';
-        var lst = af.top.filter(function(x){ return !FIN_NONACHAT.test(String(x[0]).normalize("NFD").replace(/[\u0300-\u036f]/g, "")); }).slice(0, 15), totAch = 0;
-        FIN_S.achat.forEach(function(v){ totAch += v || 0; }); if(totAch > 0) af = {total: totAch, top: af.top};
-        lst.forEach(function(x, i){ h += '<div class="fgtl fgtl3"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (af.total ? finPct(x[1] / af.total * 100) : "") + '</span></div>'; });
+        var lst, totL = af.total, mt = FIN_T ? finTopMois(FIN_T.achatsFournMois, ms, FIN_NONACHAT, 15) : null;
+        if(mt){ lst = mt; totL = finSom(FIN_S.achat, ms); }
+        else { lst = af.top.filter(function(x){ return !FIN_NONACHAT.test(finSans(x[0])); }).slice(0, 15); var ta = 0; FIN_S.achat.forEach(function(v){ ta += v || 0; }); if(ta > 0) totL = ta; }
+        lst.forEach(function(x, i){ h += '<div class="fgtl fgtl3"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (totL ? finPct(x[1] / totL * 100) : "") + '</span></div>'; });
         h += '</div>';
       }
     });
@@ -113,7 +127,7 @@ function financeOuvrir(){
       '<div class="finsous">' + (FIN_ORIGINE === "finances" ? "Finances" : "Conseil d\'administration") + '</div>' +
       perHtml(FIN_PERIODE, FIN_R.annee, FIN_DERNIER + 1, "fin") + '<div id="fin_corps"></div>' +
       '<a class="retour" href="#" id="retour">Retour</a></div>';
-    finRendu();
+    finRendu(); finTopsCharger(function(){ if(document.getElementById("fin_corps")) finRendu(); });
     perLier("fin", finPerChoix, function(){ return FIN_PERIODE; });
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); finRetour(); };
   });
@@ -250,18 +264,27 @@ function financesMenu(){
   document.getElementById("fi6").onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeTop10(); };
 }
 // Top 10 clients (Direction): les 10 clients aux ventes les plus élevées depuis le 1er janvier, avec leur part des ventes
+var FIN_PT = "A";
+function finTopRendu(){
+  var vc = FIN_R.ventesClients, ms = finMois(FIN_PT), h = "", lst = null, tot = finSom(FIN_S.ventes, ms);
+  if(FIN_T) lst = finTopMois(FIN_T.ventesClientsMois, ms, null, 10);
+  if(!lst && vc && vc.top && vc.top.length){ lst = vc.top; tot = finSom(FIN_S.ventes, finMois("A")) || vc.total; }
+  if(lst && lst.length){
+    h += '<div class="fgtl fgtl3 fgth"><span></span><span>VENTES</span><span>PART</span></div>';
+    lst.forEach(function(x, i){ h += '<div class="fgtl fgtl3 fgtv"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (tot ? finPct(x[1] / tot * 100) : "") + '</span></div>'; });
+  } else h += '<div class="finnote">Les ventes par client arrivent dès que QuickBooks les fournit à l\'application.</div>';
+  document.getElementById("fin_corps").innerHTML = h;
+}
+function finTopPerChoix(v){ FIN_PT = v; document.querySelector(".finper").outerHTML = perHtml(v, FIN_R.annee, FIN_DERNIER + 1, "top"); perLier("top", finTopPerChoix, function(){ return FIN_PT; }); finTopRendu(); }
 function financeTop10(){
   FIN_TITRE = "Top 10 clients"; FIN_ORIGINE = "finances";
   finCharger(function(r){
-    var vc = r.ventesClients, h = '<div class="page ppx fin sans-instant"><div class="pph"><h1>Top 10 clients</h1></div><div class="finsous">Finances</div>' +
-      '<div class="sect"><span class="num">01</span><span class="lab">Meilleurs clients</span></div>';
-    if(vc && vc.top && vc.top.length){
-      var tot = finSom(FIN_S.ventes, finMois("A")) || vc.total;
-      h += '<div class="fgdesc">Ventes du 1er janvier au ' + finDate() + '</div><div class="fgtl fgtl3 fgth"><span></span><span>VENTES</span><span>PART</span></div>';
-      vc.top.forEach(function(x, i){ h += '<div class="fgtl fgtl3 fgtv"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (tot ? finPct(x[1] / tot * 100) : "") + '</span></div>'; });
-    } else h += '<div class="finnote">Les ventes par client arrivent dès que QuickBooks les fournit à l\'application.</div>';
-    h += '<a class="retour" href="#" id="retour">Retour</a></div>';
-    app.innerHTML = h;
+    FIN_PT = perDefaut(r.annee, FIN_DERNIER + 1);
+    app.innerHTML = '<div class="page ppx fin sans-instant"><div class="pph"><h1>Top 10 clients</h1></div><div class="finsous">Finances</div>' +
+      perHtml(FIN_PT, r.annee, FIN_DERNIER + 1, "top") +
+      '<div class="sect"><span class="num">01</span><span class="lab">Meilleurs clients</span></div><div id="fin_corps"></div><a class="retour" href="#" id="retour">Retour</a></div>';
+    finTopRendu(); finTopsCharger(function(){ if(document.getElementById("fin_corps")) finTopRendu(); });
+    perLier("top", finTopPerChoix, function(){ return FIN_PT; });
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); finRetour(); };
   });
 }
