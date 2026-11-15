@@ -2817,7 +2817,8 @@ function heures(){
   function hm(m){ if(m === null || m === undefined) return "—"; var h = Math.floor(m / 60), n = m % 60; return h + " h " + (n < 10 ? "0" : "") + n; }
   var JOURS = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
   function ligne(x){ var d = new Date(x.date + "T12:00:00"); return [JOURS[d.getDay()] + " " + d.getDate(), hm(x.min)]; }
-  function col(t, r){ var tot = 0, vu = false; r.forEach(function(x){ if(x.min !== null){ tot += x.min; vu = true; } }); return '<div><h2 class="h2">'+t+'</h2>'+r.map(function(x){ var l = ligne(x); return '<div class="hc"><span>'+l[0]+'</span><b>'+l[1]+'</b></div>'; }).join("")+'<div class="htot"><span>Total</span><b>'+(vu ? hm(tot) : "—")+'</b></div></div>'; }
+  function col(t, r){ r = r.filter(function(x){ var j = new Date(x.date + "T12:00:00").getDay(); return !((j === 0 || j === 6) && (x.min === null || x.min === undefined || x.min === 0)); });   // samedi et dimanche non travaillés: ligne masquée
+    var tot = 0, vu = false; r.forEach(function(x){ if(x.min !== null){ tot += x.min; vu = true; } }); return '<div><h2 class="h2">'+t+'</h2>'+r.map(function(x){ var l = ligne(x); return '<div class="hc"><span>'+l[0]+'</span><b>'+l[1]+'</b></div>'; }).join("")+'<div class="htot"><span>Total</span><b>'+(vu ? hm(tot) : "—")+'</b></div></div>'; }
   function afficherH(r){
     var z = document.getElementById("hz"); if(!z) return;
     if(r && r.ok === false && /donn|num|paie|employ|introuv|inconnu/i.test(String(r.erreur || ""))){ z.innerHTML = '<div class="bandeau">▪ VOS HEURES NE SONT PAS ENCORE DISPONIBLES</div>'; return; }
