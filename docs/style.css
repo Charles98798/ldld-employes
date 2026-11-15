@@ -1324,3 +1324,15 @@ select:not(.act){width:100%;box-sizing:border-box}
 .rvo .xpp{text-align:left}
 }
 .rvo .nc-ch svg{max-height:190px;width:100%}
+.rvch h2{font-size:15px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;margin:4px 0 10px}
+.rvch .rvcols{display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
+.rvch .rvq{width:100%;box-sizing:border-box;font:inherit;font-size:14px;padding:9px 10px;border:0;border-bottom:1px solid #d8d3ca;background:#f6f3ee;border-radius:0;color:#000}
+.rvch .rvlst{margin-top:8px;max-height:430px;overflow:auto}
+.rvch .rvem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 8px;border-bottom:1px solid #ece8e1;font-size:14px;cursor:pointer;min-height:46px}
+.rvch .rvem small{display:block;font-size:11px;color:#8f877a;letter-spacing:.5px}
+.rvch .rvem.on{background:#000;color:#fff}.rvch .rvem.on small{color:#b4ab9b}
+.rvch .rvpt{font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border:1px solid #000;white-space:nowrap}.rvch .rvem.on .rvpt{border-color:#fff}
+.rvch .rvpt.ok{background:#3BEC65;border-color:#3BEC65;color:#000}
+.rvch .rvgo{display:block;width:100%;margin-top:14px;padding:12px 10px}
+.rvch .deux .rvb{padding:12px 10px}
+@media (max-width:999px){.rvch .rvcols{grid-template-columns:1fr}.rvch .rvlst{max-height:300px}}
