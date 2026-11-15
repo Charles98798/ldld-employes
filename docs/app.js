@@ -2644,7 +2644,7 @@ function portrait(id){
     var tot = Number(p.total) || 0, bs = Number(p.base) || 0, cg = Number(p.conges) || 0, au = Math.max(0, tot - bs - cg), pp = function(x){ return tot ? Math.round(x / tot * 100) : 0; };
     var nomEmp = ""; liste.forEach(function(x){ if(x.id === p.id) nomEmp = x.nom; });
     el.innerHTML = '<h1>Portrait d’un employé</h1>' +
-      '<div class="pth0"><img src="icons/icon-192-v6.png" alt="" width="44" height="44"><div><div class="ptnom">'+esc(nomEmp)+'</div><div class="ptk">'+esc(String(p.categorie))+' · Portrait '+(new Date().getFullYear())+'</div></div></div>' +
+      '<div class="pth0"><img src="icons/icon-192-v7.png" alt="" width="44" height="44"><div><div class="ptnom">'+esc(nomEmp)+'</div><div class="ptk">'+esc(String(p.categorie))+' · Portrait '+(new Date().getFullYear())+'</div></div></div>' +
       '<select class="champ" id="ps">'+liste.map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id === p.id ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
       '<div class="ptn"><button type="button" id="pp"'+(i <= 0 ? " disabled" : "")+'>Précédent</button><button type="button" id="psv"'+(i >= liste.length-1 ? " disabled" : "")+'>Suivant</button></div>' +
       '<div class="ptk">'+(p.experience === null || p.experience === undefined ? "—" : esc(String(p.experience).replace(".", ","))+' ans d’expérience')+'</div>' +

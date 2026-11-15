@@ -43,7 +43,7 @@ function portraitOriginal(idDepart){
     if(z > 1.8) z = 1.8; if(z < .6) z = 1; el.style.zoom = z; }
   function squelette(){
     $("po").innerHTML = '<h1>Portrait d’un employé</h1>' +
-      '<div class="pohead"><div class="pohd"><img class="pologo" src="icons/icon-192-v6.png" alt="" width="48" height="48"><div class="potitre"><div class="ponom" id="poNom"></div><div class="posous" id="poSous"></div></div></div>' +
+      '<div class="pohead"><div class="pohd"><img class="pologo" src="icons/icon-192-v7.png" alt="" width="48" height="48"><div class="potitre"><div class="ponom" id="poNom"></div><div class="posous" id="poSous"></div></div></div>' +
       '<div class="ponav"><select class="champ" id="poListe"></select><div class="ponb"><button type="button" class="pobtn" id="poPrec">Précédent</button><button type="button" class="pobtn noir" id="poSuiv">Suivant</button></div></div></div>' +
       '<div class="potri"><div><div class="pos"><span class="n">01</span><span class="l">Position dans l’échelle</span></div><div id="poEch"></div><div id="poEvo"></div></div>' +
       '<div><div class="pos"><span class="n">02</span><span class="l">Rémunération globale</span></div><div id="poRem"></div><div class="poinfo" id="poRemInfo"></div></div>' +
