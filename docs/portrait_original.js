@@ -78,9 +78,9 @@ function portraitOriginal(idDepart){
       yrs.forEach(function(y, k){ var x = x0 + (x1 - x0) * k / 4; g += '<text x="'+x.toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" font-size="10" fill="#8D806A">'+y+'</text>' + (conf && y === an ? '<text x="'+x.toFixed(1)+'" y="'+(H+5)+'" text-anchor="middle" font-size="8.5" fill="#8D806A">'+LIBN+'</text>' : ""); });
       pts.forEach(function(p){ var k = p.an - (an - 4), x = x0 + (x1 - x0) * k / 4, y = 22 + (H - 52) * (1 - (p.v - mn) / (mx - mn)); xy.push([x, y, p]); });
       var reel = conf ? xy.filter(function(a){ return a[2].an < an; }) : xy;
-      if(reel.length > 1) g += '<polyline points="'+reel.map(function(a){ return a[0].toFixed(1)+","+a[1].toFixed(1); }).join(" ")+'" fill="none" stroke="#1D1D1B" stroke-width="1.6"/>';
-      if(conf && xy.length > 1 && xy[xy.length - 1][2].an === an){ var a1 = xy[xy.length - 2], a2 = xy[xy.length - 1]; g += '<line x1="'+a1[0].toFixed(1)+'" y1="'+a1[1].toFixed(1)+'" x2="'+a2[0].toFixed(1)+'" y2="'+a2[1].toFixed(1)+'" stroke="#1D1D1B" stroke-width="1.6" stroke-dasharray="4 3"/>'; }
-      xy.forEach(function(a){ var last = a[2].an === (conf ? an - 1 : an); g += '<rect x="'+(a[0]-3.5).toFixed(1)+'" y="'+(a[1]-3.5).toFixed(1)+'" width="7" height="7" fill="'+(last ? "#1D1D1B" : "#fff")+'" stroke="#1D1D1B"/><text x="'+a[0].toFixed(1)+'" y="'+(a[1]-9).toFixed(1)+'" text-anchor="middle" font-size="11" fill="#1D1D1B">'+fmt(a[2].v)+'</text>'; });
+      if(reel.length > 1) g += '<polyline points="'+reel.map(function(a){ return a[0].toFixed(1)+","+a[1].toFixed(1); }).join(" ")+'" fill="none" stroke="#000000" stroke-width="1.6"/>';
+      if(conf && xy.length > 1 && xy[xy.length - 1][2].an === an){ var a1 = xy[xy.length - 2], a2 = xy[xy.length - 1]; g += '<line x1="'+a1[0].toFixed(1)+'" y1="'+a1[1].toFixed(1)+'" x2="'+a2[0].toFixed(1)+'" y2="'+a2[1].toFixed(1)+'" stroke="#000000" stroke-width="1.6" stroke-dasharray="4 3"/>'; }
+      xy.forEach(function(a){ var last = a[2].an === (conf ? an - 1 : an); g += '<rect x="'+(a[0]-3.5).toFixed(1)+'" y="'+(a[1]-3.5).toFixed(1)+'" width="7" height="7" fill="'+(last ? "#000000" : "#fff")+'" stroke="#000000"/><text x="'+a[0].toFixed(1)+'" y="'+(a[1]-9).toFixed(1)+'" text-anchor="middle" font-size="11" fill="#000000">'+fmt(a[2].v)+'</text>'; });
       return '<div><div class="pok">'+t+'</div>'+g+'</svg></div>'; }
     var an0 = D.annee;
     var PH = (e.historique || []).filter(function(q){ return q.an >= an0 - 4 && q.an < an0; }).map(function(q){ return {an: q.an, v: q.pos}; }).concat(e.pos != null ? [{an: an0, v: e.pos}] : []),
@@ -113,7 +113,7 @@ function portraitOriginal(idDepart){
     if(D.gestion.absent) inf = D.gestion.erreur || "Les chiffres arriveront avec l’export quotidien de Gestion LDLD."; else if(!g) inf = "Aucune donnée dans Gestion LDLD pour cet employé.";
     else { inf = (g.du && g.au ? "Période exportée par Gestion LDLD : du "+jour(g.du)+" au "+jour(g.au) : "Gestion LDLD.");
       if(g.du && g.au){ var d1 = new Date(g.du.slice(0, 10) + "T12:00:00"), d2 = new Date(g.au.slice(0, 10) + "T12:00:00"); if(!g.ok && (Math.abs(d1 - pa[0]) > 3 * 864e5 || Math.abs(d2 - pa[1]) > 3 * 864e5)) al = "La période exportée ne suit pas la règle des 6 mois moins 2 semaines : les chiffres ci-dessus sont à vérifier avec Gestion LDLD."; } }
-    $("poChargeInfo").innerHTML = "▪ " + esc(regle) + (inf ? "<br>▪ " + esc(inf) : "") + (al ? '<br><span style="background:#f4b3c4;padding:2px 6px;color:#1D1D1B">'+esc(al)+'</span>' : "");
+    $("poChargeInfo").innerHTML = "▪ " + esc(regle) + (inf ? "<br>▪ " + esc(inf) : "") + (al ? '<br><span style="background:#f4b3c4;padding:2px 6px;color:#000000">'+esc(al)+'</span>' : "");
     if(/^(administratif|gestionnaire|expert)/i.test(e.cat || "")){ $("poCharge").innerHTML = '<div class="poinfo">Pas de tableau de bord pour ce poste.</div>'; $("poChargeInfo").innerHTML = ""; }
     var p = e.paroles || {};
     function ligne(t, v){ return '<div><span class="pok">'+t+'</span><span class="t'+(v ? "" : " vide")+'">'+(v ? "« "+esc(v)+" »" : "—")+'</span></div>'; }

@@ -4,7 +4,7 @@
 // Les miniatures sont gardées sur l'appareil (cache); l'agrandissement charge la grande version.
 var CC = {liste: {}, img: {}, form: null};
 ["rd_commentaires_lire", "rd_commentaire_ecrire", "rd_commentaire_retirer", "rd_commentaire_photos"].forEach(function(a){ NEUTRE[a] = 1; });
-var CC_TYPES = [["positif", "Positif", "var(--vert)"], ["questionnement", "Questionnement", "#6E6350"], ["negatif", "Négatif", "#1D1D1B"]];
+var CC_TYPES = [["positif", "Positif", "var(--vert)"], ["questionnement", "Questionnement", "#6E6350"], ["negatif", "Négatif", "#000000"]];
 
 function ccType(t){ for(var i = 0; i < CC_TYPES.length; i++) if(CC_TYPES[i][0] === t) return CC_TYPES[i]; return CC_TYPES[2]; }
 function ccPastille(t){ var x = ccType(t); return '<span style="display:inline-block;width:11px;height:11px;background:'+x[2]+';margin:0 6px 0 10px;vertical-align:-1px"></span>'+rdE(x[1]); }
@@ -47,7 +47,7 @@ function ccAgrandir(liste, i){
   o.style.cssText = "position:fixed;left:0;top:0;right:0;bottom:0;z-index:1000;background:rgba(29,29,27,.94);display:flex;align-items:center;justify-content:center;padding:56px 12px;box-sizing:border-box;touch-action:pan-y";
   var im = document.createElement("img"); im.alt = "Photo agrandie"; im.style.cssText = "max-width:100%;max-height:100%;display:block;object-fit:contain";
   o.appendChild(im);
-  var bs = "position:absolute;background:#B7B1A5;color:#1D1D1B;border:0;border-radius:0;width:44px;height:44px;font-size:22px;line-height:44px;text-align:center;cursor:pointer;padding:0;font-family:inherit;";
+  var bs = "position:absolute;background:#B7B1A5;color:#000000;border:0;border-radius:0;width:44px;height:44px;font-size:22px;line-height:44px;text-align:center;cursor:pointer;padding:0;font-family:inherit;";
   function bouton(txt, css, label, f){ var b = document.createElement("button"); b.type = "button"; b.textContent = txt; b.setAttribute("aria-label", label); b.style.cssText = bs + css; b.onclick = function(e){ e.stopPropagation(); f(); }; o.appendChild(b); return b; }
   var fermer = function(){ if(o.parentNode) o.parentNode.removeChild(o); document.removeEventListener("keydown", cle); };
   var prec = bouton("\u2190", "left:12px;top:50%;margin-top:-22px", "Photo précédente", function(){ aller(i - 1); });
@@ -170,10 +170,10 @@ function ccFormulaire(existant){
   function dessinerPhotos(){
     var z = document.getElementById("ccphotos"); if(!z) return;
     var w = "width:min(180px,calc((100% - 32px)/5));aspect-ratio:1/1";
-    var tuile = tous().length < 5 ? '<a href="#" id="cctuile" aria-label="Ajouter des photos" style="'+w+';display:flex;align-items:center;justify-content:center;background:#B7B1A5;color:#1D1D1B;font-size:28px;text-decoration:none">+</a>' : "";
+    var tuile = tous().length < 5 ? '<a href="#" id="cctuile" aria-label="Ajouter des photos" style="'+w+';display:flex;align-items:center;justify-content:center;background:#B7B1A5;color:#000000;font-size:28px;text-decoration:none">+</a>' : "";
     z.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:8px">'+tous().map(function(p, i){
       var src = p.miniUrl || ccImgLire(p.m);
-      return '<div style="position:relative;'+w+'"><img alt="Photo '+(i + 1)+'" data-ph="'+rdE(p.m || "")+'" style="width:100%;height:100%;object-fit:cover;background:#B7B1A5;display:block" src="'+rdE(src)+'"><a href="#" class="rdic" data-px="'+i+'" aria-label="Retirer la photo" style="position:absolute;right:4px;top:4px;background:#B7B1A5;padding:4px;display:block;width:20px;height:20px"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px"><path d="M3 3h6v6h-6zM15 3h6v6h-6zM9 9h6v6h-6zM3 15h6v6h-6zM15 15h6v6h-6z" fill="#1D1D1B"/></svg></a></div>'; }).join("")+tuile+'</div>';
+      return '<div style="position:relative;'+w+'"><img alt="Photo '+(i + 1)+'" data-ph="'+rdE(p.m || "")+'" style="width:100%;height:100%;object-fit:cover;background:#B7B1A5;display:block" src="'+rdE(src)+'"><a href="#" class="rdic" data-px="'+i+'" aria-label="Retirer la photo" style="position:absolute;right:4px;top:4px;background:#B7B1A5;padding:4px;display:block;width:20px;height:20px"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px"><path d="M3 3h6v6h-6zM15 3h6v6h-6zM9 9h6v6h-6zM3 15h6v6h-6zM15 15h6v6h-6z" fill="#000000"/></svg></a></div>'; }).join("")+tuile+'</div>';
     var tl = document.getElementById("cctuile"); if(tl) tl.onclick = function(e){ e.preventDefault(); document.getElementById("ccfichier").click(); };
     Array.prototype.forEach.call(z.querySelectorAll("[data-px]"), function(a){ a.onclick = function(e){ e.preventDefault(); var i = Number(a.getAttribute("data-px"));
       confirmerOuiNon("Retirer cette photo ?", function(){ if(i < F.photos.length) F.photos.splice(i, 1); else F.nouvelles.splice(i - F.photos.length, 1); dessinerPhotos(); planifier(); }, false); }; });

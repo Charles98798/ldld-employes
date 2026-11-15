@@ -26,7 +26,7 @@ function rdDemoMarque(){ return RD_DEMO ? '<div class="rdp"><small>▪ Données 
 var RD_CHOIX = [["pres","Présentation"],["disc","Planification discussion"],["cap","Planification capsule"],["com","Planification commentaire"]];
 function rdMenuHtml(actif){
   var lib = ""; RD_CHOIX.forEach(function(c){ if(c[0] === actif) lib = c[1]; });
-  return '<div class="rdbtn"><button type="button" class="rdplan" id="rdmenu" aria-expanded="false">'+rdE(lib)+'</button><div id="rdml" style="display:none;background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+RD_CHOIX.map(function(c){ return '<a href="#" data-c="'+c[0]+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1D1D1B;text-decoration:none;'+(c[0] === actif ? "background:var(--vert);" : "")+'">'+rdE(c[1])+'</a>'; }).join("")+'</div></div>';
+  return '<div class="rdbtn"><button type="button" class="rdplan" id="rdmenu" aria-expanded="false">'+rdE(lib)+'</button><div id="rdml" style="display:none;background:#E3DFD3;border:2px solid #000000;margin-top:4px">'+RD_CHOIX.map(function(c){ return '<a href="#" data-c="'+c[0]+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#000000;text-decoration:none;'+(c[0] === actif ? "background:var(--vert);" : "")+'">'+rdE(c[1])+'</a>'; }).join("")+'</div></div>';
 }
 function rdMenuLier(actif){
   var bm = document.getElementById("rdmenu"), lm = document.getElementById("rdml"); if(!bm || !lm) return;
@@ -511,13 +511,13 @@ function rdCourbe(a, b){
   function lignes(arr, attr){ return segments(arr).map(function(sg){ return sg.length > 1 ? '<polyline points="'+sg.join(" ")+'" fill="none" '+attr+'/>' : ""; }).join(""); }
   var avecB = b && b.length >= n && b.some(function(x){ return !nul(x); });
   var lab = a.map(function(x, k){ return (n <= 12 || (n - 1 - k) % 2 === 0) ? '<text x="'+(px + (n > 1 ? k*(W-2*px)/(n-1) : 0)).toFixed(1)+'" y="'+(H-2)+'" font-size="7" text-anchor="middle" fill="#6E6350">'+rdE(x.m)+'</text>' : ""; }).join("");
-  var pts = a.map(function(x, k){ if(nul(x)) return ""; var p = xy(a, k); return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2" fill="#1D1D1B"/>'; }).join("");
+  var pts = a.map(function(x, k){ if(nul(x)) return ""; var p = xy(a, k); return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2" fill="#000000"/>'; }).join("");
   var kd = -1; for(var q = n - 1; q >= 0; q--){ if(!nul(a[q])){ kd = q; break; } }
   var dern = kd >= 0 ? xy(a, kd) : null;
   return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 10px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1"/>'
-    + (avecB ? lignes(b, 'stroke="#1D1D1B" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55"') : "")
-    + lignes(a, 'stroke="#1D1D1B" stroke-width="2"') + pts
-    + (dern ? '<text x="'+dern[0]+'" y="'+(parseFloat(dern[1])-6)+'" font-size="9" text-anchor="end" fill="#1D1D1B">'+rdE(a[kd].v)+'</text>' : "") + lab + '</svg>'
+    + (avecB ? lignes(b, 'stroke="#000000" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55"') : "")
+    + lignes(a, 'stroke="#000000" stroke-width="2"') + pts
+    + (dern ? '<text x="'+dern[0]+'" y="'+(parseFloat(dern[1])-6)+'" font-size="9" text-anchor="end" fill="#000000">'+rdE(a[kd].v)+'</text>' : "") + lab + '</svg>'
     + (avecB ? '<div class="rdp"><small>Trait plein · cette année · pointillé · an passé</small></div>' : "");
 }
 function rdSerie(titre, a, b){
@@ -546,7 +546,7 @@ function rdRendreSection(cle, r){
     var avecAn = eq.some(function(e){ return e.an_passe != null; });
     var jl = (r.etiquettes && r.etiquettes.length === 5) ? r.etiquettes.map(function(t){ return String(t).toLowerCase() === "aujourd’hui" || String(t).toLowerCase() === "aujourd'hui" ? "Aujourd’hui" : String(t).toLowerCase(); }) : (function(){ var o = [], d = new Date(); while(o.length < 5){ var w = d.getDay(); if(!o.length || (w !== 0 && w !== 6)) { try { o.push(o.length ? new Intl.DateTimeFormat("fr-CA", {timeZone: "America/Toronto", weekday: "long"}).format(d) : "Aujourd’hui"); } catch(x){ o.push("Jour "+(o.length + 1)); } } d = new Date(d.getTime() + 864e5); } return o; })();
     h += '<div class="rdp"><small>Pourcentage de charge · 5 prochains jours'+(avecAn ? ' · même mois de l’an passé' : '')+'</small></div>';
-    var cel = function(j){ if(j === "—" || j == null || j === "") return '<span style="flex:1;text-align:center;font-size:13px;padding:10px 0;box-sizing:border-box">—</span>'; var rouge = j > 95, vert = !rouge && j >= 65; return '<span style="flex:1;text-align:center;font-size:13px;padding:10px 0;box-sizing:border-box;white-space:nowrap;'+(rouge ? "background:#B8473A;color:#fff" : (vert ? "background:var(--vert);color:#1D1D1B" : "")) +'">'+rdE(j)+' %</span>'; };
+    var cel = function(j){ if(j === "—" || j == null || j === "") return '<span style="flex:1;text-align:center;font-size:13px;padding:10px 0;box-sizing:border-box">—</span>'; var rouge = j > 95, vert = !rouge && j >= 65; return '<span style="flex:1;text-align:center;font-size:13px;padding:10px 0;box-sizing:border-box;white-space:nowrap;'+(rouge ? "background:#B8473A;color:#fff" : (vert ? "background:var(--vert);color:#000000" : "")) +'">'+rdE(j)+' %</span>'; };
     h += '<div class="rdp" style="display:flex;font-size:9px;letter-spacing:.04em;color:#6E6350"><span style="width:26%"></span><span style="flex:1;display:flex">'+jl.map(function(t){ return '<span style="flex:1;text-align:center">'+rdE(t)+'</span>'; }).join("")+'</span></div>';
     h += eq.map(function(e){ var js = e.vide ? ["—","—","—","—","—"] : (e.jours || []); return '<div class="rdp" style="display:flex;align-items:center;padding-top:0;padding-bottom:0"><span style="width:26%;font-size:13px">'+rdE(e.equipe)+'</span><span style="flex:1;display:flex">'+[0,1,2,3,4].map(function(k){ return cel(js[k]); }).join("")+'</span></div>'; }).join("");
     h += '<div class="rdp"><small>Vert 65 à 95 % · Brique plus de 95 %</small></div>';
@@ -571,7 +571,7 @@ function rdPresentation(){
   h += rdDemoMarque();
   var mois18 = rdMois18(); if(!RD.moisSel) RD.moisSel = mois18[0].cle;
   var moisLib = ""; mois18.forEach(function(m){ if(m.cle === RD.moisSel) moisLib = m.lib; });
-  h += '<div class="rdp"><small style="color:#6f6a5f">Période des chiffres</small><div class="rdbtn"><button type="button" class="rdplan" id="rdper" aria-expanded="false">'+rdE(moisLib)+'</button><div id="rdpl" style="display:none;background:#E3DFD3;border:2px solid #0d1117;margin-top:4px;max-height:280px;overflow-y:auto">'+mois18.map(function(m){ return '<a href="#" data-mo="'+m.cle+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1D1D1B;text-decoration:none;'+(m.cle === RD.moisSel ? "background:var(--vert);" : "")+'">'+rdE(m.lib)+'</a>'; }).join("")+'</div></div></div>';
+  h += '<div class="rdp"><small style="color:#6f6a5f">Période des chiffres</small><div class="rdbtn"><button type="button" class="rdplan" id="rdper" aria-expanded="false">'+rdE(moisLib)+'</button><div id="rdpl" style="display:none;background:#E3DFD3;border:2px solid #000000;margin-top:4px;max-height:280px;overflow-y:auto">'+mois18.map(function(m){ return '<a href="#" data-mo="'+m.cle+'" style="display:block;padding:14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#000000;text-decoration:none;'+(m.cle === RD.moisSel ? "background:var(--vert);" : "")+'">'+rdE(m.lib)+'</a>'; }).join("")+'</div></div></div>';
   var blk = 0;
   function bloc(inner){ return '<div class="rdblk">'+inner+'</div>'; }
   h += bloc('<div id="rds-pts">'+(rdPointsPlanifHtml(rdCacheLire("ldld-rdd-"+RD.dep)) || (rdCacheLire("ldld-rdp-"+RD.dep) ? rdPointsHtml(rdCacheLire("ldld-rdp-"+RD.dep)) : rdMsg("Un instant")))+'</div>');

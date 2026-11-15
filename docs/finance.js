@@ -136,7 +136,7 @@ function fgSel(){
 }
 function fgLigne(vals, x0, dx, y, dash, w){
   var d = vals.map(function(v,i){ return (i?"L":"M")+(x0+i*dx).toFixed(1)+" "+y(v).toFixed(1); }).join(" ");
-  return '<path d="'+d+'" fill="none" stroke="#0D1319" stroke-width="'+(w||1.6)+'"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+  return '<path d="'+d+'" fill="none" stroke="#000000" stroke-width="'+(w||1.6)+'"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
 }
 function fgAxeY(vals, y, W, unite){
   return vals.map(function(v){ return '<line x1="34" x2="'+W+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#bdb9ae" stroke-width="1"/><text x="0" y="'+(y(v)+3)+'">'+v+unite+'</text>'; }).join("");
@@ -165,10 +165,10 @@ function fgGraphique(type){
     var hi2 = Math.max.apply(null, bq.concat(mg).concat([1])), lo2 = Math.min.apply(null, bq.concat([0])), rng = hi2-lo2, pas2 = [5,10,25,50,100,250,500].filter(function(q){ return rng/q <= 5; })[0] || 500;
     hi2 = Math.ceil(hi2/pas2)*pas2; lo2 = Math.floor(lo2/pas2)*pas2;
     var Lb = 44, bs = 14, hb = 170, yb = function(v){ return bs+(hi2-v)/(hi2-lo2)*hb; }, gb = (W-Lb)/bn, wb = Math.min(14, gb/2-2), q2;
-    for(q2=lo2;q2<=hi2;q2+=pas2) s += '<line x1="'+Lb+'" x2="'+W+'" y1="'+yb(q2)+'" y2="'+yb(q2)+'" stroke="'+(q2 ? "#bdb9ae" : "#0D1319")+'" stroke-width="1"/><text x="0" y="'+(yb(q2)+3)+'">'+q2+' k$</text>';
+    for(q2=lo2;q2<=hi2;q2+=pas2) s += '<line x1="'+Lb+'" x2="'+W+'" y1="'+yb(q2)+'" y2="'+yb(q2)+'" stroke="'+(q2 ? "#bdb9ae" : "#000000")+'" stroke-width="1"/><text x="0" y="'+(yb(q2)+3)+'">'+q2+' k$</text>';
     for(i=0;i<bn;i++){ var xb = Lb+i*gb+gb/2, v1 = bq[i], y0 = yb(0), y1 = yb(v1), hm = y0-yb(mg[i]);
-      s += '<rect x="'+(xb-wb-.5)+'" y="'+Math.min(y0,y1)+'" width="'+wb+'" height="'+Math.abs(y1-y0)+'" fill="#0D1319"/>';
-      if(hm > 1) s += '<rect x="'+(xb+1)+'" y="'+(y0-hm+.75)+'" width="'+(wb-1.5)+'" height="'+(hm-1.5)+'" fill="none" stroke="#0D1319" stroke-width="1.5"/>';
+      s += '<rect x="'+(xb-wb-.5)+'" y="'+Math.min(y0,y1)+'" width="'+wb+'" height="'+Math.abs(y1-y0)+'" fill="#000000"/>';
+      if(hm > 1) s += '<rect x="'+(xb+1)+'" y="'+(y0-hm+.75)+'" width="'+(wb-1.5)+'" height="'+(hm-1.5)+'" fill="none" stroke="#000000" stroke-width="1.5"/>';
       s += '<text x="'+xb+'" y="'+(bs+hb+16)+'" text-anchor="middle">'+FG_MM[p[0]+i]+'</text>'; }
     var zb = bn-1, cartesB = '<div class="fgcards"><div><small>EN BANQUE</small><b>'+finMontant(bq[zb]*1000)+'</b></div><div class="g"><small>MARGE UTILISÉE</small><b>'+finMontant(mg[zb]*1000)+'</b></div><div><small>MARGE DISPONIBLE</small><b>— $</b></div></div>';
     return cartesB + '<svg class="finsvg" viewBox="0 0 '+W+' '+(bs+hb+24)+'">'+s+'</svg><div class="finnote">Plein : solde en banque · Vide : marge de crédit utilisée<br>La marge disponible s\'affichera dès que la limite de la marge sera connue</div>';
@@ -181,9 +181,9 @@ function fgGraphique(type){
     var L0 = 44, base = 190, yy = function(v){ return base-v/hi*170; }, gw = (W-L0)/cn, bw = Math.min(14, gw/2-2), k;
     for(k=0;k<=hi;k+=pas) s += '<line x1="'+L0+'" x2="'+W+'" y1="'+yy(k)+'" y2="'+yy(k)+'" stroke="#bdb9ae" stroke-width="1"/><text x="0" y="'+(yy(k)+3)+'">'+k+' k$</text>';
     for(i=0;i<cn;i++){ var xc = L0+i*gw+gw/2, he = ve[i]/hi*170, hs = so[i]/hi*170;
-      s += '<rect x="'+(xc-bw-.5)+'" y="'+(base-he)+'" width="'+bw+'" height="'+he+'" fill="#0D1319"/><rect x="'+(xc+1)+'" y="'+(base-hs)+'" width="'+(bw-1.5)+'" height="'+hs+'" fill="none" stroke="#0D1319" stroke-width="1.5"/>';
+      s += '<rect x="'+(xc-bw-.5)+'" y="'+(base-he)+'" width="'+bw+'" height="'+he+'" fill="#000000"/><rect x="'+(xc+1)+'" y="'+(base-hs)+'" width="'+(bw-1.5)+'" height="'+hs+'" fill="none" stroke="#000000" stroke-width="1.5"/>';
       s += '<text x="'+xc+'" y="206" text-anchor="middle">'+FG_MM[p[0]+i]+'</text>'; }
-    s += '<line x1="'+L0+'" x2="'+W+'" y1="'+base+'" y2="'+base+'" stroke="#0D1319"/>';
+    s += '<line x1="'+L0+'" x2="'+W+'" y1="'+base+'" y2="'+base+'" stroke="#000000"/>';
     var z = cn-1, a0 = (FG.act === "M") ? p[1] : (FG.act === "T" ? FG.t*3 : 0), a1 = (FG.act === "M") ? p[1] : Math.min(p[1], FG.act === "T" ? FG.t*3+2 : p[1]), se = 0, ss2 = 0, sf = 0, kk;
     for(kk=a0;kk<=a1;kk++){ se += ve[kk-p[0]] || 0; ss2 += so[kk-p[0]] || 0; sf += fl[kk-p[0]] || 0; }
     var mc = (R.margeCredit || [])[p[1]], note = (mc || mc === 0) ? '<br>Marge de crédit utilisée : ' + finMontant(Math.abs(mc)) : '';

@@ -1197,7 +1197,7 @@ function tableau(){
       var vide = val === null || val === undefined, ok = vide ? null : (sens === "plus" ? val >= cible : val <= cible);
       var pastille = vide ? "" : '<span class="pas '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>';
       var larg = vide ? 0 : Math.min(100, val), pc = Math.min(100, cible);
-      var cq = cle === "cn" ? "#1D1D1B" : "#8D806A";
+      var cq = cle === "cn" ? "#000000" : "#8D806A";
       return '<div class="tcarte tk'+(vide ? ' sans' : '')+'"><div class="tct"><span><b class="tq" style="background:'+cq+'"></b>'+nom+'</span>'+(vide ? '' : '<span class="tind '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>')+'</div>' +
         '<div class="tl">'+(vide ? '' : '<div class="tgros">'+val+'<small>%</small></div>')+'<div class="tcib">Moyenne · cible '+cible+' % '+(sens === "plus" ? "et +" : "et −")+'</div></div>' +
         '<div class="tbarre"><i style="width:'+larg+'%"></i><u style="left:'+pc+'%"></u></div></div>';
@@ -1251,7 +1251,7 @@ function profil(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mon profil</h1>' +
     lignes.map(function(l){ return l[2] ? '<div class="ligne pfg"><span>'+esc(l[1])+'</span></div>' : '<div class="ligne pfg"><span>'+esc(l[0])+'</span><span>'+esc(l[1])+'</span></div>'; }).join("") +
     '<div id="stat"></div>' +
-    '<a class="doc" href="#" id="vnotif" style="display:block;border:2px solid #0d1117;padding:13px 14px;margin:18px 0;text-align:center;text-transform:uppercase;letter-spacing:.16em;font-size:13px"><span>Contrôle des notifications</span></a><div id="planz"></div></div>';
+    '<a class="doc" href="#" id="vnotif" style="display:block;border:2px solid #000000;padding:13px 14px;margin:18px 0;text-align:center;text-transform:uppercase;letter-spacing:.16em;font-size:13px"><span>Contrôle des notifications</span></a><div id="planz"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   // Stationnement et casier de l'employé (jamais ceux des autres), lus dans le classeur du conseil par le service.
   obtenir("stationnement", {action:"stationnement"}, function(r){
@@ -1305,7 +1305,7 @@ function chargerDroits(){
     if(app.querySelector(".menu.accueil")) menu();
   }).catch(function(){});
 }
-var CTL_COULEURS = ["#8D806A", "#0D1319", "var(--vert)"];
+var CTL_COULEURS = ["#8D806A", "#000000", "var(--vert)"];
 function controleOuvrir(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrôle</h1><div id="ctl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
@@ -1501,16 +1501,16 @@ function neBarrePage(){
   var z = document.getElementById("gebar"); var E = NE_ENV; if(!z) return;
   if(!E){ z.innerHTML = ""; return; }
   var rouge = E.etat === "non", t = E.etat === "cours" ? E.lib.cours : (E.etat === "ok" ? E.lib.ok : E.lib.non + " · " + (E.err || ""));
-  z.innerHTML = '<div style="margin:12px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(E.etat === "non" ? 0 : E.p)+'%;background:#0d1117"></i></div><div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(E.etat === "non" ? 0 : E.p)+' %</div></div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:var(--vert);color:#1D1D1B")+';padding:10px 12px;font-weight:600">▪ '+esc(t.toUpperCase())+'<br>'+esc(E.nom)+'</div>';
+  z.innerHTML = '<div style="margin:12px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(E.etat === "non" ? 0 : E.p)+'%;background:#000000"></i></div><div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(E.etat === "non" ? 0 : E.p)+' %</div></div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:var(--vert);color:#000000")+';padding:10px 12px;font-weight:600">▪ '+esc(t.toUpperCase())+'<br>'+esc(E.nom)+'</div>';
 }
 function neEnvDessiner(){
   neBarrePage();
   var z = document.getElementById("envg"); if(!z) return;
   var E = NE_ENV; if(!E){ z.innerHTML = ""; return; }
-  var L = E.lib, st = "background:var(--vert);color:#1D1D1B;font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:12px 14px;line-height:1.5;margin:0 0 22px;cursor:pointer", h = "";
+  var L = E.lib, st = "background:var(--vert);color:#000000;font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:12px 14px;line-height:1.5;margin:0 0 22px;cursor:pointer", h = "";
   if(E.etat === "cours") h = '▪ '+esc(L.cours)+' · '+Math.round(E.p)+' %<br>'+esc(E.nom);
   else if(E.etat === "ok") h = '▪ '+esc(L.ok)+' · 100 %<br>'+esc(E.nom)+(E.ldld ? ' · '+esc(E.ldld) : "");
-  else { st = st.replace("var(--vert)", "#a32a2d").replace("#1D1D1B", "#fff"); h = '▪ '+esc(L.non)+'<br>'+esc(E.nom)+' · '+esc(E.err || "")+'<br>Touchez pour réessayer'; }
+  else { st = st.replace("var(--vert)", "#a32a2d").replace("#000000", "#fff"); h = '▪ '+esc(L.non)+'<br>'+esc(E.nom)+' · '+esc(E.err || "")+'<br>Touchez pour réessayer'; }
   z.innerHTML = '<div id="envb" style="'+st+'">'+h+'</div>';
   var b = document.getElementById("envb"); if(b) b.onclick = function(){ if(E.etat === "ok"){ NE_ENV = null; neEnvDessiner(); } else if(E.etat === "non") neTache(E.cfg); };
 }
@@ -1550,7 +1550,7 @@ function nouvelEmploye(){
   var MSG = "Veuillez utiliser l’onglet Position d’embauche afin de créer une fiche nouvel employé.";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrat d’embauche</h1><div id="nl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div style="margin:22vh 0 0;background:var(--vert);color:#1D1D1B;padding:26px 20px;text-align:center;font-size:16px;line-height:1.45;letter-spacing:.06em;text-transform:uppercase;font-weight:500">'+esc(MSG)+'</div>'; }
+  function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div style="margin:22vh 0 0;background:var(--vert);color:#000000;padding:26px 20px;text-align:center;font-size:16px;line-height:1.45;letter-spacing:.06em;text-transform:uppercase;font-weight:500">'+esc(MSG)+'</div>'; }
   function montrer(l){
     var z = document.getElementById("nl"); if(!z) return;
     if(!l.length){ vide(); return; }
@@ -2026,11 +2026,11 @@ function dateHeure(opts, surChangement){
   if(opts.agenda !== false && !S.jour){ S.jour = isoJour(auj); }
   function isoDe(d){ return isoJour(d); }
   function depuis(iso){ var p = iso.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
-  var CPAL = [["charles","#1D1D1B","#fff"],["direction","#8D806A","#fff"],["famille","#5C5446","#fff"],["ldld","var(--vert)","#1D1D1B"],["prise","#BDC9B2","#1D1D1B"]], CRES = [["#B4AB9B","#1D1D1B"],["#CFC6B5","#1D1D1B"],["#C9F5B5","#1D1D1B"],["#3F3A30","#fff"]];
+  var CPAL = [["charles","#000000","#fff"],["direction","#8D806A","#fff"],["famille","#5C5446","#fff"],["ldld","var(--vert)","#000000"],["prise","#BDC9B2","#000000"]], CRES = [["#B4AB9B","#000000"],["#CFC6B5","#000000"],["#C9F5B5","#000000"],["#3F3A30","#fff"]];
   function nomAg(a){ return a.principal ? "Mon agenda" : a.nom; }
   function idAg(a){ return a.principal ? "primary" : a.id; }
   function couleurAg(id){ var L = DH_CACHE.agendas || [], i = 0, a = null; for(; i < L.length; i++){ if(idAg(L[i]) === id || (id === "primary" && L[i].principal)){ a = L[i]; break; } }
-    if(a && /^#[0-9a-fA-F]{6}$/.test(a.couleur || "")){ var hx = a.couleur, lum = (parseInt(hx.substr(1,2),16)*299 + parseInt(hx.substr(3,2),16)*587 + parseInt(hx.substr(5,2),16)*114)/1000; return {f: hx, t: lum > 150 ? "#1D1D1B" : "#fff"}; }
+    if(a && /^#[0-9a-fA-F]{6}$/.test(a.couleur || "")){ var hx = a.couleur, lum = (parseInt(hx.substr(1,2),16)*299 + parseInt(hx.substr(3,2),16)*587 + parseInt(hx.substr(5,2),16)*114)/1000; return {f: hx, t: lum > 150 ? "#000000" : "#fff"}; }
     var n = a ? (a.principal ? "charles" : String(nomAg(a)).toLowerCase()) : (id === "primary" ? "charles" : ""), k; for(k = 0; k < CPAL.length; k++){ if(n.indexOf(CPAL[k][0]) >= 0) return {f: CPAL[k][1], t: CPAL[k][2]}; }
     var r = CRES[(a ? i : String(id).length) % CRES.length]; return {f: r[0], t: r[1]}; }
   function selAgendas(){
@@ -2085,7 +2085,7 @@ function dateHeure(opts, surChangement){
   }
   function jjDe(liste, iso){ return liste.filter(function(e){ return e.d1 <= iso && iso < e.d2; }); }
   function jjNorm(r, id){ return ((r && r.journee) || []).map(function(e){ return {ag: id, id: e.id, titre: e.titre, d1: e.debut, d2: e.fin || e.debut, couleur: e.couleur || "", couleurTexte: e.couleurTexte || ""}; }); }
-  function couleurEv(e){ if(e && /^#[0-9a-fA-F]{6}$/.test(e.couleur || "")){ var hx = e.couleur, lum = (parseInt(hx.substr(1,2),16)*299 + parseInt(hx.substr(3,2),16)*587 + parseInt(hx.substr(5,2),16)*114)/1000; return {f: hx, t: lum > 150 ? "#1D1D1B" : "#fff"}; } return couleurAg(e && e.ag); }
+  function couleurEv(e){ if(e && /^#[0-9a-fA-F]{6}$/.test(e.couleur || "")){ var hx = e.couleur, lum = (parseInt(hx.substr(1,2),16)*299 + parseInt(hx.substr(3,2),16)*587 + parseInt(hx.substr(5,2),16)*114)/1000; return {f: hx, t: lum > 150 ? "#000000" : "#fff"}; } return couleurAg(e && e.ag); }
   function chargerMois(){
     var ids = selAgendas(), d1 = new Date(S.mois), dim0 = new Date(d1.getFullYear(), d1.getMonth(), 1 - d1.getDay()), l0 = isoJour(lundiDe(dim0));
     if(!ids.length || ids.length > 12) return chargerMoisOld();
@@ -2154,10 +2154,10 @@ function dateHeure(opts, surChangement){
     var fin = new Date(S.lundi); fin.setDate(fin.getDate()+6), aujIso = isoJour(auj), h = "";
     if(opts.agenda !== false){
       var Ls = DH_CACHE.agendas || [], sl = selAgendas(), noms = Ls.filter(function(a){ return sl.indexOf(idAg(a)) >= 0; }).map(nomAg);
-      h += '<button type="button" class="bx" id="dhagb" style="text-align:left;width:100%;border:2px solid #0d1117;display:flex;justify-content:space-between;margin-top:8px"><span>Agendas affichés ('+(noms.length || 1)+')</span><span>'+(S.agOuvert ? "⌃" : "⌄")+'</span></button>';
+      h += '<button type="button" class="bx" id="dhagb" style="text-align:left;width:100%;border:2px solid #000000;display:flex;justify-content:space-between;margin-top:8px"><span>Agendas affichés ('+(noms.length || 1)+')</span><span>'+(S.agOuvert ? "⌃" : "⌄")+'</span></button>';
       if(S.agOuvert){
-        h += '<div style="background:#E3DFD3;border:2px solid #0d1117;margin-top:4px">'+(Ls.length ? "" : '<div style="padding:12px;font-size:13px">▪ AGENDAS INDISPONIBLES · RÉESSAYEZ</div>')+Ls.map(function(a){ var id = idAg(a), on = sl.indexOf(id) >= 0, c = couleurAg(id);
-          return '<div class="dhagl" data-i="'+esc(id)+'" style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;cursor:pointer"><span style="width:18px;height:18px;border:2px solid #0d1117;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:12px;'+(on ? "background:#0d1117;color:#E3DFD3" : "")+'">'+(on ? "✓" : "")+'</span><i style="width:12px;height:12px;border-radius:0;background:'+c.f+'"></i><span>'+esc(nomAg(a))+'</span></div>'; }).join("")+'<button type="button" class="bouton" id="dhagt" style="margin:8px;width:calc(100% - 16px);height:44px;padding:0">Terminé</button></div>';
+        h += '<div style="background:#E3DFD3;border:2px solid #000000;margin-top:4px">'+(Ls.length ? "" : '<div style="padding:12px;font-size:13px">▪ AGENDAS INDISPONIBLES · RÉESSAYEZ</div>')+Ls.map(function(a){ var id = idAg(a), on = sl.indexOf(id) >= 0, c = couleurAg(id);
+          return '<div class="dhagl" data-i="'+esc(id)+'" style="display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;cursor:pointer"><span style="width:18px;height:18px;border:2px solid #000000;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:12px;'+(on ? "background:#000000;color:#E3DFD3" : "")+'">'+(on ? "✓" : "")+'</span><i style="width:12px;height:12px;border-radius:0;background:'+c.f+'"></i><span>'+esc(nomAg(a))+'</span></div>'; }).join("")+'<button type="button" class="bouton" id="dhagt" style="margin:8px;width:calc(100% - 16px);height:44px;padding:0">Terminé</button></div>';
       }
     }
     if(opts.mois){
@@ -2168,11 +2168,11 @@ function dateHeure(opts, surChangement){
       var m1 = new Date(S.mois), ml = new Date(m1.getFullYear(), m1.getMonth(), 1 - m1.getDay()), jm = "";
       if(S.erreurSem) h += '<div class="bandeau">▪ '+esc(S.erreurSem.toUpperCase())+'</div>';
       h += '<div class="moisbar" style="margin-top:10px"><button type="button" id="dmp">Précédent</button><b>'+MOIS_LONGS[m1.getMonth()].toUpperCase()+' '+m1.getFullYear()+'</b><button type="button" id="dms">Suivant</button></div>';
-      jm = '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid #1D1D1B;border-bottom:0;margin-top:6px">'+["D","L","M","M","J","V","S"].map(function(j){ return '<div style="background:#B4AB9B;font-size:11px;text-align:center;padding:4px 0">'+j+'</div>'; }).join("");
+      jm = '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid #000000;border-bottom:0;margin-top:6px">'+["D","L","M","M","J","V","S"].map(function(j){ return '<div style="background:#B4AB9B;font-size:11px;text-align:center;padding:4px 0">'+j+'</div>'; }).join("");
       var nbL = Math.ceil((m1.getDay() + new Date(m1.getFullYear(), m1.getMonth()+1, 0).getDate())/7); for(var wk = 0; wk < nbL; wk++) for(var dk = 0; dk < 7; dk++){ var dd = new Date(ml); dd.setDate(dd.getDate()+wk*7+dk); var iso = isoJour(dd), hors = dd.getMonth() !== m1.getMonth();
         var evj = S.evm.filter(function(e){ return isoJour(new Date(e.debut)) === iso; });
         var jjv = jjDe(S.jm, iso); evj.sort(function(a, b){ return new Date(a.debut) - new Date(b.debut); });
-        jm += '<div data-jm="'+iso+'" style="'+(conge(iso) ? "background:#B5B0A2;" : "")+'min-height:104px;border-right:1px solid #B4AB9B;border-bottom:1px solid #B4AB9B;padding:2px 1px;box-sizing:border-box;font-size:11px;cursor:pointer;'+(hors ? "opacity:.4;" : "")+'"><span style="'+(iso === aujIso ? "background:#1D1D1B;color:#fff;padding:0 4px" : "")+'">'+dd.getDate()+'</span>'+jjv.concat(evj).slice(0, 4).map(function(e){ var c = couleurEv(e); return '<div style="background:'+c.f+';color:'+c.t+';font-size:10px;line-height:14px;padding:0 3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:clip">'+esc(e.titre)+'</div>'; }).join("")+(jjv.length+evj.length > 4 ? '<div style="font-size:10px">+'+(jjv.length+evj.length-4)+'</div>' : "")+'</div>'; }
+        jm += '<div data-jm="'+iso+'" style="'+(conge(iso) ? "background:#B5B0A2;" : "")+'min-height:104px;border-right:1px solid #B4AB9B;border-bottom:1px solid #B4AB9B;padding:2px 1px;box-sizing:border-box;font-size:11px;cursor:pointer;'+(hors ? "opacity:.4;" : "")+'"><span style="'+(iso === aujIso ? "background:#000000;color:#fff;padding:0 4px" : "")+'">'+dd.getDate()+'</span>'+jjv.concat(evj).slice(0, 4).map(function(e){ var c = couleurEv(e); return '<div style="background:'+c.f+';color:'+c.t+';font-size:10px;line-height:14px;padding:0 3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:clip">'+esc(e.titre)+'</div>'; }).join("")+(jjv.length+evj.length > 4 ? '<div style="font-size:10px">+'+(jjv.length+evj.length-4)+'</div>' : "")+'</div>'; }
       h += jm+'</div>';
       h += legende();
       z.innerHTML = h; lierAg(); lierVue();
@@ -2460,11 +2460,11 @@ function suiviCharge(){
     var el = document.getElementById("sc"); if(!el) return;
     var p = liste[i], d = p.dernier;
     var h = '<span class="lbl">Employé</span><select class="bx" id="sce" style="margin-bottom:12px">'+liste.map(function(x, k){ return '<option value="'+k+'"'+(k === i ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
-      ''+tuile(p.effectuee, "CHARGE EFFECTUÉE", 0.8, false, "#8D806A")+tuile(p.nonTerminee, "CHARGE NON TERMINÉE", 0.05, true, "#1D1D1B")+tuile(p.objectifs, "OBJECTIFS ATTEINTS", 0.8, false, "#8D806A") +
+      ''+tuile(p.effectuee, "CHARGE EFFECTUÉE", 0.8, false, "#8D806A")+tuile(p.nonTerminee, "CHARGE NON TERMINÉE", 0.05, true, "#000000")+tuile(p.objectifs, "OBJECTIFS ATTEINTS", 0.8, false, "#8D806A") +
       '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente</b>'+(d ? '<div style="margin-bottom:4px">'+dateCourte(d.date)+' · État choisi : <span style="font-weight:600">'+esc(d.etat)+'</span></div>' : "")+(d && d.note ? '<div>'+esc(d.note)+'</div>' : (d && !(p.notes && p.notes.length) ? '<span>Aucune note.</span>' : (d ? "" : '<span>Aucun suivi précédent.</span>')))+(p.notes && p.notes.length ? '<div class="etq" style="margin-top:8px">NOTES</div>'+p.notes.map(function(n){ return '<div style="margin-top:2px">'+dateCourte(n.date)+' · '+esc(n.note)+'</div>'; }).join("") : "")+'</div>' +
       '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, !etat, "se"+k); }).join("")+'</div>' +
       '<div class="etq" style="margin-top:14px">NOTE · OPTIONNELLE</div>' +
-      '<textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="width:100%;box-sizing:border-box;margin:4px 0 0;background:#B7B1A5;color:#1D1D1B;border:0;border-radius:0;padding:12px">'+esc(sauvNote)+'</textarea>' +
+      '<textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="width:100%;box-sizing:border-box;margin:4px 0 0;background:#B7B1A5;color:#000000;border:0;border-radius:0;padding:12px">'+esc(sauvNote)+'</textarea>' +
       '<button type="button" id="snb" class="bouton" style="margin:8px 0 0;width:100%;white-space:nowrap;font-size:12px;'+(sauvNote.trim() ? "" : "opacity:.5;")+'"'+(sauvNote.trim() ? "" : " disabled")+'>Enregistrer la note seulement</button>' +
       (msg ? '<div class="bandeau" style="margin-top:10px">'+esc(msg)+'</div>' : "");
     el.innerHTML = h;
@@ -2496,7 +2496,7 @@ function suiviCharge(){
       document.getElementById("tb").classList.add("scbar");
     }
     bar.style.cssText = "position:fixed;z-index:20;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);display:flex;gap:8px;box-sizing:border-box";
-    r = document.getElementById("scr"); r.style.cssText = "flex:0 0 auto;background:var(--vert);color:#1D1D1B;text-decoration:none;font-size:13px;letter-spacing:1px;font-weight:600;text-transform:uppercase;padding:14px 18px;white-space:nowrap;display:flex;align-items:center";
+    r = document.getElementById("scr"); r.style.cssText = "flex:0 0 auto;background:var(--vert);color:#000000;text-decoration:none;font-size:13px;letter-spacing:1px;font-weight:600;text-transform:uppercase;padding:14px 18px;white-space:nowrap;display:flex;align-items:center";
     r.onclick = function(e){ e.preventDefault(); nettoyer(); responsable(); };
     b = document.getElementById("scb");
     b.style.cssText = "flex:1 1 0;min-width:0;width:auto;margin:0;box-sizing:border-box;white-space:nowrap;font-size:12px;padding:14px 4px;" + (etat && etat !== ETATS[0] ? "" : "opacity:.5");
@@ -2560,9 +2560,9 @@ function gestionEmployes(){
     var el = document.getElementById("ge"); if(!el) return;
     if(!r || !r.ok) throw 0;
     el.innerHTML = '<div class="etq">CHOISIR UN EMPLOYÉ</div><select class="champ" id="gs">'+r.actifs.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
-      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0;flex:1;border:2px solid #7a2e2e;background:transparent;color:#7a2e2e;padding:11px 0;font-size:12px">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0;flex:1;border:2px solid #0d1117;background:transparent;color:#0d1117;padding:11px 0;font-size:12px">Désactiver</button></div>' +
-      '<div style="background:#b8ae9b;color:#0d1117;font-size:14px;letter-spacing:.2em;padding:13px 14px;text-transform:uppercase;margin:64px 0 18px">Inactifs · '+r.inactifs.length+'</div>' +
-      (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #7a2e2e;background:transparent;color:#7a2e2e">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #0d1117;background:transparent;color:#0d1117">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
+      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0;flex:1;border:2px solid #7a2e2e;background:transparent;color:#7a2e2e;padding:11px 0;font-size:12px">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0;flex:1;border:2px solid #000000;background:transparent;color:#000000;padding:11px 0;font-size:12px">Désactiver</button></div>' +
+      '<div style="background:#b8ae9b;color:#000000;font-size:14px;letter-spacing:.2em;padding:13px 14px;text-transform:uppercase;margin:64px 0 18px">Inactifs · '+r.inactifs.length+'</div>' +
+      (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #7a2e2e;background:transparent;color:#7a2e2e">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #000000;background:transparent;color:#000000">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
     function choisi(){ var s = document.getElementById("gs"); return s.value ? {id: s.value, nom: s.options[s.selectedIndex].text} : null; }
     document.getElementById("gdes").onclick = function(){ var c = choisi(); if(c) agir(c.id, c.nom, false); };
     document.getElementById("gsup").onclick = function(){ var c = choisi(); if(c) supprimer(c.id, c.nom); };
@@ -2583,8 +2583,8 @@ function evoPortrait(p, pctPos, tauxH){
     var mx = Math.max.apply(null, pts.map(function(z){ return z.q.v; })), mn = Math.min.apply(null, pts.map(function(z){ return z.q.v; }));
     pts.forEach(function(z){ z.y = mx === mn ? 40 : 22 + (mx - z.q.v) / (mx - mn) * 44; });
     var g = '<svg viewBox="0 0 '+W+' '+Hh+'" width="100%" role="img" aria-label="'+titre+'" style="display:block;overflow:visible"><line x1="'+X0+'" y1="78" x2="'+(W-X0)+'" y2="78" stroke="#B7B1A5" stroke-width="1"/>';
-    if(pts.length > 1) g += '<polyline points="'+pts.map(function(z){ return z.x+","+z.y; }).join(" ")+'" fill="none" stroke="#1D1D1B" stroke-width="1.5" stroke-dasharray="3 3"/>';
-    pts.forEach(function(z){ g += '<rect x="'+(z.x-4)+'" y="'+(z.y-4)+'" width="8" height="8" fill="'+(z.q.s ? "#fff" : "#1D1D1B")+'" stroke="#1D1D1B" stroke-width="1.5"/><text x="'+z.x+'" y="'+(z.y-9)+'" text-anchor="middle" font-size="9" fill="#1D1D1B">'+fmt(z.q.v)+'</text>'; });
+    if(pts.length > 1) g += '<polyline points="'+pts.map(function(z){ return z.x+","+z.y; }).join(" ")+'" fill="none" stroke="#000000" stroke-width="1.5" stroke-dasharray="3 3"/>';
+    pts.forEach(function(z){ g += '<rect x="'+(z.x-4)+'" y="'+(z.y-4)+'" width="8" height="8" fill="'+(z.q.s ? "#fff" : "#000000")+'" stroke="#000000" stroke-width="1.5"/><text x="'+z.x+'" y="'+(z.y-9)+'" text-anchor="middle" font-size="9" fill="#000000">'+fmt(z.q.v)+'</text>'; });
     ans.forEach(function(y, k){ g += '<text x="'+(X0 + k*DX)+'" y="90" text-anchor="middle" font-size="8" fill="#6E6350">'+y+'</text>'; });
     g += '<text x="'+(X0 + 4*DX)+'" y="99" text-anchor="middle" font-size="6" fill="#6E6350">'+(p.suivante && p.suivante.confirme === false ? "proposé" : "confirmé")+'</text></svg>';
     return '<div class="ptk" style="margin-top:14px">'+titre+'</div>' + g;
@@ -2671,8 +2671,8 @@ function contactsResp(){
     var v = liste.filter(function(c){ return !q || (c.nom+" "+c.groupes).toLowerCase().indexOf(q) >= 0; });
     el.innerHTML = v.map(function(c){ var t = chiffresTel(c.tel);
       return '<div class="cr"><div class="cn">'+esc(c.nom)+'<small>'+esc(c.groupes)+(c.groupes && c.tel ? ' · ' : '')+esc(c.tel)+'</small></div>' +
-        (t ? '<a class="ib" aria-label="Téléphone" href="tel:'+t+'"><svg viewBox="0 0 24 24" fill="#1D1D1B"><path fill-rule="evenodd" d="M3 2h7v6h-3v8h3v6h-7z M12 8h9v8h-9z"/></svg></a><a class="ib" aria-label="SMS" href="sms:'+t+'"><svg viewBox="0 0 24 24" fill="#1D1D1B"><path d="M2 3h20v3h-20zM2 6h3v9h-3zM19 6h3v9h-3zM2 15h20v3h-20zM5 18h4v4h-4zM8 8h8v2h-8zM8 11h5v2h-5z"/></svg></a>' : '<span class="ib vide"></span><span class="ib vide"></span>') +
-        '<a class="ib" aria-label="Courriel" href="mailto:'+esc(c.courriel)+'"><svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1B" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M21 14V3H3v18h13"/><path d="M8 8h7v7H8z"/><path d="M15 15h6v-1"/></svg></a></div>'; }).join("") || '<div class="bandeau">▪ AUCUN RÉSULTAT</div>';
+        (t ? '<a class="ib" aria-label="Téléphone" href="tel:'+t+'"><svg viewBox="0 0 24 24" fill="#000000"><path fill-rule="evenodd" d="M3 2h7v6h-3v8h3v6h-7z M12 8h9v8h-9z"/></svg></a><a class="ib" aria-label="SMS" href="sms:'+t+'"><svg viewBox="0 0 24 24" fill="#000000"><path d="M2 3h20v3h-20zM2 6h3v9h-3zM19 6h3v9h-3zM2 15h20v3h-20zM5 18h4v4h-4zM8 8h8v2h-8zM8 11h5v2h-5z"/></svg></a>' : '<span class="ib vide"></span><span class="ib vide"></span>') +
+        '<a class="ib" aria-label="Courriel" href="mailto:'+esc(c.courriel)+'"><svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M21 14V3H3v18h13"/><path d="M8 8h7v7H8z"/><path d="M15 15h6v-1"/></svg></a></div>'; }).join("") || '<div class="bandeau">▪ AUCUN RÉSULTAT</div>';
   }
   document.getElementById("cq").oninput = dessiner;
   obtenir("contacts", {action:"contacts"}, function(r){ liste = r.contacts || []; dessiner(); },
@@ -2742,7 +2742,7 @@ function calendrier(){
     if(!r || !r.jours) throw 0;
     var jours = r.jours, m = new Date(); m.setDate(1);
     el.innerHTML = '<div class="moisbar"><button type="button" id="cp" aria-label="Mois précédent">Précédent</button><b id="ct"></b><button type="button" id="cn" aria-label="Mois suivant">Suivant</button></div><div class="cg" id="cg"></div>' +
-      '<div class="leg"><span><i class="sq" style="background:#0d1117"></i>Congé / fermé</span><span><i class="sq" style="background:var(--vert)"></i>Réunion</span></div>' +
+      '<div class="leg"><span><i class="sq" style="background:#000000"></i>Congé / fermé</span><span><i class="sq" style="background:var(--vert)"></i>Réunion</span></div>' +
       '<div class="etiq" style="margin-top:24px">▪ ÉVÉNEMENTS DU MOIS</div><div id="cl"></div>';
     function iso(y, mo, d){ return y+"-"+("0"+(mo+1)).slice(-2)+"-"+("0"+d).slice(-2); }
     function dessiner(){
@@ -2812,7 +2812,7 @@ function rencontre(){
     };
   }).catch(function(){ var el = document.getElementById("rc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
-function carreVert(t){ return '<div style="margin:18vh 0 0;background:var(--vert);color:#1D1D1B;padding:56px 20px;text-align:center;font-size:17px;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;font-weight:500">'+esc(t)+'</div>'; }
+function carreVert(t){ return '<div style="margin:18vh 0 0;background:var(--vert);color:#000000;padding:56px 20px;text-align:center;font-size:17px;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;font-weight:500">'+esc(t)+'</div>'; }
 var VUE_ESSAIS_H = 0;
 function heures(){
   // Vraies heures du logiciel de gestion (pointages de la borne, mises à jour aux 15 minutes). Tout tient sur un écran.
