@@ -1185,3 +1185,8 @@ select:not(.act){width:100%;box-sizing:border-box}
 @media (min-width:900px){.ca #ca{grid-template-columns:1fr 1fr;align-items:start}}
 .ca .cacops{display:grid;grid-template-columns:1fr;gap:0 12px}
 @media (min-width:600px){.ca .cacops{grid-template-columns:1fr 1fr}}
+.ca #ca{grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){.ca #ca{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.ca #ca>div,.ca .carte,.ca .cacops{min-width:0}
+.ca .carte,.ca .pret,.ca .aide,.ca .ligne>div{overflow-wrap:anywhere;word-break:break-word}
+.ca .btn{white-space:normal;padding:10px 12px;letter-spacing:.08em}
