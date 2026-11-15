@@ -111,7 +111,7 @@ setInterval(majRetour, 400);
 function filetVide(){
   var pg = app.querySelector(".page"); if(!pg || document.getElementById("envbar")) return;   // la barre au milieu (Envoi salarial, Position employé) tient lieu d'attente
   var c = pg.cloneNode(true); Array.prototype.forEach.call(c.querySelectorAll(".bl, a.retour, .auto-instant, h1, .vub, .pph, script, style"), function(x){ x.remove(); });
-  var plein = c.innerText.replace(/\s+/g, "").length > 0 || !!c.querySelector("input,select,textarea,button,img,svg,canvas,a");
+  var plein = c.innerText.replace(/\s+/g, "").length > 0 || !!c.querySelector("input,select,textarea,button,img,svg,canvas,a,.att");   // une barre d'attente déjà présente compte comme contenu: jamais deux barres
   var m = pg.querySelector(".auto-instant");
   if(pg.classList.contains("sans-instant")){ if(m) m.remove(); return; }   // Autoévaluation: jamais « Un instant »
   if(plein){ if(m) m.remove(); return; }
