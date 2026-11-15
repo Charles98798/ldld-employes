@@ -28,7 +28,7 @@ function invMoisFr(iso){ var m = ["janvier","février","mars","avril","mai","jui
 function invOnglets(){
   if(!invDroitReception()) return '<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px">Prise d’inventaire</div>';
   var v = INV.vue;
-  var st = function(on){ return "flex:1;min-width:0;height:46px;padding:0 4px;margin:0;font-size:12px;" + (on ? "border-bottom:3px solid #8EFF60" : "opacity:.6"); };
+  var st = function(on){ return "flex:1;min-width:0;height:46px;padding:0 4px;margin:0;font-size:12px;" + (on ? "border-bottom:3px solid var(--vert)" : "opacity:.6"); };
   return '<div style="display:flex;gap:6px;margin:0 0 12px"><button type="button" class="bouton" id="invtsor" style="'+st(v !== "reception" && v !== "stocks")+'">Prise d’inventaire</button><button type="button" class="bouton" id="invtsto" style="'+st(v === "stocks")+'">Gestion des stocks</button><button type="button" class="bouton" id="invtrec" style="'+st(v === "reception")+'">Réception</button></div>';
 }
 function invLierOnglets(){
@@ -148,7 +148,7 @@ function invReception(){
       h += '<div style="background:rgba(189,201,178,.5);padding:14px 14px 16px;margin:0 0 14px"><div style="overflow-wrap:anywhere">'+invE(x.description)+'</div><div style="font-size:12px;color:#6E6350;margin:2px 0 8px">'+invE(x.code)+' · Commandé : '+invE(x.commande)+'</div>'
         + '<div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap"><div><span class="lbl" style="margin-top:0">Reçu</span><div style="display:flex;align-items:center;gap:8px"><button type="button" class="bouton invm" data-i="'+invE(x.id)+'" style="width:46px;height:46px;padding:0;margin:0">−</button><span style="font-size:22px;min-width:30px;text-align:center">'+rc+'</span><button type="button" class="bouton invpl" data-i="'+invE(x.id)+'" style="width:46px;height:46px;padding:0;margin:0">+</button></div></div>'
         + '<div style="flex:1;min-width:110px"><span class="lbl" style="margin-top:0">Prix · obligatoire</span><input class="bx invprix'+(vide ? " rose" : "")+'" data-i="'+invE(x.id)+'" inputmode="decimal" autocomplete="off" value="'+invE(x.prix)+'" style="margin:0;height:46px"></div></div>'
-        + '<div style="display:flex;align-items:center;gap:18px;margin-top:10px"><button type="button" class="bouton invc" data-i="'+invE(x.id)+'" style="width:auto;height:46px;padding:0 22px;margin:0"'+(ok ? "" : " disabled")+'>Confirmer</button><a href="#" class="inva" data-i="'+invE(x.id)+'" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:#8EFF60;text-decoration-thickness:3px;text-underline-offset:4px">Annuler</a></div>'
+        + '<div style="display:flex;align-items:center;gap:18px;margin-top:10px"><button type="button" class="bouton invc" data-i="'+invE(x.id)+'" style="width:auto;height:46px;padding:0 22px;margin:0"'+(ok ? "" : " disabled")+'>Confirmer</button><a href="#" class="inva" data-i="'+invE(x.id)+'" style="color:#1D1D1B;text-decoration:underline;text-decoration-color:var(--vert);text-decoration-thickness:3px;text-underline-offset:4px">Annuler</a></div>'
         + '<div class="bandeau invmsg" data-i="'+invE(x.id)+'" style="display:none;margin-top:8px"></div></div>';
     });
   });

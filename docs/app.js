@@ -1305,7 +1305,7 @@ function chargerDroits(){
     if(app.querySelector(".menu.accueil")) menu();
   }).catch(function(){});
 }
-var CTL_COULEURS = ["#8D806A", "#0D1319", "#8EFF60"];
+var CTL_COULEURS = ["#8D806A", "#0D1319", "var(--vert)"];
 function controleOuvrir(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrôle</h1><div id="ctl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
@@ -1501,16 +1501,16 @@ function neBarrePage(){
   var z = document.getElementById("gebar"); var E = NE_ENV; if(!z) return;
   if(!E){ z.innerHTML = ""; return; }
   var rouge = E.etat === "non", t = E.etat === "cours" ? E.lib.cours : (E.etat === "ok" ? E.lib.ok : E.lib.non + " · " + (E.err || ""));
-  z.innerHTML = '<div style="margin:12px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(E.etat === "non" ? 0 : E.p)+'%;background:#0d1117"></i></div><div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(E.etat === "non" ? 0 : E.p)+' %</div></div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:#8EFF60;color:#1D1D1B")+';padding:10px 12px;font-weight:600">▪ '+esc(t.toUpperCase())+'<br>'+esc(E.nom)+'</div>';
+  z.innerHTML = '<div style="margin:12px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(E.etat === "non" ? 0 : E.p)+'%;background:#0d1117"></i></div><div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(E.etat === "non" ? 0 : E.p)+' %</div></div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:var(--vert);color:#1D1D1B")+';padding:10px 12px;font-weight:600">▪ '+esc(t.toUpperCase())+'<br>'+esc(E.nom)+'</div>';
 }
 function neEnvDessiner(){
   neBarrePage();
   var z = document.getElementById("envg"); if(!z) return;
   var E = NE_ENV; if(!E){ z.innerHTML = ""; return; }
-  var L = E.lib, st = "background:#8EFF60;color:#1D1D1B;font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:12px 14px;line-height:1.5;margin:0 0 22px;cursor:pointer", h = "";
+  var L = E.lib, st = "background:var(--vert);color:#1D1D1B;font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:12px 14px;line-height:1.5;margin:0 0 22px;cursor:pointer", h = "";
   if(E.etat === "cours") h = '▪ '+esc(L.cours)+' · '+Math.round(E.p)+' %<br>'+esc(E.nom);
   else if(E.etat === "ok") h = '▪ '+esc(L.ok)+' · 100 %<br>'+esc(E.nom)+(E.ldld ? ' · '+esc(E.ldld) : "");
-  else { st = st.replace("#8EFF60", "#a32a2d").replace("#1D1D1B", "#fff"); h = '▪ '+esc(L.non)+'<br>'+esc(E.nom)+' · '+esc(E.err || "")+'<br>Touchez pour réessayer'; }
+  else { st = st.replace("var(--vert)", "#a32a2d").replace("#1D1D1B", "#fff"); h = '▪ '+esc(L.non)+'<br>'+esc(E.nom)+' · '+esc(E.err || "")+'<br>Touchez pour réessayer'; }
   z.innerHTML = '<div id="envb" style="'+st+'">'+h+'</div>';
   var b = document.getElementById("envb"); if(b) b.onclick = function(){ if(E.etat === "ok"){ NE_ENV = null; neEnvDessiner(); } else if(E.etat === "non") neTache(E.cfg); };
 }
@@ -1550,7 +1550,7 @@ function nouvelEmploye(){
   var MSG = "Veuillez utiliser l’onglet Position d’embauche afin de créer une fiche nouvel employé.";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrat d’embauche</h1><div id="nl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div style="margin:22vh 0 0;background:#8EFF60;color:#1D1D1B;padding:26px 20px;text-align:center;font-size:16px;line-height:1.45;letter-spacing:.06em;text-transform:uppercase;font-weight:500">'+esc(MSG)+'</div>'; }
+  function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div style="margin:22vh 0 0;background:var(--vert);color:#1D1D1B;padding:26px 20px;text-align:center;font-size:16px;line-height:1.45;letter-spacing:.06em;text-transform:uppercase;font-weight:500">'+esc(MSG)+'</div>'; }
   function montrer(l){
     var z = document.getElementById("nl"); if(!z) return;
     if(!l.length){ vide(); return; }
@@ -2026,7 +2026,7 @@ function dateHeure(opts, surChangement){
   if(opts.agenda !== false && !S.jour){ S.jour = isoJour(auj); }
   function isoDe(d){ return isoJour(d); }
   function depuis(iso){ var p = iso.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
-  var CPAL = [["charles","#1D1D1B","#fff"],["direction","#8D806A","#fff"],["famille","#5C5446","#fff"],["ldld","#8EFF60","#1D1D1B"],["prise","#BDC9B2","#1D1D1B"]], CRES = [["#B4AB9B","#1D1D1B"],["#CFC6B5","#1D1D1B"],["#C9F5B5","#1D1D1B"],["#3F3A30","#fff"]];
+  var CPAL = [["charles","#1D1D1B","#fff"],["direction","#8D806A","#fff"],["famille","#5C5446","#fff"],["ldld","var(--vert)","#1D1D1B"],["prise","#BDC9B2","#1D1D1B"]], CRES = [["#B4AB9B","#1D1D1B"],["#CFC6B5","#1D1D1B"],["#C9F5B5","#1D1D1B"],["#3F3A30","#fff"]];
   function nomAg(a){ return a.principal ? "Mon agenda" : a.nom; }
   function idAg(a){ return a.principal ? "primary" : a.id; }
   function couleurAg(id){ var L = DH_CACHE.agendas || [], i = 0, a = null; for(; i < L.length; i++){ if(idAg(L[i]) === id || (id === "primary" && L[i].principal)){ a = L[i]; break; } }
@@ -2496,7 +2496,7 @@ function suiviCharge(){
       document.getElementById("tb").classList.add("scbar");
     }
     bar.style.cssText = "position:fixed;z-index:20;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(max(env(safe-area-inset-bottom,0px),12px) + 10px);display:flex;gap:8px;box-sizing:border-box";
-    r = document.getElementById("scr"); r.style.cssText = "flex:0 0 auto;background:#8EFF60;color:#1D1D1B;text-decoration:none;font-size:13px;letter-spacing:1px;font-weight:600;text-transform:uppercase;padding:14px 18px;white-space:nowrap;display:flex;align-items:center";
+    r = document.getElementById("scr"); r.style.cssText = "flex:0 0 auto;background:var(--vert);color:#1D1D1B;text-decoration:none;font-size:13px;letter-spacing:1px;font-weight:600;text-transform:uppercase;padding:14px 18px;white-space:nowrap;display:flex;align-items:center";
     r.onclick = function(e){ e.preventDefault(); nettoyer(); responsable(); };
     b = document.getElementById("scb");
     b.style.cssText = "flex:1 1 0;min-width:0;width:auto;margin:0;box-sizing:border-box;white-space:nowrap;font-size:12px;padding:14px 4px;" + (etat && etat !== ETATS[0] ? "" : "opacity:.5");
@@ -2742,7 +2742,7 @@ function calendrier(){
     if(!r || !r.jours) throw 0;
     var jours = r.jours, m = new Date(); m.setDate(1);
     el.innerHTML = '<div class="moisbar"><button type="button" id="cp" aria-label="Mois précédent">Précédent</button><b id="ct"></b><button type="button" id="cn" aria-label="Mois suivant">Suivant</button></div><div class="cg" id="cg"></div>' +
-      '<div class="leg"><span><i class="sq" style="background:#0d1117"></i>Congé / fermé</span><span><i class="sq" style="background:#8EFF60"></i>Réunion</span></div>' +
+      '<div class="leg"><span><i class="sq" style="background:#0d1117"></i>Congé / fermé</span><span><i class="sq" style="background:var(--vert)"></i>Réunion</span></div>' +
       '<div class="etiq" style="margin-top:24px">▪ ÉVÉNEMENTS DU MOIS</div><div id="cl"></div>';
     function iso(y, mo, d){ return y+"-"+("0"+(mo+1)).slice(-2)+"-"+("0"+d).slice(-2); }
     function dessiner(){
@@ -2812,7 +2812,7 @@ function rencontre(){
     };
   }).catch(function(){ var el = document.getElementById("rc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
-function carreVert(t){ return '<div style="margin:18vh 0 0;background:#8EFF60;color:#1D1D1B;padding:56px 20px;text-align:center;font-size:17px;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;font-weight:500">'+esc(t)+'</div>'; }
+function carreVert(t){ return '<div style="margin:18vh 0 0;background:var(--vert);color:#1D1D1B;padding:56px 20px;text-align:center;font-size:17px;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;font-weight:500">'+esc(t)+'</div>'; }
 var VUE_ESSAIS_H = 0;
 function heures(){
   // Vraies heures du logiciel de gestion (pointages de la borne, mises à jour aux 15 minutes). Tout tient sur un écran.
