@@ -135,8 +135,12 @@ function revOuvrir(D, acces){
     }
   };
 
+  function score(){
+    var v = [moy(["C26", "C27", "C28"]), moy(["E38", "E39", "E40", "E41", "E42"]), nombre("C29") === null ? null : (nombre("C29") <= 1 ? nombre("C29") * 10 : nombre("C29") / 10)].filter(function(x){ return x !== null; });
+    return v.length ? Math.round(v.reduce(function(a, b){ return a + b; }, 0) / v.length * 10) : null;   // indicatif seulement; le pointage exact suit la règle du portrait
+  }
   function squelette(){
-    app.innerHTML = '<div class="page sans-instant"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div class="revw" id="revw"><div class="revs"><span>' + esc(D.employe) + ' · Rencontre ' + esc(D.rencontre) + ' · ' + esc(D.annee) + '</span><span id="revs"></span></div><div class="revp" id="revp"></div><div class="revn1" id="revn1"></div><div id="revx"></div><div class="revnav"><button type="button" class="bouton" id="revpre">Précédent</button><button type="button" class="bouton revsv2" id="revsui">Suivant</button></div></div></div>';
+    app.innerHTML = '<div class="page sans-instant rvpage"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div class="revw rvo" id="revw"><header><div class="haut"><div class="qui"><div class="nom">' + esc(D.employe) + '</div><div class="sous">Rencontre ' + esc(D.rencontre) + ' · ' + esc(D.annee) + (D.categorie ? ' · ' + esc(D.categorie) : '') + ' · Évaluateur : ' + esc(D.evaluateur || "") + ' · Portail rencontre évaluation</div></div><div class="score"><div><div class="lib">Pointage indicatif</div><div class="jauge"><div id="revj"></div></div></div><div class="val" id="revv">—</div></div></div><div class="etapes" id="revp"></div></header><main id="revx"></main><footer><div class="msg" id="revs"></div><button type="button" class="rvb" id="revpre">Précédent</button><button type="button" class="rvb noir" id="revsui">Suivant</button></footer></div></div>';
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); revFermer(); };
     document.getElementById("revpre").onclick = function(){ aller(etape - 1); };
     document.getElementById("revsui").onclick = function(){ aller(etape + 1); };
@@ -157,15 +161,15 @@ function revOuvrir(D, acces){
     addEventListener("resize", ajuster);
   }
   function pastilles(){
-    var h = ""; for(var i = 1; i <= 12; i++) h += '<button type="button" class="revpt' + (i === etape ? ' on' : (faite(i) ? ' f' : '')) + '" data-n="' + i + '" aria-label="Étape ' + i + ', ' + esc(REV_TITRES[i - 1]) + '">' + i + '</button>';
+    var h = ""; for(var i = 1; i <= 12; i++) h += '<button type="button" class="pastille' + (i === etape ? ' active' : '') + (faite(i) ? ' faite' : '') + '" data-n="' + i + '" aria-label="Étape ' + i + ', ' + esc(REV_TITRES[i - 1]) + '"><span class="rond">' + i + '</span><span class="lb">' + esc(REV_TITRES[i - 1]) + '</span></button>';
     document.getElementById("revp").innerHTML = h;
-    document.getElementById("revn1").innerHTML = '<span>Étape ' + etape + ' sur 12</span><b>' + esc(REV_TITRES[etape - 1]) + '</b>';
+    var sc = score(); document.getElementById("revv").textContent = sc === null ? "—" : sc + " %"; document.getElementById("revj").style.width = (sc || 0) + "%";
     document.getElementById("revpre").disabled = etape === 1; document.getElementById("revsui").disabled = etape === 12;
   }
   function majEtape(garde){
     var x = document.getElementById("revx"); if(!x) return;
     var foc = garde && document.activeElement && document.activeElement.getAttribute ? document.activeElement.getAttribute("data-a") : null;
-    x.innerHTML = ET[etape](); pastilles();
+    x.innerHTML = '<h1>' + esc(REV_TITRES[etape - 1]) + '</h1>' + ET[etape](); pastilles();
     if(foc){ var q = x.querySelector('[data-a="' + foc + '"]'); if(q && q.tagName !== "BUTTON") q.focus(); }
     ajuster();
   }

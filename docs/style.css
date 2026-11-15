@@ -1191,3 +1191,60 @@ select:not(.act){width:100%;box-sizing:border-box}
 .ca #ca>div,.ca .carte,.ca .cacops{min-width:0}
 .ca .carte,.ca .pret,.ca .aide,.ca .ligne>div{overflow-wrap:anywhere;word-break:break-word}
 .ca .btn{white-space:normal;padding:10px 12px;letter-spacing:.08em}
+.revbn{background:#1D1D1B;color:#EDEBE4;font-size:12px;padding:9px 11px;margin:0 0 10px}
+.revt[type=date]{display:block;-webkit-appearance:none;appearance:none;min-width:0;max-width:100%;text-align:left;min-height:42px}
+
+/* Rencontre d'évaluation: habillage identique à la page web d'origine (blanc, noir, taupe #B4AB9B, Inter fin, majuscules, angles droits) */
+.page.rvpage{background:#fff}
+.rvo{font-family:Inter,'Helvetica Neue',Arial,sans-serif;font-weight:300;color:#000;font-size:13px;background:#fff}
+.rvo header{padding:10px 0 0;border-bottom:1px solid #B4AB9B}
+.rvo .haut{display:flex;align-items:center;gap:14px}
+.rvo .qui{flex:1;min-width:0}
+.rvo .nom{font-weight:400;font-size:17px;letter-spacing:2px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rvo .sous{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#B4AB9B;margin-top:2px}
+.rvo .score{display:flex;align-items:center;gap:8px;border-left:1px solid #B4AB9B;padding:2px 0 2px 14px}
+.rvo .score .lib{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:#B4AB9B;line-height:1.1}
+.rvo .score .jauge{width:110px;height:2px;background:#ece8e1;margin-top:4px}.rvo .score .jauge div{height:100%;background:#000}
+.rvo .score .val{font-size:24px;font-weight:300;min-width:62px;text-align:right}
+.rvo .etapes{display:flex;margin:10px 0 0}
+.rvo .pastille{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px 7px;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;font:inherit;font-size:9px;letter-spacing:.6px;text-transform:uppercase;color:#B4AB9B;white-space:nowrap;cursor:pointer}
+.rvo .pastille .rond{font-size:12px;font-weight:400;color:#B4AB9B}
+.rvo .pastille.active{color:#000;border-bottom-color:#000}.rvo .pastille.active .rond{color:#000}
+.rvo .pastille.faite .rond{color:#000}.rvo .pastille.faite .rond:after{content:' ✓';font-size:10px}
+.rvo main{padding:10px 4px 6px}
+.rvo h1{font-size:15px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;margin:6px 0;color:#000;background:none;padding:0;display:block}
+.rvo .note{border-left:1px solid #B4AB9B;color:#6b665e;font-size:11.5px;padding:2px 12px;margin:0 0 8px}
+.rvo .carte{border-left:1px solid #000;padding:6px 18px;margin:8px 0;background:#fff}
+.rvo .carte .grand{font-weight:300;font-size:28px;letter-spacing:2px;text-transform:uppercase}
+.rvo .deux{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rvo .bloc-lab{font-weight:400;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#8f877a;margin:6px 0 3px}
+.rvo input[type=date]{width:100%;font:inherit;font-weight:300;padding:4px 8px;border:0;border-bottom:1px solid #d8d3ca;background:#f6f3ee;border-radius:0;box-sizing:border-box;min-height:34px}
+.rvo footer{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #ece8e1}
+.rvo footer .msg{flex:1;font-weight:400;font-size:11px;letter-spacing:.5px}
+.rvo button.rvb{font:inherit;font-size:11px;letter-spacing:2px;text-transform:uppercase;background:#fff;border:1px solid #000;border-radius:0;padding:9px 22px;color:#000;cursor:pointer}
+.rvo button.rvb.noir{background:#000;color:#fff}.rvo button.rvb:disabled{opacity:.35;cursor:default}
+@media (max-width:999px){
+.rvo .haut{flex-wrap:wrap;gap:8px}.rvo .score{border-left:0;padding-left:0;width:100%;justify-content:space-between}
+.rvo .nom{white-space:normal;font-size:15px}.rvo .sous{line-height:1.5}
+.rvo .etapes{display:grid;grid-template-columns:repeat(12,1fr)}.rvo .pastille{padding:6px 0 7px}.rvo .pastille .lb{display:none}
+.rvo .carte .grand{font-size:22px}.rvo .deux{grid-template-columns:1fr}
+.rvo footer{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));z-index:5}
+.rvo footer .rvb{flex:1}.rvo footer .msg{display:none}
+.rvo main{padding-bottom:80px}}
+.rvo .score .lib{background:none!important;padding:0!important;margin:0}
+/* Habillage original appliqué aux blocs des 12 étapes */
+.rvo .revh{font-weight:400;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#8f877a;margin:10px 0 3px}
+.rvo .revc{background:#fff;border:0;border-bottom:1px solid #ece8e1;padding:6px 0;margin:0 0 4px}
+.rvo .revl{font-size:13px}.rvo .revl b{font-weight:400}.rvo .revk{font-size:11px;color:#8f877a}
+.rvo .revgr{font-weight:300;font-size:26px}
+.rvo .revb{background:#fff;border:1px solid #d8d3ca;color:#000;font-weight:400;font-size:12px;padding:9px 0;box-shadow:none}.rvo .revb:hover{border-color:#000}
+.rvo .revb.on{background:#000;border-color:#000;color:#fff}.rvo .revb.em{box-shadow:inset 0 0 0 1px #000;border-color:#000}.rvo .revb.em.on{box-shadow:none}
+.rvo .revn.rose .revb:not(.on){background:#f4b3c4;border-color:#f4b3c4}
+.rvo .revt{background:#f6f3ee;border:0;border-bottom:1px solid #d8d3ca;font-weight:300;font-size:13px}.rvo .revt:focus{border-bottom-color:#000;outline:0}
+.rvo .revt.rose{background:#f4b3c4}
+.rvo .revb2{background:#fff;border:1px solid #d8d3ca;color:#000;font-size:12px;letter-spacing:.5px;padding:8px 12px}.rvo .revb2.on{background:#000;border-color:#000;color:#fff}
+.rvo .revbar{background:#fff;border-left:1px solid #B4AB9B;padding:6px 12px;font-size:12px}
+.rvo .revbarre{background:#ece8e1;height:2px}.rvo .revbarre i{background:#000}
+.rvo .revbn{background:#fff;color:#B4AB9B;border-left:1px solid #B4AB9B;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:4px 10px}
+.rvo .revlien{color:#000}
+.rvo main h1{margin-top:6px}
