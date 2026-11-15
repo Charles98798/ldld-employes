@@ -32,7 +32,7 @@ function finPreparer(r){
   var achat = finSomme(n, finCodes(r, 6110, 6200));
   var cats = [["Fixe", finSomme(n, finCodes(r, 5105, 5290))], ["Acrylique", finSomme(n, finCodes(r, 5405, 5490))], ["Pièce", finSomme(n, finCodes(r, 5305, 5390))], ["Gestion", finSomme(n, finCodes(r, 5705, 5790))]];
   var sal = finSomme(n, cats.map(function(c){ return c[1]; }));
-  var rep = [["Fixe", finSomme(n, [].concat(finCodes(r, 4100, 4210)))], ["Acrylique", finSomme(n, finCodes(r, 4400, 4410))], ["Pièces", finSomme(n, finCodes(r, 4300, 4300))], ["Ortho", finSomme(n, finCodes(r, 4430, 4430))]];
+  var rep = [["Fixe", finSomme(n, [].concat(finCodes(r, 4100, 4210)))], ["Acrylique", finSomme(n, [].concat(finCodes(r, 4400, 4410), finCodes(r, 4136, 4136)))], ["Pièces", finSomme(n, finCodes(r, 4300, 4300))], ["Ortho", finSomme(n, finCodes(r, 4430, 4430))]];
   var repTot = finSomme(n, rep.map(function(c){ return c[1]; }));
   function L(nom, num, den, obj){ return {n: nom, num: num, den: den, obj: (obj === undefined ? null : obj)}; }
   FIN_S = {ventes: ventes, marge: marge, achat: achat, sal: sal,
