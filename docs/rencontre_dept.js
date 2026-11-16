@@ -125,7 +125,7 @@ function rdE(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c
 function rdPuces(t){
   return String(t == null ? "" : t).split("\n").map(function(l){
     var m = /^\s*([•▪\-–])\s+(.*)$/.exec(l);
-    return m ? '<div class="pu"><span>'+rdE(m[1] === "-" || m[1] === "–" ? "•" : m[1])+'</span><span>'+rdE(m[2])+'</span></div>' : '<div>'+rdE(l)+'</div>'; }).join("");
+    return m ? '<div class="pu"><span>'+rdE(m[1] === "-" || m[1] === "–" ? "•" : m[1])+'</span><span>'+rdE(rdMin(m[2]))+'</span></div>' : '<div>'+rdE(rdMin(l))+'</div>'; }).join("");
 }
 function rdMsg(txt){ if(/^un instant$/i.test(String(txt))) return '<div class="att"><i></i></div>'; return '<div class="bandeau">▪ '+rdE(String(txt).toUpperCase())+'</div>'; }
 function rdErreur(r){ var e = r && r.erreur ? String(r.erreur) : ""; return rdMsg(e || "Indisponible · réessayez"); }
