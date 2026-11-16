@@ -546,10 +546,26 @@ function dessinerAujourdhui(){
   var ab = absLignes();
   if(!l.length && !ab.length){ z.innerHTML = ""; return; }
   z.innerHTML = '<div class="aujb"><b></b><b></b></div><div class="aujl">'+ab.join("")+l.map(function(e){
-    if(e.journee) return '<div>Journée · '+esc(e.titre || "")+'</div>';
+    if(e.journee) return '<div>Journée · '+esc(titreAg(e.titre))+'</div>';
     var d = new Date(e.debut), fait = new Date(e.fin || e.debut) < t;
     var hh = d.getHours(), mm = d.getMinutes();   // l'heure vient de la date locale: heureFr() attend un texte ISO et rendait un vide
-    return '<div'+(fait ? ' class="fait"' : "")+'>'+hh+(mm ? ' h '+(mm < 10 ? "0" : "")+mm : ' h')+' · '+esc(String(e.titre || "").trim() || "Sans titre")+'</div>'; }).join("")+'</div>';
+    return '<div'+(fait ? ' class="fait"' : "")+'>'+hh+(mm ? ' h '+(mm < 10 ? "0" : "")+mm : ' h')+' · '+esc(titreAg(e.titre, e.debut) || "Sans titre")+'</div>'; }).join("")+'</div>';
+}
+// Titres d'agenda: écriture uniformisée à l'affichage seulement (l'agenda Google n'est pas modifié). Seuls les mots tout en majuscules changent:
+// première lettre en majuscule (noms propres), petits mots en minuscules, codes qui commencent par un chiffre en minuscules. L'heure répétée au début du titre est retirée.
+var PETITS_MOTS = {de:1, du:1, des:1, la:1, le:1, les:1, et:1, "à":1, au:1, aux:1, en:1, un:1, une:1, sur:1, sous:1, pour:1, par:1, dans:1};
+function titreAg(t, debut){
+  t = String(t || "").trim(); if(!t) return t;
+  if(debut){ var d = new Date(debut); if(!isNaN(d)){ var m = /^(\d{1,2})\s*[hH]\s*(\d{2})?\s*(?:[\/:\-\u2013\u2014]\s*)?/.exec(t); if(m && +m[1] === d.getHours() && (m[2] ? +m[2] : 0) === d.getMinutes() && t.length > m[0].length) t = t.slice(m[0].length); } }
+  var n = 0;
+  return t.replace(/[^\s\/]+/g, function(w){
+    var lettres = w.replace(/[^A-Za-zÀ-ÿ]/g, "");
+    if(!lettres || lettres !== lettres.toUpperCase() || lettres === lettres.toLowerCase()) { n++; return w; }
+    var bas = w.toLowerCase(), premier = n++ === 0;
+    if(/^\d/.test(w)) return bas;
+    if(!premier && PETITS_MOTS[bas]) return bas;
+    return bas.replace(/(^|[-\u2019'])([a-zà-ÿ])/g, function(x, a, b){ return a + b.toUpperCase(); });
+  }).replace(/\s*\/\s*/g, " / ");
 }
 function auj_normalise(liste, jour){
   // Tous les événements du jour, une seule fois chacun: clé = uid Google s'il existe, sinon horaire + titre; on garde la ligne qui a un titre.
@@ -2077,7 +2093,7 @@ function dateHeure(opts, surChangement){
         var c = couleurEv(x.e), d = document.createElement("div"); d.className = "blc";
         var w = col.offsetWidth - 2, haut = Math.max((f0-a0)*rh, 24), tp = y0+(a0-7)*rh; if(x.cl.bas !== undefined && tp < x.cl.bas) tp = x.cl.bas; x.cl.bas = tp + haut + 1;   // chevauchement: pleine largeur, empilés l'un sous l'autre, jamais superposés   // plusieurs événements dans la même plage: chacun pleine largeur, posés les uns par-dessus les autres (léger décalage pour les voir tous)
         d.style.cssText = "display:block;height:auto;position:absolute;cursor:pointer;box-sizing:border-box;overflow:hidden;z-index:2;border:1px solid #cecdc5;padding:1px 2px;font-size:8px;line-height:10px;letter-spacing:0;text-transform:none;text-align:left;overflow-wrap:anywhere;left:"+(col.offsetLeft+1)+"px;width:"+w+"px;top:"+tp+"px;height:"+haut+"px;background:"+c.f+";color:"+c.t;
-        d.innerHTML = '<div style="font-weight:600">'+esc(x.e.titre || "(Sans titre)")+'</div><div>'+heureTxt(new Date(x.e.debut).getHours(), new Date(x.e.debut).getMinutes())+'</div>';
+        d.innerHTML = '<div style="font-weight:600">'+esc(titreAg(x.e.titre, x.e.debut) || "(Sans titre)")+'</div><div>'+heureTxt(new Date(x.e.debut).getHours(), new Date(x.e.debut).getMinutes())+'</div>';
         d.onclick = function(){ var e = x.e; if(!e || !e.id) return; if(S.ed && S.ed.id === e.id){ S.ed = null; } else { var d0 = new Date(e.debut); S.ed = {id: e.id, jour: isoJour(d0), heure: d0.getHours()+":"+d0.getMinutes(), confirm: false, msg: ""}; } rendre(); };   // un clic sur la carte l'ouvre
         gs.appendChild(d);
       });
@@ -2189,7 +2205,7 @@ function dateHeure(opts, surChangement){
       var nbL = Math.ceil((m1.getDay() + new Date(m1.getFullYear(), m1.getMonth()+1, 0).getDate())/7); for(var wk = 0; wk < nbL; wk++) for(var dk = 0; dk < 7; dk++){ var dd = new Date(ml); dd.setDate(dd.getDate()+wk*7+dk); var iso = isoJour(dd), hors = dd.getMonth() !== m1.getMonth();
         var evj = S.evm.filter(function(e){ return isoJour(new Date(e.debut)) === iso; });
         var jjv = jjDe(S.jm, iso); evj.sort(function(a, b){ return new Date(a.debut) - new Date(b.debut); });
-        jm += '<div data-jm="'+iso+'" style="'+(conge(iso) ? "background:#B5B0A2;" : "")+'min-height:104px;border-right:1px solid #B4AB9B;border-bottom:1px solid #B4AB9B;padding:2px 1px;box-sizing:border-box;font-size:11px;cursor:pointer;'+(hors ? "opacity:.4;" : "")+'"><span style="'+(iso === aujIso ? "background:#000000;color:#fff;padding:0 4px" : "")+'">'+dd.getDate()+'</span>'+jjv.concat(evj).slice(0, 4).map(function(e){ var c = couleurEv(e); return '<div style="background:'+c.f+';color:'+c.t+';font-size:10px;line-height:14px;padding:0 3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:clip">'+esc(e.titre)+'</div>'; }).join("")+(jjv.length+evj.length > 4 ? '<div style="font-size:10px">+'+(jjv.length+evj.length-4)+'</div>' : "")+'</div>'; }
+        jm += '<div data-jm="'+iso+'" style="'+(conge(iso) ? "background:#B5B0A2;" : "")+'min-height:104px;border-right:1px solid #B4AB9B;border-bottom:1px solid #B4AB9B;padding:2px 1px;box-sizing:border-box;font-size:11px;cursor:pointer;'+(hors ? "opacity:.4;" : "")+'"><span style="'+(iso === aujIso ? "background:#000000;color:#fff;padding:0 4px" : "")+'">'+dd.getDate()+'</span>'+jjv.concat(evj).slice(0, 4).map(function(e){ var c = couleurEv(e); return '<div style="background:'+c.f+';color:'+c.t+';font-size:10px;line-height:14px;padding:0 3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:clip">'+esc(titreAg(e.titre, e.debut))+'</div>'; }).join("")+(jjv.length+evj.length > 4 ? '<div style="font-size:10px">+'+(jjv.length+evj.length-4)+'</div>' : "")+'</div>'; }
       h += jm+'</div>';
       h += legende();
       z.innerHTML = h; lierAg(); lierVue();
@@ -2208,7 +2224,7 @@ function dateHeure(opts, surChangement){
     if(S.jj.length){
       g += '<div class="h" style="height:auto;min-height:24px">Jour</div>';
       for(k = 0; k < 7; k++){ dj = new Date(S.lundi); dj.setDate(dj.getDate()+k); var lj = jjDe(S.jj, isoJour(dj));
-        g += '<div'+(isoJour(dj) === aujIso ? ' class="ja"' : '')+' style="min-width:0;height:auto;min-height:24px;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:visible;gap:2px;padding:2px 1px">'+lj.map(function(e){ var c = couleurEv(e); return '<span style="background:'+c.f+';color:'+c.t+';font-size:8px;line-height:10px;padding:1px 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;text-align:left">'+esc(e.titre)+'</span>'; }).join("")+'</div>'; }
+        g += '<div'+(isoJour(dj) === aujIso ? ' class="ja"' : '')+' style="min-width:0;height:auto;min-height:24px;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:visible;gap:2px;padding:2px 1px">'+lj.map(function(e){ var c = couleurEv(e); return '<span style="background:'+c.f+';color:'+c.t+';font-size:8px;line-height:10px;padding:1px 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;text-align:left">'+esc(titreAg(e.titre, e.debut))+'</span>'; }).join("")+'</div>'; }
     }
     for(var hh = 7; hh <= 18; hh++){
       g += '<div class="h">'+hh+' h</div>';
@@ -2221,8 +2237,8 @@ function dateHeure(opts, surChangement){
     if(S.jour && !opts.mois && S.jour >= isoJour(S.lundi) && S.jour <= isoJour(fin)){
       var d0j = depuis(S.jour), duJour = S.evs.filter(function(e){ return isoJour(new Date(e.debut)) === S.jour && e.id !== opts.exclure; });
       var jjJour = jjDe(S.jj, S.jour);
-      h += '<span class="lbl">'+jourTxt(d0j)+(conge(S.jour) ? " \u00b7 labo ferm\u00e9" : "")+'</span>' + jjJour.map(function(e){ var c = couleurAg(e.ag); return '<div class="ligne"><span style="font-size:10px">TOUTE LA JOURNÉE</span><span style="flex:1;margin-left:12px"><i style="display:inline-block;width:10px;height:10px;background:'+c.f+';margin-right:6px"></i>'+esc(e.titre)+'</span></div>'; }).join("") + ((duJour.length || jjJour.length) ? (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut), mod = e.ldld && opts.modifier !== false;
-        return '<div class="ligne"><span>'+heureTxt(d0.getHours(), d0.getMinutes())+'</span><span style="flex:1;margin-left:12px">'+esc(e.titre)+'</span>'+(mod ? '<span class="crayon" data-ed="'+esc(e.id)+'" style="cursor:pointer;padding:0 6px" aria-label="Modifier">\u270e</span>' : '')+'</div>'+(S.ed && S.ed.id === e.id ? panneau(e) : ''); }).join("") : "") : '<div class="bandeau">\u25aa AUCUN \u00c9V\u00c9NEMENT CE JOUR</div>');
+      h += '<span class="lbl">'+jourTxt(d0j)+(conge(S.jour) ? " \u00b7 labo ferm\u00e9" : "")+'</span>' + jjJour.map(function(e){ var c = couleurAg(e.ag); return '<div class="ligne"><span style="font-size:10px">TOUTE LA JOURNÉE</span><span style="flex:1;margin-left:12px"><i style="display:inline-block;width:10px;height:10px;background:'+c.f+';margin-right:6px"></i>'+esc(titreAg(e.titre, e.debut))+'</span></div>'; }).join("") + ((duJour.length || jjJour.length) ? (duJour.length ? duJour.map(function(e){ var d0 = new Date(e.debut), mod = e.ldld && opts.modifier !== false;
+        return '<div class="ligne"><span>'+heureTxt(d0.getHours(), d0.getMinutes())+'</span><span style="flex:1;margin-left:12px">'+esc(titreAg(e.titre, e.debut))+'</span>'+(mod ? '<span class="crayon" data-ed="'+esc(e.id)+'" style="cursor:pointer;padding:0 6px" aria-label="Modifier">\u270e</span>' : '')+'</div>'+(S.ed && S.ed.id === e.id ? panneau(e) : ''); }).join("") : "") : '<div class="bandeau">\u25aa AUCUN \u00c9V\u00c9NEMENT CE JOUR</div>');
     }
     var jours = optJours(S.jour), jd = S.jour ? depuis(S.jour) : null;
     var hl = optHeures(S.jour, S.heure, 30, opts.exclure);
@@ -2416,7 +2432,7 @@ function mesEvenements(){
   function dessiner(){
     var el = document.getElementById("me"); if(!el) return;
     var h = liste.length ? '<div class="lcol lcolh"><span>Date</span><span>Événement</span><span>Heure</span></div>' + liste.map(function(e, i){ var d0 = new Date(e.debut);
-      return '<a href="#" class="lcol" data-i="'+i+'" style="color:inherit;text-decoration:none'+(choisi === i ? ';background:var(--tx);color:var(--noir)' : '')+'"><span>'+d0.getDate()+" "+MOIS_LONGS[d0.getMonth()].slice(0,4)+".</span><span>"+esc(e.titre)+(e.serie ? "<small>Série</small>" : "")+"</span><span>"+heureTxt(d0.getHours(), d0.getMinutes())+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE MOIS</div>';
+      return '<a href="#" class="lcol" data-i="'+i+'" style="color:inherit;text-decoration:none'+(choisi === i ? ';background:var(--tx);color:var(--noir)' : '')+'"><span>'+d0.getDate()+" "+MOIS_LONGS[d0.getMonth()].slice(0,4)+".</span><span>"+esc(titreAg(e.titre, e.debut))+(e.serie ? "<small>Série</small>" : "")+"</span><span>"+heureTxt(d0.getHours(), d0.getMinutes())+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE MOIS</div>';
     if(choisi !== null && !mode) h += '<div class="aeact"><button type="button" class="bouton" id="mm">Modifier</button><button type="button" class="bouton" id="ms">Supprimer</button></div>';
     if(choisi !== null && mode){ h += '<div class="etq" style="margin-top:12px">▪ SUPPRIMER</div><div class="aeact"><button type="button" class="bouton" id="m1">Cet événement</button>'+(liste[choisi].serie ? '<button type="button" class="bouton" id="m2">Toute la série</button>' : '')+'</div>'; }
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
@@ -2712,7 +2728,7 @@ function evenementsEmploye(idEl){
   var tn = torontoMaintenant().date, evs = [], fermes = [];
   function dessiner(){
     var el = document.getElementById(idEl); if(!el) return;
-    var liste = evs.map(function(x){ var j = String(x.debut || "").slice(0, 10), h = heureFr(x.debut), f = heureFr(x.fin); return {j:j, h:h ? (f ? h + " à " + f : h) : "", t:x.titre || "", d:x.texte || "", tri:String(x.debut || "")}; })
+    var liste = evs.map(function(x){ var j = String(x.debut || "").slice(0, 10), h = heureFr(x.debut), f = heureFr(x.fin); return {j:j, h:h ? (f ? h + " à " + f : h) : "", t:titreAg(x.titre, x.debut), d:x.texte || "", tri:String(x.debut || "")}; })
       .concat(fermes.map(function(x){ return {j:x.d, h:"", t:x.n || "Laboratoire fermé", d:"", tri:x.d + "T00:00"}; }))
       .filter(function(x){ return x.j >= tn; });
     liste.sort(function(a, b){ return a.tri < b.tri ? -1 : a.tri > b.tri ? 1 : 0; });
