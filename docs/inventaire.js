@@ -2,7 +2,7 @@
 // la liste vient de INV_FICTIF et AUCUNE écriture réelle n'est faite. Pour brancher le vrai: (1) remplacer invLire() par l'appel au Service (lecture seule, vue SQL),
 // (2) mettre INV_ECRITURE = true et compléter invEcrire() (point unique pour « déduire » et « commander »). Rien d'autre à changer.
 var INV_ECRITURE = false;   // déduire/commander: désactivés (message clair) jusqu'à la confirmation de Michel; mettre true ensuite
-var INV_PHASE2 = false;     // Gestion des stocks et Réception: phase 2, onglets cachés   // désactivé en attendant la fonction d'écriture de Michel
+var INV_PHASE2 = true;      // onglets Gestion des stocks et Réception visibles (Gestionnaires, Direction), mais actions désactivées avec message tant que INV_ECRITURE est false   // désactivé en attendant la fonction d'écriture de Michel
 var INV_FICTIF = [
   {id: "f01", description: "ACRYLIQUE VITA DENTINE A1", categorie: "Acrylique", fournisseur: "VIDENT", unite: "BOÎTE", par: 3, stock: 4, minimum: 1, mode: "deduire"},
   {id: "f02", description: "ACRYLIQUE VITA DENTINE A2", categorie: "Acrylique", fournisseur: "VIDENT", unite: "BOÎTE", par: 3, stock: 2, minimum: 1, mode: "deduire"},
@@ -141,11 +141,11 @@ function invProduit(p){
 // Réception: une section par fournisseur et date de commande (repliable), puis une ligne par produit: code, description, commandé, reçu, prix (obligatoire), Confirmer et Annuler.
 function invReception(){
   var z = document.getElementById("invapp"); if(!z) return;
-  if(!INV.rec) INV.rec = INV_RECEPTION_FICTIF.map(function(x){ return Object.assign({}, x); });
+  if(!INV.rec) INV.rec = INV_LECTURE ? [] : INV_RECEPTION_FICTIF.map(function(x){ return Object.assign({}, x); });
   var L = INV.rec, groupes = [], idx = {};
   L.forEach(function(x){ var k = x.fournisseur + "|" + x.date; if(idx[k] === undefined){ idx[k] = groupes.length; groupes.push({k: k, f: x.fournisseur, d: x.date, l: []}); } groupes[idx[k]].l.push(x); });
   groupes.sort(function(a, b){ return a.d < b.d ? 1 : a.d > b.d ? -1 : (a.f < b.f ? -1 : 1); });
-  var h = invOnglets() + '<div style="font-size:12px;color:#6E6350;margin:0 0 8px">Données fictives pour essai</div>';
+  var h = invOnglets() + (INV_LECTURE ? '<div style="font-size:13px;color:#6E6350;margin:0 0 10px">La réception des commandes sera activée bientôt. Pour le moment, rien n’est enregistré.</div>' : '<div style="font-size:12px;color:#6E6350;margin:0 0 8px">Données fictives pour essai</div>');
   if(!groupes.length) h += '<div class="bandeau">▪ AUCUNE COMMANDE EN ATTENTE</div>';
   groupes.forEach(function(g){
     var ouvert = INV.ouv[g.k] !== false;
@@ -190,11 +190,11 @@ function invCompte(p){
   var z = document.getElementById("invapp");
   function dessiner(msg){
     var d = q - p.stock, h = (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : "");
-    h += '<span class="lbl">Produit</span><div style="font-size:20px;font-weight:700;overflow-wrap:anywhere">'+invE(p.description)+'</div><div style="font-size:12px;color:#6E6350;margin:4px 0 10px">'+invE(p.categorie)+' · '+invE(p.fournisseur)+'</div>';
+    h += '<span class="lbl">Produit</span><div style="font-size:20px;font-weight:700;overflow-wrap:anywhere">'+invE(invT(p.description))+'</div><div style="font-size:12px;color:#6E6350;margin:4px 0 10px">'+invE(invT(p.categorie))+' · '+invE(invT(p.fournisseur))+'</div>';
     h += '<div style="background:rgba(189,201,178,.5);padding:12px"><div style="font-size:12px;color:#6E6350">Stock actuel dans Trak</div><div style="font-size:22px;font-weight:700">'+invE(p.stock)+'</div></div>';
     h += '<span class="lbl" style="margin-top:18px">Quantité exacte comptée</span><div style="display:flex;align-items:center;gap:14px"><button type="button" class="bouton" id="invmoins" style="width:46px;height:46px;padding:0;margin:0">−</button><span style="font-size:28px;min-width:48px;text-align:center">'+q+'</span><button type="button" class="bouton" id="invplus" style="width:46px;height:46px;padding:0;margin:0">+</button></div>';
     h += '<div style="font-size:13px;color:#6E6350;margin:10px 0">'+(d === 0 ? "Identique au stock actuel." : "Différence : "+(d > 0 ? "+" : "−")+Math.abs(d)+".")+'</div>';
-    h += '<button type="button" class="bouton" id="invok" style="height:46px;padding:0;margin:8px 0"'+(d === 0 ? " disabled" : "")+'>Enregistrer la quantité</button>';
+    h += '<button type="button" class="bouton" id="invok" style="height:46px;padding:0;margin:8px 0"'+(d === 0 || !INV_ECRITURE ? " disabled" : "")+'>Enregistrer la quantité</button>'+(INV_ECRITURE ? "" : '<div style="font-size:13px;color:#6E6350;margin:8px 0">L’inscription des quantités sera activée bientôt. Pour le moment, rien n’est enregistré.</div>');
     h += '<div class="bandeau" id="invmsg" style="'+(msg ? "" : "display:none;")+'margin-top:8px">'+invE(msg || "")+'</div>';
     z.innerHTML = h;
     document.getElementById("invmoins").onclick = function(){ if(q > 0){ q--; dessiner(); } };
