@@ -574,10 +574,10 @@ textarea.bx{min-height:90px;resize:vertical}
 @media (prefers-reduced-motion:no-preference){
 .menu.anim .logo{clip-path:inset(0 100% 0 0);transform:translateX(-14px);animation:lgDev .6s cubic-bezier(.2,.7,.2,1) .2s forwards}
 .menu.anim a:not(.sortie){opacity:0;transform:translateX(-10px);animation:lnApp .35s ease-out forwards}
-.menu.anim a .ic{clip-path:inset(0 0 100% 0);animation:icBat .4s steps(6) forwards}
+.menu.anim a .ic{clip-path:inset(0 0 100% 0);animation:icBat .4s steps(6) both}
 @keyframes lgDev{to{clip-path:inset(0 0 0 0);transform:none}}
 @keyframes lnApp{to{opacity:1;transform:none}}
-@keyframes icBat{to{clip-path:inset(0 0 0 0)}}}
+@keyframes icBat{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(-3px -3px -3px -3px)}}}
 /* Titre de page en blocs décalés, aux proportions du logo (grand bloc de la flèche à gauche, bloc du titre plus bas, fente entre les deux) */
 .bl{position:relative;display:flow-root;margin:4px 0 20px;min-height:96px}
 .bl .rt{position:absolute;left:0;top:0;width:84px;height:74px;background:var(--encre);color:#fff;font-size:24px;text-decoration:none;display:flex;align-items:center;justify-content:center}
@@ -1387,3 +1387,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 .notifec .notifplus{display:block;text-align:center;margin-top:18px;font-size:12px;letter-spacing:.12em;color:#6E6350;text-decoration:none}
 .notifec .logo{filter:invert(1)}
 .notifec h1{display:inline-block;background:#000;color:#fff;padding:16px 28px 16px 24px;font-weight:400;font-size:26px;line-height:1.1}
+
+/* Les pictogrammes ne sont jamais coupés: rien ne rogne le dessin en dehors de l'animation d'arrivée */
+.menu a .ic,.page .doc .ic{overflow:visible}
+.menu:not(.anim) a .ic{clip-path:none}

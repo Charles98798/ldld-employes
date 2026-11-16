@@ -675,6 +675,7 @@ function menu(){
   dernierTitre = "";
   if(!reprendrePos("__menu")) window.scrollTo(0, 0);   // l'accueil s'ouvre en haut, sauf au retour d'une page (même place qu'avant)
   if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ var dl = (0.7 + Math.min(k, 12) * 0.09) + "s"; a.style.animationDelay = dl; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = dl; });
+  if(animer) setTimeout(function(){ var m = app.querySelector(".menu.anim"); if(m) m.classList.remove("anim"); }, 4500);
   Array.prototype.forEach.call(app.querySelectorAll("a[data-k]"), function(a){
     a.onclick = function(e){ e.preventDefault(); var x = ENT_PAR_ID[a.getAttribute("data-k")]; if(x) x.f(); };
   });
