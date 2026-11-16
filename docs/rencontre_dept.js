@@ -510,14 +510,14 @@ function rdCourbe(a, b){
   function segments(arr){ var out = [], cur = []; for(var k = 0; k < n; k++){ if(!arr[k] || nul(arr[k])){ if(cur.length) out.push(cur); cur = []; } else cur.push(xy(arr, k).join(",")); } if(cur.length) out.push(cur); return out; }
   function lignes(arr, attr){ return segments(arr).map(function(sg){ return sg.length > 1 ? '<polyline points="'+sg.join(" ")+'" fill="none" '+attr+'/>' : ""; }).join(""); }
   var avecB = b && b.length >= n && b.some(function(x){ return !nul(x); });
-  var lab = a.map(function(x, k){ return (n <= 12 || (n - 1 - k) % 2 === 0) ? '<text x="'+(px + (n > 1 ? k*(W-2*px)/(n-1) : 0)).toFixed(1)+'" y="'+(H-2)+'" font-size="7" text-anchor="middle" fill="#6E6350">'+rdE(x.m)+'</text>' : ""; }).join("");
+  var lab = a.map(function(x, k){ return (n <= 12 || (n - 1 - k) % 2 === 0) ? '<text x="'+(px + (n > 1 ? k*(W-2*px)/(n-1) : 0)).toFixed(1)+'" y="'+(H-2)+'" font-size="7" text-anchor="middle" fill="#6E6350" style="font-family:Archivo,sans-serif;text-transform:uppercase;letter-spacing:.06em">'+rdE(x.m)+'</text>' : ""; }).join("");
   var pts = a.map(function(x, k){ if(nul(x)) return ""; var p = xy(a, k); return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2" fill="#000000"/>'; }).join("");
   var kd = -1; for(var q = n - 1; q >= 0; q--){ if(!nul(a[q])){ kd = q; break; } }
   var dern = kd >= 0 ? xy(a, kd) : null;
-  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 10px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1"/>'
-    + (avecB ? lignes(b, 'stroke="#000000" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55"') : "")
-    + lignes(a, 'stroke="#000000" stroke-width="2"') + pts
-    + (dern ? '<text x="'+dern[0]+'" y="'+(parseFloat(dern[1])-6)+'" font-size="9" text-anchor="end" fill="#000000">'+rdE(a[kd].v)+'</text>' : "") + lab + '</svg>'
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 10px;max-width:480px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+    + (avecB ? lignes(b, 'stroke="#000000" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55" vector-effect="non-scaling-stroke"') : "")
+    + lignes(a, 'stroke="#000000" stroke-width="2" vector-effect="non-scaling-stroke"') + pts
+    + lab + '</svg>'
     + (avecB ? '<div class="rdp"><small>Trait plein · cette année · pointillé · an passé</small></div>' : "");
 }
 function rdSerie(titre, a, b){
