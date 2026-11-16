@@ -101,9 +101,9 @@ function finRendu(){
       if(l.n === "Achat" && FIN_R && FIN_R.achatsFourn && FIN_R.achatsFourn.top && FIN_R.achatsFourn.top.length){
         var af = FIN_R.achatsFourn;
         h += '<a class="fglnk" href="#" data-k="achat">Voir les plus gros fournisseurs</a><div class="fgtop" id="fgtop_achat" hidden>';
-        var lst, totL = af.total, mt = FIN_T ? finTopMois(FIN_T.achatsFournMois, ms, FIN_NONACHAT, 15) : null;
+        var lst, totL = af.total, mt = FIN_T ? finTopMois(FIN_T.achatsFournMois, ms, FIN_NONACHAT, 10) : null;
         if(mt){ lst = mt; totL = finSom(FIN_S.achat, ms); }
-        else { lst = af.top.filter(function(x){ return !FIN_NONACHAT.test(finSans(x[0])); }).slice(0, 15); var ta = 0; FIN_S.achat.forEach(function(v){ ta += v || 0; }); if(ta > 0) totL = ta; }
+        else { lst = af.top.filter(function(x){ return !FIN_NONACHAT.test(finSans(x[0])); }).slice(0, 10); var ta = 0; FIN_S.achat.forEach(function(v){ ta += v || 0; }); if(ta > 0) totL = ta; }
         lst.forEach(function(x, i){ h += '<div class="fgtl fgtl3"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (totL ? finPct(x[1] / totL * 100) : "") + '</span></div>'; });
         h += '</div>';
       }
