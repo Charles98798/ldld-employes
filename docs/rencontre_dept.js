@@ -503,7 +503,7 @@ function rdDescLigne(d){
 function rdLigne(cols){ return '<div class="rdp" style="display:flex;gap:10px;flex-wrap:wrap"><span>'+cols.map(rdE).join('</span><span>')+'</span></div>'; }
 function rdCourbe(a, b){
   // Courbe SVG: trait noir = année en cours, pointillé = an passé. Valeurs en chiffres, jamais de noms. Un mois sans donnée (null) n'est pas dessiné: la courbe s'interrompt, jamais de zéro inventé.
-  var W = Math.max(320, Math.min(960, (window.innerWidth || 360) - 40)), H = Math.round(W * (W > 500 ? .3 : .34)), px = (W > 500 ? 30 : 16), py = 20, FS = W > 500 ? 11 : 8, RP = W > 500 ? 3 : 2, n = a.length, max = 1;   // tailles en pixels réels: le graphique s'agrandit sans grossir le trait ni le texte
+  var W = Math.max(320, Math.min(1300, (window.innerWidth || 360) - 40)), H = Math.round(W * (W > 500 ? .3 : .34)), px = (W > 500 ? 30 : 16), py = 20, FS = W > 500 ? 12 : 8, RP = W > 500 ? 3.5 : 2, n = a.length, max = 1;   // tailles en pixels réels: le graphique s'agrandit sans grossir le trait ni le texte
   var nul = function(x){ return x == null || x.v == null; };
   a.forEach(function(x){ max = Math.max(max, +x.v || 0); }); (b || []).forEach(function(x){ max = Math.max(max, +x.v || 0); });
   function xy(arr, k){ return [(px + (n > 1 ? k*(W-2*px)/(n-1) : 0)).toFixed(1), (H-py-((+arr[k].v || 0)/max)*(H-2*py)).toFixed(1)]; }
@@ -514,7 +514,7 @@ function rdCourbe(a, b){
   var pts = a.map(function(x, k){ if(nul(x)) return ""; var p = xy(a, k); return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+RP+'" fill="#000000"/>'; }).join("");
   var kd = -1; for(var q = n - 1; q >= 0; q--){ if(!nul(a[q])){ kd = q; break; } }
   var dern = kd >= 0 ? xy(a, kd) : null;
-  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 10px;max-width:960px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 10px;max-width:1300px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1" vector-effect="non-scaling-stroke"/>'
     + (avecB ? lignes(b, 'stroke="#000000" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55" vector-effect="non-scaling-stroke"') : "")
     + lignes(a, 'stroke="#000000" stroke-width="2" vector-effect="non-scaling-stroke"') + pts
     + lab + '</svg>'
