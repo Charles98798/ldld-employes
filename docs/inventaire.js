@@ -30,7 +30,7 @@ function invOnglets(){
   if(!INV_PHASE2 || !invDroitReception()) return '<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px">Prise d’inventaire</div>';
   var v = INV.vue;
   var st = function(on){ return "flex:1;min-width:0;height:46px;padding:0 4px;margin:0;font-size:12px;" + (on ? "border-bottom:3px solid var(--vert)" : "opacity:.6"); };
-  return '<div style="display:flex;gap:6px;margin:0 0 12px"><button type="button" class="bouton" id="invtsor" style="'+st(v !== "reception" && v !== "stocks")+'">Prise d’inventaire</button><button type="button" class="bouton" id="invtsto" style="'+st(v === "stocks")+'">Gestion des stocks</button><button type="button" class="bouton" id="invtrec" style="'+st(v === "reception")+'">Réception</button></div>';
+  return '<div style="display:flex;gap:6px;margin:0 0 12px"><button type="button" class="bouton" id="invtsor" style="'+st(v !== "reception" && v !== "stocks")+'">Prise d’inventaire</button><button type="button" class="bouton" id="invtsto" style="'+st(v === "stocks")+'">Comptage d’inventaire</button><button type="button" class="bouton" id="invtrec" style="'+st(v === "reception")+'">Réception</button></div>';
 }
 function invLierOnglets(){
   var a = document.getElementById("invtsor"), b = document.getElementById("invtrec"), c = document.getElementById("invtsto");
@@ -78,7 +78,7 @@ function invCategories(){ var v = {}, o = []; (INV.d.produits || []).forEach(fun
 function invListe(){
   var cats = invCategories(), z = document.getElementById("invapp"); if(!z) return;
   var h = invOnglets() + (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : invMaj());
-  if(INV.vue === "stocks") h += '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Gestion des stocks : choisissez un produit pour inscrire la quantité exacte comptée.</div>';
+  if(INV.vue === "stocks") h += '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Comptage d’inventaire : choisissez un produit pour inscrire la quantité exacte comptée.</div>';
   h += '<span class="lbl">Catégorie</span><select class="bx" id="invcat" style="background:#8D806A;color:#fff;border-color:#8D806A">'+cats.map(function(c){ return '<option value="'+invE(c)+'"'+(c === INV.cat ? " selected" : "")+'>'+invE(c)+'</option>'; }).join("")+'</select>';
   h += '<span class="lbl">Commence par</span><input class="bx" id="invdeb" autocomplete="off" placeholder="Premières lettres" value="'+invE(INV.debut)+'">';
   h += '<span class="lbl">Produit</span><div id="invprod"></div>';
