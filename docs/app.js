@@ -2155,7 +2155,7 @@ function dateHeure(opts, surChangement){
     return {html: r, masquees: masq}; }
   function panneau(e){
     var ed = S.ed, dur = Math.max(15, Math.round((new Date(e.fin) - new Date(e.debut))/60000)), hs = optHeures(ed.jour, ed.heure, dur, e.id);
-    var ps = ed.choix ? '<div class="etq" style="margin-top:10px">ENREGISTRER POUR</div><div class="aeact" style="margin:6px 0 0"><button type="button" class="bouton" id="ep1" style="margin:0">Cette date seulement</button><button type="button" class="bouton" id="ep2" style="margin:0">Cette date et toutes les suivantes</button></div>' : ed.confirm ? '<div style="margin:8px 0"><div style="font-size:13px;margin-bottom:6px">Supprimer cet \u00e9v\u00e9nement ?</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="edn" style="margin:0">Non</button><button type="button" class="bouton" id="edo" style="margin:0;background:#a32d2d;color:#fff">Oui</button></div></div>'
+    var ps = ed.choix ? '<div class="etq" style="margin-top:10px">▪ ENREGISTRER POUR</div><div class="aeact" style="margin:6px 0 0"><button type="button" class="bouton" id="ep1" style="margin:0">Cette date seulement</button><button type="button" class="bouton" id="ep2" style="margin:0">Cette date et toutes les suivantes</button></div>' : ed.confirm ? '<div style="margin:8px 0"><div style="font-size:13px;margin-bottom:6px">Supprimer cet \u00e9v\u00e9nement ?</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="edn" style="margin:0">Non</button><button type="button" class="bouton" id="edo" style="margin:0;background:#a32d2d;color:#fff">Oui</button></div></div>'
       : '<div class="aeact" style="margin:8px 0 0"><button type="button" class="bouton" id="eds" style="margin:0">Enregistrer</button><button type="button" class="bouton" id="edx" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)">Supprimer</button><button type="button" class="bouton" id="edf" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)">Fermer</button></div>';
     return '<div style="border:1.5px solid var(--tx);padding:10px;margin:4px 0 10px"><div style="display:flex;gap:8px"><div style="flex:1"><span class="lbl">Date</span><select class="bx" id="edd">'+optJours(ed.jour)+'</select></div><div style="flex:1"><span class="lbl">Heure</span><select class="bx" id="edh">'+hs.html+'</select></div></div>'+ps+(ed.msg ? '<div class="bandeau">'+esc(ed.msg)+'</div>' : '')+'</div>';
   }
@@ -2372,7 +2372,7 @@ function modifierReunion(e){
   function enregistrer(){
     lire(); var q = dh.lire(); if(!q || !sujet.trim() || !part.courriels().length) return;
     if(e.serie){ var z2 = document.getElementById("nport"); if(!z2){ z2 = document.createElement("div"); z2.id = "nport"; document.getElementById("nreste").appendChild(z2); }
-      z2.innerHTML = '<div class="etq" style="margin-top:14px">ENREGISTRER POUR</div><div class="aeact"><button type="button" class="bouton" id="p1">Cette date seulement</button><button type="button" class="bouton" id="p2">Cette date et toutes les suivantes</button></div>';
+      z2.innerHTML = '<div class="etq" style="margin-top:14px">▪ ENREGISTRER POUR</div><div class="aeact"><button type="button" class="bouton" id="p1">Cette date seulement</button><button type="button" class="bouton" id="p2">Cette date et toutes les suivantes</button></div>';
       document.getElementById("p1").onclick = function(){ z2.remove(); envoyerMod("un"); }; document.getElementById("p2").onclick = function(){ z2.remove(); envoyerMod("suivants"); }; return; }
     envoyerMod("un");
   }
@@ -2411,7 +2411,7 @@ function mesEvenements(){
     var h = liste.length ? '<div class="lcol lcolh"><span>Date</span><span>Événement</span><span>Heure</span></div>' + liste.map(function(e, i){ var d0 = new Date(e.debut);
       return '<a href="#" class="lcol" data-i="'+i+'" style="color:inherit;text-decoration:none'+(choisi === i ? ';background:var(--tx);color:var(--noir)' : '')+'"><span>'+d0.getDate()+" "+MOIS_LONGS[d0.getMonth()].slice(0,4)+".</span><span>"+esc(e.titre)+(e.serie ? "<small>Série</small>" : "")+"</span><span>"+heureTxt(d0.getHours(), d0.getMinutes())+'</span></a>'; }).join("") : '<div class="bandeau">▪ AUCUN ÉVÉNEMENT CE MOIS</div>';
     if(choisi !== null && !mode) h += '<div class="aeact"><button type="button" class="bouton" id="mm">Modifier</button><button type="button" class="bouton" id="ms">Supprimer</button></div>';
-    if(choisi !== null && mode){ h += '<div class="etq" style="margin-top:12px">SUPPRIMER</div><div class="aeact"><button type="button" class="bouton" id="m1">Cet événement</button>'+(liste[choisi].serie ? '<button type="button" class="bouton" id="m2">Toute la série</button>' : '')+'</div>'; }
+    if(choisi !== null && mode){ h += '<div class="etq" style="margin-top:12px">▪ SUPPRIMER</div><div class="aeact"><button type="button" class="bouton" id="m1">Cet événement</button>'+(liste[choisi].serie ? '<button type="button" class="bouton" id="m2">Toute la série</button>' : '')+'</div>'; }
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
     el.innerHTML = h;
     Array.prototype.forEach.call(el.querySelectorAll("[data-i]"), function(a){ a.onclick = function(e){ e.preventDefault(); choisi = +a.getAttribute("data-i"); mode = ""; msg = ""; dessiner(); }; });
@@ -2444,8 +2444,8 @@ function utilisationApp(){
     var el = document.getElementById("ut"); if(!el) return;
     if(!r || !r.ok) throw 0;
     if(!r.employes.length){ el.innerHTML = '<div class="bandeau">▪ LE SUIVI COMMENCE AUJOURD\'HUI · REVENEZ DEMAIN</div>'; return; }
-    el.innerHTML = '<div class="etq">JOURS OUVRABLES OÙ L\'EMPLOYÉ A OUVERT L\'APPLICATION · 6 DERNIERS MOIS · DEPUIS LE '+esc(r.depuis)+'</div>' +
-      '<div class="etq" style="margin-top:14px">MOYENNE DE L\'ÉQUIPE · '+pc(r.moyenne || 0)+'</div>'+barre(r.moyenne || 0) +
+    el.innerHTML = '<div class="etq">▪ JOURS OUVRABLES OÙ L\'EMPLOYÉ A OUVERT L\'APPLICATION · 6 DERNIERS MOIS · DEPUIS LE '+esc(r.depuis)+'</div>' +
+      '<div class="etq" style="margin-top:14px">▪ MOYENNE DE L\'ÉQUIPE · '+pc(r.moyenne || 0)+'</div>'+barre(r.moyenne || 0) +
       '<div class="etiq" style="margin-top:14px">▪ EMPLOYÉS</div>' +
       r.employes.map(function(x){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span>'+pc(x.taux)+'</span></div>'+barre(x.taux); }).join("");
   }).catch(function(){ var el = document.getElementById("ut"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
@@ -2471,9 +2471,9 @@ function suiviCharge(){
     var p = liste[i], d = p.dernier;
     var h = '<span class="lbl">Employé</span><select class="bx" id="sce" style="margin-bottom:12px">'+liste.map(function(x, k){ return '<option value="'+k+'"'+(k === i ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
       ''+tuile(p.effectuee, "CHARGE EFFECTUÉE", 0.8, false, "#8D806A")+tuile(p.nonTerminee, "CHARGE NON TERMINÉE", 0.05, true, "#000000")+tuile(p.objectifs, "OBJECTIFS ATTEINTS", 0.8, false, "#8D806A") +
-      '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente</b>'+(d ? '<div style="margin-bottom:4px">'+dateCourte(d.date)+' · État choisi : <span style="font-weight:600">'+esc(d.etat)+'</span></div>' : "")+(d && d.note ? '<div>'+esc(d.note)+'</div>' : (d && !(p.notes && p.notes.length) ? '<span>Aucune note.</span>' : (d ? "" : '<span>Aucun suivi précédent.</span>')))+(p.notes && p.notes.length ? '<div class="etq" style="margin-top:8px">NOTES</div>'+p.notes.map(function(n){ return '<div style="margin-top:2px">'+dateCourte(n.date)+' · '+esc(n.note)+'</div>'; }).join("") : "")+'</div>' +
-      '<div class="etq" style="margin-top:12px">ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, !etat, "se"+k); }).join("")+'</div>' +
-      '<div class="etq" style="margin-top:14px">NOTE · OPTIONNELLE</div>' +
+      '<div style="border-left:4px solid var(--tx);padding:8px 10px;margin:10px 0;font-size:13px;line-height:1.5"><b class="etq" style="font-weight:500;text-transform:uppercase">Suivi de la réunion précédente</b>'+(d ? '<div style="margin-bottom:4px">'+dateCourte(d.date)+' · État choisi : <span style="font-weight:600">'+esc(d.etat)+'</span></div>' : "")+(d && d.note ? '<div>'+esc(d.note)+'</div>' : (d && !(p.notes && p.notes.length) ? '<span>Aucune note.</span>' : (d ? "" : '<span>Aucun suivi précédent.</span>')))+(p.notes && p.notes.length ? '<div class="etq" style="margin-top:8px">▪ NOTES</div>'+p.notes.map(function(n){ return '<div style="margin-top:2px">'+dateCourte(n.date)+' · '+esc(n.note)+'</div>'; }).join("") : "")+'</div>' +
+      '<div class="etq" style="margin-top:12px">▪ ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, !etat, "se"+k); }).join("")+'</div>' +
+      '<div class="etq" style="margin-top:14px">▪ NOTE · OPTIONNELLE</div>' +
       '<textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="width:100%;box-sizing:border-box;margin:4px 0 0;background:#B7B1A5;color:#000000;border:0;border-radius:0;padding:12px">'+esc(sauvNote)+'</textarea>' +
       '<button type="button" id="snb" class="bouton" style="margin:8px 0 0;width:100%;white-space:nowrap;font-size:12px;'+(sauvNote.trim() ? "" : "opacity:.5;")+'"'+(sauvNote.trim() ? "" : " disabled")+'>Enregistrer la note seulement</button>' +
       (msg ? '<div class="bandeau" style="margin-top:10px">'+esc(msg)+'</div>' : "");
@@ -2569,7 +2569,7 @@ function gestionEmployes(){
   appelService({action:"employes_etat", session:sessionGardee()}).then(function(r){
     var el = document.getElementById("ge"); if(!el) return;
     if(!r || !r.ok) throw 0;
-    el.innerHTML = '<div class="etq">CHOISIR UN EMPLOYÉ</div><select class="champ" id="gs">'+r.actifs.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
+    el.innerHTML = '<div class="etq">▪ CHOISIR UN EMPLOYÉ</div><select class="champ" id="gs">'+r.actifs.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
       '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0;flex:1;border:2px solid #7a2e2e;background:transparent;color:#7a2e2e;padding:11px 0;font-size:12px">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0;flex:1;border:2px solid #000000;background:transparent;color:#000000;padding:11px 0;font-size:12px">Désactiver</button></div>' +
       '<div style="background:#b8ae9b;color:#000000;font-size:14px;letter-spacing:.2em;padding:13px 14px;text-transform:uppercase;margin:64px 0 18px">Inactifs · '+r.inactifs.length+'</div>' +
       (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #7a2e2e;background:transparent;color:#7a2e2e">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #000000;background:transparent;color:#000000">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
@@ -2629,7 +2629,7 @@ function sectionsPortrait(p){
     : '<div class="bandeau">▪ DONNÉES À VENIR</div>';
   h += '<div class="pts"><b>04</b>Pour notre discussion</div>';
   h += pa ? [["CE QUI VA BIEN", pa.bien], ["À DÉVELOPPER", pa.developper], ["À ABORDER", pa.aborder]].filter(function(l){ return l[1]; })
-      .map(function(l){ return '<div class="etq" style="margin-top:10px">'+l[0]+'</div><div>'+esc(l[1])+'</div>'; }).join("")
+      .map(function(l){ return '<div class="etq" style="margin-top:10px">▪ '+l[0]+'</div><div>'+esc(l[1])+'</div>'; }).join("")
     : '<div class="bandeau">▪ AUTOÉVALUATION NON REMPLIE</div>';
   return h;
 }
