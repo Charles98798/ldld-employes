@@ -2715,7 +2715,7 @@ function contactsResp(){
     liste.forEach(function(c){ var a = String(c.courriel || "").trim().toLowerCase(); if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a) && !vus[a]){ vus[a] = 1; adr.push(a); } });
     if(!adr.length || document.getElementById("cctdlg")) return;
     // Même composant de confirmation que « Envoyer le contrat via DocuSign ? » (superposition, Oui / Non), puis la même barre d'état.
-    document.body.insertAdjacentHTML("beforeend", '<div class="pop" id="cctdlg"><div class="popc"><div class="popt">Écrire à '+adr.length+' personne'+(adr.length > 1 ? "s" : "")+' ?</div><div class="popd"><div>Un brouillon s’ouvre dans votre courriel, toutes les adresses en CCI</div><div>L’application n’envoie rien : vous écrivez et envoyez</div></div><div class="aeact"><button type="button" class="bouton" id="cctoui">Oui, ouvrir</button><button type="button" class="bouton lg" id="cctnon">Non</button></div><div class="popd" style="margin-top:12px"><a href="#" id="cctcop" style="color:#000000">Rien ne s’ouvre ? Copier les adresses</a></div></div></div>');
+    document.body.insertAdjacentHTML("beforeend", '<div class="pop" id="cctdlg"><div class="popc"><div class="popt">Écrire à '+adr.length+' personne'+(adr.length > 1 ? "s" : "")+' ?</div><div class="popd"><div>Un brouillon s’ouvre dans votre courriel, toutes les adresses en CCI</div><div>L’application n’envoie rien : vous écrivez et envoyez</div></div><div class="aeact"><button type="button" class="bouton" id="cctoui">Ouvrir dans Gmail</button><button type="button" class="bouton lg" id="cctnon">Non</button></div><div class="popd" style="margin-top:12px"><a href="#" id="cctmail" style="color:#000000">Autre application de courriel</a> · <a href="#" id="cctcop" style="color:#000000">Copier les adresses</a></div></div></div>');
     document.getElementById("cctnon").onclick = function(){ var d = document.getElementById("cctdlg"); if(d) d.remove(); };
     document.getElementById("cctcop").onclick = function(e){
       e.preventDefault(); var txt = adr.join("; "), d = document.getElementById("cctdlg");
@@ -2728,10 +2728,11 @@ function contactsResp(){
       envBarreOuvrir("Préparation du courriel…", 1200);
       setTimeout(function(){
         envBarreFin(true, "Brouillon prêt · " + adr.length + " adresse" + (adr.length > 1 ? "s" : "") + " en CCI");
-        window.location.href = "mailto:?bcc=" + adr.map(encodeURIComponent).join(",");
+        var w = window.open("https://mail.google.com/mail/?view=cm&fs=1&bcc=" + adr.map(encodeURIComponent).join(","), "_blank"); if(!w) window.location.href = "https://mail.google.com/mail/?view=cm&fs=1&bcc=" + adr.map(encodeURIComponent).join(",");
         setTimeout(envBarreRetirer, 1600);
       }, 1400);
     };
+    document.getElementById("cctmail").onclick = function(e){ e.preventDefault(); var d = document.getElementById("cctdlg"); if(d) d.remove(); window.location.href = "mailto:?bcc=" + adr.map(encodeURIComponent).join(","); };
   };
   obtenir("contacts", {action:"contacts"}, function(r){ liste = r.contacts || []; dessiner(); },
     function(){ var el = document.getElementById("ctl"); if(el) el.innerHTML = '<div class="bandeau">▪ CONTACTS INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
