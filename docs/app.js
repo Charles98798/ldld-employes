@@ -1267,7 +1267,7 @@ function profil(){
   document.getElementById("vnotif").onclick = function(e){ e.preventDefault(); prefsNotifs(); };
 }
 // Centre de contrôle des notifications : chaque employé choisit ses propres alertes (enregistrées par le service, par courriel).
-var PREFS_NOTIFS = [["courriel", "Courriel"], ["reunion_veille", "Réunions : la veille à 16 h"], ["reunion_1h", "Réunions : 1 heure avant"], ["rencontres", "Rencontres planifiées"], ["autoeval", "Autoévaluation à remplir"]];
+var PREFS_NOTIFS = [["courriel", "Courriel", "Recevoir aussi chaque avis par courriel"], ["reunion_veille", "Réunions : la veille à 16 h", "Rappel de vos réunions du lendemain"], ["reunion_1h", "Réunions : 1 heure avant", "Dernier rappel avant la réunion"], ["rencontres", "Rencontres planifiées", "Quand une rencontre avec vous est fixée"], ["autoeval", "Autoévaluation à remplir", "Quand votre autoévaluation est ouverte"]];
 function prefsNotifs(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mon profil</h1><div id="notifs"></div><div id="prefs"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); profil(); };
@@ -1283,7 +1283,7 @@ function prefsNotifs(){
   });
   var etat = {courriel: false};
   function dessiner(){
-    document.getElementById("prefs").innerHTML = PREFS_NOTIFS.map(function(p){ return '<label class="ligne"><span>'+p[1]+'</span><input type="checkbox" data-k="'+p[0]+'"'+(etat[p[0]] !== false ? " checked" : "")+'></label>'; }).join("");
+    document.getElementById("prefs").innerHTML = PREFS_NOTIFS.map(function(p){ return '<label class="ligne"><span>'+p[1]+(p[2] ? '<small class="ligne-d">'+p[2]+'</small>' : '')+'</span><input type="checkbox" data-k="'+p[0]+'"'+(etat[p[0]] !== false ? " checked" : "")+'></label>'; }).join("");
     Array.prototype.forEach.call(document.querySelectorAll("#prefs input"), function(c){
       c.onchange = function(){ var k = c.getAttribute("data-k"), v = c.checked; etat[k] = v;
         appelService({action:"prefs_ecrire", session:sessionGardee(), cle:k, valeur:v}).catch(function(){}); };
