@@ -484,11 +484,14 @@ function rdLignesCol(cle, L){
     return [rdIsoDate(l[0])].concat(l.slice(1));
   });
 }
+// Règle permanente (16 nov): détails et commentaires affichés en minuscules. Les mots écrits tout en majuscules sont mis en minuscules (affichage seulement, la source reste intacte); sigles connus et codes avec chiffres inchangés.
+var RD_SIGLES = {LDLD:1, TEAM:1, PDF:1, CAD:1, CAM:1, DEC:1, ZR:1, SLA:1, PMMA:1};
+function rdMin(t){ return String(t == null ? "" : t).replace(/[^\s\/]+/g, function(w){ var l = w.replace(/[^A-Za-zÀ-ÿ]/g, ""); if(!l || /\d/.test(w) || RD_SIGLES[l] || l !== l.toUpperCase() || l === l.toLowerCase()) return w; return w.toLowerCase(); }); }
 function rdListeDates(L, descs, col3, col2){
   var g = "display:grid;grid-template-columns:26% 44% 30%;gap:0 8px;max-width:720px;";
   return '<div class="rdp" style="'+g+'margin-top:44px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>'+(col2 || "Cas")+'</span><span>'+(col3 || "Étape")+'</span></div>'+L.map(function(c, i){
     var d = c[0], cas = c[1], etape = c.length > 3 ? c[3] : (c.length > 2 ? c[2] : ""), desc = c.length > 3 ? c[2] : "";
-    return '<div class="rdp" style="'+g+'font-size:13px'+(descs && i > 0 && descs[i-1] ? ';margin-top:18px' : '')+'"><span>'+rdE(String(d).slice(0, 10))+'</span><span>'+rdE(col3 === "Montant" ? String(cas).replace(/^\s*dossier\s*/i, "") : cas)+(desc ? '<div style="color:#6E6350">'+rdE(desc)+'</div>' : "")+'</span><span>'+rdE(etape)+'</span></div>'+rdDescLigne(descs && descs[i]); }).join("");
+    return '<div class="rdp" style="'+g+'font-size:13px'+(descs && i > 0 && descs[i-1] ? ';margin-top:18px' : '')+'"><span>'+rdE(String(d).slice(0, 10))+'</span><span>'+rdE(col3 === "Montant" ? String(cas).replace(/^\s*dossier\s*/i, "") : rdMin(cas))+(desc ? '<div style="color:#6E6350">'+rdE(rdMin(desc))+'</div>' : "")+'</span><span>'+rdE(col3 === "Montant" ? etape : rdMin(etape))+'</span></div>'+rdDescLigne(descs && descs[i]); }).join("");
 }
 // Escomptes prévisibles: description d'analyse (colonne « description » de credits.csv), petit texte sous le cas; cachée si vide, jamais de nom de patient.
 function rdDescLigne(d){
@@ -498,7 +501,7 @@ function rdDescLigne(d){
   if(typeof d === "string"){
     d.split("|").forEach(function(p){ p = nett(p); if(!p) return; var m = /^(analyse|travail effectu[ée])\s*:\s*(.*)$/i.exec(p); l.push(m ? [/^a/i.test(m[1]) ? "Analyse" : "Travail effectué", m[2]] : ["", p]); });
   } else { l = [["Analyse", nett(d.analyse)], ["Travail effectué", nett(d.travail)]]; }
-  return l.filter(function(x){ return x[1]; }).map(function(x){ return '<div class="rdp" style="font-size:12px;color:#6E6350;padding-top:0;overflow-wrap:anywhere">'+(x[0] ? '<span style="letter-spacing:.08em;text-transform:uppercase;font-size:10px">'+x[0]+'</span><br>' : "")+rdE(x[1])+'</div>'; }).join("");
+  return l.filter(function(x){ return x[1]; }).map(function(x){ return '<div class="rdp" style="font-size:12px;color:#6E6350;padding-top:0;overflow-wrap:anywhere">'+(x[0] ? '<span style="letter-spacing:.08em;text-transform:uppercase;font-size:10px">'+x[0]+'</span><br>' : "")+rdE(rdMin(x[1]))+'</div>'; }).join("");
 }
 function rdLigne(cols){ return '<div class="rdp" style="display:flex;gap:10px;flex-wrap:wrap"><span>'+cols.map(rdE).join('</span><span>')+'</span></div>'; }
 function rdCourbe(a, b){
