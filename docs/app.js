@@ -2517,23 +2517,10 @@ function suiviCharge(){
       '<div class="etq" style="margin-top:12px">▪ ÉTAT · OBLIGATOIRE</div><div style="display:flex;gap:6px;margin-top:4px">'+ETATS.map(function(x, k){ return bouton(x, etat === x, !etat, "se"+k); }).join("")+'</div>' +
       '<div class="etq" style="margin-top:14px">▪ NOTE · OPTIONNELLE</div>' +
       '<textarea class="champ" id="snt" rows="4" maxlength="2000" placeholder="Note du suivi…" style="width:100%;box-sizing:border-box;margin:4px 0 0;background:#B7B1A5;color:#000000;border:0;border-radius:0;padding:12px">'+esc(sauvNote)+'</textarea>' +
-      '<button type="button" id="snb" class="bouton" style="margin:8px 0 0;width:100%;white-space:nowrap;font-size:12px;'+(sauvNote.trim() ? "" : "opacity:.5;")+'"'+(sauvNote.trim() ? "" : " disabled")+'>Enregistrer la note seulement</button>' +
       (msg ? '<div class="bandeau" style="margin-top:10px">'+esc(msg)+'</div>' : "");
     el.innerHTML = h;
     ETATS.forEach(function(x, k){ document.getElementById("se"+k).onclick = function(){ lireNote(); etat = x; msg = ""; if(k === 0) enregistrer(); else dessiner(); }; });
     document.getElementById("se2").style.flexGrow = "1.8"; document.getElementById("se0").style.flexGrow = "0.9"; document.getElementById("se1").style.flexGrow = "1";
-    var tx = document.getElementById("snt"), nb = document.getElementById("snb");
-    tx.oninput = function(){ var v = !!tx.value.trim(); nb.disabled = !v; nb.style.opacity = v ? "" : ".5"; };
-    nb.onclick = function(){
-      lireNote(); var t = sauvNote.trim(); if(!t || occupe) return;
-      occupe = true; nb.disabled = true; nb.textContent = "Enregistrement…";
-      appelService({action:"charge_suivi", session:sessionGardee(), nom:p.brut, etat:"Note", note:t}).then(function(r){
-        occupe = false;
-        if(r && r.ok){ p.notes = [{date: isoJour(new Date()), note: t}].concat(p.notes || []); sauvNote = ""; msg = "▪ NOTE ENREGISTRÉE"; }
-        else msg = "▪ NON ENREGISTRÉ · "+String((r && r.erreur) || "RÉESSAYEZ").toUpperCase();
-        dessiner();
-      }).catch(function(){ occupe = false; msg = "▪ NON ENREGISTRÉ · RÉSEAU"; dessiner(); });
-    };
     document.getElementById("sce").onchange = function(){ i = +this.value; etat = ""; sauvNote = ""; msg = ""; occupe = false; window.scrollTo(0, 0); dessiner(); };
     barre();
   }
