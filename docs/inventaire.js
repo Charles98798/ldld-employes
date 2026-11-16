@@ -74,22 +74,26 @@ function invMaj(){
   var h = t.toLocaleTimeString("fr-CA", {timeZone: "America/Toronto", hour: "2-digit", minute: "2-digit"}).replace(":", " h "), vieux = Date.now() - t.getTime() > 30 * 60000;
   return '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">'+(vieux ? "Données de " : "Mis à jour à ")+invE(h)+(vieux ? " · elles ne sont peut-être pas à jour" : "")+'</div>';
 }
-function invCategories(){ var v = {}, o = []; (INV.d.produits || []).forEach(function(p){ if(!v[p.categorie]){ v[p.categorie] = 1; o.push(p.categorie); } }); return o.sort(function(a, b){ return invNorm(a) < invNorm(b) ? -1 : 1; }); }
+function invChamp(){ return INV.vue === "stocks" && INV.tri === "fournisseur" ? "fournisseur" : "categorie"; }   // Comptage d'inventaire: regrouper par catégorie ou par fournisseur
+function invCategories(){ var v = {}, o = [], f = invChamp(); (INV.d.produits || []).forEach(function(p){ if(!v[p[f]]){ v[p[f]] = 1; o.push(p[f]); } }); return o.sort(function(a, b){ return invNorm(a) < invNorm(b) ? -1 : 1; }); }
 function invListe(){
   var cats = invCategories(), z = document.getElementById("invapp"); if(!z) return;
   var h = invOnglets() + (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : invMaj());
   if(INV.vue === "stocks") h += '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Comptage d’inventaire : choisissez un produit pour inscrire la quantité exacte comptée.</div>';
-  h += '<span class="lbl">Catégorie</span><select class="bx" id="invcat" style="background:#8D806A;color:#fff;border-color:#8D806A">'+cats.map(function(c){ return '<option value="'+invE(c)+'"'+(c === INV.cat ? " selected" : "")+'>'+invE(c)+'</option>'; }).join("")+'</select>';
+  var champ = invChamp(); if(!cats.length || cats.indexOf(INV.cat) < 0) INV.cat = cats[0] || "";
+  if(INV.vue === "stocks") h += '<div style="display:flex;gap:6px;margin:6px 0 4px"><button type="button" class="bouton invtri" data-t="categorie" style="flex:1;height:46px;padding:0;margin:0;font-size:12px;'+(champ === "categorie" ? "border-bottom:3px solid var(--vert)" : "opacity:.6")+'">Par catégorie</button><button type="button" class="bouton invtri" data-t="fournisseur" style="flex:1;height:46px;padding:0;margin:0;font-size:12px;'+(champ === "fournisseur" ? "border-bottom:3px solid var(--vert)" : "opacity:.6")+'">Par fournisseur</button></div>';
+  h += '<span class="lbl">'+(champ === "fournisseur" ? "Fournisseur" : "Catégorie")+'</span><select class="bx" id="invcat" style="background:#8D806A;color:#fff;border-color:#8D806A">'+cats.map(function(c){ return '<option value="'+invE(c)+'"'+(c === INV.cat ? " selected" : "")+'>'+invE(champ === "fournisseur" ? (invT(c) || "Sans fournisseur") : c)+'</option>'; }).join("")+'</select>';
   h += '<span class="lbl">Commence par</span><input class="bx" id="invdeb" autocomplete="off" placeholder="Premières lettres" value="'+invE(INV.debut)+'">';
   h += '<span class="lbl">Produit</span><div id="invprod"></div>';
   z.innerHTML = h; invLierOnglets();
+  Array.prototype.forEach.call(z.querySelectorAll(".invtri"), function(b){ b.onclick = function(){ INV.tri = b.getAttribute("data-t"); INV.cat = ""; invListe(); }; });
   document.getElementById("invcat").onchange = function(){ INV.cat = this.value; invProduits(); };
   document.getElementById("invdeb").oninput = function(){ INV.debut = this.value; invProduits(); };
   invProduits();
 }
 function invProduits(){
   var z = document.getElementById("invprod"); if(!z) return;
-  var d = invNorm(INV.debut), L = (INV.d.produits || []).filter(function(p){ return p.categorie === INV.cat && (!d || invNorm(p.description).indexOf(d) === 0); });
+  var d = invNorm(INV.debut), L = (INV.d.produits || []).filter(function(p){ return p[invChamp()] === INV.cat && (!d || invNorm(p.description).indexOf(d) === 0); });
   z.innerHTML = L.length ? L.map(function(p){ return '<div class="invp" data-i="'+invE(p.id)+'" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:rgba(189,201,178,.5);padding:14px;margin:0 0 6px;cursor:pointer"><span style="min-width:0;overflow-wrap:anywhere">'+invE(invT(p.description))+'</span><span style="font-size:12px;color:#6E6350">'+invE(p.stock)+'</span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN PRODUIT</div>';
   Array.prototype.forEach.call(z.querySelectorAll(".invp"), function(x){ x.onclick = function(){ var p = (INV.d.produits || []).filter(function(q){ return q.id === x.getAttribute("data-i"); })[0]; if(p){ if(INV.vue === "stocks" && invDroitReception()) invCompte(p); else invProduit(p); } }; });
 }
