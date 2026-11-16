@@ -49,7 +49,7 @@ function aepPlanification(){
     v.sort(function(a, b){ return a.j < b.j ? -1 : a.j > b.j ? 1 : (a.h || "") < (b.h || "") ? -1 : (a.h || "") > (b.h || "") ? 1 : a.nom.localeCompare(b.nom, "fr"); });
     var ok = v.filter(function(x){ return x.ok; }).length, tousConnus = v.length && v.every(function(x){ return x.connu; }), h = '<div class="aepsec">14 prochains jours</div>';
     if(!v.length) return h + '<div class="aevide">Aucune rencontre dans les 14 prochains jours.</div>';
-    h += '<div class="aepf"><span class="aepb">' + v.length + (v.length > 1 ? ' rencontres' : ' rencontre') + '</span>' + (!tousConnus ? '' : '<span class="aepb' + (ok >= 1 ? ' on' : '') + '">' + ok + (ok > 1 ? ' remplies' : ' remplie') + '</span><span class="aepb">' + (v.length - ok) + (v.length - ok > 1 ? ' non remplies' : ' non remplie') + '</span>') + '</div>';
+    h += '<div class="aepf">' + (!tousConnus ? '' : '<span class="aepb' + (ok >= 1 ? ' on' : '') + '">' + ok + (ok > 1 ? ' remplies' : ' remplie') + '</span><span class="aepb">' + (v.length - ok) + (v.length - ok > 1 ? ' non remplies' : ' non remplie') + '</span>') + '</div>';
     var c = "";
     v.forEach(function(x){
       if(x.j !== c){ c = x.j; var q = c.split("-"); h += '<div class="emois">' + esc(JOURS_COURTS_E[new Date(+q[0], +q[1] - 1, +q[2]).getDay()] + " " + (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1]) + '</div>'; }
