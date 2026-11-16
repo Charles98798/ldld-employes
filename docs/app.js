@@ -2696,7 +2696,7 @@ function portrait(id){
 }
 function chiffresTel(t){ var d = String(t || "").replace(/\D/g, ""); return d.length === 10 ? "+1"+d : (d.length === 11 && d[0] === "1" ? "+"+d : d); }
 function contactsResp(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Notre équipe</h1><input class="champ" id="cq" placeholder="Rechercher" autocomplete="off"><div class="ctl" id="ctl"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Notre équipe</h1><a class="bouton" id="cctous" href="#" style="display:flex;align-items:center;justify-content:center;height:46px;margin:0 0 14px;font-weight:700;text-decoration:none">Courriel à tous</a><input class="champ" id="cq" placeholder="Rechercher" autocomplete="off"><div class="ctl" id="ctl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var liste = [];
   function dessiner(){
@@ -2708,6 +2708,24 @@ function contactsResp(){
         '<a class="ib" aria-label="Courriel" href="mailto:'+esc(c.courriel)+'"><svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M21 14V3H3v18h13"/><path d="M8 8h7v7H8z"/><path d="M15 15h6v-1"/></svg></a></div>'; }).join("") || '<div class="bandeau">▪ AUCUN RÉSULTAT</div>';
   }
   document.getElementById("cq").oninput = dessiner;
+  // « Courriel à tous »: ouvre un brouillon dans le courriel de l'utilisateur, tous les courriels en CCI. L'application n'envoie rien.
+  document.getElementById("cctous").onclick = function(e){
+    e.preventDefault(); var vus = {}, adr = [];
+    liste.forEach(function(c){ var a = String(c.courriel || "").trim().toLowerCase(); if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a) && !vus[a]){ vus[a] = 1; adr.push(a); } });
+    if(!adr.length || document.getElementById("cctdlg")) return;
+    // Même composant de confirmation que « Envoyer le contrat via DocuSign ? » (superposition, Oui / Non), puis la même barre d'état.
+    document.body.insertAdjacentHTML("beforeend", '<div class="pop" id="cctdlg"><div class="popc"><div class="popt">Écrire à '+adr.length+' personne'+(adr.length > 1 ? "s" : "")+' ?</div><div class="popd"><div>Un brouillon s’ouvre dans votre courriel, toutes les adresses en CCI</div><div>L’application n’envoie rien : vous écrivez et envoyez</div></div><div class="aeact"><button type="button" class="bouton" id="cctoui">Oui, ouvrir</button><button type="button" class="bouton lg" id="cctnon">Non</button></div></div></div>');
+    document.getElementById("cctnon").onclick = function(){ var d = document.getElementById("cctdlg"); if(d) d.remove(); };
+    document.getElementById("cctoui").onclick = function(){
+      var d = document.getElementById("cctdlg"); if(d) d.remove();
+      envBarreOuvrir("Préparation du courriel…", 1200);
+      setTimeout(function(){
+        envBarreFin(true, "Brouillon prêt · " + adr.length + " adresse" + (adr.length > 1 ? "s" : "") + " en CCI");
+        window.location.href = "mailto:?bcc=" + adr.map(encodeURIComponent).join(",");
+        setTimeout(envBarreRetirer, 1600);
+      }, 1400);
+    };
+  };
   obtenir("contacts", {action:"contacts"}, function(r){ liste = r.contacts || []; dessiner(); },
     function(){ var el = document.getElementById("ctl"); if(el) el.innerHTML = '<div class="bandeau">▪ CONTACTS INDISPONIBLES · RÉESSAYEZ</div>'; }, true);
 }
