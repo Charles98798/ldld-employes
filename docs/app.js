@@ -511,9 +511,14 @@ function couperNotifs(){
   });
 }
 function ecranNotifs(){
-  app.innerHTML = '<div class="menu"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div class="nom">Notifications</div>' +
-    '<p class="aide" style="padding:0 24px">Soyez avisé dès qu\'un message arrive ou qu\'un document est mis à jour. Aucun détail confidentiel n\'est affiché. Vous pouvez les couper à tout moment dans Mon profil.</p>' +
-    '<a href="#" id="notifOui">▪ Activer les notifications</a><a href="#" id="notifPlus" style="opacity:.85">Plus tard</a></div>';
+  app.innerHTML = '<div class="page notifec"><img class="logo" width="120" height="100" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins">' +
+    '<svg class="notifpic" viewBox="0 0 24 24" width="56" height="56" aria-hidden="true"><path fill="#000" d="M2 3h20v13h-11l-5 5v-5h-4z"/><path fill="#CECCC5" d="M6 7h12v2h-12zM6 11h7v2h-7z"/><path fill="#3BEC65" d="M18 1h5v5h-5z"/></svg>' +
+    '<h1 data-pt="1">Notifications</h1>' +
+    '<p class="notifph">Restez au courant, sans ouvrir l’application.</p>' +
+    '<ul class="notiflst"><li>Nouveaux messages</li><li>Rappels de réunions</li><li>Rencontres et autoévaluation</li></ul>' +
+    '<p class="notifpt">Aucun détail confidentiel. Modifiable dans Mon profil.</p>' +
+    '<button type="button" class="bouton" id="notifOui" style="height:46px;padding:0;margin:0;font-weight:700">ACTIVER</button>' +
+    '<a href="#" id="notifPlus" class="notifplus">PLUS TARD</a></div>';
   function fini(){ try { localStorage.setItem("ldld-notif-demande", "1"); } catch(e){} menu(); }
   document.getElementById("notifOui").onclick = function(e){ e.preventDefault(); demanderNotifs().then(fini).catch(fini); };
   document.getElementById("notifPlus").onclick = function(e){ e.preventDefault(); fini(); };
