@@ -27,10 +27,10 @@ var INV = {cat: "", debut: "", sorties: [], vue: "sortie", recu: {}, ouv: {}};
 function invDroitReception(){ return typeof roleIdx === "function" && roleIdx() >= 1; }
 function invMoisFr(iso){ var m = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"], p = String(iso).split("-"); return p.length === 3 ? (+p[2]) + " " + m[+p[1] - 1] + " " + p[0] : String(iso); }
 function invOnglets(){
-  if(!INV_PHASE2 || !invDroitReception()) return '<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px">Prise d’inventaire</div>';
+  if(!INV_PHASE2 || !invDroitReception()) return '<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px">Retrait</div>';
   var v = INV.vue;
   var st = function(on){ return "flex:1;min-width:0;height:46px;padding:0 4px;margin:0;font-size:12px;" + (on ? "border-bottom:3px solid var(--vert)" : "opacity:.6"); };
-  return '<div style="display:flex;gap:6px;margin:0 0 12px"><button type="button" class="bouton" id="invtsor" style="'+st(v !== "reception" && v !== "stocks")+'">Prise d’inventaire</button><button type="button" class="bouton" id="invtsto" style="'+st(v === "stocks")+'">Comptage d’inventaire</button><button type="button" class="bouton" id="invtrec" style="'+st(v === "reception")+'">Réception</button></div>';
+  return '<div style="display:flex;gap:6px;margin:0 0 12px"><button type="button" class="bouton" id="invtsor" style="'+st(v !== "reception" && v !== "stocks")+'">Retrait</button><button type="button" class="bouton" id="invtsto" style="'+st(v === "stocks")+'">Comptage</button><button type="button" class="bouton" id="invtrec" style="'+st(v === "reception")+'">Réception</button></div>';
 }
 function invLierOnglets(){
   var a = document.getElementById("invtsor"), b = document.getElementById("invtrec"), c = document.getElementById("invtsto");
@@ -79,7 +79,7 @@ function invCategories(){ var v = {}, o = [], f = invChamp(); (INV.d.produits ||
 function invListe(){
   var cats = invCategories(), z = document.getElementById("invapp"); if(!z) return;
   var h = invOnglets() + (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : invMaj());
-  if(INV.vue === "stocks") h += '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Comptage d’inventaire : choisissez un produit pour inscrire la quantité exacte comptée.</div>';
+  if(INV.vue === "stocks") h += '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Comptage : choisissez un produit pour inscrire la quantité exacte comptée.</div>';
   var champ = invChamp(); if(!cats.length || cats.indexOf(INV.cat) < 0) INV.cat = cats[0] || "";
   if(INV.vue === "stocks") h += '<div style="display:flex;gap:6px;margin:6px 0 4px"><button type="button" class="bouton invtri" data-t="categorie" style="flex:1;height:46px;padding:0;margin:0;font-size:12px;'+(champ === "categorie" ? "border-bottom:3px solid var(--vert)" : "opacity:.6")+'">Par catégorie</button><button type="button" class="bouton invtri" data-t="fournisseur" style="flex:1;height:46px;padding:0;margin:0;font-size:12px;'+(champ === "fournisseur" ? "border-bottom:3px solid var(--vert)" : "opacity:.6")+'">Par fournisseur</button></div>';
   h += '<span class="lbl">'+(champ === "fournisseur" ? "Fournisseur" : "Catégorie")+'</span><select class="bx" id="invcat" style="background:#8D806A;color:#fff;border-color:#8D806A">'+cats.map(function(c){ return '<option value="'+invE(c)+'"'+(c === INV.cat ? " selected" : "")+'>'+invE(champ === "fournisseur" ? (invT(c) || "Sans fournisseur") : c)+'</option>'; }).join("")+'</select>';
