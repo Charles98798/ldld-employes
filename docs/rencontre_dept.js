@@ -514,7 +514,7 @@ function rdCourbe(a, b){
   var pts = a.map(function(x, k){ if(nul(x)) return ""; var p = xy(a, k); return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2" fill="#000000"/>'; }).join("");
   var kd = -1; for(var q = n - 1; q >= 0; q--){ if(!nul(a[q])){ kd = q; break; } }
   var dern = kd >= 0 ? xy(a, kd) : null;
-  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 10px;max-width:480px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 10px;max-width:600px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1" vector-effect="non-scaling-stroke"/>'
     + (avecB ? lignes(b, 'stroke="#000000" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55" vector-effect="non-scaling-stroke"') : "")
     + lignes(a, 'stroke="#000000" stroke-width="2" vector-effect="non-scaling-stroke"') + pts
     + lab + '</svg>'
