@@ -69,8 +69,8 @@ function invOuvrir(){
     INV.d = r; if(!INV.cat) INV.cat = (r.produits[0] || {}).categorie || ""; if(INV_PHASE2 && INV.vue === "reception" && invDroitReception()) invReception(); else { if(!INV_PHASE2 || (INV.vue === "stocks" && !invDroitReception())) INV.vue = "sortie"; invListe(); }
   }).catch(function(){ var a = document.getElementById("invatt"); if(a){ a.className = "bandeau"; a.textContent = "▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"; a.onclick = invOuvrir; } });
 }
-function invMaj(){
-  var t = INV.d && INV.d.maj_t ? new Date(INV.d.maj_t) : null; if(!t || isNaN(t)) return '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Aucune donnée reçue pour le moment</div>';
+function invMaj(d){
+  d = d || INV.d; var t = d && d.maj_t ? new Date(d.maj_t) : null; if(!t || isNaN(t)) return '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Aucune donnée reçue pour le moment</div>';
   var h = t.toLocaleTimeString("fr-CA", {timeZone: "America/Toronto", hour: "2-digit", minute: "2-digit"}).replace(":", " h "), vieux = Date.now() - t.getTime() > 30 * 60000;
   return '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">'+(vieux ? "Données de " : "Mis à jour à ")+invE(h)+(vieux ? " · elles ne sont peut-être pas à jour" : "")+'</div>';
 }
@@ -142,8 +142,37 @@ function invProduit(p){
   dessiner();
 }
 
-// Réception: une section par fournisseur et date de commande (repliable), puis une ligne par produit: code, description, commandé, reçu, prix (obligatoire), Confirmer et Annuler.
+// Réception (vrai): LECTURE SEULE pour Gestionnaires et Direction (Service inv_reception_lire, copie Supabase inventaire_reception). Confirmer et Annuler désactivés tant que l'écriture n'est pas branchée.
 function invReception(){
+  if(!INV_LECTURE) return invReceptionAncien();
+  var z = document.getElementById("invapp"); if(!z) return;
+  z.innerHTML = invOnglets() + '<div class="att" id="invatt"><i></i></div>'; invLierOnglets();
+  var panne = function(t){ var a = document.getElementById("invatt"); if(a){ a.className = "bandeau"; a.textContent = t; a.onclick = invReception; } };
+  appelService({action: "inv_reception_lire", session: sessionGardee()}).then(function(r){
+    if(!document.getElementById("invatt")) return;
+    if(!(r && r.ok && Array.isArray(r.lignes))){ panne(/non disponible/i.test(String(r && r.erreur)) ? "▪ RÉCEPTION PAS ENCORE ACTIVÉE" : "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"); return; }
+    var groupes = [], idx = {};
+    r.lignes.forEach(function(x){ var k = x.fournisseur + "|" + x.date; if(idx[k] === undefined){ idx[k] = groupes.length; groupes.push({k: k, f: x.fournisseur, d: x.date, l: []}); } groupes[idx[k]].l.push(x); });
+    groupes.sort(function(a, b){ return a.d < b.d ? 1 : a.d > b.d ? -1 : (a.f < b.f ? -1 : 1); });
+    var h = invOnglets() + invMaj({maj_t: r.maj_t}) + '<div style="font-size:13px;color:#6E6350;margin:0 0 10px">La réception sera activée bientôt. Pour le moment, vous pouvez consulter les commandes : rien n’est enregistré.</div>';
+    if(!groupes.length) h += '<div class="bandeau">▪ AUCUNE COMMANDE EN ATTENTE</div>';
+    groupes.forEach(function(g){
+      var ouvert = INV.ouv[g.k] !== false;
+      h += '<div class="invg" data-k="'+invE(g.k)+'" style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:30px 0 10px;cursor:pointer"><b style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;overflow-wrap:anywhere">'+invE(invT(g.f))+'</b><span style="font-size:12px;color:#6E6350;white-space:nowrap">'+invE(invMoisFr(g.d))+' · '+g.l.length+'</span></div>';
+      if(!ouvert) return;
+      g.l.forEach(function(x){
+        var pr = Number(x.prix) || 0;
+        h += '<div style="background:rgba(189,201,178,.5);padding:14px 14px 16px;margin:0 0 14px"><div style="overflow-wrap:anywhere">'+invE(invT(x.description))+'</div><div style="font-size:12px;color:#6E6350;margin:2px 0 8px">'+invE(x.code)+'</div>'
+          + '<div style="display:flex;gap:6px"><div style="flex:1"><div style="font-size:12px;color:#6E6350">Commandé</div><div style="font-size:20px;font-weight:700">'+invE(x.commande)+'</div></div><div style="flex:1"><div style="font-size:12px;color:#6E6350">Déjà reçu</div><div style="font-size:20px;font-weight:700">'+invE(x.recu)+'</div></div><div style="flex:1"><div style="font-size:12px;color:#6E6350">Prix unitaire</div><div style="font-size:20px;font-weight:700">'+(pr > 0 ? invE(pr.toFixed(2).replace(".", ","))+' $' : "—")+'</div></div></div>'
+          + '<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="bouton" style="flex:1;height:46px;padding:0;margin:0;opacity:.45" disabled>Confirmer</button><button type="button" class="bouton lg" style="flex:1;height:46px;padding:0;margin:0;opacity:.45" disabled>Annuler</button></div></div>';
+      });
+    });
+    z.innerHTML = h; invLierOnglets();
+    Array.prototype.forEach.call(z.querySelectorAll(".invg"), function(e){ e.onclick = function(){ var k = e.getAttribute("data-k"); INV.ouv[k] = INV.ouv[k] === false; invReception(); }; });
+  }).catch(function(){ panne("▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"); });
+}
+// Réception (ancien écran d'essai): une section par fournisseur et date de commande (repliable), puis une ligne par produit: code, description, commandé, reçu, prix (obligatoire), Confirmer et Annuler.
+function invReceptionAncien(){
   var z = document.getElementById("invapp"); if(!z) return;
   if(!INV.rec) INV.rec = INV_LECTURE ? [] : INV_RECEPTION_FICTIF.map(function(x){ return Object.assign({}, x); });
   var L = INV.rec, groupes = [], idx = {};
