@@ -1391,3 +1391,4 @@ select:not(.act){width:100%;box-sizing:border-box}
 /* Les pictogrammes ne sont jamais coupés: rien ne rogne le dessin en dehors de l'animation d'arrivée */
 .menu a .ic,.page .doc .ic{overflow:visible}
 .menu:not(.anim) a .ic{clip-path:none}
+.fin .fgtl2{grid-template-columns:minmax(0,1fr) 44px;gap:2px;font-size:12px;padding-left:8px}.fin .fgtl2 span:first-child{min-width:0;overflow-wrap:anywhere}

@@ -245,17 +245,18 @@ function finOk(id){ var pid = /^conseil_/.test(id) ? "conseil" : (/^finances_/.t
 function financeMenu(){
   FIN_ORIGINE = "conseil";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Conseil d\'administration</h1>' +
-    (finOk("conseil_production") ? '<a class="doc" href="#" id="fm5"><span>'+picto("Production")+'Production</span></a>' : '')+(finOk("conseil_indicateurs") ? '<a class="doc" href="#" id="fm0"><span>'+picto("Indicateurs")+'Indicateurs</span></a>' : '')+(finOk("conseil_ratios") ? '<a class="doc" href="#" id="fm1"><span>'+picto("Ratios par catégorie")+'Ratios en %</span></a>' : '')+'</div>';
+    (finOk("conseil_production") ? '<a class="doc" href="#" id="fm5"><span>'+picto("Production")+'Production</span></a>' : '')+(finOk("conseil_indicateurs") ? '<a class="doc" href="#" id="fm0"><span>'+picto("Indicateurs")+'Indicateurs</span></a>' : '')+(finOk("conseil_ratios") ? '<a class="doc" href="#" id="fm1"><span>'+picto("Ratios par catégorie")+'Ratios en %</span></a>' : '')+(finOk("conseil_top10") ? '<a class="doc" href="#" id="fm6"><span>'+picto("Top 10 clients")+'Top 10 clients en %</span></a>' : '')+'</div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var f5 = document.getElementById("fm5"); if(f5) f5.onclick = function(e){ e.preventDefault(); productionOuvrir(); };
   var f0 = document.getElementById("fm0"); if(f0) f0.onclick = function(e){ e.preventDefault(); financeOuvrir(); };
   var f1 = document.getElementById("fm1"); if(f1) f1.onclick = function(e){ e.preventDefault(); financeGraphique("ratios"); };
+  var f6 = document.getElementById("fm6"); if(f6) f6.onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "conseil"; financeTop10(); };
 }
 // Finances (Direction): tout le financier, y compris la copie des ratios par catégorie avec montants
 function financesMenu(){
   FIN_ORIGINE = "finances";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Finances</h1>' +
-    '<a class="doc" href="#" id="fi5"><span>'+picto("États financiers")+'États financiers</span></a><a class="doc" href="#" id="fi0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fi1"><span>'+picto("Ratios par catégorie")+'Ratios en $</span></a><a class="doc" href="#" id="fi2"><span>'+picto("Ventes vs an passé")+'Ventes vs an passé</span></a><a class="doc" href="#" id="fi3"><span>'+picto("Trésorerie")+'Trésorerie</span></a><a class="doc" href="#" id="fi7"><span>'+picto("Banque et crédit")+'Banque et crédit</span></a><a class="doc" href="#" id="fi4"><span>'+picto("Comptes clients")+'Comptes clients</span></a><a class="doc" href="#" id="fi6"><span>'+picto("Top 10 clients")+'Top 10 clients</span></a></div>';
+    '<a class="doc" href="#" id="fi5"><span>'+picto("États financiers")+'États financiers</span></a><a class="doc" href="#" id="fi0"><span>'+picto("Indicateurs")+'Indicateurs</span></a><a class="doc" href="#" id="fi1"><span>'+picto("Ratios par catégorie")+'Ratios en $</span></a><a class="doc" href="#" id="fi2"><span>'+picto("Ventes vs an passé")+'Ventes vs an passé</span></a><a class="doc" href="#" id="fi3"><span>'+picto("Trésorerie")+'Trésorerie</span></a><a class="doc" href="#" id="fi7"><span>'+picto("Banque et crédit")+'Banque et crédit</span></a><a class="doc" href="#" id="fi4"><span>'+picto("Comptes clients")+'Comptes clients</span></a><a class="doc" href="#" id="fi6"><span>'+picto("Top 10 clients")+'Top 10 clients en $</span></a></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   document.getElementById("fi0").onclick = function(e){ e.preventDefault(); FIN_ORIGINE = "finances"; financeOuvrir(); };
   document.getElementById("fi1").onclick = function(e){ e.preventDefault(); financesRatios(); };
@@ -270,17 +271,18 @@ function finTopRendu(){
   if(FIN_T) lst = finTopMois(FIN_T.ventesClientsMois, ms, null, 10);
   if(!lst && vc && vc.top && vc.top.length){ lst = vc.top; tot = finSom(FIN_S.ventes, finMois("A")) || vc.total; }
   if(lst && lst.length){
-    h += '<div class="fgtl fgtl3 fgth"><span></span><span>VENTES</span><span>PART</span></div>';
-    lst.forEach(function(x, i){ h += '<div class="fgtl fgtl3 fgtv"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span><span>' + finMontant(x[1]) + '</span><span>' + (tot ? finPct(x[1] / tot * 100) : "") + '</span></div>'; });
+    var pc = FIN_ORIGINE === "conseil";
+    h += '<div class="fgtl ' + (pc ? "fgtl2" : "fgtl3") + ' fgth"><span></span>' + (pc ? "" : "<span>VENTES</span>") + '<span>PART</span></div>';
+    lst.forEach(function(x, i){ h += '<div class="fgtl ' + (pc ? "fgtl2" : "fgtl3") + ' fgtv"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span>' + (pc ? "" : '<span>' + finMontant(x[1]) + '</span>') + '<span>' + (tot ? finPct(x[1] / tot * 100) : "") + '</span></div>'; });
   } else h += '<div class="finnote">Les ventes par client arrivent dès que QuickBooks les fournit à l\'application.</div>';
   document.getElementById("fin_corps").innerHTML = h;
 }
 function finTopPerChoix(v){ FIN_PT = v; document.querySelector(".finper").outerHTML = perHtml(v, FIN_R.annee, FIN_DERNIER + 1, "top"); perLier("top", finTopPerChoix, function(){ return FIN_PT; }); finTopRendu(); }
 function financeTop10(){
-  FIN_TITRE = "Top 10 clients"; FIN_ORIGINE = "finances";
+  FIN_TITRE = "Top 10 clients";
   finCharger(function(r){
     FIN_PT = perDefaut(r.annee, FIN_DERNIER + 1);
-    app.innerHTML = '<div class="page ppx fin sans-instant"><div class="pph"><h1>Top 10 clients</h1></div><div class="finsous">Finances</div>' +
+    app.innerHTML = '<div class="page ppx fin sans-instant"><div class="pph"><h1>Top 10 clients</h1></div><div class="finsous">' + (FIN_ORIGINE === "finances" ? "Finances" : "Conseil d\'administration") + '</div>' +
       perHtml(FIN_PT, r.annee, FIN_DERNIER + 1, "top") +
       '<div class="sect"><span class="num">01</span><span class="lab">Meilleurs clients</span></div><div id="fin_corps"></div><a class="retour" href="#" id="retour">Retour</a></div>';
     finTopRendu(); finTopsCharger(function(){ if(document.getElementById("fin_corps")) finTopRendu(); });
