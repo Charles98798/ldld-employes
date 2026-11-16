@@ -464,8 +464,8 @@ function connexion(message){
     msg.textContent = "";
     var bt = document.getElementById("envoi"); bt.disabled = true; bt.classList.add("envoyant");
     // L'écran de saisie s'ouvre tout de suite (le courriel peut arriver avant la réponse du service); une erreur renvoie au courriel avec le message.
-    // La barre dure 15 s (délai réel d'arrivée du courriel); l'écran du code s'ouvre à la fin de la barre, ou à la réponse du service si elle est plus tardive. Une erreur s'affiche tout de suite.
-    var ouvert = false, fin = false, rep = false, DELAI = 15000;
+    // La barre dure 12 s (délai réel d'arrivée du courriel); l'écran du code s'ouvre à la fin de la barre, ou à la réponse du service si elle est plus tardive. Une erreur s'affiche tout de suite.
+    var ouvert = false, fin = false, rep = false, DELAI = 12000;
     function ouvrir(){ if(!ouvert && fin && rep){ ouvert = true; saisieCode(c); } }
     setTimeout(function(){ fin = true; ouvrir(); }, DELAI);
     appelService({action:"code", courriel:c}).then(function(r){
