@@ -1404,3 +1404,23 @@ select:not(.act){width:100%;box-sizing:border-box}
 .rvacc .accbl{position:absolute;top:max(env(safe-area-inset-top,0px),20px);left:20px;right:20px;margin:0}
 .rvacc .haut{top:calc(max(env(safe-area-inset-top,0px),20px) + 112px)}
 @media (max-width:999px){.rvacc .accbl{top:max(env(safe-area-inset-top,0px),47px)}.rvacc .haut{top:calc(max(env(safe-area-inset-top,0px),47px) + 112px)}}
+
+/* Accueil grand écran (écran large) : prénom et nom sur une ligne, deux blocs noirs et fente verte en mouvement lent */
+.rvacc .k1,.rvacc .mv{display:none}
+@media (min-width:1000px){
+.rvacc .centre{left:0;right:0;top:50%;transform:translateY(-54%);text-align:center}
+.rvacc .k1{display:block;font-size:13px;letter-spacing:5px;text-transform:uppercase;color:#6E6350}
+.rvacc .nom{font-size:clamp(44px,8.4vw,124px);letter-spacing:.05em;margin:18px 0 14px}
+.rvacc .nom span{display:inline}.rvacc .nom span+span{padding-left:0}
+.rvacc .mv{display:block;height:44px;position:relative;margin:0 auto 26px;width:min(420px,80%)}
+.rvacc .b1,.rvacc .b2{position:absolute;height:18px;background:#000;width:46%}
+.rvacc .b1{top:0;left:6%;animation:rvg1 9s ease-in-out infinite alternate}
+.rvacc .b2{top:23px;right:6%;animation:rvg2 9s ease-in-out infinite alternate}
+.rvacc .fen{position:absolute;top:0;bottom:0;left:50%;width:3px;margin-left:-1px;background:#3BEC65;animation:rvfen 9s ease-in-out infinite alternate}
+.rvacc .renc{margin-top:0;font-size:18px;letter-spacing:1px;text-transform:none;color:#000}
+}
+@keyframes rvg1{from{transform:translateX(-14%)}to{transform:translateX(14%)}}
+@keyframes rvg2{from{transform:translateX(14%)}to{transform:translateX(-14%)}}
+@keyframes rvfen{from{transform:translateX(-90px)}to{transform:translateX(90px)}}
+@media (prefers-reduced-motion:reduce){.rvacc .b1,.rvacc .b2,.rvacc .fen{animation:none}}
+.rvacc .rdate{display:none}@media (min-width:1000px){.rvacc .rdate{display:block;margin-top:10px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#6E6350}}
