@@ -1367,5 +1367,5 @@ select:not(.act){width:100%;box-sizing:border-box}
 
 /* Connexion: bouton « ENVOI DU CODE… » avec fine barre noire (3 px) qui avance au bord inférieur */
 .bouton.envoyant{position:relative;overflow:hidden;opacity:1;color:var(--encre)}
-.bouton.envoyant::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:0;background:#000;animation:envc 12s linear forwards}
+.bouton.envoyant::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:0;background:#000;animation:envc 8s linear forwards}
 @keyframes envc{to{width:100%}}
