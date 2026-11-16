@@ -659,7 +659,8 @@ function entreeOk(x){
   var r = roleIdx();
   if(x.id === "calendrier" && r >= 1) return false;   // Gestionnaire et Direction: le calendrier est dans « Calendrier ▪ notification »
   if(x.v) return !!x.d[r];
-  if(DROITS_SERVICE && DROITS_SERVICE.hasOwnProperty(x.id)) return !!DROITS_SERVICE[x.id];
+  if(DROITS_SERVICE && DROITS_SERVICE.hasOwnProperty(x.id) && (DROITS_SERVICE[x.id] === false || DROITS_SERVICE[x.id] === "false" || DROITS_SERVICE[x.id] === "FALSE")) return false;   // une tuile n'est retirée que si le Service répond clairement « faux »; réponse vide ou incomplète = droits par défaut
+  if(DROITS_SERVICE && DROITS_SERVICE.hasOwnProperty(x.id) && (DROITS_SERVICE[x.id] === true || DROITS_SERVICE[x.id] === "true" || DROITS_SERVICE[x.id] === "TRUE")) return true;
   return !!x.d[r];
 }
 function entreesVisibles(){
