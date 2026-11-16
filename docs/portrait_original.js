@@ -1,7 +1,7 @@
 // Portrait d'un employé, identique à l'original Google (page web de SALAIRE). Données: action Service « portrait_original » (Direction seulement, lecture seule).
 // Aucune valeur salariale n'est gardée en cache ni sur l'appareil: la réponse reste en mémoire le temps de la page.
 function portraitOriginal(idDepart){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><div class="po" id="po"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Portrait d’un employé</h1><div class="po" id="po"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   var D = null, i = -1, LIBN = "";
   var MOIS = ['JANV.','FÉVR.','MARS','AVR.','MAI','JUIN','JUIL.','AOÛT','SEPT.','OCT.','NOV.','DÉC.'];
@@ -42,7 +42,7 @@ function portraitOriginal(idDepart){
     el.style.width = "1500px"; var h = el.offsetHeight, haut = el.getBoundingClientRect().top + (window.scrollY || 0), z = Math.min((innerWidth - 24) / 1500, (innerHeight - haut - 8) / h);
     if(z > 1.8) z = 1.8; if(z < .6) z = 1; el.style.zoom = z; }
   function squelette(){
-    $("po").innerHTML = '<h1>Portrait d’un employé</h1>' +
+    $("po").innerHTML = ''+
       '<div class="pohead"><div class="pohd"><img class="pologo" src="icons/icon-192-v7.png" alt="" width="48" height="48"><div class="potitre"><div class="ponom" id="poNom"></div><div class="posous" id="poSous"></div></div></div>' +
       '<div class="ponav"><select class="champ" id="poListe"></select><div class="ponb"><button type="button" class="pobtn" id="poPrec">Précédent</button><button type="button" class="pobtn noir" id="poSuiv">Suivant</button></div></div></div>' +
       '<div class="potri"><div><div class="pos"><span class="n">01</span><span class="l">Position dans l’échelle</span></div><div id="poEch"></div><div id="poEvo"></div></div>' +
@@ -123,7 +123,7 @@ function portraitOriginal(idDepart){
   appelService({action: "portrait_original", session: sessionGardee()}).then(function(r){
     if(!$("po")) return;
     if(!r || !r.ok || !r.d) throw 0;
-    D = r.d; if(!D.employes || !D.employes.length){ $("po").innerHTML = '<h1>Portrait d’un employé</h1><div class="bandeau">▪ AUCUN EMPLOYÉ ACTIF</div>'; return; }
+    D = r.d; if(!D.employes || !D.employes.length){ $("po").innerHTML = '<div class="bandeau">▪ AUCUN EMPLOYÉ ACTIF</div>'; return; }
     var k = -1; if(idDepart) D.employes.forEach(function(x, j){ if(x.id === idDepart) k = j; });
     i = k >= 0 ? k : 0; squelette(); afficher(); ajuster(); addEventListener("resize", ajuster);
   }).catch(function(){ if($("po")) portrait(idDepart); });   // Service sans portrait_original: ancien portrait

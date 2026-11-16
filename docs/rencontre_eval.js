@@ -295,6 +295,7 @@ function revChoix(liste, ouvrir, annee, evaluateur){
     document.getElementById("accEmp").onchange = function(){ var v = document.getElementById("accEmp").value; if(v === "") return; sel = +v; renc = 1; dessiner(); };
     Array.prototype.forEach.call(a.querySelectorAll("[data-accr]"), function(b){ b.onclick = function(){ renc = +b.getAttribute("data-accr"); dessiner(); }; });
     document.getElementById("accGo").onclick = function(){ if(sel >= 0) ouvrir(liste[sel][0], renc); };
+    try { ajusterTitre(a.querySelector(".accbl h1.ti")); setTimeout(function(){ try { ajusterTitre(a.querySelector(".accbl h1.ti")); } catch(e){} }, 400); } catch(e){}
     document.getElementById("accRet").onclick = function(){ menu(); };
   }
   dessiner();

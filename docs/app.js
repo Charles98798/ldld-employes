@@ -83,6 +83,17 @@ document.addEventListener("click", function(e){
   // Toute autre ouverture (onglet de l'accueil, bouton, lien) s'ouvre en haut: on annule le « retour récent ».
   if(t.closest("a, button") && !t.closest(".bl")){ RETOUR_T = 0; POS_PAGE[clePos()] = lireY(); }
 }, true);
+// Règle (16 nov): le bloc noir du titre épouse son texte (même marge partout), jamais étiré: on mesure la ligne la plus longue et on fixe la largeur.
+function ajusterTitre(h){
+  try {
+    h.style.width = ""; var r = document.createRange(); r.selectNodeContents(h); var m = 0;
+    Array.prototype.forEach.call(r.getClientRects(), function(q){ if(q.width > m) m = q.width; });
+    if(m > 0 && h.getClientRects().length){ var cs = getComputedStyle(h), pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight); h.style.boxSizing = "border-box"; h.style.width = Math.ceil(m + pad + 1) + "px"; }
+  } catch(e){}
+}
+function ajusterTitres(){ Array.prototype.forEach.call(app.querySelectorAll(".bl h1.ti"), ajusterTitre); }
+window.addEventListener("resize", function(){ try { ajusterTitres(); } catch(e){} });
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ try { ajusterTitres(); } catch(e){} });
 function decorerTitres(){
   Array.prototype.forEach.call(app.querySelectorAll(".page:not(.vue) > h1:not([data-pt]), .page:not(.vue) > .pph > h1:not([data-pt]), .page:not(.vue) #pe > h1:not([data-pt]), .page:not(.vue) #ea_app > h1:not([data-pt]), .page:not(.vue) #pt > h1:not([data-pt]), .page:not(.vue) .pph > h1:not([data-pt])"), function(h){
     h.setAttribute("data-pt", "1");
@@ -94,6 +105,7 @@ function decorerTitres(){
     fl.onclick = function(e){ e.preventDefault(); if(retour) retour.click(); };
     h.parentNode.insertBefore(bl, h); bl.appendChild(fl); h.classList.add("ti"); bl.appendChild(h);
     page.classList.add("bl-ok");
+    ajusterTitre(h); requestAnimationFrame(function(){ ajusterTitre(h); }); setTimeout(function(){ ajusterTitre(h); }, 400);
     if(/^manuel/i.test(h.textContent.trim())) page.classList.add("p-manuel");
     if(retour) page.appendChild(retour);
   });
@@ -2659,7 +2671,7 @@ function sectionsPortrait(p){
   return h;
 }
 function portrait(id){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><div id="pt"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Portrait d’un employé</h1><div id="pt"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
   function pctPos(v){ var t = String(v === null || v === undefined ? "" : v).trim(); if(!t) return "—"; var n = parseFloat(t.replace(",", ".")); if(isNaN(n)) return esc(t); if(t.indexOf("%") < 0 && Math.abs(n) <= 2.5) n = n * 100; return Math.round(n) + " %"; }
   function tauxH(v){ var n = parseFloat(String(v).replace(",", ".")); return isNaN(n) ? esc(String(v)) : n.toFixed(2).replace(".", ",") + " $"; }
@@ -2677,7 +2689,7 @@ function portrait(id){
     var pn = function(c){ var n = parseFloat(String(c.p).replace(",", ".")); if(Math.abs(n) <= 2.5) n = n * 100; return n; }, lo = bas ? pn(bas) : 0, hi = hau ? pn(hau) : 100, pc = Math.abs(posNum) <= 2.5 ? posNum * 100 : posNum, w = isFinite(pc) && hi > lo ? Math.max(0, Math.min(100, (pc - lo) / (hi - lo) * 100)) : 0;
     var tot = Number(p.total) || 0, bs = Number(p.base) || 0, cg = Number(p.conges) || 0, au = Math.max(0, tot - bs - cg), pp = function(x){ return tot ? Math.round(x / tot * 100) : 0; };
     var nomEmp = ""; liste.forEach(function(x){ if(x.id === p.id) nomEmp = x.nom; });
-    el.innerHTML = '<h1>Portrait d’un employé</h1>' +
+    el.innerHTML = ''+
       '<div class="pth0"><img src="icons/icon-192-v7.png" alt="" width="44" height="44"><div><div class="ptnom">'+esc(nomEmp)+'</div><div class="ptk">'+esc(String(p.categorie))+' · Portrait '+(new Date().getFullYear())+'</div></div></div>' +
       '<select class="champ" id="ps">'+liste.map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id === p.id ? " selected" : "")+'>'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
       '<div class="ptn"><button type="button" id="pp"'+(i <= 0 ? " disabled" : "")+'>Précédent</button><button type="button" id="psv"'+(i >= liste.length-1 ? " disabled" : "")+'>Suivant</button></div>' +
