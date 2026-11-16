@@ -163,7 +163,7 @@ function invReception(){
       g.l.forEach(function(x){
         var pr = Number(x.prix) || 0;
         h += '<div style="background:#E3DFD3;padding:14px 14px 16px;margin:0 0 14px"><div style="overflow-wrap:anywhere">'+invE(invT(x.description))+'</div><div style="font-size:12px;color:#6E6350;margin:2px 0 8px">'+invE(x.code)+'</div>'
-          + '<div style="display:flex;gap:6px"><div style="flex:1"><div style="font-size:12px;color:#6E6350">Commandé</div><div style="font-size:20px;font-weight:700">'+invE(x.commande)+'</div></div><div style="flex:1"><div style="font-size:12px;color:#6E6350">Déjà reçu</div><div style="font-size:20px;font-weight:700">'+invE(x.recu)+'</div></div><div style="flex:1"><div style="font-size:12px;color:#6E6350">Prix unitaire</div><div style="font-size:20px;font-weight:700">'+(pr > 0 ? invE(pr.toFixed(2).replace(".", ","))+' $' : "—")+'</div></div></div>'
+          + '<div style="display:flex;gap:6px"><div style="flex:1"><div style="font-size:12px;color:#6E6350">Commandé</div><div style="font-size:20px;font-weight:700">'+invE(x.commande)+'</div></div><div style="flex:1"><div style="font-size:12px;color:#6E6350">Prix unitaire</div><div style="font-size:20px;font-weight:700">'+(pr > 0 ? invE(pr.toFixed(2).replace(".", ","))+' $' : "—")+'</div></div></div>'
           + '<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="bouton" style="flex:1;height:46px;padding:0;margin:0;opacity:.45" disabled>Confirmer</button><button type="button" class="bouton lg" style="flex:1;height:46px;padding:0;margin:0;opacity:.45" disabled>Annuler</button></div></div>';
       });
     });
