@@ -286,7 +286,7 @@ function revChoix(liste, ouvrir, annee, evaluateur){
   app.innerHTML = '<div class="rvacc on" id="rvacc"></div>';
   function dessiner(){
     var ok = sel >= 0, e = ok ? liste[sel] : null, r2 = ok && e[2] && e[3], mots = ok ? e[0].trim().split(/\s+/) : [], prenom = mots.slice(0, -1).join(" ") || mots[0] || "", nom = mots.length > 1 ? mots[mots.length - 1] : "";
-    var h = '<div class="haut"><img class="logo" src="assets/LDLD_logo_complet_blanc_transparent.png" alt="Lafond Desjardins"><div style="text-align:right">Appréciation<br>de la contribution<br><span style="color:#B4AB9B">' + esc(annee) + "</span></div></div>";
+    var h = '<div class="haut"><span></span><div style="text-align:right">Appréciation<br>de la contribution<br><span style="color:#B4AB9B">' + esc(annee) + "</span></div></div>";
     if(ok) h += '<div class="centre"><div class="nom"><span>' + esc(prenom) + "</span><span>" + esc(nom) + '</span></div><div class="renc">Rencontre ' + renc + (evaluateur ? " — " + esc(evaluateur) : "") + "</div></div>";
     h += '<div class="bas"><div><div class="lab">Employé</div><select id="accEmp"' + (ok ? "" : ' class="rose"') + '><option value="" disabled' + (ok ? "" : " selected") + ">Choisir un employé</option>" + liste.map(function(x, i){ return "<option value=\"" + i + "\"" + (ok && i === sel ? " selected" : "") + ">" + esc(x[0]) + "</option>"; }).join("") + "</select></div>";
     if(ok) h += '<div><div class="lab">Rencontre</div>' + [1, 2].filter(function(n){ return n === 1 || r2; }).map(function(n){ return '<button type="button" class="lienR' + (renc === n ? " on" : "") + '" data-accr="' + n + '">0' + n + "</button>"; }).join("&nbsp;&nbsp;&nbsp;") + "</div>";
