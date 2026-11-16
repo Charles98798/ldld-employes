@@ -1813,8 +1813,15 @@ function prixSoumissions(){
     var r = document.getElementById("psr");
     if(r) r.oninput = function(){ rech = r.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); var p = r.selectionStart; dessiner(); var r2 = document.getElementById("psr"); if(r2){ r2.focus(); try { r2.setSelectionRange(p, p); } catch(e){} } };
   }
+  function panne(){ var el = document.getElementById("psb"); if(!el) return; var a = el.querySelector(".att, .bandeau"); while(a){ a.remove(); a = el.querySelector(".att, .bandeau"); } el.insertAdjacentHTML("beforeend", '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'); }
+  // Réponse sans liste ou sans soumissions (copie locale périmée ou réponse inattendue): la copie locale est vidée et un message s'affiche, au lieu d'une page vide.
+  function recu(r){
+    if(!r || !Array.isArray(r.liste) || !Array.isArray(r.soumissions)){ try { delete CACHE["prix_soumissions"]; localStorage.removeItem("ldld-c-prix_soumissions"); } catch(e){} panne(); return; }
+    d = r; dessiner();
+  }
   dessiner();
-  obtenir("prix_soumissions", {action: "prix_soumissions"}, function(r){ d = r; dessiner(); }, function(){ var el = document.getElementById("psb"); if(el) el.insertAdjacentHTML("beforeend", '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'); }, true);
+  if(!lireCache("prix_soumissions")) document.getElementById("psb").insertAdjacentHTML("beforeend", '<div class="att"><i></i></div>');
+  obtenir("prix_soumissions", {action: "prix_soumissions"}, recu, panne, true);
 }
 function entretien(){
   if(!entretien.verifie){ entretien.verifie = true; var s0 = sessionGardee(); appelBrut({action:"moi", session:s0}).then(function(r){ entretien.verifie = false; if(r && r.ok && MOI && r.role !== MOI.role){ MOI = r; try { garderMoi(s0, r); } catch(e){} entretien(); } }).catch(function(){ entretien.verifie = false; }); }
