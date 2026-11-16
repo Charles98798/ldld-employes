@@ -485,8 +485,8 @@ function rdLignesCol(cle, L){
   });
 }
 function rdListeDates(L, descs, col3, col2){
-  var g = "display:grid;grid-template-columns:26% 44% 30%;gap:0 8px;";
-  return '<div class="rdp" style="'+g+'font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>'+(col2 || "Cas")+'</span><span>'+(col3 || "Étape")+'</span></div>'+L.map(function(c, i){
+  var g = "display:grid;grid-template-columns:26% 44% 30%;gap:0 8px;max-width:720px;";
+  return '<div class="rdp" style="'+g+'margin-top:18px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>'+(col2 || "Cas")+'</span><span>'+(col3 || "Étape")+'</span></div>'+L.map(function(c, i){
     var d = c[0], cas = c[1], etape = c.length > 3 ? c[3] : (c.length > 2 ? c[2] : ""), desc = c.length > 3 ? c[2] : "";
     return '<div class="rdp" style="'+g+'font-size:13px'+(descs && i > 0 && descs[i-1] ? ';margin-top:18px' : '')+'"><span>'+rdE(String(d).slice(0, 10))+'</span><span>'+rdE(col3 === "Montant" ? String(cas).replace(/^\s*dossier\s*/i, "") : cas)+(desc ? '<div style="color:#6E6350">'+rdE(desc)+'</div>' : "")+'</span><span>'+rdE(etape)+'</span></div>'+rdDescLigne(descs && descs[i]); }).join("");
 }
