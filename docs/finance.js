@@ -81,6 +81,7 @@ function finTopsCharger(apres){
   if(FIN_T){ apres(); return; }
   try { appelService({action: "finance_tops", session: sessionGardee()}).then(function(r){ if(r && r.ok !== false && (r.ventesClientsMois || r.achatsFournMois)){ FIN_T = r; apres(); } }).catch(function(){}); } catch(e){}
 }
+function finNomClient(c){ var m = FIN_T && FIN_T.clientsNoms; var n = m && m[String(c).replace(/[\s,;]+$/, "")]; return n ? n : c; }
 function finTopMois(t, ms, exclure, n){
   if(!t || !t.lignes || !ms.length) return null;
   var out = [];
@@ -214,7 +215,7 @@ function fgGraphique(type){
     var l = b[2] && tp[b[2]];
     if(l && l.length){
       h += '<a class="fglnk" href="#" data-k="'+b[2]+'">Voir les 10 comptes</a><div class="fgtop" id="fgtop_'+b[2]+'" hidden>';
-      l.forEach(function(x, i){ h += '<div class="fgtl"><span>'+(i+1)+'. '+String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "")+'</span><span>'+finMontant(x[1])+'</span></div>'; });
+      l.forEach(function(x, i){ h += '<div class="fgtl"><span>'+(i+1)+'. '+String(finNomClient(x[0])).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "")+'</span><span>'+finMontant(x[1])+'</span></div>'; });
       h += '</div>';
     }
     h += '</div>';
@@ -235,6 +236,7 @@ function financeGraphique(type){
         if(k === "M"){ FG.m = v; FG.t = Math.floor(v/3); } else if(k === "T"){ FG.t = v; FG.m = Math.min(v*3+2, FIN_DERNIER); }
         financeGraphique(type); }; });
     finLiens();
+    if(type === "cli"){ var avait = !!FIN_T; finTopsCharger(function(){ if(!avait && FIN_TITRE === "Comptes clients" && document.querySelector(".fgcl")) financeGraphique("cli"); }); }
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); finRetour(); };
   });
 }
@@ -273,7 +275,7 @@ function finTopRendu(){
   if(lst && lst.length){
     var pc = FIN_ORIGINE === "conseil";
     h += '<div class="fgtl ' + (pc ? "fgtl2" : "fgtl3") + ' fgth"><span></span>' + (pc ? "" : "<span>VENTES</span>") + '<span>PART</span></div>';
-    lst.forEach(function(x, i){ h += '<div class="fgtl ' + (pc ? "fgtl2" : "fgtl3") + ' fgtv"><span>' + (i+1) + '. ' + String(x[0]).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span>' + (pc ? "" : '<span>' + finMontant(x[1]) + '</span>') + '<span>' + (tot ? finPct(x[1] / tot * 100) : "") + '</span></div>'; });
+    lst.forEach(function(x, i){ h += '<div class="fgtl ' + (pc ? "fgtl2" : "fgtl3") + ' fgtv"><span>' + (i+1) + '. ' + String(finNomClient(x[0])).replace(/[<>&]/g, "").replace(/[\s,;]+$/, "") + '</span>' + (pc ? "" : '<span>' + finMontant(x[1]) + '</span>') + '<span>' + (tot ? finPct(x[1] / tot * 100) : "") + '</span></div>'; });
   } else h += '<div class="finnote">Les ventes par client arrivent dès que QuickBooks les fournit à l\'application.</div>';
   document.getElementById("fin_corps").innerHTML = h;
 }
