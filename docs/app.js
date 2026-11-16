@@ -1272,7 +1272,10 @@ function prefsNotifs(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mon profil</h1><div id="notifs"></div><div id="prefs"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); profil(); };
   var zone = document.getElementById("notifs");
-  if(!notifPossible()){ zone.innerHTML = '<p class="aide">Pour recevoir les notifications sur iPhone, ajoutez l\'application à l\'écran d\'accueil (Partager > Sur l\'écran d\'accueil).</p>'; }
+  if(!notifPossible()){
+    var iph = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1), autonome = window.navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+    if(iph && !autonome) zone.innerHTML = '<div class="notifiph"><div class="notifiph-t">NOTIFICATIONS SUR IPHONE</div><div>1. Touchez Partager</div><div>2. Choisissez « Sur l’écran d’accueil »</div></div>';
+  }
   else if(Notification.permission === "denied"){ zone.innerHTML = '<p class="aide">Les notifications sont bloquées dans les réglages de votre appareil. Autorisez-les dans les réglages pour les recevoir.</p>'; }
   else navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(sub){
     zone.innerHTML = '<label class="ligne"><span>Alerte dans l\'app</span><input type="checkbox" id="notifCase"'+(sub && Notification.permission === "granted" ? " checked" : "")+'></label>';
