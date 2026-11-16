@@ -28,9 +28,8 @@ function invDroitReception(){ return typeof roleIdx === "function" && roleIdx() 
 function invMoisFr(iso){ var m = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"], p = String(iso).split("-"); return p.length === 3 ? (+p[2]) + " " + m[+p[1] - 1] + " " + p[0] : String(iso); }
 function invOnglets(){
   if(!INV_PHASE2 || !invDroitReception()) return '<div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px">Retrait</div>';
-  var v = INV.vue;
-  var st = function(on){ return "flex:1;min-width:0;height:46px;padding:0 4px;margin:0;font-size:12px;" + (on ? "border-bottom:3px solid var(--vert)" : "opacity:.6"); };
-  return '<div style="display:flex;gap:6px;margin:0 0 12px"><button type="button" class="bouton" id="invtsor" style="'+st(v !== "reception" && v !== "stocks")+'">Retrait</button><button type="button" class="bouton" id="invtsto" style="'+st(v === "stocks")+'">Comptage</button><button type="button" class="bouton" id="invtrec" style="'+st(v === "reception")+'">Réception</button></div>';
+  var v = INV.vue, t = function(id, on, lib){ return '<button type="button" class="invt'+(on ? " on" : "")+'" id="'+id+'">'+lib+'</button>'; };
+  return '<div class="invts">'+t("invtsor", v !== "reception" && v !== "stocks", "Retrait")+t("invtsto", v === "stocks", "Comptage")+t("invtrec", v === "reception", "Réception")+'</div>';
 }
 function invLierOnglets(){
   var a = document.getElementById("invtsor"), b = document.getElementById("invtrec"), c = document.getElementById("invtsto");
@@ -142,7 +141,10 @@ function invProduit(p){
   dessiner();
 }
 
-// Réception (vrai): LECTURE SEULE pour Gestionnaires et Direction (Service inv_reception_lire, copie Supabase inventaire_reception). Confirmer et Annuler désactivés tant que l'écriture n'est pas branchée.
+// Réception (vrai): style des pages de l'app. Une bande taupe numérotée par fournisseur et date, lignes sur le fond, trois colonnes (Commandé ou Reste, Nombre reçu, Prix unitaire).
+// Confirmer: aucune deuxième confirmation ni message de traitement; l'écran se met à jour tout de suite et la demande part en arrière-plan (inv_recevoir). Écriture désactivée tant que INV_ECRITURE est false.
+function invMoisCourt(iso){ var m = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."], p = String(iso).split("-"); return p.length === 3 ? (+p[2]) + " " + m[+p[1] - 1] : String(iso); }
+function invPrixTxt(n){ return String(n).replace(".", ","); }
 function invReception(){
   if(!INV_LECTURE) return invReceptionAncien();
   var z = document.getElementById("invapp"); if(!z) return;
@@ -151,25 +153,52 @@ function invReception(){
   appelService({action: "inv_reception_lire", session: sessionGardee()}).then(function(r){
     if(!document.getElementById("invatt")) return;
     if(!(r && r.ok && Array.isArray(r.lignes))){ panne(/non disponible/i.test(String(r && r.erreur)) ? "▪ RÉCEPTION PAS ENCORE ACTIVÉE" : "▪ " + String((r && r.erreur) || "Échec").toUpperCase() + " · TOUCHEZ POUR RÉESSAYER"); return; }
-    var groupes = [], idx = {};
-    r.lignes.forEach(function(x){ var k = x.fournisseur + "|" + x.date; if(idx[k] === undefined){ idx[k] = groupes.length; groupes.push({k: k, f: x.fournisseur, d: x.date, l: []}); } groupes[idx[k]].l.push(x); });
-    groupes.sort(function(a, b){ return a.d < b.d ? 1 : a.d > b.d ? -1 : (a.f < b.f ? -1 : 1); });
-    var h = invOnglets() + invMaj({maj_t: r.maj_t}) + '<div style="font-size:13px;color:#6E6350;margin:0 0 10px">La réception sera activée bientôt. Pour le moment, vous pouvez consulter les commandes : rien n’est enregistré.</div>';
-    if(!groupes.length) h += '<div class="bandeau">▪ AUCUNE COMMANDE EN ATTENTE</div>';
-    groupes.forEach(function(g){
-      var ouvert = INV.ouv[g.k] !== false;
-      h += '<div class="invg" data-k="'+invE(g.k)+'" style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:30px 0 10px;cursor:pointer"><b style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;overflow-wrap:anywhere">'+invE(invT(g.f))+'</b><span style="font-size:12px;color:#6E6350;white-space:nowrap">'+invE(invMoisFr(g.d))+' · '+g.l.length+'</span></div>';
-      if(!ouvert) return;
-      g.l.forEach(function(x){
-        var pr = Number(x.prix) || 0;
-        h += '<div style="background:#E3DFD3;padding:14px 14px 16px;margin:0 0 14px"><div style="overflow-wrap:anywhere">'+invE(invT(x.description))+'</div><div style="font-size:12px;color:#6E6350;margin:2px 0 8px">'+invE(x.code)+'</div>'
-          + '<div style="display:flex;gap:6px"><div style="flex:1"><div style="font-size:12px;color:#6E6350">Commandé</div><div style="font-size:20px;font-weight:700">'+invE(x.commande)+'</div></div><div style="flex:1"><div style="font-size:12px;color:#6E6350">Prix unitaire</div><div style="font-size:20px;font-weight:700">'+(pr > 0 ? invE(pr.toFixed(2).replace(".", ","))+' $' : "—")+'</div></div></div>'
-          + '<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="bouton" style="flex:1;height:46px;padding:0;margin:0;opacity:.45" disabled>Confirmer</button><button type="button" class="bouton lg" style="flex:1;height:46px;padding:0;margin:0;opacity:.45" disabled>Annuler</button></div></div>';
-      });
-    });
-    z.innerHTML = h; invLierOnglets();
-    Array.prototype.forEach.call(z.querySelectorAll(".invg"), function(e){ e.onclick = function(){ var k = e.getAttribute("data-k"); INV.ouv[k] = INV.ouv[k] === false; invReception(); }; });
+    INV.rl = r.lignes.map(function(x){ return {id: String(x.id), fournisseur: x.fournisseur, date: x.date, code: x.code, description: x.description, commande: Number(x.commande) || 0, recu: Number(x.recu) || 0, prix: Number(x.prix) || 0}; });
+    INV.rmaj = r.maj_t; INV.rsaisie = {}; invReceptionDessiner();
   }).catch(function(){ panne("▪ RÉSEAU INDISPONIBLE · TOUCHEZ POUR RÉESSAYER"); });
+}
+function invReceptionDessiner(msg){
+  var z = document.getElementById("invapp"); if(!z) return;
+  var L = (INV.rl || []).filter(function(x){ return x.recu < x.commande; }), groupes = [], idx = {};
+  L.forEach(function(x){ var k = x.fournisseur + "|" + x.date; if(idx[k] === undefined){ idx[k] = groupes.length; groupes.push({k: k, f: x.fournisseur, d: x.date, l: []}); } groupes[idx[k]].l.push(x); });
+  groupes.sort(function(a, b){ return a.d < b.d ? 1 : a.d > b.d ? -1 : (a.f < b.f ? -1 : 1); });
+  var h = invOnglets() + invMaj({maj_t: INV.rmaj}) + (INV_ECRITURE ? "" : '<div style="font-size:13px;color:#6E6350;margin:0 0 10px">La réception sera activée bientôt. Pour le moment, vous pouvez consulter les commandes : rien n’est enregistré.</div>');
+  h += '<div class="bandeau" id="invrmsg" style="'+(msg ? "" : "display:none;")+'margin:0 0 10px">'+invE(msg || "")+'</div>';
+  if(!groupes.length) h += '<div class="bandeau">▪ AUCUNE COMMANDE EN ATTENTE</div>';
+  groupes.forEach(function(g, gi){
+    h += '<div class="invband"><b>'+(gi < 9 ? "0" : "")+(gi + 1)+'</b><span>'+invE(invT(g.f))+' · '+invE(invMoisCourt(g.d))+'</span></div>';
+    g.l.forEach(function(x){
+      var sa = INV.rsaisie[x.id] || {}, q = sa.q != null ? sa.q : "", pr = sa.p != null ? sa.p : (x.prix > 0 ? invPrixTxt(x.prix.toFixed(2)) : "");
+      var qv = /^\d+$/.test(q) && +q > 0, pv = /^\d+([.,]\d{1,2})?$/.test(String(pr).trim());
+      h += '<div class="invlig" data-i="'+invE(x.id)+'"><div class="invnom">'+invE(invT(x.description))+'</div><div class="invnom">'+invE(x.code)+'</div>'
+        + '<div class="invcols"><div><div class="etq">▪ '+(x.recu > 0 ? "Reste" : "Commandé")+'</div><div class="invnb">'+(x.commande - x.recu)+'</div></div>'
+        + '<div><div class="etq">▪ Nombre reçu</div><input class="invf invq'+(qv ? "" : " rose")+'" data-i="'+invE(x.id)+'" inputmode="numeric" autocomplete="off" placeholder="Quantité" value="'+invE(q)+'"></div>'
+        + '<div><div class="etq">▪ Prix unitaire</div><input class="invf invp'+(pv ? "" : " rose")+'" data-i="'+invE(x.id)+'" inputmode="decimal" autocomplete="off" placeholder="0,00 $" value="'+invE(pr)+'"></div></div>'
+        + '<div class="invact"><button type="button" class="bouton invc" data-i="'+invE(x.id)+'"'+(qv && pv && INV_ECRITURE ? "" : " disabled")+'>Confirmer</button><a href="#" class="inva" data-i="'+invE(x.id)+'" style="'+(INV_ECRITURE ? "" : "opacity:.45;pointer-events:none")+'">Annuler la ligne</a></div><div class="invconf" data-i="'+invE(x.id)+'"></div></div>';
+    });
+  });
+  z.innerHTML = h; invLierOnglets();
+  var ligne = function(id){ return INV.rl.filter(function(q){ return q.id === id; })[0]; };
+  var maj = function(e){ var i = e.getAttribute("data-i"), sa = INV.rsaisie[i] = INV.rsaisie[i] || {}; if(e.classList.contains("invq")) sa.q = e.value.trim(); else sa.p = e.value.trim();
+    var c = document.querySelector('.invlig[data-i="'+i+'"]'), q = c.querySelector(".invq"), p = c.querySelector(".invp"), x = ligne(i);
+    var qv = /^\d+$/.test(q.value.trim()) && +q.value.trim() > 0, pv = /^\d+([.,]\d{1,2})?$/.test(p.value.trim());
+    q.classList.toggle("rose", !qv); p.classList.toggle("rose", !pv); c.querySelector(".invc").disabled = !(qv && pv && INV_ECRITURE); };
+  Array.prototype.forEach.call(z.querySelectorAll(".invf"), function(e){ e.oninput = function(){ maj(e); }; });
+  Array.prototype.forEach.call(z.querySelectorAll(".invc"), function(b){ b.onclick = function(){
+    var i = b.getAttribute("data-i"), x = ligne(i), c = document.querySelector('.invlig[data-i="'+i+'"]'); if(!x || !c) return;
+    var q = +c.querySelector(".invq").value.trim(), p = c.querySelector(".invp").value.trim().replace(",", "."), avant = {recu: x.recu, prix: x.prix};
+    x.recu = x.recu + q; x.prix = +p; delete INV.rsaisie[i]; invReceptionDessiner();   // l'écran se met à jour tout de suite
+    invEcrire("inv_recevoir", {id_ligne: i, qte_recue: x.recu, prix: +p}).then(function(r){
+      if(!(r && r.ok)){ x.recu = avant.recu; x.prix = avant.prix; invReceptionDessiner("▪ RÉCEPTION REFUSÉE · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
+    }).catch(function(){ x.recu = avant.recu; x.prix = avant.prix; invReceptionDessiner("▪ RÉCEPTION NON ENVOYÉE · RÉSEAU INDISPONIBLE"); });
+  }; });
+  Array.prototype.forEach.call(z.querySelectorAll(".inva"), function(a){ a.onclick = function(ev){ ev.preventDefault();
+    var i = a.getAttribute("data-i"), m = document.querySelector('.invconf[data-i="'+i+'"]'); if(!m) return;
+    m.innerHTML = '<div style="margin:10px 0 8px">Annuler cette ligne de commande?</div><div style="display:flex;gap:8px"><button type="button" class="bouton lg invan" style="flex:1;height:46px;padding:0;margin:0">Non</button><button type="button" class="bouton invao" style="flex:1;height:46px;padding:0;margin:0;background:#A33A2B;color:#fff">Oui, annuler</button></div>';
+    m.querySelector(".invan").onclick = function(){ m.innerHTML = ""; };
+    m.querySelector(".invao").onclick = function(){ var x = ligne(i), idx = INV.rl.indexOf(x); INV.rl.splice(idx, 1); invReceptionDessiner();
+      invEcrire("inv_annuler_ligne", {id_ligne: i}).then(function(r){ if(!(r && r.ok)){ INV.rl.splice(idx, 0, x); invReceptionDessiner("▪ NON ANNULÉE · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); } }).catch(function(){ INV.rl.splice(idx, 0, x); invReceptionDessiner("▪ NON ANNULÉE · RÉSEAU INDISPONIBLE"); }); };
+  }; });
 }
 // Réception (ancien écran d'essai): une section par fournisseur et date de commande (repliable), puis une ligne par produit: code, description, commandé, reçu, prix (obligatoire), Confirmer et Annuler.
 function invReceptionAncien(){

@@ -1393,3 +1393,10 @@ select:not(.act){width:100%;box-sizing:border-box}
 .menu:not(.anim) a .ic{clip-path:none}
 .fin .fgtl2{grid-template-columns:minmax(0,1fr) 44px;gap:2px;font-size:12px;padding-left:8px}.fin .fgtl2 span:first-child{min-width:0;overflow-wrap:anywhere}
 .fin .fincols.d,.fin .finl.d{grid-template-columns:minmax(0,1fr) 78px 36px 38px 40px;gap:2px}.fin .finl.d{font-size:13px}.fin .finl.d .n{font-size:14px;white-space:normal}.fin .fincols.d span:nth-child(n+2){text-align:right}
+
+/* Inventaire (16 nov): onglets soulignés, bandes numérotées, lignes de réception sans cartes */
+.invts{display:flex;gap:8px;margin:0 0 18px}.invt{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid #000;border-radius:0;color:#000;font:inherit;font-size:12px;letter-spacing:.14em;text-transform:uppercase;height:46px;padding:0 4px;cursor:pointer}.invt.on{border-bottom-width:3px}
+.invband{display:flex;align-items:baseline;gap:12px;background:#B4AB9B;padding:14px 12px;margin:26px 0 14px}.invband b{font-weight:400;font-size:22px;color:#6E6350}.invband span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;overflow-wrap:anywhere}
+.invlig{margin:0 0 30px}.invnom{font-size:18px;color:#000;overflow-wrap:anywhere}.invcols{display:grid;grid-template-columns:1fr 1.25fr 1.25fr;gap:10px;margin:12px 0 0;align-items:end}.invcols .etq{font-size:12px;color:#6E6350;margin:0 0 4px}.invnb{font-size:18px;height:46px;display:flex;align-items:center}
+.invf{display:block;width:100%;box-sizing:border-box;height:46px;padding:0 10px;font:inherit;font-size:18px;color:#000;background:transparent;border:0;border-bottom:1px solid #B4AB9B;border-radius:0;margin:0}.invf.rose{background:#fff;border-bottom:3px solid var(--vert)}.invf::placeholder{color:#8b8579;opacity:1}
+.invact{display:flex;align-items:center;gap:22px;margin:14px 0 0}.invact .bouton{width:auto;min-width:46%;height:46px;padding:0 22px;margin:0}.invact .bouton:disabled{opacity:.55}.invact .inva{color:#000;text-decoration:none;border-bottom:3px solid var(--vert);font-size:14px;padding-bottom:2px}
