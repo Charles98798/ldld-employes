@@ -1392,3 +1392,4 @@ select:not(.act){width:100%;box-sizing:border-box}
 .menu a .ic,.page .doc .ic{overflow:visible}
 .menu:not(.anim) a .ic{clip-path:none}
 .fin .fgtl2{grid-template-columns:minmax(0,1fr) 44px;gap:2px;font-size:12px;padding-left:8px}.fin .fgtl2 span:first-child{min-width:0;overflow-wrap:anywhere}
+.fin .fincols.d,.fin .finl.d{grid-template-columns:minmax(0,1fr) 78px 36px 38px 40px;gap:2px}.fin .finl.d{font-size:13px}.fin .finl.d .n{font-size:14px;white-space:normal}.fin .fincols.d span:nth-child(n+2){text-align:right}
