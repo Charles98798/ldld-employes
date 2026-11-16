@@ -2715,8 +2715,14 @@ function contactsResp(){
     liste.forEach(function(c){ var a = String(c.courriel || "").trim().toLowerCase(); if(/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(a) && !vus[a]){ vus[a] = 1; adr.push(a); } });
     if(!adr.length || document.getElementById("cctdlg")) return;
     // Même composant de confirmation que « Envoyer le contrat via DocuSign ? » (superposition, Oui / Non), puis la même barre d'état.
-    document.body.insertAdjacentHTML("beforeend", '<div class="pop" id="cctdlg"><div class="popc"><div class="popt">Écrire à '+adr.length+' personne'+(adr.length > 1 ? "s" : "")+' ?</div><div class="popd"><div>Un brouillon s’ouvre dans votre courriel, toutes les adresses en CCI</div><div>L’application n’envoie rien : vous écrivez et envoyez</div></div><div class="aeact"><button type="button" class="bouton" id="cctoui">Oui, ouvrir</button><button type="button" class="bouton lg" id="cctnon">Non</button></div></div></div>');
+    document.body.insertAdjacentHTML("beforeend", '<div class="pop" id="cctdlg"><div class="popc"><div class="popt">Écrire à '+adr.length+' personne'+(adr.length > 1 ? "s" : "")+' ?</div><div class="popd"><div>Un brouillon s’ouvre dans votre courriel, toutes les adresses en CCI</div><div>L’application n’envoie rien : vous écrivez et envoyez</div></div><div class="aeact"><button type="button" class="bouton" id="cctoui">Oui, ouvrir</button><button type="button" class="bouton lg" id="cctnon">Non</button></div><div class="popd" style="margin-top:12px"><a href="#" id="cctcop" style="color:#000000">Rien ne s’ouvre ? Copier les adresses</a></div></div></div>');
     document.getElementById("cctnon").onclick = function(){ var d = document.getElementById("cctdlg"); if(d) d.remove(); };
+    document.getElementById("cctcop").onclick = function(e){
+      e.preventDefault(); var txt = adr.join("; "), d = document.getElementById("cctdlg");
+      var fini = function(ok){ if(d) d.remove(); envBarreOuvrir("Copie des adresses…", 600); setTimeout(function(){ envBarreFin(ok, ok ? adr.length + " adresse" + (adr.length > 1 ? "s" : "") + " copiée" + (adr.length > 1 ? "s" : "") + " · collez-les dans CCI" : "Copie impossible"); setTimeout(envBarreRetirer, 2200); }, 700); };
+      var repli = function(){ try { var t = document.createElement("textarea"); t.value = txt; t.style.position = "fixed"; t.style.opacity = "0"; document.body.appendChild(t); t.select(); var ok = document.execCommand("copy"); t.remove(); fini(!!ok); } catch(x){ fini(false); } };
+      if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function(){ fini(true); }, repli); else repli();
+    };
     document.getElementById("cctoui").onclick = function(){
       var d = document.getElementById("cctdlg"); if(d) d.remove();
       envBarreOuvrir("Préparation du courriel…", 1200);
