@@ -486,7 +486,7 @@ function rdLignesCol(cle, L){
 }
 function rdListeDates(L, descs, col3, col2){
   var g = "display:grid;grid-template-columns:26% 44% 30%;gap:0 8px;max-width:720px;";
-  return '<div class="rdp" style="'+g+'margin-top:18px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>'+(col2 || "Cas")+'</span><span>'+(col3 || "Étape")+'</span></div>'+L.map(function(c, i){
+  return '<div class="rdp" style="'+g+'margin-top:30px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>'+(col2 || "Cas")+'</span><span>'+(col3 || "Étape")+'</span></div>'+L.map(function(c, i){
     var d = c[0], cas = c[1], etape = c.length > 3 ? c[3] : (c.length > 2 ? c[2] : ""), desc = c.length > 3 ? c[2] : "";
     return '<div class="rdp" style="'+g+'font-size:13px'+(descs && i > 0 && descs[i-1] ? ';margin-top:18px' : '')+'"><span>'+rdE(String(d).slice(0, 10))+'</span><span>'+rdE(col3 === "Montant" ? String(cas).replace(/^\s*dossier\s*/i, "") : cas)+(desc ? '<div style="color:#6E6350">'+rdE(desc)+'</div>' : "")+'</span><span>'+rdE(etape)+'</span></div>'+rdDescLigne(descs && descs[i]); }).join("");
 }
@@ -514,7 +514,7 @@ function rdCourbe(a, b){
   var pts = a.map(function(x, k){ if(nul(x)) return ""; var p = xy(a, k); return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+RP+'" fill="#000000"/>'; }).join("");
   var kd = -1; for(var q = n - 1; q >= 0; q--){ if(!nul(a[q])){ kd = q; break; } }
   var dern = kd >= 0 ? xy(a, kd) : null;
-  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 10px;max-width:1300px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Courbe" style="display:block;margin:6px 0 22px;max-width:1300px"><line x1="'+px+'" y1="'+(H-py)+'" x2="'+(W-px)+'" y2="'+(H-py)+'" stroke="#B4AB9B" stroke-width="1" vector-effect="non-scaling-stroke"/>'
     + (avecB ? lignes(b, 'stroke="#000000" stroke-width="1.5" stroke-dasharray="3 3" opacity=".55" vector-effect="non-scaling-stroke"') : "")
     + lignes(a, 'stroke="#000000" stroke-width="2" vector-effect="non-scaling-stroke"') + pts
     + lab + '</svg>'
