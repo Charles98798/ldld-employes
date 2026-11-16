@@ -83,6 +83,10 @@ document.addEventListener("click", function(e){
   // Toute autre ouverture (onglet de l'accueil, bouton, lien) s'ouvre en haut: on annule le « retour récent ».
   if(t.closest("a, button") && !t.closest(".bl")){ RETOUR_T = 0; POS_PAGE[clePos()] = lireY(); }
 }, true);
+// Règle (16 nov): liste obligatoire vide = blanc + soulignement vert; choisie = se fond (classe rose gérée ici).
+function marquerVides(racine, ids){
+  Array.prototype.forEach.call((racine || app).querySelectorAll(ids), function(q){ var m = function(){ q.classList.toggle("rose", !q.value); }; m(); q.addEventListener("change", m); });
+}
 // Règle (16 nov): le bloc noir du titre épouse son texte (même marge partout), jamais étiré: on mesure la ligne la plus longue et on fixe la largeur.
 function ajusterTitre(h){
   try {
@@ -1463,6 +1467,7 @@ function attributionPage(genre){
     }
     if(msg) h += '<div class="bandeau">'+esc(msg)+'</div>';
     el.innerHTML = h;
+    marquerVides(el, "#ape, select[id^=\"apn-\"]");
     document.getElementById("aps").onchange = function(){ choisi = this.value; caseSel = ""; confirmer = null; msg = ""; dessiner(); };
     document.getElementById("apc").onchange = function(){ caseSel = this.value; choisi = ""; confirmer = null; msg = ""; dessiner(); };
     Array.prototype.forEach.call(el.querySelectorAll("[data-cx]"), function(b){ b.onclick = function(){ confirmer = "case"; dessiner(); }; });
@@ -2610,6 +2615,7 @@ function gestionEmployes(){
       '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0;flex:1;border:2px solid #7a2e2e;background:transparent;color:#7a2e2e;padding:11px 0;font-size:12px">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0;flex:1;border:2px solid #000000;background:transparent;color:#000000;padding:11px 0;font-size:12px">Désactiver</button></div>' +
       '<div style="background:#b8ae9b;color:#000000;font-size:14px;letter-spacing:.2em;padding:13px 14px;text-transform:uppercase;margin:64px 0 18px">Inactifs · '+r.inactifs.length+'</div>' +
       (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #7a2e2e;background:transparent;color:#7a2e2e">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #000000;background:transparent;color:#000000">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
+    marquerVides(el, "#gs");
     function choisi(){ var s = document.getElementById("gs"); return s.value ? {id: s.value, nom: s.options[s.selectedIndex].text} : null; }
     document.getElementById("gdes").onclick = function(){ var c = choisi(); if(c) agir(c.id, c.nom, false); };
     document.getElementById("gsup").onclick = function(){ var c = choisi(); if(c) supprimer(c.id, c.nom); };
