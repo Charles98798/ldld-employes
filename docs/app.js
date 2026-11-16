@@ -1267,7 +1267,7 @@ function profil(){
   document.getElementById("vnotif").onclick = function(e){ e.preventDefault(); prefsNotifs(); };
 }
 // Centre de contrôle des notifications : chaque employé choisit ses propres alertes (enregistrées par le service, par courriel).
-var PREFS_NOTIFS = [["courriel", "Courriel", "Recevoir aussi chaque avis par courriel"], ["reunion_veille", "Réunions : la veille à 16 h", "Rappel de vos réunions du lendemain"], ["reunion_1h", "Réunions : 1 heure avant", "Dernier rappel avant la réunion"], ["rencontres", "Rencontres planifiées", "Quand une rencontre avec vous est fixée"], ["autoeval", "Autoévaluation à remplir", "Quand votre autoévaluation est ouverte"]];
+var PREFS_NOTIFS = [["courriel", "Courriel", "Recevoir aussi chaque notification par courriel"], ["reunion_veille", "Réunions : la veille à 16 h", "Rappel de vos réunions du lendemain"], ["reunion_1h", "Réunions : 1 heure avant", "Dernier rappel avant la réunion"], ["rencontres", "Rencontres planifiées", "Quand une rencontre avec vous est fixée"], ["autoeval", "Autoévaluation à remplir", "Quand votre autoévaluation est ouverte"]];
 function prefsNotifs(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mon profil</h1><div id="notifs"></div><div id="prefs"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); profil(); };
