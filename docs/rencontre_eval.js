@@ -290,7 +290,7 @@ function revChoix(liste, ouvrir, annee, evaluateur){
     if(ok) h += '<div class="centre"><div class="nom"><span>' + esc(prenom) + "</span><span>" + esc(nom) + '</span></div><div class="renc">Rencontre ' + renc + (evaluateur ? " — " + esc(evaluateur) : "") + "</div></div>";
     h += '<div class="bas"><div><div class="lab">Employé</div><select id="accEmp"' + (ok ? "" : ' class="rose"') + '><option value="" disabled' + (ok ? "" : " selected") + ">Choisir un employé</option>" + liste.map(function(x, i){ return "<option value=\"" + i + "\"" + (ok && i === sel ? " selected" : "") + ">" + esc(x[0]) + "</option>"; }).join("") + "</select></div>";
     if(ok) h += '<div><div class="lab">Rencontre</div>' + [1, 2].filter(function(n){ return n === 1 || r2; }).map(function(n){ return '<button type="button" class="lienR' + (renc === n ? " on" : "") + '" data-accr="' + n + '">0' + n + "</button>"; }).join("&nbsp;&nbsp;&nbsp;") + "</div>";
-    h += '<button type="button" class="go" id="accGo"' + (ok ? "" : " disabled") + '>Ouvrir la rencontre</button></div><a href="#" class="accfl" id="accRet" aria-label="Retour">←</a>';
+    h += '<button type="button" class="go" id="accGo"' + (ok ? "" : " disabled") + '>Ouvrir la rencontre</button></div><div class="bl accbl"><a href="#" class="rt" id="accRet" aria-label="Retour">←</a><h1 class="ti">Rencontre d’évaluation</h1></div>';
     var a = document.getElementById("rvacc"); a.innerHTML = h;
     document.getElementById("accEmp").onchange = function(){ var v = document.getElementById("accEmp").value; if(v === "") return; sel = +v; renc = 1; dessiner(); };
     Array.prototype.forEach.call(a.querySelectorAll("[data-accr]"), function(b){ b.onclick = function(){ renc = +b.getAttribute("data-accr"); dessiner(); }; });
