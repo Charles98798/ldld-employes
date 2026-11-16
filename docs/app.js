@@ -608,7 +608,7 @@ var ENT = [
  {id:"inventaire", g:"Atelier", l:"Inventaire", p:"Inventaire", d:[1,1,1], f:function(){ invOuvrir(); }},
  {id:"casier", g:"Atelier", l:"Casier", p:"Casier", d:[0,1,1], f:function(){ attributionPage("casier"); }},
  {id:"stationnement", g:"Atelier", l:"Stationnement", p:"Stationnement", d:[0,1,1], f:function(){ attributionPage("place"); }},
- {id:"entretien_machinerie", g:"Installations", l:"Entretien machinerie", p:"Entretien machinerie", d:[1,1,1], f:function(){ entretien(); }},
+ {id:"entretien_machinerie", g:"Atelier", l:"Entretien machinerie", p:"Entretien machinerie", d:[1,1,1], f:function(){ entretien(); }},
  {id:"conseil", g:"Finances", l:"Conseil d’admin.", p:"Conseil d'administration", d:[0,0,1], f:function(){ financeMenu(); }},
  {id:"finances", g:"Finances", l:"Finances", p:"Finances", d:[0,0,1], v:1, f:function(){ financesMenu(); }},
  {id:"conseil_production", g:"Finances", l:"Conseil · Production", p:"Production", d:[0,0,1], s:1},
