@@ -1364,3 +1364,8 @@ select:not(.act){width:100%;box-sizing:border-box}
 /* Connexion: hauteur stable. 100vh sur iPhone = fenêtre avec barre Safari réduite; barre ouverte, le bloc du bas descendait sous l'écran. svh = fenêtre avec la barre ouverte (toujours visible), dvh en priorité si connu. */
 @supports (height:100svh){.connexion{min-height:100svh}}
 @media (min-width:900px){.connexion{min-height:100vh}@supports (height:100svh){.connexion{min-height:100svh}}}
+
+/* Connexion: bouton « ENVOI DU CODE… » avec fine barre noire (3 px) qui avance au bord inférieur */
+.bouton.envoyant{position:relative;overflow:hidden;opacity:1;color:var(--encre)}
+.bouton.envoyant::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:0;background:#000;animation:envc 6s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes envc{to{width:92%}}

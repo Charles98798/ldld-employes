@@ -461,7 +461,8 @@ function connexion(message){
   document.getElementById("envoi").onclick = function(){
     var c = document.getElementById("courriel").value.trim().toLowerCase(), msg = document.getElementById("msg");
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c)){ msg.textContent = "Entrez votre courriel."; return; }
-    msg.textContent = "Envoi du code…";
+    msg.textContent = "";
+    var bt = document.getElementById("envoi"); bt.disabled = true; bt.classList.add("envoyant");
     // L'écran de saisie s'ouvre tout de suite (le courriel peut arriver avant la réponse du service); une erreur renvoie au courriel avec le message.
     var ouvert = false;
     var arrive = setTimeout(function(){ ouvert = true; saisieCode(c); }, 2500);
@@ -471,7 +472,7 @@ function connexion(message){
       if(!ouvert) saisieCode(c);
     }).catch(function(){
       clearTimeout(arrive);
-      if(!ouvert) msg.textContent = "Envoi impossible. Vérifiez le réseau et réessayez.";
+      if(!ouvert){ bt.disabled = false; bt.classList.remove("envoyant"); bt.textContent = "Recevoir mon code"; msg.textContent = "Envoi impossible. Vérifiez le réseau et réessayez."; }
     });
   };
 }
