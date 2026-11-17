@@ -9,7 +9,7 @@ function caHeure(t){ var d = new Date(t); if(isNaN(d)) return ""; return d.getHo
 function cleAnnuelle(){
   caArreter(); CA.code = false;
   app.innerHTML = '<div class="page ca"><a class="retour" href="#" id="retour">Retour</a><h1>Clé annuelle</h1><div id="ca"></div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); caArreter(); menu(); };
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); caArreter(); controleMenu(); };
   caCharger();
 }
 function caCharger(){

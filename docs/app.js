@@ -663,9 +663,9 @@ var ENT = [
  {id:"prix_soumissions", g:"Documents", l:"Prix et soumissions", p:"Prix et soumissions", d:[0,1,1], f:function(){ prixSoumissions(); }},
  {id:"manuel", g:"Documents", l:"Manuel d’employé", p:"Manuel", d:[1,1,1], i:1, f:function(){ section(1); }},
  {id:"plan_incendie", g:"Documents", l:"Plan d’incendie", p:"Plan d'incendie", d:[1,1,1], i:5, f:function(){ section(5); }},
- {id:"utilisation", g:"Contrôle", l:"Utilisation app", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
- {id:"controle", g:"Contrôle", l:"Contrôle", p:"Contrôle", d:[0,0,1], v:1, f:function(){ controleOuvrir(); }},
- {id:"cle_annuelle", g:"Contrôle", l:"Clé annuelle", p:"Clé annuelle", d:[0,0,1], f:function(){ cleAnnuelle(); }}
+ {id:"utilisation", s:1, g:"Contrôle", l:"Utilisation app", p:"Utilisation", d:[0,0,1], f:function(){ utilisationApp(); }},
+ {id:"controle", g:"Contrôle", l:"Contrôle", p:"Contrôle", d:[0,0,1], v:1, f:function(){ controleMenu(); }},
+ {id:"cle_annuelle", s:1, g:"Contrôle", l:"Clé annuelle", p:"Clé annuelle", d:[0,0,1], f:function(){ cleAnnuelle(); }}
 ];
 var FLECHE_TXT = '<svg viewBox="0 0 24 24" aria-hidden="true" style="width:1.05em;height:1.05em;vertical-align:-.15em;fill:currentColor;margin:0 .05em 0 .2em"><path d="M11 3h2v2h-2zM9 5h6v2H9zM7 7h10v2H7zM10 9h4v10h-4z"/></svg>';
 var ENT_PAR_ID = {}; ENT.forEach(function(x){ ENT_PAR_ID[x.id] = x; });
@@ -1350,9 +1350,23 @@ function chargerDroits(){
   }).catch(function(){});
 }
 var CTL_COULEURS = ["#8D806A", "#000000", "var(--vert)"];
-function controleOuvrir(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrôle</h1><div id="ctl"></div></div>';
+// « Contrôle » (Direction): onglet principal avec ses sous-onglets (décision de Charles, 17 nov).
+var CTL_DOC_NOMENCLATURE = "https://docs.google.com/document/d/1nuiNhU7nRXmlLRCu1_cShIrsWCHiJFA2w-48tJ_X02w/edit";
+var CTL_DOC_STRATEGIE = "https://docs.google.com/document/d/1HdKIXauVtbUES3yExGeLv7ZGqb4UbhnWpmGcbLCcJkc/edit";
+function controleMenu(){
+  var T = [["Utilisation app", "Utilisation", "utilisation"], ["Autorisation des accès", "Contrôle", "ctl_acces"], ["Clé annuelle", "Clé annuelle", "cle_annuelle"], ["Nomenclature", "Manuel", CTL_DOC_NOMENCLATURE], ["Stratégie de reprise", "Plan d'incendie", CTL_DOC_STRATEGIE]];
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrôle</h1><div class="menu" style="margin:0;padding:0;min-height:0">' + T.map(function(t){
+    var doc = /^https:/.test(t[2]);
+    return '<a href="'+(doc ? esc(t[2]) : "#")+'"'+(doc ? ' target="_blank" rel="noopener"' : ' data-k="'+t[2]+'"')+'><span>'+picto(t[1])+esc(t[0])+'</span></a>';
+  }).join("") + '</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
+  Array.prototype.forEach.call(app.querySelectorAll("a[data-k]"), function(a){
+    a.onclick = function(e){ e.preventDefault(); var k = a.getAttribute("data-k"); if(k === "ctl_acces") controleOuvrir(); else { var x = ENT_PAR_ID[k]; if(x) x.f(); } };
+  });
+}
+function controleOuvrir(){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Autorisation des accès</h1><div id="ctl"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); controleMenu(); };
   var t = {}, msg = "";
   ENT.forEach(function(x){ t[x.id] = [!!x.d[0], !!x.d[1], !!x.d[2]]; });
   function dessiner(){
@@ -1362,7 +1376,7 @@ function controleOuvrir(){
     var g = "";
     ENT.forEach(function(x){
       if(x.s) return;   // les sous-pages (Conseil · …, Finances · …) suivent le droit de leur onglet d'accueil: aucun contrôle de sous-groupe
-      if(x.g !== g){ g = x.g; h += '<div class="ctt">▪ '+esc(g === "Contrôle" ? "Contrôle des onglets" : g)+'</div>'; }
+      if(x.g !== g){ g = x.g; h += '<div class="ctt">▪ '+esc(g)+'</div>'; }
       h += '<span class="ctn">'+esc(x.l)+(x.v ? '<small> · verrouillé</small>' : "")+'</span>';
       for(var k = 0; k < 3; k++){
         var on = t[x.id][k], bloque = x.v;
@@ -2479,7 +2493,7 @@ function confirmerOuiNon(question, oui, rouge){
 }
 function utilisationApp(){
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Utilisation app</h1><div id="ut"></div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); controleMenu(); };
   function pc(x){ return Math.round(x*100)+" %"; }
   function barre(x){ return '<div style="height:10px;border:1px solid var(--tx2);margin:4px 0 10px"><i style="display:block;height:100%;width:'+Math.round(x*100)+'%;background:var(--tx)"></i></div>'; }
   appelService({action:"utilisation", session:sessionGardee()}).then(function(r){
