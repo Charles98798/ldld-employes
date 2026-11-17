@@ -178,7 +178,8 @@ function rdPlanif(){
 // Planification commentaire: ajout, modification et retrait des commentaires clients du département (sauvegarde automatique dans le formulaire).
 function rdCommentairesPage(){
   var z = document.getElementById("rdz"); if(!z) return;
-  z.innerHTML = '<div class="rdgrid" style="margin-top:12px"><button type="button" class="rdsoft" id="ccadd">Ajouter un commentaire client</button></div><div id="cclist"></div>';
+  z.innerHTML = '<div class="chx" id="rdch" style="margin-top:12px">'+RD_DEPS.map(function(d){ return '<button type="button" data-d="'+rdE(d)+'" aria-pressed="'+(d === RD.dep ? "true" : "false")+'">'+rdE(d)+'</button>'; }).join("")+'</div><div class="rdgrid" style="margin-top:12px"><button type="button" class="rdsoft" id="ccadd">Ajouter un commentaire client</button></div><div id="cclist"></div>';
+  Array.prototype.forEach.call(z.querySelectorAll("#rdch button"), function(bt){ bt.onclick = function(){ RD.dep = bt.getAttribute("data-d"); try { localStorage.setItem("ldld-rd-dep", RD.dep); } catch(e){} rdPlanif(); }; });
   if(typeof ccFormulaire === "function"){ document.getElementById("ccadd").onclick = function(){ ccFormulaire(); }; ccListePlanif(); }
 }
 // Affichage de la planification: un point de base et un point de discussion de même texte (ou quasi identique) n'apparaissent qu'une fois; les points « retirés » ne s'affichent jamais. Rien n'est supprimé dans les feuilles.

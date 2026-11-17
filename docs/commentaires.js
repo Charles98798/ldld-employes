@@ -149,7 +149,7 @@ function ccReduire(fichier){
   });
 }
 function ccFormulaire(existant){
-  var F = CC.form = {id: existant ? existant.id : "", date: existant ? existant.date : ccAujourdhui(), type: existant ? existant.type : "negatif", dep: existant ? existant.departement : RD.dep,
+  var F = CC.form = {id: existant ? existant.id : "", date: existant ? existant.date : ccAujourdhui(), type: existant ? existant.type : "negatif", dep: existant ? existant.departement : RD.dep, depAvant: existant ? existant.departement : "",
     texte: existant ? existant.texte : "", photos: existant ? (existant.photos || []).map(function(p){ return {g: p.g, m: p.m}; }) : [], nouvelles: [], occupe: false, sale: false, t: 0, dernier: ""};
   var h = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+rdE(rdTitreDep())+'</h1>';
   h += '<div class="rdt" style="font-size:16px;letter-spacing:.16em;text-transform:uppercase;font-weight:400">+ <span style="margin-left:6px;font-size:inherit">'+(existant ? "Modifier le commentaire client" : "Ajouter un commentaire client")+'</span></div>';
@@ -199,8 +199,9 @@ function ccFormulaire(existant){
         var nb = F.photos.length; F.photos = ps.map(function(p){ return {g: p.g, m: p.m}; });
         envoyees.forEach(function(n, k){ var p = ps[nb + k]; if(p) ccImgGarder(p.m, n.miniUrl, true); });
         dessinerPhotos();
-        dire(rdHeureEnreg());
-        ["tout", "derniere"].forEach(function(d){ try { localStorage.removeItem("ldld-cc-"+d+"-"+F.dep); } catch(e){} delete CC.liste[d+"-"+F.dep]; });
+        dire(rdHeureEnreg().replace("Enregistré à", "Enregistré dans " + F.dep + " à"));
+        ["tout", "derniere"].forEach(function(d){ try { localStorage.removeItem("ldld-cc-"+d+"-"+F.dep); } catch(e){} delete CC.liste[d+"-"+F.dep]; if(F.depAvant && F.depAvant !== F.dep){ try { localStorage.removeItem("ldld-cc-"+d+"-"+F.depAvant); } catch(e){} delete CC.liste[d+"-"+F.depAvant]; } });
+        F.depAvant = F.dep;
       } else { F.sale = true; dire((r && r.erreur) || "Non enregistré · nouvel essai"); F.t = setTimeout(enregistrer, 4000); }
       if(F.sale && CC.form === F && valide()) { clearTimeout(F.t); F.t = setTimeout(enregistrer, 700); }
     }).catch(function(){ F.occupe = false; F.sale = true; dire("Réseau indisponible · nouvel essai"); F.t = setTimeout(enregistrer, 4000); });
