@@ -55,11 +55,15 @@ function envPrets(){ return envVisibles().filter(function(e){ return e.statut ==
 function envCoches(){ ENVS.coches = ENVS.coches || {}; return envPrets().filter(function(e){ return ENVS.coches[e.nom]; }); }
 function envListe(){
   var d = ENVS.d, L = envVisibles(), ferme = !!(d.fenetre && d.fenetre.ouverte === false), prets = ferme ? [] : envCoches(), tousPrets = envPrets(), essai = d.mode !== "reel";
-  var h = (ferme ? '<div style="font-size:13px;color:#6E6350;margin:0 0 12px">'+envE(d.fenetre.message || "Envoi salarial verrouillé")+'</div>' : '') + '';
+  var h = '';
+  // Note du verrou (message de la fenêtre du pont): encadré au contour vert, à droite, en face de « Employés »; le texte n'inclut jamais « Envoi salarial ».
+  var note = d.fenetre ? String(d.fenetre.message || (ferme ? "Verrouillé" : "")).replace(/^\s*envoi salarial\s*[:\-–·]?\s*/i, "").trim() : "";
+  if(note) note = note.charAt(0).toUpperCase() + note.slice(1);
   if(d.annee) h += '<span class="lbl">Année</span><div class="bx" style="border-color:transparent;padding-left:0">'+envE(d.annee)+'</div>';
-  h += '<span class="lbl">Employés</span>';
+  h += '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px"><div><span class="lbl">Employés</span>';
   if(tousPrets.length && ferme) h += '<div style="margin:0 0 8px;opacity:.35"><span style="text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:4px">Tout cocher</span></div>';
   else if(tousPrets.length) h += '<div style="margin:0 0 8px"><a href="#" id="envtout" style="color:#000000;text-decoration:underline;text-decoration-color:var(--vert);text-decoration-thickness:3px;text-underline-offset:4px">'+(prets.length === tousPrets.length ? "Tout décocher" : "Tout cocher")+'</a></div>';
+  h += '</div>' + (note ? '<div style="flex:0 1 58%;box-sizing:border-box;border:3px solid #3BEC65;padding:10px 14px;margin:0 0 8px;text-align:right;font-weight:700;font-size:15px;line-height:1.25;color:#000">'+envE(note)+'</div>' : '') + '</div>';
   if(!L.length) h += '<div class="bandeau">Aucun employé à envoyer</div>';
   h += L.map(function(e, i){
     var sous = (e.statut === "Bloqué" || /^non concern/i.test(String(e.statut))) ? (e.raison || "") : e.statut === "Envoyé" ? (e.essaiEnvoye ? "essai envoyé" : "envoyé") + (e.raison ? " · " + e.raison : "") : [envFr(e.salaire), e.position != null && e.position !== "" ? "position " + e.position + " %" : ""].filter(Boolean).join(" · ");
