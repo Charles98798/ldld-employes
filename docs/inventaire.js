@@ -1,6 +1,7 @@
 // Inventaire (tous les employés). DONNÉES FICTIVES POUR ESSAI: tant que la vue de Michel (trak.app_inventaire) et sa fonction d'écriture n'existent pas,
 // la liste vient de INV_FICTIF et AUCUNE écriture réelle n'est faite. Pour brancher le vrai: (1) remplacer invLire() par l'appel au Service (lecture seule, vue SQL),
 // (2) mettre INV_ECRITURE = true et compléter invEcrire() (point unique pour « déduire » et « commander »). Rien d'autre à changer.
+var INV_COMPTER = true;     // comptage seul actif (déduire, commander, réception encore désactivés)
 var INV_ECRITURE = false;   // déduire/commander: désactivés (message clair) jusqu'à la confirmation de Michel; mettre true ensuite
 var INV_PHASE2 = true;      // onglets Gestion des stocks et Réception visibles (Gestionnaires, Direction), mais actions désactivées avec message tant que INV_ECRITURE est false   // désactivé en attendant la fonction d'écriture de Michel
 var INV_FICTIF = [
@@ -52,9 +53,35 @@ function invLire(){
   });
 }
 // Point unique d'écriture. Désactivé: aucune écriture réelle, la réponse simule un succès clairement marqué comme essai.
+function invUuid(){
+  var c = window.crypto; if(c && c.randomUUID) return c.randomUUID();
+  var b = new Uint8Array(16); if(c && c.getRandomValues) c.getRandomValues(b); else for(var i = 0; i < 16; i++) b[i] = Math.floor(Math.random() * 256);
+  b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+  var h = Array.prototype.map.call(b, function(x){ return ("0" + x.toString(16)).slice(-2); }).join("");
+  return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20);
+}
+// Écriture: champs à plat, id_demande (uuid v4) généré ici (même demande renvoyée = même id, sans doublon). Le Service répond tout de suite « en_attente »; le résultat de Michel se lit avec inv_demande_lire (toutes les 6 s, 2 minutes au plus).
+// Résultat: {ok:true, stock_apres} accepté, {ok:false, erreur} refusé (message_refus de Michel), {ok:true, attente:true} sans réponse dans les 2 minutes (la demande reste enregistrée).
 function invEcrire(action, corps){
-  if(!INV_ECRITURE) return Promise.resolve({ok: true, essai: true});
-  return appelService({action: action, session: sessionGardee(), f: corps});   // À brancher sur la fonction de Michel (inv_deduire / inv_commander)
+  if(!INV_ECRITURE && !(action === "inv_compter" && INV_COMPTER)) return Promise.resolve({ok: true, essai: true});
+  var id = (corps && corps.id_demande) || invUuid(), c = {action: action, session: sessionGardee(), id_demande: id};
+  Object.keys(corps || {}).forEach(function(k){ c[k === "quantite" && action === "inv_compter" ? "qte_exacte" : k] = corps[k]; });
+  var essais = 0;
+  function lire(){
+    return new Promise(function(ok){ setTimeout(ok, 6000); }).then(function(){ return appelService({action: "inv_demande_lire", session: sessionGardee(), id_demande: id}); }).then(function(d){
+      if(d && d.ok === false) return {ok: false, erreur: d.erreur || "Réessayez"};
+      if(d && d.statut === "refuse") return {ok: false, erreur: d.message_refus || "Refusé"};
+      if(d && d.statut === "accepte") return {ok: true, stock_apres: d.stock_apres};   // tout autre statut ou réponse inattendue: toujours en attente
+      if(++essais >= 20) return {ok: true, attente: true};
+      return lire();
+    }, function(){ if(++essais >= 20) return {ok: true, attente: true}; return lire(); });
+  }
+  return appelService(c).then(function(r){
+    if(!(r && r.ok)) return r;
+    if(r.statut === "accepte") return {ok: true, stock_apres: r.stock_apres};
+    if(r.statut === "refuse") return {ok: false, erreur: r.message_refus || "Refusé"};
+    return lire();
+  });
 }
 function invPage(corps){
   app.innerHTML = '<div class="page"><h1>Inventaire</h1><a class="retour" href="#" id="retour">Retour</a>'+corps+'</div>';
@@ -256,18 +283,19 @@ function invCompte(p){
     h += '<div style="background:#E3DFD3;padding:12px"><div style="font-size:12px;color:#6E6350">Stock actuel dans Trak</div><div style="font-size:22px;font-weight:700">'+invE(p.stock)+'</div></div>';
     h += '<span class="lbl" style="margin-top:18px">Quantité exacte comptée</span><div style="display:flex;align-items:center;gap:14px"><button type="button" class="bouton" id="invmoins" style="width:46px;height:46px;padding:0;margin:0">−</button><span style="font-size:28px;min-width:48px;text-align:center">'+q+'</span><button type="button" class="bouton" id="invplus" style="width:46px;height:46px;padding:0;margin:0">+</button></div>';
     h += '<div style="font-size:13px;color:#6E6350;margin:10px 0">'+(d === 0 ? "Identique au stock actuel." : "Différence : "+(d > 0 ? "+" : "−")+Math.abs(d)+".")+'</div>';
-    h += '<button type="button" class="bouton" id="invok" style="height:46px;padding:0;margin:8px 0"'+(d === 0 || !INV_ECRITURE ? " disabled" : "")+'>Enregistrer la quantité</button>'+(INV_ECRITURE ? "" : '<div style="font-size:13px;color:#6E6350;margin:8px 0">L’inscription des quantités sera activée bientôt. Pour le moment, rien n’est enregistré.</div>');
+    h += '<button type="button" class="bouton" id="invok" style="height:46px;padding:0;margin:8px 0"'+(d === 0 || !(INV_ECRITURE || INV_COMPTER) ? " disabled" : "")+'>Enregistrer la quantité</button>'+((INV_ECRITURE || INV_COMPTER) ? "" : '<div style="font-size:13px;color:#6E6350;margin:8px 0">L’inscription des quantités sera activée bientôt. Pour le moment, rien n’est enregistré.</div>');
     h += '<div class="bandeau" id="invmsg" style="'+(msg ? "" : "display:none;")+'margin-top:8px">'+invE(msg || "")+'</div>';
     z.innerHTML = h;
     document.getElementById("invmoins").onclick = function(){ if(q > 0){ q--; dessiner(); } };
     document.getElementById("invplus").onclick = function(){ if(q < 99999){ q++; dessiner(); } };
     var ok = document.getElementById("invok");
     ok.onclick = function(){
-      ok.disabled = true; ok.textContent = "Enregistrement…";
-      invEcrire("inv_compter", {id_produit: p.id, quantite: q}).then(function(r){
-        if(r && r.ok){ p.stock = q; dessiner(r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : "▪ QUANTITÉ ENREGISTRÉE"); }
-        else dessiner("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase());
-      }).catch(function(){ dessiner("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
+      var avant = p.stock, qs = q;   // l'écran se met à jour tout de suite; la valeur d'avant revient si Michel refuse
+      p.stock = qs; dessiner((INV_ECRITURE || INV_COMPTER) ? "▪ ENVOYÉ À TRAK · EN ATTENTE DE CONFIRMATION" : "");
+      invEcrire("inv_compter", {id_produit: p.id, quantite: qs}).then(function(r){
+        if(r && r.ok){ if(r.stock_apres !== undefined && r.stock_apres !== null) p.stock = +r.stock_apres; q = p.stock; dessiner(r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : (r.attente ? "▪ EN ATTENTE DE TRAITEMENT" : "▪ QUANTITÉ ENREGISTRÉE")); }
+        else { p.stock = avant; q = avant; dessiner("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
+      }).catch(function(){ p.stock = avant; q = avant; dessiner("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
     };
   }
   dessiner();
