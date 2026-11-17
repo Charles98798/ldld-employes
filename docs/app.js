@@ -919,6 +919,7 @@ var ORGANIGRAMME = '<div class="org"><div class="orp">Présidence</div>' +
 function blocsHtml(blocs){
   var nImg = 0;   // les plans d'incendie sont des images de l'application (plans/plan1.png…), dans l'ordre du document
   return blocs.map(function(b){
+    if(b.t === "h" && b.n > 1) return '<h3 class="txh" style="font-size:1em;margin:18px 0 6px">'+numTitre(b.v)+'</h3>';   // sous-titre (documents de Contrôle)
     if(b.t === "h") return '<h2 class="txh">'+numTitre(b.v)+'</h2>';
     if(b.t === "s") return '<div class="txs">'+esc(b.v)+'</div>';
     if(b.t === "p" && /Image à replacer\s*:\s*organigramme/i.test(String(b.v))) return ORGANIGRAMME;
@@ -944,9 +945,9 @@ function lectureTexte(titre, cleCache, corps, retourFn, prenomOk){
   obtenir(cleCache, corps, function(r){
     var el = document.getElementById("mn"); if(!el) return;
     if(!r.blocs || !r.blocs.length){ return repli(); }
-    if(!r.blocs.some(function(b){ return b.t === "h"; })){ el.innerHTML = blocsHtml(r.blocs); return; }   // document sans titres: texte affiché tel quel
+    if(!r.blocs.some(function(b){ return b.t === "h" && !(b.n > 1); })){ el.innerHTML = blocsHtml(r.blocs); return; }   // document sans titres: texte affiché tel quel
     var secs = [], cur = {titre:"", blocs:[]};
-    r.blocs.forEach(function(b){ if(b.t === "h"){ if(cur.blocs.length || cur.titre) secs.push(cur); cur = {titre:b.v, blocs:[b]}; } else cur.blocs.push(b); });
+    r.blocs.forEach(function(b){ if(b.t === "h" && !(b.n > 1)){ if(cur.blocs.length || cur.titre) secs.push(cur); cur = {titre:b.v, blocs:[b]}; } else cur.blocs.push(b); });
     secs.push(cur);
     var prenom = MOI && MOI.nom ? String(MOI.nom).trim().split(/\s+/)[0] : "";
     if(prenomOk && prenom) secs.forEach(function(x){ if(/mot de la direction/i.test(x.titre || "") && !(x.blocs[1] && /^bonjour/i.test(x.blocs[1].v || ""))) x.blocs.splice(1, 0, {t:"p", v:"Bonjour "+prenom}); });
