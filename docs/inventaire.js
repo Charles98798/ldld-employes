@@ -151,7 +151,7 @@ function invProduit(p){
     if(ok) ok.onclick = function(){
       ok.disabled = true; ok.textContent = "Enregistrement…";
       invEcrire("inv_deduire", {id_produit: p.id, quantite: qte}).then(function(r){
-        if(r && r.ok){ var t = new Date(); INV.sorties.unshift({nom: p.description, q: qte, h: t.getHours()+" h "+("0"+t.getMinutes()).slice(-2)}); p.stock = p.stock - qte; var mm = r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : "▪ ENREGISTRÉ"; qte = 1; dessiner(mm); }
+        if(r && r.ok){ var t = new Date(); INV.sorties.unshift({nom: p.description, q: qte, h: t.getHours()+" h "+("0"+t.getMinutes()).slice(-2)}); p.stock = p.stock - qte; var mm = r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS GESTION" : "▪ ENREGISTRÉ"; qte = 1; dessiner(mm); }
         else dessiner("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase());
       }).catch(function(){ dessiner("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
     };
@@ -259,7 +259,7 @@ function invReceptionAncien(){
   Array.prototype.forEach.call(z.querySelectorAll(".invc"), function(e){ e.onclick = function(){
     var i = e.getAttribute("data-i"), q = ligne(i); if(!q) return; e.disabled = true;
     invEcrire("inv_recevoir", {id_ligne: i, qte_recue: INV.recu[i] || 0, prix: q.prix}).then(function(r){
-      if(r && r.ok){ INV.rec = INV.rec.filter(function(w){ return w.id !== i; }); delete INV.recu[i]; invReception(); var b = document.createElement("div"); b.className = "bandeau"; b.style.marginTop = "8px"; b.textContent = r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : "▪ RÉCEPTION CONFIRMÉE"; var zz = document.getElementById("invapp"); if(zz) zz.insertBefore(b, zz.firstChild.nextSibling); }
+      if(r && r.ok){ INV.rec = INV.rec.filter(function(w){ return w.id !== i; }); delete INV.recu[i]; invReception(); var b = document.createElement("div"); b.className = "bandeau"; b.style.marginTop = "8px"; b.textContent = r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS GESTION" : "▪ RÉCEPTION CONFIRMÉE"; var zz = document.getElementById("invapp"); if(zz) zz.insertBefore(b, zz.firstChild.nextSibling); }
       else { var m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(m){ m.style.display = "block"; m.textContent = "▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); } e.disabled = false; }
     }).catch(function(){ var m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(m){ m.style.display = "block"; m.textContent = "▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"; } e.disabled = false; });
   }; });
@@ -280,7 +280,7 @@ function invCompte(p){
   function dessiner(msg){
     var d = q - p.stock, h = (INV.d.fictif ? '<div style="font-size:12px;color:#6E6350;margin:0 0 6px">Données fictives pour essai</div>' : "");
     h += '<span class="lbl">Produit</span><div style="font-size:20px;font-weight:700;overflow-wrap:anywhere">'+invE(invT(p.description))+'</div><div style="font-size:12px;color:#6E6350;margin:4px 0 10px">'+invE(invT(p.categorie))+' · '+invE(invT(p.fournisseur))+'</div>';
-    h += '<div style="background:#E3DFD3;padding:12px"><div style="font-size:12px;color:#6E6350">Stock actuel dans Trak</div><div style="font-size:22px;font-weight:700">'+invE(p.stock)+'</div></div>';
+    h += '<div style="background:#E3DFD3;padding:12px"><div style="font-size:12px;color:#6E6350">Stock actuel dans Gestion</div><div style="font-size:22px;font-weight:700">'+invE(p.stock)+'</div></div>';
     h += '<span class="lbl" style="margin-top:18px">Quantité exacte comptée</span><div style="display:flex;align-items:center;gap:14px"><button type="button" class="bouton" id="invmoins" style="width:46px;height:46px;padding:0;margin:0">−</button><span style="font-size:28px;min-width:48px;text-align:center">'+q+'</span><button type="button" class="bouton" id="invplus" style="width:46px;height:46px;padding:0;margin:0">+</button></div>';
     h += '<div style="font-size:13px;color:#6E6350;margin:10px 0">'+(d === 0 ? "Identique au stock actuel." : "Différence : "+(d > 0 ? "+" : "−")+Math.abs(d)+".")+'</div>';
     h += '<button type="button" class="bouton" id="invok" style="height:46px;padding:0;margin:8px 0"'+(d === 0 || !(INV_ECRITURE || INV_COMPTER) ? " disabled" : "")+'>Enregistrer la quantité</button>'+((INV_ECRITURE || INV_COMPTER) ? "" : '<div style="font-size:13px;color:#6E6350;margin:8px 0">L’inscription des quantités sera activée bientôt. Pour le moment, rien n’est enregistré.</div>');
@@ -291,11 +291,15 @@ function invCompte(p){
     var ok = document.getElementById("invok");
     ok.onclick = function(){
       var avant = p.stock, qs = q;   // l'écran se met à jour tout de suite; la valeur d'avant revient si Michel refuse
-      p.stock = qs; dessiner((INV_ECRITURE || INV_COMPTER) ? "▪ ENVOYÉ À TRAK · EN ATTENTE DE CONFIRMATION" : "");
+      var actif = INV_ECRITURE || INV_COMPTER, flash = null;
+      p.stock = qs; dessiner(actif ? "▪ ENREGISTRÉ" : "");
+      if(actif) flash = setTimeout(function(){ var m = document.getElementById("invmsg"); if(m){ m.style.display = "none"; m.textContent = ""; } }, 1000);   // « Enregistré » 1 seconde; la confirmation de Gestion se fait en arrière-plan
       invEcrire("inv_compter", {id_produit: p.id, quantite: qs}).then(function(r){
-        if(r && r.ok){ if(r.stock_apres !== undefined && r.stock_apres !== null) p.stock = +r.stock_apres; q = p.stock; dessiner(r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS TRAK" : (r.attente ? "▪ EN ATTENTE DE TRAITEMENT" : "▪ QUANTITÉ ENREGISTRÉE")); }
-        else { p.stock = avant; q = avant; dessiner("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
-      }).catch(function(){ p.stock = avant; q = avant; dessiner("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
+        if(r && r.ok){
+          if(r.attente){ clearTimeout(flash); dessiner("▪ EN ATTENTE DE TRAITEMENT"); return; }
+          if(r.stock_apres !== undefined && r.stock_apres !== null && +r.stock_apres !== p.stock){ p.stock = +r.stock_apres; q = p.stock; clearTimeout(flash); dessiner(); }
+        } else { clearTimeout(flash); p.stock = avant; q = avant; dessiner("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
+      }).catch(function(){ clearTimeout(flash); p.stock = avant; q = avant; dessiner("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
     };
   }
   dessiner();
