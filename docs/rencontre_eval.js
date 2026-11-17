@@ -301,6 +301,13 @@ function revChoix(liste, ouvrir, annee, evaluateur){
   dessiner();
 }
 // Branchement sur le Service (actions rencontre_eval_*): inerte tant que le Service répond « Non disponible. » (aperçu fictif dans ce cas).
+function revBandeau(titre, texte){
+  var a = document.getElementById("rvacc"); if(!a) return;
+  var o = a.querySelector(".rvband"); if(o) o.remove();
+  var b = document.createElement("div"); b.className = "rvband"; b.setAttribute("role", "alert");
+  b.innerHTML = "<b>" + esc(titre) + "</b>" + esc(texte); a.appendChild(b);
+  setTimeout(function(){ if(b.parentNode) b.remove(); }, 12000);
+}
 function revSvc(corps){ corps.session = sessionGardee(); return appelService(corps); }
 function revDemarrer(){
   revSvc({action: "rencontre_eval_liste"}).then(function(r){
@@ -309,15 +316,15 @@ function revDemarrer(){
     var liste = L.map(function(e){ return [e.nom, e.categorie || "", !!e.r1Faite, e.r2Prevue !== false, e.datePrevue || "—", !!e.autoevalOk]; });
     revChoix(liste, function(nom, renc){
       revSvc({action: "rencontre_eval_verrou", op: "prendre", nom: nom, rencontre: renc}).then(function(v){
-        if(!v || !v.ok){ alert((v && (v.erreur || v.message)) || "Une autre personne a la rencontre ouverte. Réessaie plus tard."); return; }
+        if(!v || !v.ok){ revBandeau("Rencontre déjà ouverte", (v && (v.erreur || v.message)) || "Une autre personne a la rencontre ouverte. Une seule personne à la fois. Réessaie dans quelques minutes."); return; }
         return revSvc({action: "rencontre_eval_lire", nom: nom, rencontre: renc}).then(function(d){
           var D = d && d.ok ? (d.D || d.d || d.donnees || d) : null;
-          if(!D || !D.g){ revSvc({action: "rencontre_eval_verrou", op: "liberer"}); alert("Chargement impossible. Réessaie."); return; }
+          if(!D || !D.g){ revSvc({action: "rencontre_eval_verrou", op: "liberer"}); revBandeau("Chargement impossible", "La rencontre n’a pas pu être lue. Rien n’a été modifié et la rencontre est libérée. Réessaie."); return; }
           var bat = setInterval(function(){ revSvc({action: "rencontre_eval_verrou", op: "battre"}).catch(function(){}); }, 30000);
           REV_FIN = function(){ clearInterval(bat); revSvc({action: "rencontre_eval_verrou", op: "liberer"}).catch(function(){}); };
           revOuvrir(D, {ecrire: function(adresse, valeur){ return revSvc({action: "rencontre_eval_ecrire", nom: nom, rencontre: renc, adresse: adresse, valeur: valeur, cle: D.cle}).then(function(x){ if(!x || !x.ok) throw new Error((x && (x.erreur || x.message)) || "refus"); return x; }); }});
         });
-      }).catch(function(){ alert("Connexion impossible. Réessaie."); });
+      }).catch(function(){ revBandeau("Connexion impossible", "Réessaie dans quelques instants."); });
     }, new Date().getFullYear(), "");
   }).catch(function(){ revApercu(); });
 }
