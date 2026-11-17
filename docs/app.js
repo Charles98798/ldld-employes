@@ -916,7 +916,7 @@ var ORGANIGRAMME = '<div class="org"><div class="orp">Présidence</div>' +
   '</div>' +
   '<div class="olg">Autres directions</div><div class="og2"><div class="ogr"><div class="ogt">Développement et expérience client</div><div class="oc on"><i>Équipe</i>administrative</div></div>' +
   '<div class="ogr"><div class="ogt">Finances et comptabilité</div></div></div></div>';
-function blocsHtml(blocs){
+function blocsHtml(blocs, fiches){
   var nImg = 0;   // les plans d'incendie sont des images de l'application (plans/plan1.png…), dans l'ordre du document
   return blocs.map(function(b){
     if(b.t === "h" && b.n > 1) return '<h3 class="txh" style="font-size:1em;margin:18px 0 6px">'+numTitre(b.v)+'</h3>';   // sous-titre (documents de Contrôle)
@@ -928,6 +928,10 @@ function blocsHtml(blocs){
     if(b.t === "li") return '<ul class="txl">'+b.v.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ul>';
     if(b.t === "ol") return '<ol class="txl">'+b.v.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("")+'</ol>';
     if(b.t === "kv") return '<dl class="txk">'+b.v.map(function(x){ return '<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>'; }).join("")+'</dl>';
+    if(b.t === "tab" && fiches && b.v.length > 1){   // mode application: une fiche par ligne (jamais de tableau large)
+      var ent = b.v[0];
+      return b.v.slice(1).map(function(l){ return '<div class="txf"><b>'+esc(l[0])+'</b>'+l.slice(1).map(function(c, k){ return String(c || "").trim() ? '<div><span>'+esc(ent[k+1])+'</span>'+esc(c)+'</div>' : ""; }).join("")+'</div>'; }).join("");
+    }
     if(b.t === "tab") return '<div class="txtab"><table>'+b.v.map(function(l,i){ return '<tr>'+l.map(function(c){ return (i?'<td>':'<th>')+esc(c)+(i?'</td>':'</th>'); }).join("")+'</tr>'; }).join("")+'</table></div>';
     if(b.t === "img"){ nImg++; return '<img class="txi" alt="" src="plans/plan'+nImg+'.png">'; }
     return "";
@@ -938,6 +942,7 @@ function sansAccent(t){ return String(t).normalize("NFD").replace(/[\u0300-\u036
 function manuel(){ lectureTexte("Manuel d\'employé", "manuel_texte", {action:"manuel_texte"}, menu, true); }
 // Document écrit dans l'application (Manuel, Nomenclature, Stratégie de reprise): table des matières, recherche, sections.
 function lectureTexte(titre, cleCache, corps, retourFn, prenomOk){
+  var fiches = !prenomOk;   // documents de Contrôle: tableaux en fiches
   var repli = function(){ var e = document.getElementById("mn"); if(e) e.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; };
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titre+'</h1><div id="mn"></div></div>';
   var retourSec = null;   // Retour (bouton vert et bloc ←) remonte d'un seul niveau: d'une section vers la table des matières
@@ -945,7 +950,7 @@ function lectureTexte(titre, cleCache, corps, retourFn, prenomOk){
   obtenir(cleCache, corps, function(r){
     var el = document.getElementById("mn"); if(!el) return;
     if(!r.blocs || !r.blocs.length){ return repli(); }
-    if(!r.blocs.some(function(b){ return b.t === "h" && !(b.n > 1); })){ el.innerHTML = blocsHtml(r.blocs); return; }   // document sans titres: texte affiché tel quel
+    if(!r.blocs.some(function(b){ return b.t === "h" && !(b.n > 1); })){ el.innerHTML = blocsHtml(r.blocs, fiches); return; }   // document sans titres: texte affiché tel quel
     var secs = [], cur = {titre:"", blocs:[]};
     r.blocs.forEach(function(b){ if(b.t === "h" && !(b.n > 1)){ if(cur.blocs.length || cur.titre) secs.push(cur); cur = {titre:b.v, blocs:[b]}; } else cur.blocs.push(b); });
     secs.push(cur);
@@ -959,7 +964,7 @@ function lectureTexte(titre, cleCache, corps, retourFn, prenomOk){
       res.innerHTML = '<div class="txs">TABLE DES MATIÈRES</div><ol class="toc">'+secs.map(function(x,i){ return x.titre ? '<li><a href="#" data-s="'+i+'">'+numTitre(x.titre)+'</a></li>' : ""; }).join("")+'</ol>';
     }
     function ouvrir(i, mot){
-      res.innerHTML = ""; rech.value = mot || ""; corps.innerHTML = blocsHtml(secs[i].blocs);
+      res.innerHTML = ""; rech.value = mot || ""; corps.innerHTML = blocsHtml(secs[i].blocs, fiches);
       if(mot) surligner(corps, mot);
       var m = corps.querySelector("mark"); window.scrollTo(0, 0); if(m) m.scrollIntoView({block:"center"});
       retourSec = function(){ retourSec = null; corps.innerHTML = ""; rech.value = mot || ""; if(mot) chercherMot(); else toc(); window.scrollTo(0, 0); };

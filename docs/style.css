@@ -1438,3 +1438,11 @@ select:not(.act){width:100%;box-sizing:border-box}
 .invact .bouton:disabled{color:#000}
 .rvacc .rvband{position:absolute;left:50%;transform:translateX(-50%);bottom:110px;width:min(560px,calc(100% - 40px));background:#f6f3ee;border-left:3px solid #A33A2B;padding:10px 14px;font-size:13px;line-height:1.5;color:#000;z-index:5}
 .rvacc .rvband b{display:block;font-weight:400;letter-spacing:1.2px;text-transform:uppercase;font-size:11px;margin-bottom:2px}
+
+/* Documents de Contrôle en mode application: jamais plus larges que l'écran, tableaux en fiches */
+#mn,#mn .txp,#mn .txl li,#mn .txk dd{overflow-wrap:anywhere;min-width:0}
+#mn img,#mn .txtab{max-width:100%}
+.txf{background:#E3DFD3;padding:12px 14px;margin:0 0 8px;line-height:1.5}
+.txf b{display:block;font-size:15px;font-weight:700;margin-bottom:6px;overflow-wrap:anywhere}
+.txf div{margin:4px 0;overflow-wrap:anywhere}
+.txf span{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6E6350}
