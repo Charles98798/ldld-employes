@@ -2487,7 +2487,7 @@ function mesEvenements(){
 function confirmerOuiNon(question, oui, rouge){
   var f = document.createElement("div");
   f.style.cssText = "position:fixed;inset:0;background:rgba(15,20,32,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50";
-  f.innerHTML = '<div style="background:#e3dfd3;color:#111;border:1.5px solid #111;padding:20px;width:100%;max-width:340px"><div style="font-size:15px;line-height:1.5;margin-bottom:16px">'+esc(question)+'</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="cno" style="margin:0">Non</button><button type="button" class="bouton" id="coui" style="margin:0'+(rouge ? ";background:#A33A2B;color:#fff" : "")+'">Oui</button></div></div>';
+  f.innerHTML = '<div style="background:#e3dfd3;color:#000000;border:1.5px solid #000000;padding:20px;width:100%;max-width:340px"><div style="font-size:15px;line-height:1.5;margin-bottom:16px">'+esc(question)+'</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="cno" style="margin:0">Non</button><button type="button" class="bouton" id="coui" style="margin:0'+(rouge ? ";background:#A33A2B;color:#fff" : "")+'">Oui</button></div></div>';
   document.body.appendChild(f);
   document.getElementById("cno").onclick = function(){ f.remove(); };
   document.getElementById("coui").onclick = function(){ f.remove(); oui(); };
@@ -2522,7 +2522,7 @@ function suiviCharge(){
       '<div class="tl">'+(vide ? '<div class="tgros">\u2014</div>' : '<div class="tgros">'+val+'<small>%</small></div>')+'<div class="tcib">Cible '+c+' % '+(max ? "et \u2212" : "et +")+'</div></div>' +
       '<div class="tbarre"><i style="width:'+Math.min(100, val)+'%"></i><u style="left:'+Math.min(100, c)+'%"></u></div></div>'; }
   function dateCourte(d){ var p = String(d).split("-"); return +p[2]+" "+MOIS_LONGS[+p[1]-1].slice(0,4)+"."; }
-  function bouton(txt, on, rose, id){ return '<button type="button" id="'+id+'" class="bouton" style="margin:0;flex:1 1 0;min-width:0;white-space:nowrap;letter-spacing:0;font-size:10px;padding:12px 2px;'+(on ? "" : "background:"+(rose ? "#fff" : "transparent")+";color:#111;")+'border:1.5px solid var(--tx)">'+txt+'</button>'; }
+  function bouton(txt, on, rose, id){ return '<button type="button" id="'+id+'" class="bouton" style="margin:0;flex:1 1 0;min-width:0;white-space:nowrap;letter-spacing:0;font-size:10px;padding:12px 2px;'+(on ? "" : "background:"+(rose ? "#fff" : "transparent")+";color:#000000;")+'border:1.5px solid var(--tx)">'+txt+'</button>'; }
   function dessiner(){
     var el = document.getElementById("sc"); if(!el) return;
     var p = liste[i], d = p.dernier;

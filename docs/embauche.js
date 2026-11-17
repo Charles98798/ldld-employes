@@ -146,9 +146,9 @@ function embPage3(z){
 function embFenetreCourriel(r, m){
   var S = EMB.S, f = document.createElement("div");
   f.style.cssText = "position:fixed;inset:0;background:rgba(15,20,32,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50";
-  f.innerHTML = '<div style="background:#e3dfd3;color:#111;border:1.5px solid #111;padding:20px;width:100%;max-width:340px"><div style="font-size:15px;letter-spacing:.14em;text-transform:uppercase">Envoyer par courriel</div>'+
+  f.innerHTML = '<div style="background:#e3dfd3;color:#000000;border:1.5px solid #000000;padding:20px;width:100%;max-width:340px"><div style="font-size:15px;letter-spacing:.14em;text-transform:uppercase">Envoyer par courriel</div>'+
     '<div class="etq" style="margin:4px 0 8px">'+esc(S.prenom.trim()+" "+S.famille.trim())+' · départ '+r.dep+' % · '+embFmt(r.td)+' $/h</div>'+
-    '<span class="lbl">Courriel du candidat</span><input class="bx rose" id="pcm" placeholder="Courriel du candidat" inputmode="email" autocomplete="off" spellcheck="false" maxlength="120"><div class="aeact" style="margin:12px 0 0"><button type="button" class="bouton" id="pcn" style="margin:0;background:transparent;color:#111;border:1.5px solid #111">Annuler</button><button type="button" class="bouton" id="pco" style="margin:0" disabled>Envoyer</button></div></div>';
+    '<span class="lbl">Courriel du candidat</span><input class="bx rose" id="pcm" placeholder="Courriel du candidat" inputmode="email" autocomplete="off" spellcheck="false" maxlength="120"><div class="aeact" style="margin:12px 0 0"><button type="button" class="bouton" id="pcn" style="margin:0;background:transparent;color:#000000;border:1.5px solid #000000">Annuler</button><button type="button" class="bouton" id="pco" style="margin:0" disabled>Envoyer</button></div></div>';
   document.body.appendChild(f);
   var c = document.getElementById("pcm"), ok = function(){ return /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/.test(c.value.trim()); };
   c.oninput = function(){ c.className = "bx"+(c.value.trim() ? "" : " rose"); document.getElementById("pco").disabled = !ok(); };
