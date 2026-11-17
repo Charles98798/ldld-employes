@@ -1356,13 +1356,13 @@ function chargerDroits(){
 var CTL_COULEURS = ["#8D806A", "#000000", "var(--vert)"];
 // « Contrôle » (Direction): onglet principal avec ses sous-onglets (décision de Charles, 17 nov).
 function controleMenu(){
-  var T = [["Utilisation app", "Utilisation", "utilisation"], ["Autorisation des accès", "Contrôle", "ctl_acces"], ["Clé annuelle", "Clé annuelle", "cle_annuelle"], ["Nomenclature", "Manuel", "ctl_nomenclature"], ["Stratégie de reprise", "Plan d'incendie", "ctl_strategie"]];
+  var T = [["Utilisation app", "Utilisation", "utilisation"], ["Autorisation des accès", "Contrôle", "ctl_acces"], ["Clé annuelle", "Clé annuelle", "cle_annuelle"], ["Nomenclature", "Manuel", "ctl_nomenclature"], ["Stratégie de reprise", "Plan d'incendie", "ctl_strategie"], ["Infrastructure globale", "Manuel", "ctl_infrastructure"]];
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrôle</h1><div class="menu" style="margin:0;padding:0;min-height:0">' + T.map(function(t){
     return '<a href="#" data-k="'+t[2]+'"><span>'+picto(t[1])+esc(t[0])+'</span></a>';
   }).join("") + '</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   Array.prototype.forEach.call(app.querySelectorAll("a[data-k]"), function(a){
-    a.onclick = function(e){ e.preventDefault(); var k = a.getAttribute("data-k"); if(k === "ctl_acces") controleOuvrir(); else if(k === "ctl_nomenclature" || k === "ctl_strategie"){ var nom = k === "ctl_nomenclature"; lectureTexte(nom ? "Nomenclature" : "Stratégie de reprise", "controle_doc_" + (nom ? "nomenclature" : "strategie"), {action:"controle_doc_texte", cle: nom ? "nomenclature" : "strategie", session: sessionGardee()}, controleMenu, false); } else { var x = ENT_PAR_ID[k]; if(x) x.f(); } };
+    a.onclick = function(e){ e.preventDefault(); var k = a.getAttribute("data-k"); if(k === "ctl_acces") controleOuvrir(); else if(k === "ctl_nomenclature" || k === "ctl_strategie" || k === "ctl_infrastructure"){ var DOCS = {ctl_nomenclature: ["Nomenclature", "nomenclature"], ctl_strategie: ["Stratégie de reprise", "strategie"], ctl_infrastructure: ["Infrastructure globale", "infrastructure"]}[k]; lectureTexte(DOCS[0], "controle_doc_" + DOCS[1], {action:"controle_doc_texte", cle: DOCS[1], session: sessionGardee()}, controleMenu, false); } else { var x = ENT_PAR_ID[k]; if(x) x.f(); } };
   });
 }
 function controleOuvrir(){
