@@ -1561,7 +1561,7 @@ function neBarrePage(){
   var z = document.getElementById("gebar"); var E = NE_ENV; if(!z) return;
   if(!E){ z.innerHTML = ""; return; }
   var rouge = E.etat === "non", t = E.etat === "cours" ? E.lib.cours : (E.etat === "ok" ? E.lib.ok : E.lib.non + " · " + (E.err || ""));
-  z.innerHTML = '<div style="margin:12px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(E.etat === "non" ? 0 : E.p)+'%;background:#000000"></i></div><div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(E.etat === "non" ? 0 : E.p)+' %</div></div><div class="bandeau" style="'+(rouge ? "background:#a32d2d;color:#fff" : "background:var(--vert);color:#000000")+';padding:10px 12px;font-weight:600">▪ '+esc(t.toUpperCase())+'<br>'+esc(E.nom)+'</div>';
+  z.innerHTML = '<div style="margin:12px 0 8px"><div style="height:14px;background:var(--beige);border:1px solid var(--tx2);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:'+Math.round(E.etat === "non" ? 0 : E.p)+'%;background:#000000"></i></div><div style="font-size:30px;font-weight:300;margin-top:6px">'+Math.round(E.etat === "non" ? 0 : E.p)+' %</div></div><div class="bandeau" style="'+(rouge ? "background:#A33A2B;color:#fff" : "background:var(--vert);color:#000000")+';padding:10px 12px;font-weight:600">▪ '+esc(t.toUpperCase())+'<br>'+esc(E.nom)+'</div>';
 }
 function neEnvDessiner(){
   neBarrePage();
@@ -1570,7 +1570,7 @@ function neEnvDessiner(){
   var L = E.lib, st = "background:var(--vert);color:#000000;font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:12px 14px;line-height:1.5;margin:0 0 22px;cursor:pointer", h = "";
   if(E.etat === "cours") h = '▪ '+esc(L.cours)+' · '+Math.round(E.p)+' %<br>'+esc(E.nom);
   else if(E.etat === "ok") h = '▪ '+esc(L.ok)+' · 100 %<br>'+esc(E.nom)+(E.ldld ? ' · '+esc(E.ldld) : "");
-  else { st = st.replace("var(--vert)", "#a32a2d").replace("#000000", "#fff"); h = '▪ '+esc(L.non)+'<br>'+esc(E.nom)+' · '+esc(E.err || "")+'<br>Touchez pour réessayer'; }
+  else { st = st.replace("var(--vert)", "#A33A2B").replace("#000000", "#fff"); h = '▪ '+esc(L.non)+'<br>'+esc(E.nom)+' · '+esc(E.err || "")+'<br>Touchez pour réessayer'; }
   z.innerHTML = '<div id="envb" style="'+st+'">'+h+'</div>';
   var b = document.getElementById("envb"); if(b) b.onclick = function(){ if(E.etat === "ok"){ NE_ENV = null; neEnvDessiner(); } else if(E.etat === "non") neTache(E.cfg); };
 }
@@ -1610,7 +1610,7 @@ function nouvelEmploye(){
   var MSG = "Veuillez utiliser l’onglet Position d’embauche afin de créer une fiche nouvel employé.";
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrat d’embauche</h1><div id="nl"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); responsable(); };
-  function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div style="margin:22vh 0 0;background:var(--vert);color:#000000;padding:26px 20px;text-align:center;font-size:16px;line-height:1.45;letter-spacing:.06em;text-transform:uppercase;font-weight:500">'+esc(MSG)+'</div>'; }
+  function vide(){ var z = document.getElementById("nl"); if(z) z.innerHTML = '<div style="margin:22vh 0 0;background:#E3DFD3;border-left:3px solid var(--vert);color:#000000;padding:26px 20px;text-align:left;font-size:16px;line-height:1.45;letter-spacing:.06em;text-transform:uppercase;font-weight:500">'+esc(MSG)+'</div>'; }
   function montrer(l){
     var z = document.getElementById("nl"); if(!z) return;
     if(!l.length){ vide(); return; }
@@ -2212,7 +2212,7 @@ function dateHeure(opts, surChangement){
     return {html: r, masquees: masq}; }
   function panneau(e){
     var ed = S.ed, dur = Math.max(15, Math.round((new Date(e.fin) - new Date(e.debut))/60000)), hs = optHeures(ed.jour, ed.heure, dur, e.id);
-    var ps = ed.choix ? '<div class="etq" style="margin-top:10px">▪ ENREGISTRER POUR</div><div class="aeact" style="margin:6px 0 0"><button type="button" class="bouton" id="ep1" style="margin:0">Cette date seulement</button><button type="button" class="bouton" id="ep2" style="margin:0">Cette date et toutes les suivantes</button></div>' : ed.confirm ? '<div style="margin:8px 0"><div style="font-size:13px;margin-bottom:6px">Supprimer cet \u00e9v\u00e9nement ?</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="edn" style="margin:0">Non</button><button type="button" class="bouton" id="edo" style="margin:0;background:#a32d2d;color:#fff">Oui</button></div></div>'
+    var ps = ed.choix ? '<div class="etq" style="margin-top:10px">▪ ENREGISTRER POUR</div><div class="aeact" style="margin:6px 0 0"><button type="button" class="bouton" id="ep1" style="margin:0">Cette date seulement</button><button type="button" class="bouton" id="ep2" style="margin:0">Cette date et toutes les suivantes</button></div>' : ed.confirm ? '<div style="margin:8px 0"><div style="font-size:13px;margin-bottom:6px">Supprimer cet \u00e9v\u00e9nement ?</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="edn" style="margin:0">Non</button><button type="button" class="bouton" id="edo" style="margin:0;background:#A33A2B;color:#fff">Oui</button></div></div>'
       : '<div class="aeact" style="margin:8px 0 0"><button type="button" class="bouton" id="eds" style="margin:0">Enregistrer</button><button type="button" class="bouton" id="edx" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)">Supprimer</button><button type="button" class="bouton" id="edf" style="margin:0;background:transparent;color:var(--tx);border:1.5px solid var(--tx)">Fermer</button></div>';
     return '<div style="border:1.5px solid var(--tx);padding:10px;margin:4px 0 10px"><div style="display:flex;gap:8px"><div style="flex:1"><span class="lbl">Date</span><select class="bx" id="edd">'+optJours(ed.jour)+'</select></div><div style="flex:1"><span class="lbl">Heure</span><select class="bx" id="edh">'+hs.html+'</select></div></div>'+ps+(ed.msg ? '<div class="bandeau">'+esc(ed.msg)+'</div>' : '')+'</div>';
   }
@@ -2487,7 +2487,7 @@ function mesEvenements(){
 function confirmerOuiNon(question, oui, rouge){
   var f = document.createElement("div");
   f.style.cssText = "position:fixed;inset:0;background:rgba(15,20,32,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50";
-  f.innerHTML = '<div style="background:#e3dfd3;color:#111;border:1.5px solid #111;padding:20px;width:100%;max-width:340px"><div style="font-size:15px;line-height:1.5;margin-bottom:16px">'+esc(question)+'</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="cno" style="margin:0">Non</button><button type="button" class="bouton" id="coui" style="margin:0'+(rouge ? ";background:#a32d2d;color:#fff" : "")+'">Oui</button></div></div>';
+  f.innerHTML = '<div style="background:#e3dfd3;color:#111;border:1.5px solid #111;padding:20px;width:100%;max-width:340px"><div style="font-size:15px;line-height:1.5;margin-bottom:16px">'+esc(question)+'</div><div class="aeact" style="margin:0"><button type="button" class="bouton" id="cno" style="margin:0">Non</button><button type="button" class="bouton" id="coui" style="margin:0'+(rouge ? ";background:#A33A2B;color:#fff" : "")+'">Oui</button></div></div>';
   document.body.appendChild(f);
   document.getElementById("cno").onclick = function(){ f.remove(); };
   document.getElementById("coui").onclick = function(){ f.remove(); oui(); };
@@ -2614,9 +2614,9 @@ function gestionEmployes(){
     var el = document.getElementById("ge"); if(!el) return;
     if(!r || !r.ok) throw 0;
     el.innerHTML = '<div class="etq">▪ CHOISIR UN EMPLOYÉ</div><select class="champ" id="gs"><option value="" selected></option>'+r.actifs.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' +
-      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0;flex:1;border:2px solid #7a2e2e;background:transparent;color:#7a2e2e;padding:11px 0;font-size:12px">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0;flex:1;border:2px solid #000000;background:transparent;color:#000000;padding:11px 0;font-size:12px">Désactiver</button></div>' +
+      '<div class="aeact" style="margin:0 0 22px"><button type="button" class="bouton" id="gsup" style="margin:0;flex:1;border:2px solid #A33A2B;background:transparent;color:#A33A2B;padding:11px 0;font-size:12px">Supprimer</button><button type="button" class="bouton" id="gdes" style="margin:0;flex:1;border:2px solid #000000;background:transparent;color:#000000;padding:11px 0;font-size:12px">Désactiver</button></div>' +
       '<div style="background:#b8ae9b;color:#000000;font-size:14px;letter-spacing:.2em;padding:13px 14px;text-transform:uppercase;margin:64px 0 18px">Inactifs · '+r.inactifs.length+'</div>' +
-      (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #7a2e2e;background:transparent;color:#7a2e2e">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #000000;background:transparent;color:#000000">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
+      (r.inactifs.length ? r.inactifs.map(function(x, k){ return '<div class="ligne"><span>'+esc(x.nom)+'</span><span style="display:flex;gap:6px"><button type="button" class="bouton" data-s="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #A33A2B;background:transparent;color:#A33A2B">Supprimer</button><button type="button" class="bouton" data-k="'+k+'" style="margin:0;width:auto;padding:9px 12px;font-size:11px;border:2px solid #000000;background:transparent;color:#000000">Réactiver</button></span></div>'; }).join("") : '<div class="bandeau">▪ AUCUN</div>');
     marquerVides(el, "#gs");
     function choisi(){ var s = document.getElementById("gs"); return s.value ? {id: s.value, nom: s.options[s.selectedIndex].text} : null; }
     document.getElementById("gdes").onclick = function(){ var c = choisi(); if(c) agir(c.id, c.nom, false); };

@@ -1,7 +1,7 @@
 // Garde le «squelette» de l'application pour qu'elle s'ouvre vite et hors réseau. Les données (messages, documents) ne sont jamais gardées ici.
-var V = "ldld-app-v703";
+var V = "ldld-app-v704";
 var FICHIERS = ["./", "index.html", "style.css", "app.js", "embauche.js", "positionnement.js", "finance.js", "production.js", "etatsfin.js", "echelle.js", "employe_actuel.js", "rencontre_dept.js", "commentaires.js", "evaluation.js", "cle_annuelle.js", "dechiffrement.js", "reunion_copie.js", "rencontre_eval.js", "portrait_original.js", "envoisalarial.js", "inventaire.js", "manifest.webmanifest", "vendor/pdf.min.js", "vendor/pdf.worker.min.js",
-  "plans/plan1.png", "plans/plan2.png", "plans/plan3.png", "plans/plan_stationnement.png", "fonts/Archivo-200.woff2", "fonts/Archivo-300.woff2", "fonts/Archivo-400.woff2", "fonts/Archivo-500.woff2", "fonts/Inter.woff2",
+  "plans/plan1.png", "plans/plan2.png", "plans/plan3.png", "plans/plan_stationnement.png", "fonts/Inter.woff2",
   "assets/LDLD_logo_complet_blanc_transparent.png", "assets/LDLD_logo_complet_noir_transparent.png", "assets/LDLD_symbole_blanc_transparent.png"];
 // cache "reload": jamais une vieille copie du cache HTTP du navigateur (GitHub Pages: 10 min)
 self.addEventListener("install", function(e){ e.waitUntil(caches.open(V).then(function(c){ return Promise.all(FICHIERS.map(function(f){ return c.add(new Request(f, {cache: "reload"})); })); }).then(function(){ return self.skipWaiting(); })); });
