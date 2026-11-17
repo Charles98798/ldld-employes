@@ -2,7 +2,8 @@
 // la liste vient de INV_FICTIF et AUCUNE écriture réelle n'est faite. Pour brancher le vrai: (1) remplacer invLire() par l'appel au Service (lecture seule, vue SQL),
 // (2) mettre INV_ECRITURE = true et compléter invEcrire() (point unique pour « déduire » et « commander »). Rien d'autre à changer.
 var INV_COMPTER = true;     // comptage seul actif (déduire, commander, réception encore désactivés)
-var INV_ECRITURE = false;   // déduire/commander: désactivés (message clair) jusqu'à la confirmation de Michel; mettre true ensuite
+var INV_COMMANDER = false;  // « Commander le produit » reste désactivé jusqu'à la décision de Charles sur le courriel (Michel recommandé)
+var INV_ECRITURE = true;    // déduire/commander: désactivés (message clair) jusqu'à la confirmation de Michel; mettre true ensuite
 var INV_PHASE2 = true;      // onglets Gestion des stocks et Réception visibles (Gestionnaires, Direction), mais actions désactivées avec message tant que INV_ECRITURE est false   // désactivé en attendant la fonction d'écriture de Michel
 var INV_FICTIF = [
   {id: "f01", description: "ACRYLIQUE VITA DENTINE A1", categorie: "Acrylique", fournisseur: "VIDENT", unite: "BOÎTE", par: 3, stock: 4, minimum: 1, mode: "deduire"},
@@ -63,6 +64,7 @@ function invUuid(){
 // Écriture: champs à plat, id_demande (uuid v4) généré ici (même demande renvoyée = même id, sans doublon). Le Service répond tout de suite « en_attente »; le résultat de Michel se lit avec inv_demande_lire (toutes les 6 s, 2 minutes au plus).
 // Résultat: {ok:true, stock_apres} accepté, {ok:false, erreur} refusé (message_refus de Michel), {ok:true, attente:true} sans réponse dans les 2 minutes (la demande reste enregistrée).
 function invEcrire(action, corps){
+  if(action === "inv_commander" && !INV_COMMANDER) return Promise.resolve({ok: false, erreur: "Commande non activée"});
   if(!INV_ECRITURE && !(action === "inv_compter" && INV_COMPTER)) return Promise.resolve({ok: true, essai: true});
   var id = (corps && corps.id_demande) || invUuid(), c = {action: action, session: sessionGardee(), id_demande: id};
   Object.keys(corps || {}).forEach(function(k){ c[k === "quantite" && action === "inv_compter" ? "qte_exacte" : k] = corps[k]; });
@@ -137,7 +139,7 @@ function invProduit(p){
       h += '<div style="font-size:13px;color:#6E6350;margin:10px 0">'+(reste < 0 ? "Il n’y en a pas assez en stock." : reste < p.minimum ? "Il restera "+reste+" en stock, sous le minimum de "+invE(p.minimum)+"." : reste === p.minimum ? "Il restera "+reste+" en stock, soit le minimum." : "Il restera "+reste+" en stock.")+'</div>';
       if(p.stock <= 0) h += '<div style="font-size:13px;color:#6E6350;margin:8px 0">Il n’y en a plus en stock.</div>'; else h += '<button type="button" class="bouton" id="invok" style="height:46px;padding:0;margin:8px 0"'+(reste < 0 || qte < 1 || !INV_ECRITURE ? " disabled" : "")+'>Enregistrer</button>';
     } else {
-      h += '<div style="font-size:13px;color:#6E6350;margin:18px 0 10px">Ce produit se commande. Aucune quantité n’est déduite du stock.</div><button type="button" class="bouton" id="invcmd" style="height:46px;padding:0;margin:8px 0"'+(INV_ECRITURE ? "" : " disabled")+'>Commander le produit</button>';
+      h += '<div style="font-size:13px;color:#6E6350;margin:18px 0 10px">Ce produit se commande. Aucune quantité n’est déduite du stock.</div><button type="button" class="bouton" id="invcmd" style="height:46px;padding:0;margin:8px 0"'+(INV_ECRITURE && INV_COMMANDER ? "" : " disabled")+'>Commander le produit</button>'+(INV_COMMANDER ? "" : '<div style="font-size:13px;color:#6E6350;margin:8px 0">La commande sera activée bientôt.</div>');
     }
     if(!INV_ECRITURE) h += '<div style="font-size:13px;color:#6E6350;margin:8px 0">Les sorties et les commandes seront activées bientôt. Pour le moment, rien n’est enregistré.</div>';
     h += '<div class="bandeau" id="invmsg" style="'+(msg ? "" : "display:none;")+'margin-top:8px">'+invE(msg || "")+'</div>';
