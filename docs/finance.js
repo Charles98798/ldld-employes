@@ -210,7 +210,7 @@ function fgGraphique(type){
   }
   var c = R.clients, h = "";
   if(!c) return '<div class="finnote">Aucune donnée de comptes clients.</div>';
-  var tot = c.total || 0, tp = c.top || {}, bk = [["Courant et 1-30 jours", c.courant + c.t30, ""], ["31-60 jours", c.t60, "t60"], ["61-90 jours", c.t90, "t90"], ["Plus de 90 jours", c.plus, "plus"]];
+  var tot = c.total || 0, tp = c.top || {}, bk = [["Courant et 1-30 jours", c.courant + c.t30, "courant"], ["31-60 jours", c.t60, "t60"], ["61-90 jours", c.t90, "t90"], ["Plus de 90 jours", c.plus, "plus"]];
   bk.forEach(function(b){
     h += '<div class="fgcl"><div class="fgcn"><span>'+b[0]+'</span><span>'+finMontant(b[1])+'</span></div><div class="fgbar"><i style="width:'+(tot ? Math.max(0, Math.round(b[1]/tot*100)) : 0)+'%"></i></div>';
     var l = b[2] && tp[b[2]];
