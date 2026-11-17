@@ -943,7 +943,8 @@ function lectureTexte(titre, cleCache, corps, retourFn, prenomOk){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(retourSec) retourSec(); else retourFn(); };
   obtenir(cleCache, corps, function(r){
     var el = document.getElementById("mn"); if(!el) return;
-    if(!r.blocs){ return repli(); }
+    if(!r.blocs || !r.blocs.length){ return repli(); }
+    if(!r.blocs.some(function(b){ return b.t === "h"; })){ el.innerHTML = blocsHtml(r.blocs); return; }   // document sans titres: texte affiché tel quel
     var secs = [], cur = {titre:"", blocs:[]};
     r.blocs.forEach(function(b){ if(b.t === "h"){ if(cur.blocs.length || cur.titre) secs.push(cur); cur = {titre:b.v, blocs:[b]}; } else cur.blocs.push(b); });
     secs.push(cur);
