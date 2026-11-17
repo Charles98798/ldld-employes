@@ -282,7 +282,7 @@ function appelDirectGoogle(corps, vu){
 // Lectures préchargées en mémoire: la page s'ouvre sans attente. Valide 3 min; toute écriture vide tout; rafraîchi en silence si plus vieux que 20 s.
 var RCACHE = {};
 var LECT = {inv_lire:1, evenements_employe:1, rd_points_lire:1, rd_planif_lire:1, rd_capsules_lire:1, production_lire:1, tableau_courant:1, heures:1, charges_jours:1, calendrier_labo:1, ech_donnees:1, emp_donnees:1, embauche_donnees:1, embauche_avantages:1, pos_donnees:1, charge_equipe:1, employes_etat:1, entretien_lire:1, parking_lire:1, rencontre_liste:1, utilisation:1, equipe_groupes:1, agenda_mes:1, agenda_liste:1, prefs_lire:1, portrait:1, prix_soumissions:1, ef_donnees:1, finance_mensuel:1};
-var NEUTRE = {rencontre_eval_liste:1, rencontre_eval_lire:1, rencontre_eval_ecrire:1, rencontre_eval_verrou:1, portrait_original:1, absences_equipe:1, tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
+var NEUTRE = {controle_doc_texte:1, rencontre_eval_liste:1, rencontre_eval_lire:1, rencontre_eval_ecrire:1, rencontre_eval_verrou:1, portrait_original:1, absences_equipe:1, tableau_courant:1, moi:1, sortie:1, code:1, salaire_lire:1, agenda_semaine:1, agenda_semaines:1, messages:1, tableau:1, incendie_texte:1, manuel_texte:1, calendrier:1, ae_lire:1, charges_jours:1, calendrier_labo:1, embauche_attente:1, embauche_brouillon:1, embauche_brouillon_maj:1, embauche_choix:1, embauche_responsabilites:1};
 function copie(r){ return JSON.parse(JSON.stringify(r)); }
 // Copie gardée sur l'appareil (affichée tout de suite à l'ouverture, remplacée en silence par la version fraîche). JAMAIS de salaire ni de rémunération (Portrait, Échelle, Positionnement, Embauche, Employé actuel restent en mémoire seulement).
 // Données de l'employé lui-même: toutes les personnes. Données d'équipe: Direction seulement. Tout est effacé à la déconnexion (préfixe ldld-c-).
@@ -934,19 +934,21 @@ function blocsHtml(blocs){
 }
 function sansAccent(t){ return String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
 // Manuel en texte : recherche par mot (sans accents ni majuscules), table des matières; sans réponse du service, l'ancien affichage PDF reste en place.
-function manuel(){
+function manuel(){ lectureTexte("Manuel d\'employé", "manuel_texte", {action:"manuel_texte"}, menu, true); }
+// Document écrit dans l'application (Manuel, Nomenclature, Stratégie de reprise): table des matières, recherche, sections.
+function lectureTexte(titre, cleCache, corps, retourFn, prenomOk){
   var repli = function(){ var e = document.getElementById("mn"); if(e) e.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; };
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Manuel d\'employé</h1><div id="mn"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>'+titre+'</h1><div id="mn"></div></div>';
   var retourSec = null;   // Retour (bouton vert et bloc ←) remonte d'un seul niveau: d'une section vers la table des matières
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(retourSec) retourSec(); else menu(); };
-  obtenir("manuel_texte", {action:"manuel_texte"}, function(r){
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(retourSec) retourSec(); else retourFn(); };
+  obtenir(cleCache, corps, function(r){
     var el = document.getElementById("mn"); if(!el) return;
     if(!r.blocs){ return repli(); }
     var secs = [], cur = {titre:"", blocs:[]};
     r.blocs.forEach(function(b){ if(b.t === "h"){ if(cur.blocs.length || cur.titre) secs.push(cur); cur = {titre:b.v, blocs:[b]}; } else cur.blocs.push(b); });
     secs.push(cur);
     var prenom = MOI && MOI.nom ? String(MOI.nom).trim().split(/\s+/)[0] : "";
-    if(prenom) secs.forEach(function(x){ if(/mot de la direction/i.test(x.titre || "") && !(x.blocs[1] && /^bonjour/i.test(x.blocs[1].v || ""))) x.blocs.splice(1, 0, {t:"p", v:"Bonjour "+prenom}); });
+    if(prenomOk && prenom) secs.forEach(function(x){ if(/mot de la direction/i.test(x.titre || "") && !(x.blocs[1] && /^bonjour/i.test(x.blocs[1].v || ""))) x.blocs.splice(1, 0, {t:"p", v:"Bonjour "+prenom}); });
     secs.forEach(function(x){ x.texte = sansAccent(JSON.stringify(x.blocs.map(function(b){ return b.v; }))); });
     var q0 = "";
     el.innerHTML = '<input class="rech" id="rech" type="search" placeholder="Rechercher un mot" autocomplete="off" aria-label="Rechercher un mot"><div id="res"></div><div id="corps"></div>';
@@ -1351,17 +1353,14 @@ function chargerDroits(){
 }
 var CTL_COULEURS = ["#8D806A", "#000000", "var(--vert)"];
 // « Contrôle » (Direction): onglet principal avec ses sous-onglets (décision de Charles, 17 nov).
-var CTL_DOC_NOMENCLATURE = "https://docs.google.com/document/d/1nuiNhU7nRXmlLRCu1_cShIrsWCHiJFA2w-48tJ_X02w/edit";
-var CTL_DOC_STRATEGIE = "https://docs.google.com/document/d/1HdKIXauVtbUES3yExGeLv7ZGqb4UbhnWpmGcbLCcJkc/edit";
 function controleMenu(){
-  var T = [["Utilisation app", "Utilisation", "utilisation"], ["Autorisation des accès", "Contrôle", "ctl_acces"], ["Clé annuelle", "Clé annuelle", "cle_annuelle"], ["Nomenclature", "Manuel", CTL_DOC_NOMENCLATURE], ["Stratégie de reprise", "Plan d'incendie", CTL_DOC_STRATEGIE]];
+  var T = [["Utilisation app", "Utilisation", "utilisation"], ["Autorisation des accès", "Contrôle", "ctl_acces"], ["Clé annuelle", "Clé annuelle", "cle_annuelle"], ["Nomenclature", "Manuel", "ctl_nomenclature"], ["Stratégie de reprise", "Plan d'incendie", "ctl_strategie"]];
   app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Contrôle</h1><div class="menu" style="margin:0;padding:0;min-height:0">' + T.map(function(t){
-    var doc = /^https:/.test(t[2]);
-    return '<a href="'+(doc ? esc(t[2]) : "#")+'"'+(doc ? ' target="_blank" rel="noopener"' : ' data-k="'+t[2]+'"')+'><span>'+picto(t[1])+esc(t[0])+'</span></a>';
+    return '<a href="#" data-k="'+t[2]+'"><span>'+picto(t[1])+esc(t[0])+'</span></a>';
   }).join("") + '</div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   Array.prototype.forEach.call(app.querySelectorAll("a[data-k]"), function(a){
-    a.onclick = function(e){ e.preventDefault(); var k = a.getAttribute("data-k"); if(k === "ctl_acces") controleOuvrir(); else { var x = ENT_PAR_ID[k]; if(x) x.f(); } };
+    a.onclick = function(e){ e.preventDefault(); var k = a.getAttribute("data-k"); if(k === "ctl_acces") controleOuvrir(); else if(k === "ctl_nomenclature" || k === "ctl_strategie"){ var nom = k === "ctl_nomenclature"; lectureTexte(nom ? "Nomenclature" : "Stratégie de reprise", "controle_doc_" + (nom ? "nomenclature" : "strategie"), {action:"controle_doc_texte", cle: nom ? "nomenclature" : "strategie", session: sessionGardee()}, controleMenu, false); } else { var x = ENT_PAR_ID[k]; if(x) x.f(); } };
   });
 }
 function controleOuvrir(){
