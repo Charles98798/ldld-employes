@@ -1437,3 +1437,6 @@ select:not(.act){width:100%;box-sizing:border-box}
 /* Confirmer et Annuler: exactement la même couleur de fond #B7B1A5; Confirmer inactif se reconnaît à son texte atténué seulement */
 .invact .bouton,.invact .bouton:disabled,.invact a.inva{background:#B7B1A5!important;opacity:1!important}
 .invact .bouton:disabled{color:#6E6350}
+/* Confirmer et Annuler: même ton pâle (celui du Confirmer inactif, version 694), décision de Charles 16 nov soir */
+.invact .bouton,.invact .bouton:disabled,.invact a.inva{background:#C1BDB3!important;opacity:1!important}
+.invact .bouton:disabled{color:#000}
