@@ -49,10 +49,15 @@ var INV_LECTURE = true;   // vrais produits (Service inv_lire, copie Supabase in
 function invLire(){
   if(!INV_LECTURE) return Promise.resolve({ok: true, fictif: true, produits: INV_FICTIF});
   return appelService({action: "inv_lire", session: sessionGardee()}).then(function(r){
-    if(r && r.ok && Array.isArray(r.produits)){ r.produits.forEach(function(p){ p.id = String(p.id); p.stock = Number(p.stock) || 0; p.minimum = Number(p.minimum) || 0; p.par = Number(p.par) || 1; }); INV.rec = (r.reception || []).map(function(x){ return Object.assign({}, x, {prix: x.prix == null ? "" : String(x.prix)}); }); }
+    if(r && r.ok && Array.isArray(r.produits)){ r.produits.forEach(function(p){ p.id = String(p.id); p.stock = Number(p.stock) || 0; invPendAppliquer(p); p.minimum = Number(p.minimum) || 0; p.par = Number(p.par) || 1; }); INV.rec = (r.reception || []).map(function(x){ return Object.assign({}, x, {prix: x.prix == null ? "" : String(x.prix)}); }); }
     return r;
   });
 }
+// Quantités enregistrées mais pas encore revenues dans la lecture (copie en retard): la liste montre la nouvelle valeur tout de suite; retirée quand la lecture la rattrape (ou après 10 minutes) ou si Gestion refuse.
+INV.pend = INV.pend || {};
+function invPend(p, v){ INV.pend[p.id] = {v: v, t: Date.now()}; }
+function invPendRetirer(p){ delete INV.pend[p.id]; }
+function invPendAppliquer(p){ var e = INV.pend[p.id]; if(!e) return; if(Date.now() - e.t > 600000 || p.stock === e.v){ delete INV.pend[p.id]; return; } p.stock = e.v; }
 // Point unique d'écriture. Désactivé: aucune écriture réelle, la réponse simule un succès clairement marqué comme essai.
 function invUuid(){
   var c = window.crypto; if(c && c.randomUUID) return c.randomUUID();
@@ -160,9 +165,9 @@ function invProduit(p){
       ok.disabled = true; ok.textContent = "Enregistrement…";
       var q0 = qte, t0 = new Date(), ligne = {nom: p.description, q: q0, h: t0.getHours()+" h "+("0"+t0.getMinutes()).slice(-2)}, parti = false, flash = null;
       if(!INV_ECRITURE){ dessiner("▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS GESTION"); return; }
-      INV.sorties.unshift(ligne); p.stock = p.stock - q0; qte = 1; dessiner("▪ ENREGISTRÉ");   // l'écran se met à jour tout de suite, puis retour à la liste après 1 seconde
+      INV.sorties.unshift(ligne); p.stock = p.stock - q0; invPend(p, p.stock); qte = 1; dessiner("▪ ENREGISTRÉ");   // l'écran se met à jour tout de suite, puis retour à la liste après 1 seconde
       flash = setTimeout(function(){ parti = true; invOuvrir(); }, 1000);
-      function annule(t){ clearTimeout(flash); var k = INV.sorties.indexOf(ligne); if(k >= 0) INV.sorties.splice(k, 1); p.stock = p.stock + q0; if(parti) invAvis(t + " · " + String(p.description || "").toUpperCase()); else dessiner(t); }
+      function annule(t){ clearTimeout(flash); var k = INV.sorties.indexOf(ligne); if(k >= 0) INV.sorties.splice(k, 1); p.stock = p.stock + q0; invPendRetirer(p); if(parti) invAvis(t + " · " + String(p.description || "").toUpperCase()); else dessiner(t); }
       invEcrire("inv_deduire", {id_produit: p.id, quantite: q0}).then(function(r){
         if(!(r && r.ok)) annule("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase());
         else if(r.attente){ if(parti) invAvis("▪ EN ATTENTE DE TRAITEMENT · " + String(p.description || "").toUpperCase()); else { clearTimeout(flash); dessiner("▪ EN ATTENTE DE TRAITEMENT"); } }
@@ -305,13 +310,13 @@ function invCompte(p){
     ok.onclick = function(){
       var avant = p.stock, qs = q;   // l'écran se met à jour tout de suite; la valeur d'avant revient si Michel refuse
       var actif = INV_ECRITURE || INV_COMPTER, flash = null, parti = false;
-      p.stock = qs; dessiner(actif ? "▪ ENREGISTRÉ" : "");
+      p.stock = qs; if(actif) invPend(p, qs); dessiner(actif ? "▪ ENREGISTRÉ" : "");
       if(actif) flash = setTimeout(function(){ parti = true; invOuvrir(); }, 1000);   // « Enregistré » 1 seconde, puis retour à la liste; la confirmation de Gestion se fait en arrière-plan
-      function refus(t){ clearTimeout(flash); p.stock = avant; q = avant; if(parti) invAvis(t); else dessiner(t); }
+      function refus(t){ clearTimeout(flash); invPendRetirer(p); p.stock = avant; q = avant; if(parti) invAvis(t); else dessiner(t); }
       invEcrire("inv_compter", {id_produit: p.id, quantite: qs}).then(function(r){
         if(r && r.ok){
           if(r.attente){ if(parti) invAvis("▪ EN ATTENTE DE TRAITEMENT · " + String(p.description || "").toLowerCase()); else { clearTimeout(flash); dessiner("▪ EN ATTENTE DE TRAITEMENT"); } return; }
-          if(r.stock_apres !== undefined && r.stock_apres !== null && +r.stock_apres !== p.stock){ p.stock = +r.stock_apres; q = p.stock; }
+          if(r.stock_apres !== undefined && r.stock_apres !== null && +r.stock_apres !== p.stock){ p.stock = +r.stock_apres; q = p.stock; invPend(p, p.stock); }
         } else refus("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase() + (parti ? " · " + String(p.description || "").toUpperCase() : ""));
       }).catch(function(){ refus("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE" + (parti ? " · " + String(p.description || "").toUpperCase() : "")); });
     };
