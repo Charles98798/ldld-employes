@@ -85,6 +85,12 @@ function invEcrire(action, corps){
     return lire();
   });
 }
+// Avis bref sur la page affichée (refus qui arrive après le retour à la liste): disparaît seul.
+function invAvis(t){
+  var pg = document.querySelector("#app .page, .page"); if(!pg) return;
+  var b = document.createElement("div"); b.className = "bandeau"; b.style.margin = "8px 0"; b.textContent = t; pg.insertBefore(b, pg.children[2] || null);
+  setTimeout(function(){ if(b.parentNode) b.parentNode.removeChild(b); }, 8000);
+}
 function invPage(corps){
   app.innerHTML = '<div class="page"><h1>Inventaire</h1><a class="retour" href="#" id="retour">Retour</a>'+corps+'</div>';
 }
@@ -152,10 +158,15 @@ function invProduit(p){
     var ok = document.getElementById("invok");
     if(ok) ok.onclick = function(){
       ok.disabled = true; ok.textContent = "Enregistrement…";
-      invEcrire("inv_deduire", {id_produit: p.id, quantite: qte}).then(function(r){
-        if(r && r.ok){ var t = new Date(); INV.sorties.unshift({nom: p.description, q: qte, h: t.getHours()+" h "+("0"+t.getMinutes()).slice(-2)}); p.stock = p.stock - qte; var mm = r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS GESTION" : "▪ ENREGISTRÉ"; qte = 1; dessiner(mm); }
-        else dessiner("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase());
-      }).catch(function(){ dessiner("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
+      var q0 = qte, t0 = new Date(), ligne = {nom: p.description, q: q0, h: t0.getHours()+" h "+("0"+t0.getMinutes()).slice(-2)}, parti = false, flash = null;
+      if(!INV_ECRITURE){ dessiner("▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS GESTION"); return; }
+      INV.sorties.unshift(ligne); p.stock = p.stock - q0; qte = 1; dessiner("▪ ENREGISTRÉ");   // l'écran se met à jour tout de suite, puis retour à la liste après 1 seconde
+      flash = setTimeout(function(){ parti = true; invOuvrir(); }, 1000);
+      function annule(t){ clearTimeout(flash); var k = INV.sorties.indexOf(ligne); if(k >= 0) INV.sorties.splice(k, 1); p.stock = p.stock + q0; if(parti) invAvis(t + " · " + String(p.description || "").toUpperCase()); else dessiner(t); }
+      invEcrire("inv_deduire", {id_produit: p.id, quantite: q0}).then(function(r){
+        if(!(r && r.ok)) annule("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase());
+        else if(r.attente){ if(parti) invAvis("▪ EN ATTENTE DE TRAITEMENT · " + String(p.description || "").toUpperCase()); else { clearTimeout(flash); dessiner("▪ EN ATTENTE DE TRAITEMENT"); } }
+      }).catch(function(){ annule("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
     };
     var cm = document.getElementById("invcmd");
     if(cm) cm.onclick = function(){
@@ -293,15 +304,16 @@ function invCompte(p){
     var ok = document.getElementById("invok");
     ok.onclick = function(){
       var avant = p.stock, qs = q;   // l'écran se met à jour tout de suite; la valeur d'avant revient si Michel refuse
-      var actif = INV_ECRITURE || INV_COMPTER, flash = null;
+      var actif = INV_ECRITURE || INV_COMPTER, flash = null, parti = false;
       p.stock = qs; dessiner(actif ? "▪ ENREGISTRÉ" : "");
-      if(actif) flash = setTimeout(function(){ var m = document.getElementById("invmsg"); if(m){ m.style.display = "none"; m.textContent = ""; } }, 1000);   // « Enregistré » 1 seconde; la confirmation de Gestion se fait en arrière-plan
+      if(actif) flash = setTimeout(function(){ parti = true; invOuvrir(); }, 1000);   // « Enregistré » 1 seconde, puis retour à la liste; la confirmation de Gestion se fait en arrière-plan
+      function refus(t){ clearTimeout(flash); p.stock = avant; q = avant; if(parti) invAvis(t); else dessiner(t); }
       invEcrire("inv_compter", {id_produit: p.id, quantite: qs}).then(function(r){
         if(r && r.ok){
-          if(r.attente){ clearTimeout(flash); dessiner("▪ EN ATTENTE DE TRAITEMENT"); return; }
-          if(r.stock_apres !== undefined && r.stock_apres !== null && +r.stock_apres !== p.stock){ p.stock = +r.stock_apres; q = p.stock; clearTimeout(flash); dessiner(); }
-        } else { clearTimeout(flash); p.stock = avant; q = avant; dessiner("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
-      }).catch(function(){ clearTimeout(flash); p.stock = avant; q = avant; dessiner("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"); });
+          if(r.attente){ if(parti) invAvis("▪ EN ATTENTE DE TRAITEMENT · " + String(p.description || "").toLowerCase()); else { clearTimeout(flash); dessiner("▪ EN ATTENTE DE TRAITEMENT"); } return; }
+          if(r.stock_apres !== undefined && r.stock_apres !== null && +r.stock_apres !== p.stock){ p.stock = +r.stock_apres; q = p.stock; }
+        } else refus("▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase() + (parti ? " · " + String(p.description || "").toUpperCase() : ""));
+      }).catch(function(){ refus("▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE" + (parti ? " · " + String(p.description || "").toUpperCase() : "")); });
     };
   }
   dessiner();
