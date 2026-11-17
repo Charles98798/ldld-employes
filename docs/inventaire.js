@@ -174,7 +174,7 @@ function invReceptionDessiner(msg){
         + '<div class="invcols"><div><div class="etq">▪ '+(x.recu > 0 ? "Reste" : "Commandé")+'</div><div class="invnb">'+(x.commande - x.recu)+'</div></div>'
         + '<div><div class="etq">▪ Nombre reçu</div><input class="invf invq'+(qv ? "" : " rose")+'" data-i="'+invE(x.id)+'" inputmode="numeric" autocomplete="off" placeholder="Quantité" value="'+invE(q)+'"></div>'
         + '<div><div class="etq">▪ Prix unitaire</div><input class="invf invp'+(pv ? "" : " rose")+'" data-i="'+invE(x.id)+'" inputmode="decimal" autocomplete="off" placeholder="0,00 $" value="'+invE(pr)+'"></div></div>'
-        + '<div class="invact"><button type="button" class="bouton invc" data-i="'+invE(x.id)+'"'+(qv && pv && INV_ECRITURE ? "" : " disabled")+'>Confirmer</button><a href="#" class="bouton inva" data-i="'+invE(x.id)+'" style="'+(INV_ECRITURE ? "" : "opacity:.45;pointer-events:none")+'">Annuler</a></div><div class="invconf" data-i="'+invE(x.id)+'"></div></div>';
+        + '<div class="invact"><button type="button" class="bouton invc" data-i="'+invE(x.id)+'"'+(qv && pv && INV_ECRITURE ? "" : " disabled")+'>Confirmer</button><a href="#" class="bouton inva" data-i="'+invE(x.id)+'" style="'+(INV_ECRITURE ? "" : "pointer-events:none")+'">Annuler</a></div><div class="invconf" data-i="'+invE(x.id)+'"></div></div>';
     });
   });
   z.innerHTML = h; invLierOnglets();

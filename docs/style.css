@@ -1434,3 +1434,6 @@ select:not(.act){width:100%;box-sizing:border-box}
 .invact{gap:8px}
 .invact .bouton,.invact a.inva{flex:1;width:auto;min-width:0;height:46px;box-sizing:border-box;padding:0}
 .invact a.inva{display:flex;align-items:center;justify-content:center;margin:0;border:0;background:#B7B1A5;color:#000;box-shadow:none!important;text-decoration:none;font-size:14px}
+/* Confirmer et Annuler: exactement la même couleur de fond #B7B1A5; Confirmer inactif se reconnaît à son texte atténué seulement */
+.invact .bouton,.invact .bouton:disabled,.invact a.inva{background:#B7B1A5!important;opacity:1!important}
+.invact .bouton:disabled{color:#6E6350}
