@@ -1424,3 +1424,9 @@ select:not(.act){width:100%;box-sizing:border-box}
 @keyframes rvfen{from{transform:translateX(-90px)}to{transform:translateX(90px)}}
 @media (prefers-reduced-motion:reduce){.rvacc .b1,.rvacc .b2,.rvacc .fen{animation:none}}
 .rvacc .rdate{display:none}@media (min-width:1000px){.rvacc .rdate{display:block;margin-top:10px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#6E6350}}
+/* Réception sobre (décision de Charles, 16 nov soir, version C): lignes répétées = filet 1 px seul, vert seulement sous Confirmer quand la ligne est prête */
+.invf.rose{background:transparent!important;border-bottom:1px solid #B4AB9B!important;box-shadow:none!important}
+.invf::placeholder{color:#8b8579;opacity:1}
+.invact .inva{color:#6E6350;border-bottom:1px solid #6E6350;text-decoration:none}
+.invact .bouton:not(:disabled){box-shadow:inset 0 -3px 0 var(--vert)}
+.invact .bouton:disabled{box-shadow:none}
