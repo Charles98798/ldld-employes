@@ -776,7 +776,8 @@ function messages(filtre){
   if(fusion){ evenementsEmploye("aven"); aeAFaire(); }
   obtenir("messages", {action:"messages"}, function(r){
     if(!document.getElementById("liste")) return;
-    MESSAGES = r.messages; var l = lus();
+    MESSAGES = r.messages.concat(r.messages.filter(function(m){ return m.envoye && /^Demande de rencontre/.test(m.titre); }).map(function(m){ var c = {}; Object.keys(m).forEach(function(k){ c[k] = m[k]; }); c.envoye = false; c.id = m.id + "~r"; c.de = "Vous (vérification)"; return c; }));   // demande envoyée à soi-même (Direction): affichée aussi comme reçue, pour essayer Planifier
+    var l = lus();
     var vus = MESSAGES.filter(function(m){ return !msgPerime(m); }).filter(function(m){ return FILTRE_MSG === "envoyes" ? m.envoye : FILTRE_MSG === "rencontres" ? (!m.envoye && /^Demande de rencontre/.test(m.titre)) : true; });   // les messages restent affichés 30 jours
     function ligne(m, neuf){ return '<a class="lcol'+(neuf ? ' lnv' : '')+'" href="#" data-id="'+esc(m.id)+'"><span>'+dateCourte(m.date)+'</span><span>'+esc(m.titre)+'<small>'+(m.envoye ? 'Envoyé à '+m.nb+' personne'+(m.nb > 1 ? 's' : '') : (m.de === 'Agenda' ? esc(String(m.texte || '').split('\n').filter(function(z){ return z.trim(); }).slice(0, 2).join(' · ').slice(0, 90) || m.de) : esc(m.de)))+'</small></span><span>'+(m.envoye ? "Envoyé" : (neuf ? '<b class="nvb">Nouveau</b>' : "Lu"))+'</span></a>'; }
     var entete = '<div class="lcol lcolh"><span>Date</span><span>Message</span><span>État</span></div>', nvs = [], reste = [];
@@ -802,7 +803,7 @@ function detail(id){
       var q = dhr.lire(); if(!q){ dhr.valider(); dire("▪ DATE ET HEURE REQUISES"); return; }
       var d = q.date, h = q.heure;
       var bt = this; bt.disabled = true; dire("▪ ENVOI…");
-      appelService({action:"rencontre_planifier", session:sessionGardee(), id:id, date:d, heure:h}).then(function(r){
+      appelService({action:"rencontre_planifier", session:sessionGardee(), id:String(id).replace(/~r$/, ""), date:d, heure:h}).then(function(r){
         if(r && r.ok){ dire("▪ RENCONTRE PLANIFIÉE · L'EMPLOYÉ EST AVISÉ"); }
         else { bt.disabled = false; dire("▪ NON PLANIFIÉE · "+((r && r.erreur) || "RÉESSAYEZ")); }
       }).catch(function(){ bt.disabled = false; dire("▪ NON PLANIFIÉE · RÉSEAU"); });
