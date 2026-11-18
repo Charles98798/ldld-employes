@@ -2932,14 +2932,21 @@ function rencontre(){
       if(VUE.on){ dire("▪ VUE D’UN EMPLOYÉ · LECTURE SEULE · L’ENVOI EST DÉSACTIVÉ"); return; }
       if(!choix.resp){ dire("▪ CHOISISSEZ UNE PERSONNE"); return; }
       if(!choix.sujet){ dire("▪ CHOISISSEZ UN SUJET"); return; }
-      var bt = this; bt.disabled = true; dire("▪ ENVOI…");
-      appelService({action:"rencontre_demande", session:sessionGardee(), responsable:choix.resp, sujet:choix.sujet, texte:document.getElementById("rt").value.trim()}).then(function(x){
-        if(x && x.ok){ dire("▪ DEMANDE ENVOYÉE"); setTimeout(menu, 1400); }
-        else { bt.disabled = false; dire("▪ NON ENVOYÉE · "+((x && x.erreur) || "RÉESSAYEZ")); }
-      }).catch(function(){ bt.disabled = false; dire("▪ NON ENVOYÉE · RÉSEAU"); });
+      var bt = this; bt.disabled = true;
+      var corps = {action:"rencontre_demande", session:sessionGardee(), responsable:choix.resp, sujet:choix.sujet, texte:document.getElementById("rt").value.trim()};
+      dire("▪ DEMANDE ENVOYÉE, NOUS VOUS REVIENDRONS POUR PLANIFIER UNE RÉUNION.");
+      // L'envoi se fait en arrière-plan (jusqu'à 3 essais); retour à l'accueil après 1 seconde.
+      (function envoi(n){
+        appelService(corps).then(function(x){
+          if(x && x.ok){ try { delete CACHE.messages; localStorage.removeItem("ldld-c-messages"); } catch(e){} return; }
+          if(n < 3) setTimeout(function(){ envoi(n + 1); }, 4000); else echecEnvoi((x && x.erreur) || "RÉESSAYEZ");
+        }).catch(function(){ if(n < 3) setTimeout(function(){ envoi(n + 1); }, 4000); else echecEnvoi("RÉSEAU"); });
+      })(1);
+      setTimeout(menu, 1000);
     };
   }).catch(function(){ var el = document.getElementById("rc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
+function echecEnvoi(m){ var d = document.createElement("div"); d.className = "bandeau"; d.style.cssText = "position:fixed;left:16px;right:16px;bottom:16px;z-index:99;background:var(--noir);color:#fff"; d.textContent = "▪ DEMANDE DE RENCONTRE NON ENVOYÉE · "+m+" · REFAITES-LA"; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 15000); }
 function carreVert(t){ return '<div style="margin:18vh 0 0;background:var(--vert);color:#000000;padding:56px 20px;text-align:center;font-size:17px;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;font-weight:500">'+esc(t)+'</div>'; }
 var VUE_ESSAIS_H = 0;
 function heures(){
