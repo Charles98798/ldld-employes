@@ -2948,10 +2948,9 @@ function rencontre(){
 }
 function confirmationPleine(t, p){
   var d = document.createElement("div");
-  d.style.cssText = "position:fixed;inset:0;z-index:98;background:#000000;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 28px;gap:16px";
-  d.innerHTML = '<div style="font-size:30px;line-height:1.2;letter-spacing:.08em;text-transform:uppercase;font-weight:500">'+esc(t)+'</div><div style="font-size:16px;line-height:1.5;letter-spacing:.04em">'+esc(p)+'</div><div style="position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--vert);transition:width 3s linear"></div>';
+  d.style.cssText = "position:fixed;inset:0;z-index:98;background:rgba(206,204,197,.82);display:flex;align-items:center;justify-content:center;padding:0 24px";
+  d.innerHTML = '<div style="background:var(--vert);color:#000000;padding:44px 28px;text-align:center;width:100%;box-sizing:border-box;line-height:1.5;letter-spacing:.06em;font-weight:500"><div style="font-size:22px;text-transform:uppercase">'+esc(t)+'</div><div style="font-size:16px;margin-top:10px">'+esc(p)+'</div></div>';
   document.body.appendChild(d);
-  var b = d.lastChild; setTimeout(function(){ b.style.width = "0"; }, 30);
   setTimeout(function(){ d.remove(); }, 3000);
 }
 function echecEnvoi(m){ var d = document.createElement("div"); d.className = "bandeau"; d.style.cssText = "position:fixed;left:16px;right:16px;bottom:16px;z-index:99;background:var(--noir);color:#fff"; d.textContent = "▪ DEMANDE DE RENCONTRE NON ENVOYÉE · "+m+" · REFAITES-LA"; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 15000); }
