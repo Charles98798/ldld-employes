@@ -624,7 +624,7 @@ var ENT = [
  {id:"messages", g:"Mon travail", l:"Message reçu", p:"Messages", d:[1,1,1], i:0, f:function(){ section(0); }},
  {id:"tableau_de_bord", g:"Mon travail", h:1, l:"Tableau de bord", p:"Tableau de bord", d:[1,1,1], i:4, f:function(){ section(4); }},
  {id:"calendrier", g:"Mon travail", l:"Calendrier", p:"Calendrier", d:[1,1,1], i:6, f:function(){ section(6); }},
- {id:"rencontre", g:"Mon travail", h:1, l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
+ {id:"rencontre", g:"Mon travail", l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
  {id:"ae_planif", g:"Évaluation", l:"Planification évaluation", p:"Planification évaluation", n:1, d:[0,1,1], f:function(){ aepPlanification(); }},
  {id:"ae_reunion", g:"Évaluation", l:"Rencontre d’évaluation", p:"Rencontre d’évaluation", n:2, d:[0,1,1], f:function(){ revDemarrer(); }},
  {id:"autoevaluation", g:"Évaluation", v:1, h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,0,0], i:2, f:function(){ aeEntree(); }},
@@ -2973,9 +2973,10 @@ function heures(){
   // Délai d'attente: si rien n'est arrivé après 8 s (appels en rafale à l'ouverture), une demande neuve part et la première réponse gagne.
   setTimeout(function(){ var z = document.getElementById("hz"); if(z && !!z.querySelector(".att")){ chercher("heures", {action:"heures"}).then(function(r){ var z2 = document.getElementById("hz"); if(z2 && !!z2.querySelector(".att")) afficherH(r); }).catch(function(){}); } }, 8000);
 }
-var VUE_ONGLETS = [9, 4, 2, 7];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
+var VUE_ONGLETS = [9, 4, 2];   // Mes heures, Messages, Tableau de bord, Autoévaluation (la Rémunération reste la mienne: son code part par courriel)
 function estCharles(){ return !!(MOI && /^\s*charles\b/i.test(String(MOI.nom || ""))); }
 function section(i){
+  if(i === 7 && VUE.on) vueFin();   // Demander rencontre: la Direction envoie avec son propre compte, la vue employé se ferme
   if(MOI && MOI.role === "direction" && !vueComme() && VUE_ONGLETS.indexOf(i) >= 0) return vueEmploye(i);
   sectionBase(i);
 }
