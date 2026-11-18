@@ -2374,8 +2374,7 @@ function dateHeure(opts, surChangement){
     ajouter: function(titre, jour, heure, minutes){
       var p = jour.split("-"), h = heure.split(":"), d0 = new Date(+p[0], +p[1]-1, +p[2], +h[0], +h[1] || 0), d1 = new Date(d0.getTime() + (minutes || 30)*60000);
       S.evs = (S.evs || []).concat([{id: "nouveau-"+d0.getTime(), titre: titre, debut: isoDe(d0)+"T"+pad2(d0.getHours())+":"+pad2(d0.getMinutes())+":00", fin: isoDe(d1)+"T"+pad2(d1.getHours())+":"+pad2(d1.getMinutes())+":00", ag: S.agenda}]);
-      rendre();
-      setTimeout(function(){ try { charger(); } catch(e){} }, 2500);
+      rendre();   // pas de relecture tout de suite: la mémoire du service garde la semaine 60 s et ferait disparaître la case
     }
   };
 }
