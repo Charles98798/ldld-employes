@@ -2934,7 +2934,7 @@ function rencontre(){
       if(!choix.sujet){ dire("▪ CHOISISSEZ UN SUJET"); return; }
       var bt = this; bt.disabled = true;
       var corps = {action:"rencontre_demande", session:sessionGardee(), responsable:choix.resp, sujet:choix.sujet, texte:document.getElementById("rt").value.trim()};
-      dire("▪ DEMANDE ENVOYÉE, NOUS VOUS REVIENDRONS POUR PLANIFIER UNE RÉUNION.");
+      confirmationPleine("Demande envoyée", "Nous vous reviendrons pour planifier une réunion.");
       // L'envoi se fait en arrière-plan (jusqu'à 3 essais); retour à l'accueil après 1 seconde.
       (function envoi(n){
         appelService(corps).then(function(x){
@@ -2942,9 +2942,17 @@ function rencontre(){
           if(n < 3) setTimeout(function(){ envoi(n + 1); }, 4000); else echecEnvoi((x && x.erreur) || "RÉESSAYEZ");
         }).catch(function(){ if(n < 3) setTimeout(function(){ envoi(n + 1); }, 4000); else echecEnvoi("RÉSEAU"); });
       })(1);
-      setTimeout(menu, 1000);
+      setTimeout(menu, 3000);
     };
   }).catch(function(){ var el = document.getElementById("rc"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
+function confirmationPleine(t, p){
+  var d = document.createElement("div");
+  d.style.cssText = "position:fixed;inset:0;z-index:98;background:#000000;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 28px;gap:16px";
+  d.innerHTML = '<div style="font-size:30px;line-height:1.2;letter-spacing:.08em;text-transform:uppercase;font-weight:500">'+esc(t)+'</div><div style="font-size:16px;line-height:1.5;letter-spacing:.04em">'+esc(p)+'</div><div style="position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--vert);transition:width 3s linear"></div>';
+  document.body.appendChild(d);
+  var b = d.lastChild; setTimeout(function(){ b.style.width = "0"; }, 30);
+  setTimeout(function(){ d.remove(); }, 3000);
 }
 function echecEnvoi(m){ var d = document.createElement("div"); d.className = "bandeau"; d.style.cssText = "position:fixed;left:16px;right:16px;bottom:16px;z-index:99;background:var(--noir);color:#fff"; d.textContent = "▪ DEMANDE DE RENCONTRE NON ENVOYÉE · "+m+" · REFAITES-LA"; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 15000); }
 function carreVert(t){ return '<div style="margin:18vh 0 0;background:var(--vert);color:#000000;padding:56px 20px;text-align:center;font-size:17px;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;font-weight:500">'+esc(t)+'</div>'; }
