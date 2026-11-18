@@ -2923,7 +2923,7 @@ function rencontre(){
     function listeRole(id, titre, gens){ return gens.length ? '<select class="champ" id="'+id+'" style="flex:1;min-width:0"><option value="">'+titre+'</option>'+gens.map(function(x){ return '<option value="'+esc(x.c)+'">'+esc(x.nom)+'</option>'; }).join("")+'</select>' : ""; }
     var qui = avecRole ? '<div style="display:flex;gap:12px">'+listeRole("pg", "Gestionnaires", r.responsables.filter(function(x){ return x.role !== "direction"; }))+listeRole("pd", "Direction", r.responsables.filter(function(x){ return x.role === "direction"; }))+'</div>' : pastilles("pr", r.responsables, "resp", function(x){ return x.c; });
     var mesR = (r.mes_demandes || []).map(function(x){
-      var etatP = x.etat === "planifiee", p = (x.date || "").split("-"), jr = p.length === 3 ? JOURS_COURTS_E[new Date(+p[0], +p[1]-1, +p[2]).getDay()]+" "+(+p[2])+" "+MOIS_LONGS[+p[1]-1].slice(0, 4)+"." : "";
+      var etatP = x.etat === "planifiee", p = (x.date || "").split("-"), jr = p.length === 3 ? JOURS_COURTS_E[new Date(+p[0], +p[1]-1, +p[2]).getDay()]+" "+(+p[2])+" "+(function(m){ return m.length > 4 ? m.slice(0, 3)+"." : m; })(MOIS_LONGS[+p[1]-1]) : "";
       return '<div class="lcol"><span>'+(etatP ? esc(jr)+'<br><b>'+esc((x.heure || "").replace(/^0/, "").replace(":00", " h"))+'</b>' : "Demandée")+'</span><span>'+esc(x.sujet || "")+(x.avec ? '<small>avec '+esc(x.avec)+'</small>' : "")+'</span><span>'+(etatP ? "Planifiée" : "En attente")+'</span></div>';
     }).join("");
     el.innerHTML = (mesR ? '<div class="sect"><span>Mes rencontres</span></div>'+mesR : "")+'<div class="etiq">▪ AVEC QUI</div>'+qui+
