@@ -804,7 +804,7 @@ function detail(id){
       var d = q.date, h = q.heure;
       var bt = this; bt.disabled = true; dire("▪ ENVOI…");
       appelService({action:"rencontre_planifier", session:sessionGardee(), id:String(id).replace(/~r$/, ""), date:d, heure:h}).then(function(r){
-        if(r && r.ok){ dire("▪ RENCONTRE PLANIFIÉE · L'EMPLOYÉ EST AVISÉ"); try { dhr.ajouter("Rencontre" + (m.de ? " · " + m.de : ""), d, h, 30); } catch(e){} }
+        if(r && r.ok){ dire("▪ RENCONTRE PLANIFIÉE · L'EMPLOYÉ EST AVISÉ"); confirmationPleine("Rencontre planifiée", "Employé avisé de la réunion."); try { dhr.ajouter("Rencontre" + (m.de ? " · " + m.de : ""), d, h, 30); } catch(e){} }
         else { bt.disabled = false; dire("▪ NON PLANIFIÉE · "+((r && r.erreur) || "RÉESSAYEZ")); }
       }).catch(function(){ bt.disabled = false; dire("▪ NON PLANIFIÉE · RÉSEAU"); });
     };
