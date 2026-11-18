@@ -2927,7 +2927,9 @@ function rencontre(){
     if(avecRole){ var sg = document.getElementById("pg"), sd = document.getElementById("pd"); [[sg, sd], [sd, sg]].forEach(function(p){ if(p[0]) p[0].onchange = function(){ choix.resp = p[0].value; if(p[1]) p[1].value = ""; }; }); }
     var etat = document.getElementById("retat");
     function dire(t){ etat.style.display = "block"; etat.textContent = t; }
+    if(VUE.on){ var rb = document.getElementById("renv"); rb.disabled = true; dire("▪ VUE D’UN EMPLOYÉ · LECTURE SEULE · L’ENVOI EST DÉSACTIVÉ"); }   // Direction qui regarde comme un employé: aucune demande envoyée en son nom
     document.getElementById("renv").onclick = function(){
+      if(VUE.on){ dire("▪ VUE D’UN EMPLOYÉ · LECTURE SEULE · L’ENVOI EST DÉSACTIVÉ"); return; }
       if(!choix.resp){ dire("▪ CHOISISSEZ UNE PERSONNE"); return; }
       if(!choix.sujet){ dire("▪ CHOISISSEZ UN SUJET"); return; }
       var bt = this; bt.disabled = true; dire("▪ ENVOI…");
