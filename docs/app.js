@@ -916,9 +916,30 @@ var ORGANIGRAMME = '<div class="org"><div class="orp">Présidence</div>' +
   '</div>' +
   '<div class="olg">Autres directions</div><div class="og2"><div class="ogr"><div class="ogt">Développement et expérience client</div><div class="oc on"><i>Équipe</i>administrative</div></div>' +
   '<div class="ogr"><div class="ogt">Finances et comptabilité</div></div></div></div>';
+// Mode application: un sous-titre (n > 1) suivi de paragraphes devient une fiche: phrase d'ouverture, rubriques courtes (Gestion et soutien, Adresse IP…) et détails.
+var FICHE_RUB = /^(Gestion et soutien|Adresse IP|Adresse|Port|Responsable|Fournisseur|Accès|Code|Rôle|Hébergement|Lien|Relève|État)\s*:\s*(.+)$/i;
+function fichesDe(blocs){
+  var out = [], i = 0;
+  while(i < blocs.length){
+    var b = blocs[i];
+    if(b.t === "h" && b.n > 1){
+      var ps = [], j = i + 1;
+      while(j < blocs.length && blocs[j].t === "p"){ ps.push(blocs[j].v); j++; }
+      if(ps.length){
+        var ph = String(ps.join(" ")).split(/(?<=[.!?])\s+(?=[A-ZÀ-ÝÉ«])/), ouv = ph.shift() || "", rub = [], det = [];
+        ph.forEach(function(x){ var m = FICHE_RUB.exec(String(x).replace(/[.]\s*$/, "")); if(m) rub.push([m[1], m[2]]); else det.push(x); });
+        out.push({t:"fiche", titre:b.v, ouv:ouv, rub:rub, det:det}); i = j; continue;
+      }
+    }
+    out.push(b); i++;
+  }
+  return out;
+}
 function blocsHtml(blocs, fiches){
   var nImg = 0;   // les plans d'incendie sont des images de l'application (plans/plan1.png…), dans l'ordre du document
+  if(fiches) blocs = fichesDe(blocs);
   return blocs.map(function(b){
+    if(b.t === "fiche") return '<div class="txf"><b>'+numTitre(b.titre)+'</b>'+(b.ouv ? '<p class="txo">'+esc(b.ouv)+'</p>' : "")+b.rub.map(function(r){ return '<div><span>'+esc(r[0])+'</span>'+esc(r[1])+'</div>'; }).join("")+b.det.map(function(x){ return '<p class="txd">'+esc(x)+'</p>'; }).join("")+'</div>';
     if(b.t === "h" && b.n > 1) return '<h3 class="txh" style="font-size:1em;margin:18px 0 6px">'+numTitre(b.v)+'</h3>';   // sous-titre (documents de Contrôle)
     if(b.t === "h") return '<h2 class="txh">'+numTitre(b.v)+'</h2>';
     if(b.t === "s") return '<div class="txs">'+esc(b.v)+'</div>';
