@@ -918,18 +918,32 @@ var ORGANIGRAMME = '<div class="org"><div class="orp">Présidence</div>' +
   '<div class="ogr"><div class="ogt">Finances et comptabilité</div></div></div></div>';
 // Mode application: un sous-titre (n > 1) suivi de paragraphes devient une fiche: phrase d'ouverture, rubriques courtes (Gestion et soutien, Adresse IP…) et détails.
 var FICHE_RUB = /^(Gestion et soutien|Adresse IP|Adresse|Port|Responsable|Fournisseur|Accès|Code|Rôle|Hébergement|Lien|Relève|État)\s*:\s*(.+)$/i;
+var FICHE_LIB = /^([^:.«»]{2,42}?)\s*:\s*(.+)$/;   // « Libellé : valeur » (listes)
+function fichesPhrases(t){ return String(t).split(/(?<=[.!?])\s+(?=[A-ZÀ-ÝÉ«])/); }
 function fichesDe(blocs){
   var out = [], i = 0;
   while(i < blocs.length){
     var b = blocs[i];
     if(b.t === "h" && b.n > 1){
-      var ps = [], j = i + 1;
-      while(j < blocs.length && blocs[j].t === "p"){ ps.push(blocs[j].v); j++; }
-      if(ps.length){
-        var ph = String(ps.join(" ")).split(/(?<=[.!?])\s+(?=[A-ZÀ-ÝÉ«])/), ouv = ph.shift() || "", rub = [], det = [];
-        ph.forEach(function(x){ var m = FICHE_RUB.exec(String(x).replace(/[.]\s*$/, "")); if(m) rub.push([m[1], m[2]]); else det.push(x); });
+      var ph = [], rub = [], det = [], j = i + 1, ouv = "", brut = [];
+      while(j < blocs.length && (blocs[j].t === "p" || blocs[j].t === "li" || blocs[j].t === "ol")){
+        var x = blocs[j];
+        if(x.t === "p") ph = ph.concat(fichesPhrases(x.v)); else x.v.forEach(function(it){ brut.push(String(it)); });
+        j++;
+      }
+      if(ph.length || brut.length){
+        ouv = ph.length ? ph.shift() : "";
+        ph.forEach(function(p){ var m = FICHE_RUB.exec(String(p).replace(/[.]\s*$/, "")); if(m) rub.push([m[1], m[2]]); else det.push(p); });
+        brut.forEach(function(it){ var m = FICHE_LIB.exec(it); if(m) rub.push([m[1], m[2]]); else det.push(it); });
         out.push({t:"fiche", titre:b.v, ouv:ouv, rub:rub, det:det}); i = j; continue;
       }
+    }
+    if(b.t === "li" || b.t === "ol"){   // liste hors sous-titre: chaque point « Libellé : valeur » devient une fiche courte
+      var lib = b.v.filter(function(it){ return FICHE_LIB.test(String(it)); }).length;
+      if(lib >= Math.ceil(b.v.length / 2)){ out.push({t:"fiche", titre:"", ouv:"", rub:b.v.map(function(it){ var m = FICHE_LIB.exec(String(it)); return m ? [m[1], m[2]] : ["", it]; }), det:[]}); i++; continue; }
+    }
+    if(b.t === "p" && String(b.v).length > 220){   // long paragraphe: une phrase par ligne
+      fichesPhrases(b.v).forEach(function(p){ out.push({t:"p", v:p}); }); i++; continue;
     }
     out.push(b); i++;
   }
@@ -939,7 +953,7 @@ function blocsHtml(blocs, fiches){
   var nImg = 0;   // les plans d'incendie sont des images de l'application (plans/plan1.png…), dans l'ordre du document
   if(fiches) blocs = fichesDe(blocs);
   return blocs.map(function(b){
-    if(b.t === "fiche") return '<div class="txf"><b>'+numTitre(b.titre)+'</b>'+(b.ouv ? '<p class="txo">'+esc(b.ouv)+'</p>' : "")+b.rub.map(function(r){ return '<div><span>'+esc(r[0])+'</span>'+esc(r[1])+'</div>'; }).join("")+b.det.map(function(x){ return '<p class="txd">'+esc(x)+'</p>'; }).join("")+'</div>';
+    if(b.t === "fiche") return '<div class="txf">'+(b.titre ? '<b>'+numTitre(b.titre)+'</b>' : "")+(b.ouv ? '<p class="txo">'+esc(b.ouv)+'</p>' : "")+b.rub.map(function(r){ return '<div>'+(r[0] ? '<span>'+esc(r[0])+'</span>' : '')+esc(String(r[1]).charAt(0).toUpperCase()+String(r[1]).slice(1))+'</div>'; }).join("")+b.det.map(function(x){ return '<p class="txd">'+esc(x)+'</p>'; }).join("")+'</div>';
     if(b.t === "h" && b.n > 1) return '<h3 class="txh" style="font-size:1em;margin:18px 0 6px">'+numTitre(b.v)+'</h3>';   // sous-titre (documents de Contrôle)
     if(b.t === "h") return '<h2 class="txh">'+numTitre(b.v)+'</h2>';
     if(b.t === "s") return '<div class="txs">'+esc(b.v)+'</div>';
