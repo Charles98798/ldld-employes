@@ -804,7 +804,7 @@ function detail(id){
       var d = q.date, h = q.heure;
       var bt = this; bt.disabled = true; dire("▪ ENVOI…");
       appelService({action:"rencontre_planifier", session:sessionGardee(), id:String(id).replace(/~r$/, ""), date:d, heure:h}).then(function(r){
-        if(r && r.ok){ dire("▪ RENCONTRE PLANIFIÉE · L'EMPLOYÉ EST AVISÉ"); }
+        if(r && r.ok){ dire("▪ RENCONTRE PLANIFIÉE · L'EMPLOYÉ EST AVISÉ"); try { dhr.ajouter("Rencontre" + (m.de ? " · " + m.de : ""), d, h, 30); } catch(e){} }
         else { bt.disabled = false; dire("▪ NON PLANIFIÉE · "+((r && r.erreur) || "RÉESSAYEZ")); }
       }).catch(function(){ bt.disabled = false; dire("▪ NON PLANIFIÉE · RÉSEAU"); });
     };
@@ -2369,7 +2369,14 @@ function dateHeure(opts, surChangement){
     monter: function(zone){ S.zone = zone; rendre(); if(!DH_CACHE.agendas || !DH_CACHE.conges) chargerCaches(function(){ rendre(); }); charger(); },
     lire: function(){ return S.jour && S.heure ? {date: S.jour, heure: pad2(S.heure.split(":")[0])+":"+pad2(S.heure.split(":")[1]), agenda: (S.agCreer || S.agenda), conge: !!conge(S.jour)} : null; },
     valider: function(){ if(S.jour && S.heure) return true; S.err = true; rendre(); return false; },
-    confirme: function(v){ if(v === undefined) return S.confirme; S.confirme = v; }
+    confirme: function(v){ if(v === undefined) return S.confirme; S.confirme = v; },
+    // Après une planification: la rencontre apparaît tout de suite dans la case, puis la grille est relue depuis l'agenda.
+    ajouter: function(titre, jour, heure, minutes){
+      var p = jour.split("-"), h = heure.split(":"), d0 = new Date(+p[0], +p[1]-1, +p[2], +h[0], +h[1] || 0), d1 = new Date(d0.getTime() + (minutes || 30)*60000);
+      S.evs = (S.evs || []).concat([{id: "nouveau-"+d0.getTime(), titre: titre, debut: isoDe(d0)+"T"+pad2(d0.getHours())+":"+pad2(d0.getMinutes())+":00", fin: isoDe(d1)+"T"+pad2(d1.getHours())+":"+pad2(d1.getMinutes())+":00", ag: S.agenda}]);
+      rendre();
+      setTimeout(function(){ try { charger(); } catch(e){} }, 2500);
+    }
   };
 }
 function chargerCaches(fin){
