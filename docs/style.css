@@ -1448,3 +1448,5 @@ select:not(.act){width:100%;box-sizing:border-box}
 .txf span{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6E6350}
 .txf .txo{margin:0 0 8px;line-height:1.5}
 .txf .txd{margin:8px 0 0;font-size:13px;color:#6E6350;line-height:1.5;overflow-wrap:anywhere}
+/* Saisie papier (Direction): « Autoévaluation non remplie » devient un bouton, même apparence que l'étiquette */
+button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}

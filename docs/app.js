@@ -1189,7 +1189,7 @@ function aeRythmeHtml(d){
   });
   return h;
 }
-function aeAfficher(d){
+function aeAfficher(d, papier){   // papier = {id, nom} : saisie par la Direction du papier d'un employé (service ae_papier_enregistrer); absent = autoévaluation de l'employé lui-même
   var vals = {}, page = 0, occupe = false;
   d.champs.forEach(function(f){ vals[f.cell] = f.value; });
   var zone = document.getElementById("ae");
@@ -1229,9 +1229,9 @@ function aeAfficher(d){
   function toutValide(){ var m = d.champs.filter(function(f){ return f.required && manque(f); })[0]; if(m){ dire("▪ COMPLÉTEZ LES NOTES DE COMPÉTENCES ET DE VALEURS AVANT DE TERMINER"); return false; } return true; }
   function enregistrer(terminer, suite){
     if(occupe) return; occupe = true; dire("▪ ENREGISTREMENT…");
-    appelService({action:"ae_enregistrer", session:sessionGardee(), rencontre:d.rencontre, revision:d.revision, terminer:terminer, valeurs:vals}).then(function(r){
+    appelService(papier ? {action:"ae_papier_enregistrer", session:sessionGardee(), id:papier.id, rencontre:d.rencontre, revision:d.revision, terminer:terminer, valeurs:vals} : {action:"ae_enregistrer", session:sessionGardee(), rencontre:d.rencontre, revision:d.revision, terminer:terminer, valeurs:vals}).then(function(r){
       occupe = false;
-      if(r && r.ok){ d.revision = r.revision; precharger(); if(r.terminee){ d.terminee = true; zone.innerHTML = '<div class="bandeau">▪ MERCI POUR VOTRE AUTOÉVALUATION</div><p class="aide">Vos réponses sont enregistrées pour cette rencontre. Elles prépareront notre discussion.</p>'; } else { dire("▪ RÉPONSES ENREGISTRÉES"); if(suite) suite(); } }
+      if(r && r.ok){ d.revision = r.revision; precharger(); if(r.terminee){ d.terminee = true; zone.innerHTML = papier ? '<div class="bandeau">▪ AUTOÉVALUATION TRANSCRITE · ENREGISTRÉE</div><p class="aide">Les réponses de '+esc(papier.nom)+' sont enregistrées pour cette rencontre.</p>' : '<div class="bandeau">▪ MERCI POUR VOTRE AUTOÉVALUATION</div><p class="aide">Vos réponses sont enregistrées pour cette rencontre. Elles prépareront notre discussion.</p>'; } else { dire("▪ RÉPONSES ENREGISTRÉES"); if(suite) suite(); } }
       else dire("▪ NON ENREGISTRÉ · "+((r && r.erreur) || "RÉESSAYEZ"));
     }).catch(function(){ occupe = false; dire("▪ NON ENREGISTRÉ · RÉSEAU. VOS RÉPONSES RESTENT À L'ÉCRAN"); });
   }

@@ -45,7 +45,7 @@ function aepPlanification(){
   }
   function prochains(L){
     var t = auj(), f = new Date(); f.setDate(f.getDate() + 14); var fin = f.getFullYear() + "-" + ("0" + (f.getMonth() + 1)).slice(-2) + "-" + ("0" + f.getDate()).slice(-2), v = [];
-    L.forEach(function(x){ [[1, x.d1, x.h1, x.a1], [2, x.d2, x.h2, x.a2]].forEach(function(q){ if(q[1] && q[1] >= t && q[1] <= fin) v.push({j: q[1], h: q[2], nom: x.nom, num: q[0], ok: q[3] === true, connu: donnees.autoeval_ok !== false && q[3] !== undefined && q[3] !== null}); }); });
+    L.forEach(function(x){ [[1, x.d1, x.h1, x.a1], [2, x.d2, x.h2, x.a2]].forEach(function(q){ if(q[1] && q[1] >= t && q[1] <= fin) v.push({j: q[1], h: q[2], nom: x.nom, id: x.id, num: q[0], ok: q[3] === true, connu: donnees.autoeval_ok !== false && q[3] !== undefined && q[3] !== null}); }); });
     v.sort(function(a, b){ return a.j < b.j ? -1 : a.j > b.j ? 1 : (a.h || "") < (b.h || "") ? -1 : (a.h || "") > (b.h || "") ? 1 : a.nom.localeCompare(b.nom, "fr"); });
     var ok = v.filter(function(x){ return x.ok; }).length, tousConnus = v.length && v.every(function(x){ return x.connu; }), h = '<div class="aepsec">14 prochains jours</div>';
     if(!v.length) return h + '<div class="aevide">Aucune rencontre dans les 14 prochains jours.</div>';
@@ -53,13 +53,14 @@ function aepPlanification(){
     var c = "";
     v.forEach(function(x){
       if(x.j !== c){ c = x.j; var q = c.split("-"); h += '<div class="emois">' + esc(JOURS_COURTS_E[new Date(+q[0], +q[1] - 1, +q[2]).getDay()] + " " + (+q[2]) + " " + MOIS_COURTS_E[+q[1] - 1]) + '</div>'; }
-      h += '<div class="aepl"><span class="aepn">' + esc(x.nom) + '<small>' + esc((aepHeure(x.h) ? aepHeure(x.h) + ' · ' : '') + 'Rencontre ' + x.num) + '</small></span>' + (x.connu ? '<span class="aere' + (x.ok ? ' ok' : '') + '">Autoévaluation ' + (x.ok ? 'remplie' : 'non remplie') + '</span>' : '') + '</div>';
+      h += '<div class="aepl"><span class="aepn">' + esc(x.nom) + '<small>' + esc((aepHeure(x.h) ? aepHeure(x.h) + ' · ' : '') + 'Rencontre ' + x.num) + '</small></span>' + (x.connu ? (!x.ok && MOI && MOI.role === "direction" && x.id ? '<button type="button" class="aere aeresai" data-id="' + esc(x.id) + '" data-n="' + x.num + '" data-nom="' + esc(x.nom) + '" data-j="' + esc(x.j) + '">Autoévaluation non remplie</button>' : '<span class="aere' + (x.ok ? ' ok' : '') + '">Autoévaluation ' + (x.ok ? 'remplie' : 'non remplie') + '</span>') : '') + '</div>';
     });
     return h;
   }
   function afficher(){
     var z = document.getElementById("aepz"); if(!z || !donnees) return;
     var L = liste(); document.getElementById("aepp").innerHTML = prochains(L);
+    Array.prototype.forEach.call(document.querySelectorAll("#aepp button.aeresai"), function(b){ b.onclick = function(){ aePapier(b.getAttribute("data-id"), b.getAttribute("data-nom"), +b.getAttribute("data-n"), b.getAttribute("data-j")); }; });
     if(!L.length){ z.innerHTML = '<div class="aevide">Aucun employé dans cette liste.</div>'; return; }
     function ligne(x){
       var n = x.d1 && x.d2 ? "2" : x.d1 ? "1" : "0";
@@ -204,3 +205,15 @@ function aerBientot(){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
 }
 
+
+// ---- Saisie par la Direction de l'autoévaluation papier d'un employé (Service: ae_papier_lire / ae_papier_enregistrer, Direction seulement) ----
+// Même formulaire en 8 étapes que celui de l'employé; la mention « transcrite du papier par … le … » est gardée dans la fiche par le Service.
+function aePapier(id, nom, rencontre, date){
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Autoévaluation</h1><div class="etiq">▪ ' + (date ? 'RENCONTRE DU ' + esc(aeDateTxt(date)).toUpperCase() + ' · ' : '') + esc(nom).toUpperCase() + '</div><div class="bandeau">▪ TRANSCRITE DU PAPIER · SAISIE PAR LA DIRECTION</div><div id="ae"></div></div>';
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); aepPlanification(); };
+  appelService({action: "ae_papier_lire", session: sessionGardee(), id: id, rencontre: rencontre}).then(function(r){
+    if(!r || !r.ok) throw 0;
+    if(r.transcrite){ var b = document.querySelector(".page .bandeau"); if(b) b.textContent = "▪ " + String(r.transcrite).toUpperCase(); }
+    aeAfficher(r, {id: id, nom: nom});
+  }).catch(function(){ document.getElementById("ae").innerHTML = '<div class="bandeau">▪ FICHE INDISPONIBLE · RÉESSAYEZ</div>'; });
+}
