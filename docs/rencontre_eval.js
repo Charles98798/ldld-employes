@@ -286,14 +286,14 @@ function revChoix(liste, ouvrir, annee, evaluateur){
   var sel = -1, renc = 1;
   app.innerHTML = '<div class="rvacc on" id="rvacc"></div>';
   function dessiner(){
-    var ok = sel >= 0, e = ok ? liste[sel] : null, r2 = ok && e[2] && e[3], mots = ok ? e[0].trim().split(/\s+/) : [], prenom = mots.slice(0, -1).join(" ") || mots[0] || "", nom = mots.length > 1 ? mots[mots.length - 1] : "";
+    var ok = sel >= 0, e = ok ? liste[sel] : null, r2 = ok && ((e[2] && e[3]) || e[6] === 2), mots = ok ? e[0].trim().split(/\s+/) : [], prenom = mots.slice(0, -1).join(" ") || mots[0] || "", nom = mots.length > 1 ? mots[mots.length - 1] : "";
     var h = '<div class="haut"><span></span><div style="text-align:right">Appréciation<br>de la contribution<br><span style="color:#B4AB9B">' + esc(annee) + "</span></div></div>";
     if(ok) h += '<div class="centre"><div class="k1">Bienvenue à votre rencontre d’évaluation</div><div class="nom" style="--n:' + Math.max(8, (String(prenom) + " " + String(nom)).length) + '"><span>' + esc(prenom) + "</span> <span>" + esc(nom) + '</span></div><div class="mv" aria-hidden="true"><div class="b1"></div><div class="b2"></div><div class="fen"></div></div><div class="renc">Rencontre ' + renc + (evaluateur ? " avec " + esc(evaluateur.trim().split(/\s+/)[0]) : "") + '</div>' + (e[4] && e[4] !== "—" ? '<div class="rdate">' + esc(e[4]) + "</div>" : "") + "</div>";
     h += '<div class="bas"><div><div class="lab">Employé</div><select id="accEmp"' + (ok ? "" : ' class="rose"') + '><option value="" disabled' + (ok ? "" : " selected") + ">" + (liste.length ? "Choisir un employé" : "Aucune autoévaluation remplie") + "</option>" + liste.map(function(x, i){ return "<option value=\"" + i + "\"" + (ok && i === sel ? " selected" : "") + ">" + esc(x[0]) + "</option>"; }).join("") + "</select></div>";
     if(ok) h += '<div><div class="lab">Rencontre</div>' + [1, 2].filter(function(n){ return n === 1 || r2; }).map(function(n){ return '<button type="button" class="lienR' + (renc === n ? " on" : "") + '" data-accr="' + n + '">0' + n + "</button>"; }).join("&nbsp;&nbsp;&nbsp;") + "</div>";
     h += '<button type="button" class="go" id="accGo"' + (ok ? "" : " disabled") + '>Ouvrir la rencontre</button></div><div class="bl accbl"><a href="#" class="rt" id="accRet" aria-label="Retour">←</a><h1 class="ti">Rencontre d’évaluation</h1></div>';
     var a = document.getElementById("rvacc"); a.innerHTML = h;
-    document.getElementById("accEmp").onchange = function(){ var v = document.getElementById("accEmp").value; if(v === "") return; sel = +v; renc = 1; dessiner(); };
+    document.getElementById("accEmp").onchange = function(){ var v = document.getElementById("accEmp").value; if(v === "") return; sel = +v; renc = liste[sel][6] || 1; dessiner(); };
     Array.prototype.forEach.call(a.querySelectorAll("[data-accr]"), function(b){ b.onclick = function(){ renc = +b.getAttribute("data-accr"); dessiner(); }; });
     document.getElementById("accGo").onclick = function(){ if(sel >= 0) ouvrir(liste[sel][0], renc); };
     try { ajusterTitre(a.querySelector(".accbl h1.ti")); setTimeout(function(){ try { ajusterTitre(a.querySelector(".accbl h1.ti")); } catch(e){} }, 400); } catch(e){}
@@ -315,6 +315,18 @@ function revDemarrer(){
     var L = r && r.ok ? (r.liste || r.employes || r.donnees) : null;
     if(!L || !L.length) return revApercu();
     var liste = L.map(function(e){ return [e.nom, e.categorie || "", !!e.r1Faite, e.r2Prevue !== false, e.datePrevue || "—", !!e.autoevalOk]; });
+    // Même règle que Planification évaluation: rencontre dans les 14 prochains jours dont l'autoévaluation est remplie (donnée ae_planif_lire)
+    return revSvc({action: "ae_planif_lire"}).then(function(p){
+      if(!p || !p.ok || p.autoeval_ok === false || !(p.lignes || []).length) return;
+      var d = new Date(), f = new Date(); f.setDate(f.getDate() + 14);
+      var j = function(x){ return x.getFullYear() + "-" + ("0" + (x.getMonth() + 1)).slice(-2) + "-" + ("0" + x.getDate()).slice(-2); }, t = j(d), fin = j(f), m = {};
+      p.lignes.forEach(function(e){ var x = aepNormaliser(e), k = String(x.nom || "").trim().toLowerCase();
+        [[1, x.d1, e.autoeval1], [2, x.d2, e.autoeval2]].forEach(function(q){ if(q[1] && q[1] >= t && q[1] <= fin && q[2] === true && !m[k]) m[k] = q[0]; }); });
+      liste.forEach(function(e){ var n = m[String(e[0]).trim().toLowerCase()]; e[5] = !!n; if(n) e[6] = n; });
+    }).catch(function(){}).then(function(){ revMontrer(liste); });
+  }).catch(function(){ revApercu(); });
+}
+function revMontrer(liste){
     revChoix(liste, function(nom, renc){
       revSvc({action: "rencontre_eval_verrou", op: "prendre", nom: nom, rencontre: renc}).then(function(v){
         if(!v || !v.ok){ revBandeau("Rencontre déjà ouverte", (v && (v.erreur || v.message)) || "Une autre personne a la rencontre ouverte. Une seule personne à la fois. Réessaie dans quelques minutes."); return; }
@@ -327,7 +339,6 @@ function revDemarrer(){
         });
       }).catch(function(){ revBandeau("Connexion impossible", "Réessaie dans quelques instants."); });
     }, new Date().getFullYear(), "");
-  }).catch(function(){ revApercu(); });
 }
 function revApercu(){
   revChoix(REV_EMPLOYES, function(nom, renc){
