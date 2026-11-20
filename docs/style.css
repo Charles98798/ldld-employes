@@ -1406,7 +1406,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 @media (min-width:1000px){
 .rvacc .centre{left:0;right:0;top:50%;transform:translateY(-54%);text-align:center}
 .rvacc .k1{display:block;font-size:13px;letter-spacing:5px;text-transform:uppercase;color:#6E6350}
-.rvacc .nom{font-size:clamp(44px,8.4vw,124px);letter-spacing:.05em;margin:18px 0 14px}
+.rvacc .nom{font-size:clamp(30px,min(4.4vw,calc(61.5vw / var(--n,14))),124px);letter-spacing:.05em;margin:18px 0 14px}
 .rvacc .nom span{display:inline}.rvacc .nom span+span{padding-left:0}
 .rvacc .mv{display:block;height:44px;position:relative;margin:0 auto 26px;width:min(420px,80%)}
 .rvacc .b1,.rvacc .b2{position:absolute;height:18px;background:#000;width:46%}
