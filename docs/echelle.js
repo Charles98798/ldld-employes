@@ -135,7 +135,7 @@ function echLierRefs(){
   var d = ECH.d;
   d.ecarts.forEach(function(e, i){
     var el = document.getElementById("ech_ref" + i); if(!el) return;
-    el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; e.ref = echNum(el.value); var z = document.getElementById("ech_ecarts"); var pos = el.id, v = el.value; z.innerHTML = echEcarts(); echLierRefs(); var n = document.getElementById(pos); if(n){ n.focus(); try{ n.setSelectionRange(v.length, v.length); }catch(x){} } };
+    el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; e.ref = echNum(el.value); var z = document.getElementById("ech_ecarts"); var pos = el.id, v = el.value; z.innerHTML = echEcarts(); echLierRefs(); var n = document.getElementById(pos); if(n){ n.value = v; n.className = v.trim() === "" ? "vide" : ""; n.focus(); try{ n.setSelectionRange(v.length, v.length); }catch(x){} } };
     el.onchange = function(){ echSauver("ref" + i, echNum(el.value)); };
   });
 }
