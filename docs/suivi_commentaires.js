@@ -28,7 +28,7 @@ function suiviOuvrir(){
 function suiviDessiner(){
   var el = document.getElementById("sv"); if(!el) return;
   var n = SUIVI.lignes.filter(function(x){ return x.statut === "A_TRAITER"; }).length;
-  if(!SUIVI.lignes.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN COMMENTAIRE POUR L\'INSTANT</div>'; return; }
+  if(!SUIVI.lignes.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN COMMENTAIRE EN CE MOMENT</div>'; return; }
   el.innerHTML = '<div class="etq">▪ DU PLUS RÉCENT AU PLUS ANCIEN · '+SUIVI.lignes.length+' · À TRAITER '+n+'</div>' + SUIVI.lignes.map(function(x, i){
     return '<div class="carte" style="margin:10px 0;padding:12px 14px" data-i="'+i+'"><div class="etq" style="margin:0">'+esc(x.nom || "—")+' · '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
       '<div style="margin:6px 0 8px;font-size:14px;line-height:1.35">'+esc(suiviMin(x.texte))+'</div>' +
@@ -77,7 +77,7 @@ function suiviMesOuvrir(){
   appelService({action: "suivi_mes", session: sessionGardee(), lu: true}).then(function(r){
     var el = document.getElementById("sm"); if(!el) return;
     if(!r || !r.ok) throw 0;
-    if(!r.lignes.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN COMMENTAIRE POUR L\'INSTANT</div>'; return; }
+    if(!r.lignes.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN COMMENTAIRE EN CE MOMENT</div>'; return; }
     el.innerHTML = r.lignes.map(function(x){
       return '<div class="carte" style="margin:10px 0;padding:12px 14px"><div class="etq" style="margin:0">Rencontre du '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
         '<div style="margin:6px 0 8px;font-size:14px;line-height:1.35">'+esc(suiviMin(x.texte))+'</div><b class="etq" style="font-weight:600;color:#000000">'+SUIVI_EMP[x.statut]+'</b>' +
