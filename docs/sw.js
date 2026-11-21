@@ -1,9 +1,9 @@
 // Garde le «squelette» de l'application pour qu'elle s'ouvre vite et hors réseau. Les données (messages, documents) ne sont jamais gardées ici.
-var V = "ldld-app-v770";
+var V = "ldld-app-v771";
 var FICHIERS = ["./", "index.html", "style.css", "app.js", "embauche.js", "positionnement.js", "position_assurance.js", "finance.js", "production.js", "etatsfin.js", "echelle.js", "employe_actuel.js", "rencontre_dept.js", "commentaires.js", "evaluation.js", "cle_annuelle.js", "dechiffrement.js", "reunion_copie.js", "rencontre_eval.js", "portrait_original.js", "envoisalarial.js", "inventaire.js", "manifest.webmanifest", "vendor/pdf.min.js", "vendor/pdf.worker.min.js",
   "plans/plan1.png", "plans/plan2.png", "plans/plan3.png", "plans/plan_stationnement.png", "fonts/Inter.woff2",
   "assets/LDLD_logo_complet_blanc_transparent.png", "assets/LDLD_logo_complet_noir_transparent.png", "assets/LDLD_symbole_blanc_transparent.png"];
-// cache "reload": jamais une vieille copie du cache HTTP du navigateur (GitHub Pages: 10 min)
+// cache "reload" à l'installation et "no-cache" à chaque lecture: jamais une vieille copie du cache HTTP du navigateur (GitHub Pages: 10 min). Sans cela, des fichiers de versions différentes se mélangeaient et des tuiles restaient muettes.
 self.addEventListener("install", function(e){ e.waitUntil(caches.open(V).then(function(c){ return Promise.all(FICHIERS.map(function(f){ return c.add(new Request(f, {cache: "reload"})); })); }).then(function(){ return self.skipWaiting(); })); });
 self.addEventListener("activate", function(e){
   e.waitUntil(caches.keys().then(function(ks){ return Promise.all(ks.filter(function(k){ return k.indexOf("ldld-app-") === 0 && k !== V; }).map(function(k){ return caches.delete(k); })); }).then(function(){ return self.clients.claim(); }));
@@ -11,7 +11,7 @@ self.addEventListener("activate", function(e){
 self.addEventListener("fetch", function(e){
   var r = e.request;
   if(r.method !== "GET" || new URL(r.url).origin !== location.origin) return;   // le service Google n'est jamais mis en cache
-  e.respondWith(fetch(r).then(function(rep){ var cp = rep.clone(); caches.open(V).then(function(c){ c.put(r, cp); }); return rep; }).catch(function(){ return caches.match(r); }));
+  e.respondWith(fetch(r, {cache: "no-cache"}).then(function(rep){ var cp = rep.clone(); caches.open(V).then(function(c){ c.put(r, cp); }); return rep; }).catch(function(){ return caches.match(r); }));
 });
 
 // Notifications : le service envoie un signal sans contenu; on affiche un texte général (aucun détail confidentiel).
