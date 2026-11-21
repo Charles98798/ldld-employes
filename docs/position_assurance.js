@@ -34,14 +34,9 @@ function paRendu(){
   var d = PA.d, z = document.getElementById("pa_app"); if(!d || !z) return;
   var an = d.annee, h = "";
   // 1 Position
-  h += '<div class="pa-b"><button type="button" class="btn' + (PA.vue === "ass" ? "" : " sel") + '" data-pv="pos">Position ' + an + '</button><button type="button" class="btn' + (PA.vue === "ass" ? " sel" : "") + '" data-pv="ass">Assurance ' + an + '</button></div><div id="pa_v_pos"' + (PA.vue === "ass" ? ' style="display:none"' : "") + '>';
-  if(d.position.confirme) h += '<p class="pa-l">Confirmée par ' + paEsc(d.position.par) + ' · ' + paEsc(paQuand(d.position.quand)) + ' · <a href="#" id="pa_pos_mod" class="pa-mod">Modifier</a></p>';
-  else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b></p>';
-  var ot = d.otpad || {}, otOk = !!ot.confirme;
-  h += '<div class="pa-b"><button type="button" class="btn" id="pa_pos_ouvrir">Ouvrir les positions</button><button type="button" class="btn" id="pa_pos_conf"' + ((d.position.confirme || !otOk) ? " disabled" : "") + '>Confirmer la position</button></div>';
-  h += '<p class="pa-l">Échelle salariale ' + an + '\u00a0: ' + (otOk ? 'confirmée par ' + paEsc(ot.par) + ' · ' + paEsc(paQuand(ot.quand)) : '<b class="pa-rouge">à confirmer</b> (requis pour confirmer la position)') + '</p>';
+  h += paBarre("ass");
   // 2 Assurance : un montant PAR EMPLOYÉ, repris de l'an passé, à confirmer ou ajuster ("0" s'il n'y en a pas)
-  h += '</div><div id="pa_v_ass"' + (PA.vue === "ass" ? "" : ' style="display:none"') + '>';
+  h += '<div id="pa_v_ass">';
   h += '<div class="pa-lst">' + d.assurance.employes.map(function(e, i){
     if(paDirection(e)) return "";
     return '<div class="pa-e"><div class="pa-n"><span>' + paEsc(e.nom) + '</span><small>' + paEsc(e.cat) + '</small></div><div class="pa-c"><input id="pa_a' + i + '" data-id="' + paEsc(e.id) + '" inputmode="decimal" autocomplete="off" aria-label="Assurance ' + paEsc(e.nom) + '" class="' + (e.val == null ? "vide" : "") + '" value="' + paEsc(e.val == null ? "" : String(e.val).replace(".", ",")) + '"><u>$</u></div>' +
@@ -49,10 +44,7 @@ function paRendu(){
   }).join("") + '</div><div id="pa_bas"></div></div>';  h += '<p class="finnote" id="pa_etat"></p>';
   z.innerHTML = h;
   var $ = function(i){ return document.getElementById(i); };
-  Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(b){ b.onclick = function(){ PA.vue = b.getAttribute("data-pv"); Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(x){ x.className = "btn" + (x === b ? " sel" : ""); }); $("pa_v_pos").style.display = PA.vue === "ass" ? "none" : ""; $("pa_v_ass").style.display = PA.vue === "ass" ? "" : "none"; }; });
-  $("pa_pos_ouvrir").onclick = function(){ PA_RETOUR = true; posEmpOuvrir(); };
-  $("pa_pos_conf").onclick = function(){ paAction("pos_conf", null, "Position confirmée."); };
-  if($("pa_pos_mod")) $("pa_pos_mod").onclick = function(e){ e.preventDefault(); PA.enCours = false; paAppel("pos_modif").then(function(){ PA_RETOUR = true; posEmpOuvrir(); }).catch(function(x){ paEtat(null, String(x.message || x), true); }); };
+  paBarreLier(z);
   Array.prototype.forEach.call(z.querySelectorAll(".pa-c input"), function(el, i){
     el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; };
     el.onchange = function(){
@@ -78,3 +70,21 @@ function paBas(){
   document.getElementById("pa_ass_conf").onclick = function(){ paAction("ass_conf", null, "Assurance confirmée."); };
 }
 var PA_RETOUR = false;
+// Deux boutons seulement : Position (ouvre la liste des positions) et Assurance. Le bouton choisi est noir.
+function paBarre(vue){ var an = PA.d ? PA.d.annee : ""; return '<div class="pa-b"><button type="button" class="btn' + (vue === "pos" ? " sel" : "") + '" data-pv="pos">Position ' + an + '</button><button type="button" class="btn' + (vue === "ass" ? " sel" : "") + '" data-pv="ass">Assurance ' + an + '</button></div>'; }
+function paBarreLier(z){ Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(b){ b.onclick = function(){ if(b.getAttribute("data-pv") === "pos"){ PA_RETOUR = true; posEmpOuvrir(); } else paOuvrir(); }; }); }
+// Bas de la page des positions : confirmation de la position (requiert l'Échelle salariale confirmée).
+function paPosBas(){
+  var z = document.getElementById("pa_pos_bas"); if(!z) return;
+  var go = function(){
+    var d = PA.d, ot = d.otpad || {}, otOk = !!ot.confirme, h = "";
+    if(d.position.confirme) h += '<p class="pa-l">Position confirmée par ' + paEsc(d.position.par) + ' · ' + paEsc(paQuand(d.position.quand)) + ' · <a href="#" id="pa_pos_mod" class="pa-mod">Modifier</a></p>';
+    else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b></p>';
+    h += '<div class="pa-b"><button type="button" class="btn" id="pa_pos_conf"' + ((d.position.confirme || !otOk) ? " disabled" : "") + '>Confirmer la position</button></div>';
+    h += '<p class="pa-l">Échelle salariale ' + d.annee + '\u00a0: ' + (otOk ? 'confirmée par ' + paEsc(ot.par) + ' · ' + paEsc(paQuand(ot.quand)) : '<b class="pa-rouge">à confirmer</b> (requis pour confirmer la position)') + '</p><p class="finnote" id="pa_etat"></p>';
+    z.innerHTML = h;
+    var c = document.getElementById("pa_pos_conf"); if(c) c.onclick = function(){ if(PA.enCours) return; PA.enCours = true; paAppel("pos_conf").then(function(){ PA.enCours = false; paPosBas(); }).catch(function(e){ PA.enCours = false; var t = document.getElementById("pa_etat"); if(t) t.textContent = String(e.message || e); }); };
+    var m = document.getElementById("pa_pos_mod"); if(m) m.onclick = function(e){ e.preventDefault(); paAppel("pos_modif").then(function(){ paPosBas(); }).catch(function(x){ var t = document.getElementById("pa_etat"); if(t) t.textContent = String(x.message || x); }); };
+  };
+  if(PA.d) go(); else paLire().then(go).catch(function(){});
+}

@@ -3,8 +3,9 @@
 var POS_CACHE = {d: null};
 var POS_FERMER = null;
 function posEmpOuvrir(){
-  app.innerHTML = '<div class="page ppx"><a class="retour" href="#" id="retour">Retour</a><h1>Position employé</h1><div id="pp_app" class="sansemp"></div><div class="voile" id="pp_voile"></div></div>';
+  app.innerHTML = '<div class="page ppx"><a class="retour" href="#" id="retour">Retour</a><h1>Position et assurance</h1><div id="pa_barre"></div><div id="pp_app" class="sansemp"></div><div id="pa_pos_bas"></div><div class="voile" id="pp_voile"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(typeof envBarreRetirer === "function") envBarreRetirer(); if(POS_FERMER) POS_FERMER(); if(typeof PA_RETOUR!=="undefined" && PA_RETOUR){ PA_RETOUR = false; paOuvrir(); } else responsable(); };
+  if(typeof paBarre === "function"){ var pb = document.getElementById("pa_barre"); pb.innerHTML = paBarre("pos"); paBarreLier(pb); paPosBas(); }
   (function(){
 
   // Pont: les mêmes fonctions du classeur (posDonneesLDLD, posEnregistrerLDLD), appelées par le service de l'application.
