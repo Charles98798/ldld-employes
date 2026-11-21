@@ -86,6 +86,7 @@ function paPosBas(){
   var z = document.getElementById("pa_pos_bas"); if(!z) return;
   var go = function(){
     var d = PA.d, ot = d.otpad || {}, otOk = !!ot.confirme, h = "";
+    if(d.position && d.position.total != null) h += '<p class="pa-l">Positions confirmées\u00a0: ' + d.position.faits + ' sur ' + d.position.total + '</p>';
     h += '<p class="pa-l">Échelle salariale ' + d.annee + '\u00a0: ' + (otOk ? 'confirmée par ' + paEsc(ot.par) + ' · ' + paEsc(paQuand(ot.quand)) : '<b class="pa-rouge">à confirmer</b> (requis pour confirmer les positions)') + '</p><p class="finnote" id="pa_etat"></p>';
     z.innerHTML = h;
   };
