@@ -53,7 +53,7 @@ function echEcarts(){
   d.ecarts.forEach(function(e, i){
     var med = echArr(e.maxAvant*(1+t)*e.posMediane, 2), ref = e.ref != null ? e.ref : e.refPasse, ec = ref ? (med / ref - 1) * 100 : null;
     h += '<div class="lab">' + echEsc(e.nom) + '</div><div class="tr"><span>Médiane de l’échelle</span><b>' + echFr(med, 2) + ' $</b></div>' +
-      '<div class="tr"><span>Référence (Guichet-Emplois)' + (e.refPasse != null ? '<small class="ech-prec">Montant précédent : ' + echFr(e.refPasse, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + ' $</small>' : '') + '</span>' + echCase("ech_ref" + i, e.ref, "$") + '</div>' +
+      '<div class="tr"><span>Référence (Guichet-Emplois Canada/Montréal)' + (e.refPasse != null ? '<small class="ech-prec">Montant précédent : ' + echFr(e.refPasse, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + ' $</small>' : '') + '</span>' + echCase("ech_ref" + i, e.ref, "$") + '</div>' +
       '<div class="tr"><span>Écart</span><b>' + (ec == null ? "—" : (ec >= 0 ? "+ " : "− ") + echFr(Math.abs(ec), 0) + " %") + '</b></div>';
   });
   return h;
