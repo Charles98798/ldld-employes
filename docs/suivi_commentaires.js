@@ -72,7 +72,7 @@ function suiviEnvoyer(i, statut, action, echeance, reponse){
 }
 // Vue employé: statut du commentaire et réponse de la Direction, sans nom, sans courriel.
 function suiviMesOuvrir(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi de mes commentaires et changements</h1><div id="sm"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes commentaires et changements</h1><div id="sm"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   appelService({action: "suivi_mes", session: sessionGardee(), lu: true}).then(function(r){
     var el = document.getElementById("sm"); if(!el) return;
