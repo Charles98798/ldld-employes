@@ -210,9 +210,9 @@ function revOuvrir(D, acces){
       if(N && N.ok && !Number(N.n6)) return '<p class="note">Aucune non-conformité signalée au cours des 6 derniers mois. Félicitations!</p>';
       if(!N || !N.ok) return '<p class="note">Les non-conformités ne sont pas disponibles' + (N && N.raison ? " : " + esc(N.raison) : "") + ".</p>";
       // Même courbe et même liste en colonnes (Date | Cas | Étape) que la Réunion de production, pour cet employé seulement.
-      var serie = (N.mois || []).map(function(m){ return {m: m.label, v: m.n}; }), lignes = (N.detail || []).slice(0, 6).map(function(d){ var m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; }; return [d.d, m(d.cat), d.dos, m(d.etape), d.type, m(d.com)]; });
+      var serie = (N.mois || []).map(function(m){ return {m: m.label, v: m.n}; }), lignes = (N.detail || []).slice(0, 6).map(function(d){ var m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; }; return [d.d, m(d.cat), d.dos, m(d.etape), m(d.type), m(d.com)]; });
       var courbe = typeof rdCourbe === "function" ? rdCourbe(serie) : "";
-      var liste = typeof rdListeDates === "function" && typeof rdLignesCol === "function" ? (lignes.length ? rdListeDates(rdLignesCol("nc", lignes)) : '<div class="nc-plus">Aucune non-conformité sur les 6 derniers mois.</div>') : "";
+      var liste = typeof rdIsoDate === "function" ? (lignes.length ? ncTable(lignes) : '<div class="nc-plus">Aucune non-conformité sur les 6 derniers mois.</div>') : "";
       return '<div class="nc"><div class="nc-k"><div class="carte"><div class="nc-lab">6 derniers mois</div><div class="grand">' + esc(N.n6) + '</div></div><div class="carte"><div class="nc-lab">12 derniers mois</div><div class="grand">' + esc(N.n12) + '</div></div><div class="carte"><div class="nc-lab">Type le plus fréquent</div><div class="grand t">' + esc(N.typeTop || "—") + '</div></div></div><div class="nc-ch"><div class="nc-lab">Non-conformités par mois</div>' + courbe + '</div><div class="nc-det"><div class="bloc-lab">Détail des 6 derniers mois</div>' + liste + ((N.detail || []).length > 6 ? '<div class="nc-plus">+ ' + ((N.detail || []).length - 6) + " autres non-conformités sur les 6 derniers mois</div>" : "") + "</div></div>";
     },
     8: function(){
@@ -309,6 +309,13 @@ function revOuvrir(D, acces){
     document.getElementById("revoui").onclick = function(){ fermerBareme(); terminer(); };
   }
   // Oui: l'écran se ferme tout de suite; les dernières saisies partent en arrière-plan, puis la rencontre est libérée.
+  // Détail des non-conformités: Date | Étape | Travail (colonnes propres à la rencontre; la Réunion garde la sienne).
+  function ncTable(L){
+    var gr = "display:grid;grid-template-columns:110px 220px 1fr;gap:0 12px;", E = esc, m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; };
+    var h = '<div style="' + gr + 'margin-top:20px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>Étape</span><span>Travail</span></div>';
+    return h + L.map(function(l){ var tr = [l[2], l[1]].filter(Boolean).join(" · "), det = [l[4], l[5]].filter(Boolean).join(" · ");
+      return '<div style="' + gr + 'font-size:13px;margin-top:14px"><span>' + E(rdIsoDate(l[0])) + "</span><span>" + E(l[3] || "") + "</span><span>" + E(tr) + (det ? '<div style="color:#6E6350">' + E(det) + "</div>" : "") + "</span></div>"; }).join("");
+  }
   function terminer(){
     removeEventListener("resize", ajuster); var f = REV_FIN; REV_FIN = null; menu();
     var t = document.createElement("div"); t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;padding:12px 20px;font-size:14px;z-index:9999";
