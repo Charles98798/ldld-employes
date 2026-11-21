@@ -128,7 +128,7 @@ function paCoches(){
     Object.keys(ok).forEach(function(k){
       var a = document.querySelector('.menu a[data-k="' + k + '"] > span'); if(!a) return;
       var o = a.querySelector("b.okc"); if(o) o.remove();
-      var b = document.createElement("b"); b.className = "okc" + (ok[k] ? " on" : ""); b.textContent = ok[k] ? "\u2713" : ""; b.setAttribute("aria-label", ok[k] ? "Confirmé" : "À confirmer"); var nc = a.querySelector("b.nc"); if(nc) a.insertBefore(b, nc); else a.appendChild(b);
+      var b = document.createElement("b"); b.className = "okc" + (ok[k] ? " on" : ""); b.textContent = ok[k] ? "\u2713" : ""; b.setAttribute("aria-label", ok[k] ? "Confirmé" : "À confirmer"); var dv = a.querySelector("i.okd"); if(dv) dv.remove(); if(k === "envoi_salarial" && ok[k] && d.envoi && d.envoi.quand){ var q = paQuand(d.envoi.quand).split(" à ")[0]; var dt = document.createElement("i"); dt.className = "okd"; dt.textContent = q; a.appendChild(dt); } var nc = a.querySelector("b.nc"); if(nc) a.insertBefore(b, nc); else a.appendChild(b);
     });
   };
   dessiner();
