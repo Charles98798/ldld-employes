@@ -51,7 +51,7 @@ function echGrille(){
 function echEcarts(){
   var d = ECH.d, t = d.taux == null ? 0 : d.taux / 100, h = "";
   d.ecarts.forEach(function(e, i){
-    var med = echArr(e.maxAvant*(1+t)*e.posMediane, 2), ref = e.ref != null ? e.ref : e.refPasse, ec = ref ? (med / ref - 1) * 100 : null;
+    var med = echArr(e.maxAvant*(1+t)*e.posMediane, 2), ref = e.ref, ec = ref ? (med / ref - 1) * 100 : null;
     h += '<div class="lab">' + echEsc(e.nom) + '</div><div class="tr"><span>Médiane de l’échelle</span><b>' + echFr(med, 2) + ' $</b></div>' +
       '<div class="tr"><span>Référence<small class="ech-prec" style="white-space:nowrap">Guichet-Emplois Canada/Montréal</small>' + (e.refPasse != null ? '<small class="ech-prec">Précédent : ' + echFr(e.refPasse, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + ' $</small>' : '') + '</span>' + echCase("ech_ref" + i, e.ref, "$") + '</div>' +
       '<div class="tr"><span>Écart</span><b>' + echEcartTxt(ref ? med / ref - 1 : null) + '</b></div>';
