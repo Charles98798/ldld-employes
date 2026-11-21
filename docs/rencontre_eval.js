@@ -80,7 +80,7 @@ function revOuvrir(D, acces){
     if(k === "xp"){ v = R[0][1]; m = R[0][2]; }
     else if(k === "comp"){ m = R[1][2] + R[2][2] + R[3][2]; v = (R[1][1] == null || R[2][1] == null || R[3][1] == null) ? null : R[1][1] + R[2][1] + R[3][1]; }
     else if(k === "val"){ v = R[4][1]; m = R[4][2]; }
-    else { if(R.length < 6) return ""; v = R[5][1]; m = R[5][2]; lib = "pondération objectifs atteints "; }
+    else { if(R.length < 6) return ""; v = R[5][1]; m = R[5][2]; lib = "pondération "; }
     var t = lib + (v == null ? "—" : Math.round(v)) + " / " + m;
     return v == null ? '<span class="rosef">' + t + "</span>" : t;
   }
