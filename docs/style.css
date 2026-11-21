@@ -1482,7 +1482,7 @@ button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}
 
 .menu a .okd{position:absolute;right:58px;top:50%;margin-top:-8px;font-style:normal;font-size:12px;line-height:16px;color:#6E6350;white-space:nowrap}
 
-.rvo .rvpo{max-width:none;margin:0}.rvo .rvpo .poir{display:grid;grid-template-columns:1.3fr 1.2fr 2.2fr 1.6fr;gap:14px;align-items:center;padding:8px 0}.rvo .rvpo .poir .v{margin:0}.rvo .rvpo .poir .dt{margin:0;padding-left:12px}.rvo .rvpo .rvob{grid-column:1/-1;display:flex;gap:6px;justify-content:flex-end}
+.rvo .rvpo{max-width:none;margin:0}.rvo .rvpo .poir{display:grid;grid-template-columns:1.15fr 1.1fr 1.9fr 1.3fr auto;gap:12px;align-items:center;padding:8px 0}.rvo .rvpo .poir .v{margin:0}.rvo .rvpo .poir .dt{margin:0;padding-left:12px}.rvo .rvpo .rvob{display:flex;gap:4px;justify-content:flex-end}.rvo .rvpo .rvob .puce{min-width:0;height:28px;padding:0 7px;font-size:10px}
 .rvo .rvnote{font-size:11px;color:#6E6350;margin-top:10px}
 @media (max-width:999px){.rvo .rvpo .poir{display:block}.rvo .rvpo .rvob{margin-top:8px;justify-content:flex-start}}
 
