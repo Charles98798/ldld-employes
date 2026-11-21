@@ -11,7 +11,7 @@ function paQuand(q){ var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(
 function paHeure(q){ var m = /[T ](\d{2}):(\d{2})/.exec(String(q || "")); return m ? (+m[1]) + " h " + m[2] : ""; }
 function paAppel(champ, valeur, id){
   var c = {action: "pa_enregistrer", champ: champ, session: sessionGardee()}; if(valeur !== undefined && valeur !== null) c.valeur = valeur; if(id) c.id = id;
-  return appelService(c).then(function(r){ if(r && r.ok){ PA.d = paNorm(r.r); return r.r; } throw new Error((r && r.erreur) || "Échec de l'enregistrement."); });
+  return Promise.race([appelService(c), new Promise(function(_, non){ setTimeout(function(){ non(new Error("Enregistrement trop long : vérifiez la connexion et réessayez.")); }, 30000); })]).then(function(r){ if(r && r.ok){ PA.d = paNorm(r.r); return r.r; } throw new Error((r && r.erreur) || "Échec de l'enregistrement."); });
 }
 function paLire(){ return Promise.race([appelService({action: "pa_donnees", session: sessionGardee()}), new Promise(function(_, non){ setTimeout(function(){ non(new Error("Lecture trop longue")); }, 25000); })]).then(function(r){ if(r && r.ok){ PA.d = paNorm(r.r); return r.r; } throw new Error((r && r.erreur) || "Échec."); }); }
 
@@ -69,7 +69,7 @@ function paBas(){
   else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b>' + (E.some(function(e){ return e.prefill; }) ? ' · montants repris de l’an passé' : '') + '</p>';
   h += '<div class="pa-b"><button type="button" class="btn" id="pa_ass_conf"' + ((A.confirme || !complet) ? " disabled" : "") + '>Confirmer l’assurance</button></div>';
   z.innerHTML = h;
-  document.getElementById("pa_ass_conf").onclick = function(){ paAction("ass_conf", null, "Assurance confirmée."); };
+  document.getElementById("pa_ass_conf").onclick = function(){ paOui("Voulez-vous confirmer les assurances\u00a0?", function(){ paAction("ass_conf", null, "Assurance confirmée."); }); };
 }
 var PA_RETOUR = false;
 // Deux boutons seulement : Position (ouvre la liste des positions) et Assurance. Le bouton choisi est noir.
@@ -89,4 +89,14 @@ function paPosBas(){
     var m = document.getElementById("pa_pos_mod"); if(m) m.onclick = function(e){ e.preventDefault(); paAppel("pos_modif").then(function(){ paPosBas(); }).catch(function(x){ var t = document.getElementById("pa_etat"); if(t) t.textContent = String(x.message || x); }); };
   };
   if(PA.d) go(); else paLire().then(go).catch(function(){});
+}
+
+// Fenêtre de confirmation maison (Oui / Non), sans boîte du navigateur.
+function paOui(question, oui){
+  var v = document.createElement("div"); v.className = "pa-voile";
+  v.innerHTML = '<div class="pa-boite" role="dialog" aria-modal="true"><p>' + paEsc(question) + '</p><div class="pa-b"><button type="button" class="btn" id="pa_non">Non</button><button type="button" class="btn sel" data-pv="oui" id="pa_oui">Oui</button></div></div>';
+  document.body.appendChild(v);
+  var f = function(){ if(v.parentNode) v.parentNode.removeChild(v); };
+  document.getElementById("pa_non").onclick = f;
+  document.getElementById("pa_oui").onclick = function(){ f(); oui(); };
 }
