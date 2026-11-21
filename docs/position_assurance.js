@@ -34,7 +34,7 @@ function paRendu(){
   var d = PA.d, z = document.getElementById("pa_app"); if(!d || !z) return;
   var an = d.annee, h = "";
   // 1 Position
-  h += '<div class="tgm"><button type="button" class="tgb' + (PA.vue === "ass" ? "" : " on") + '" data-pv="pos">Position ' + an + '</button><button type="button" class="tgb' + (PA.vue === "ass" ? " on" : "") + '" data-pv="ass">Assurance ' + an + '</button></div><div id="pa_v_pos"' + (PA.vue === "ass" ? ' style="display:none"' : "") + '>';
+  h += '<div class="pa-b"><button type="button" class="btn' + (PA.vue === "ass" ? "" : " sel") + '" data-pv="pos">Position ' + an + '</button><button type="button" class="btn' + (PA.vue === "ass" ? " sel" : "") + '" data-pv="ass">Assurance ' + an + '</button></div><div id="pa_v_pos"' + (PA.vue === "ass" ? ' style="display:none"' : "") + '>';
   if(d.position.confirme) h += '<p class="pa-l">Confirmée par ' + paEsc(d.position.par) + ' · ' + paEsc(paQuand(d.position.quand)) + ' · <a href="#" id="pa_pos_mod" class="pa-mod">Modifier</a></p>';
   else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b></p>';
   var ot = d.otpad || {}, otOk = !!ot.confirme;
@@ -49,7 +49,7 @@ function paRendu(){
   }).join("") + '</div><div id="pa_bas"></div></div>';  h += '<p class="finnote" id="pa_etat"></p>';
   z.innerHTML = h;
   var $ = function(i){ return document.getElementById(i); };
-  Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(b){ b.onclick = function(){ PA.vue = b.getAttribute("data-pv"); Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(x){ x.className = "tgb" + (x === b ? " on" : ""); }); $("pa_v_pos").style.display = PA.vue === "ass" ? "none" : ""; $("pa_v_ass").style.display = PA.vue === "ass" ? "" : "none"; }; });
+  Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(b){ b.onclick = function(){ PA.vue = b.getAttribute("data-pv"); Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(x){ x.className = "btn" + (x === b ? " sel" : ""); }); $("pa_v_pos").style.display = PA.vue === "ass" ? "none" : ""; $("pa_v_ass").style.display = PA.vue === "ass" ? "" : "none"; }; });
   $("pa_pos_ouvrir").onclick = function(){ PA_RETOUR = true; posEmpOuvrir(); };
   $("pa_pos_conf").onclick = function(){ paAction("pos_conf", null, "Position confirmée."); };
   if($("pa_pos_mod")) $("pa_pos_mod").onclick = function(e){ e.preventDefault(); PA.enCours = false; paAppel("pos_modif").then(function(){ PA_RETOUR = true; posEmpOuvrir(); }).catch(function(x){ paEtat(null, String(x.message || x), true); }); };
