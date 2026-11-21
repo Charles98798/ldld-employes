@@ -312,7 +312,7 @@ function revOuvrir(D, acces){
   // Oui: l'écran se ferme tout de suite; les dernières saisies partent en arrière-plan, puis la rencontre est libérée.
   // Détail des non-conformités: Date | Dossier | Étape | Travail | Non-conformité (colonnes propres à la rencontre; la Réunion garde la sienne).
   function ncTable(L){
-    var gr = "display:grid;grid-template-columns:100px 90px 200px 1fr 1fr;gap:0 12px;", E = esc, m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; };
+    var gr = "display:grid;grid-template-columns:100px 90px 200px 330px 1fr;gap:0 12px;", E = esc, m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; };
     var h = '<div style="' + gr + 'margin-top:20px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>Dossier</span><span>Étape</span><span>Travail</span><span>Non-conformité</span></div>';
     return h + L.map(function(l){ var tr = [l[2], l[1]].filter(Boolean).join(" · "), det = [l[4], l[5]].filter(Boolean).join(" · ");
       return '<div style="' + gr + 'font-size:13px;margin-top:14px"><span>' + E(rdIsoDate(l[0])) + "</span><span>" + E(l[6] || "—") + "</span><span>" + E(l[3] || "") + "</span><span>" + E(tr) + "</span><span>" + E(det) + "</span></div>"; }).join("");
@@ -340,6 +340,8 @@ function revOuvrir(D, acces){
     el.style.width = "1500px"; var h = el.offsetHeight, haut = el.getBoundingClientRect().top + (window.scrollY || 0), z = Math.min((innerWidth - 64) / 1500, Math.max(1, (innerHeight - haut - 8) / h));   // jamais rapetissé pour la hauteur: une page longue défile
     if(z > 1.8) z = 1.8; if(z < .5) z = 1; el.style.zoom = z; }
   // La date de la rencontre est toujours celle du jour: enregistrée une seule fois si la case est vide.
+  // Report d'une rencontre à l'autre: le pont envoie D.report (texte validé à la rencontre précédente) pour les cases encore vides; on les inscrit une fois, sans bruit.
+  if(!D.apercu && D.report && typeof D.report === "object"){ Object.keys(D.report).forEach(function(a){ if(D.report[a] && vide(a)) ecrire(a, String(D.report[a]), true); }); }
   if(!D.apercu && vide("B6")){ var q = new Date(); ecrire("B6", q.getFullYear() + "-" + ("0" + (q.getMonth() + 1)).slice(-2) + "-" + ("0" + q.getDate()).slice(-2), true); }
   squelette(); majEtape(false);
   return {aller: aller};
