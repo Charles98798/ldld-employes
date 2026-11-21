@@ -116,6 +116,27 @@ function revOuvrir(D, acces){
     var o = Math.round(x.obj * 10) / 10, c = Number(r("C29")); if(isFinite(o) && (isNaN(c) || Math.abs(c - o / 100) > 1e-9)) ecrire("C29", o / 100, true);
   }
 
+  // Mise en page du Portrait d'employé (« 05 Objectifs et charges »): valeur, cible, barre avec repère vert, pastille, détail mensuel, notes sur la période de Gestion.
+  function revPortrait(X){
+    var nb = function(v, d){ return v == null || isNaN(v) ? "—" : (Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d).replace(".", ","); };
+    var jour = function(t){ var q = String(t || "").slice(0, 10).split("-"); return q.length === 3 ? ryTxt(q.join("-")) : ""; };
+    var pct = function(v){ return v == null || isNaN(v) ? "—" : Math.round(v) + " %"; };
+    function lig(n, t, cibTxt, cib, real, realTxt, plus, det){
+      var ok = real != null && cib != null && (plus ? real >= cib - 1e-9 : real <= cib + 1e-9), mx = Math.max(cib == null ? 0 : cib, real == null ? 0 : real) || 1;
+      var ch = S.hasOwnProperty("R" + n) ? S["R" + n] : ((D.rythme && D.rythme[n - 59]) || "");
+      var btn = ["Augmentation", "Réduction", "Maintien"].map(function(o){ return '<button type="button" class="puce mot' + (ch === o ? " choisie" : "") + '" data-ry="' + n + '" data-c="' + ({Augmentation: "G", "Réduction": "I", Maintien: "K"})[o] + '" data-o="' + o + '">' + o + "</button>"; }).join("");
+      return '<div class="poir"><div class="t">' + t + '</div><div class="v"><span' + (real == null ? ' class="vide"' : "") + ">" + realTxt + "</span><em>Cible : " + cibTxt + '</em></div><div><div class="bar"><i style="width:' + (real == null ? 0 : real / mx * 100) + '%"></i>' + (cib == null ? "" : '<u style="left:' + (cib / mx * 100) + '%"></u>') + "</div>" + (real == null ? '<span class="bg nd">Pas de donnée</span>' : cib == null ? '<span class="bg nd">Cible à confirmer</span>' : '<span class="bg' + (ok ? " ok" : "") + '">' + (ok ? "Dans la cible" : "Sous la cible") + "</span>") + '</div><div class="dt">' + esc(det || "") + '</div><div class="puces rvob" data-l="Objectif">' + btn + "</div></div>";
+    }
+    var j = function(a){ return a ? [].concat(a).join(" · ") : ""; };
+    var h = '<div class="po rvpo"><div class="poind">' +
+      lig(59, esc(g("A59")), nb(X.ch, 2).replace(/,00$/, ""), X.ch, X.heures, nb(X.heures, 2), true, X.semaines != null ? X.semaines + " semaines comptées" : "") +
+      lig(60, esc(g("A60")), X.cce == null ? "—" : pct(X.cce) + " et +", X.cce, X.ce, pct(X.ce), true, X.dCE) +
+      lig(61, esc(g("A61")), "5 % et −", 5, X.cn, pct(X.cn), false, X.dCN) +
+      lig(62, esc(g("A62")), "80 % et +", 80, X.obj, pct(X.obj), true, X.dObj) + "</div>";
+    h += '<div class="poinfo rvnote">▪ Chiffres de Gestion : les 6 derniers mois travaillés (complets), qui se terminent au moins 2 semaines avant la rencontre' + (X.du && X.au ? ", du " + esc(jour(X.du)) + " au " + esc(jour(X.au)) : "") + ".<br>▪ Période exportée par Gestion LDLD" + (X.du && X.au ? " : du " + esc(jour(X.du)) + " au " + esc(jour(X.au)) : "") + ".</div></div>";
+    return h;
+  }
+
   // ---- étapes ----
   var ET = {
     1: function(){
@@ -163,6 +184,7 @@ function revOuvrir(D, acces){
       var cur = String(r("C56") || ""), iso = ryLire(cur) || ["", ""], rose = cur === "" ? " rose" : "";
       h += '<div class="rang rg2"><div class="lab">' + esc(g("A56")) + '</div><div class="ry-per">Du <span class="' + rose + '"><input type="date" data-ry="D" value="' + iso[0] + '"' + (GX ? " disabled" : "") + '></span> au <span class="' + rose + '"><input type="date" data-ry="F" value="' + iso[1] + '"' + (GX ? " disabled" : "") + "></span></div></div>";
       if(!GX) h += '<p class="note">Chiffres de Gestion indisponibles : ' + esc(D.gx ? (D.gx.raison || "?") : "aucune donnée reçue du serveur") + "</p>";
+      if(GX) h += revPortrait(GX); else {
       h += '<div class="entete-tab t6"><div>' + esc(g("A58")) + "</div><div>" + esc(g("E58") || "Réalisé") + "</div><div>" + esc(g("C58") || "Cible") + "</div><div>Réalisé vs cible</div><div>Détail</div><div>" + esc(g("H58") || "Objectifs") + "</div></div>";
       [59, 60, 61, 62].forEach(function(n, k){
         var ch = S.hasOwnProperty("R" + n) ? S["R" + n] : ((D.rythme && D.rythme[k]) || ""), det = GX ? (n === 59 ? (GX.semaines != null ? GX.semaines + " semaines comptées" : "") : n === 60 ? GX.dCE : n === 61 ? GX.dCN : GX.dObj) : "";
@@ -174,6 +196,7 @@ function revOuvrir(D, acces){
         }
         h += '<div class="ligne-tab t6"><div class="lab">' + esc(g("A" + n)) + '</div><div data-l="Réalisé">' + (n < 62 ? champ("E" + n, 1, "", !!GX, "oblig" + (vide("E" + n) ? " rose-c" : "")) : '<input type="text" value="' + (val === null ? "" : Math.round(val) + " %") + '" disabled>') + '</div><div data-l="Cible">' + esc(cibTxt) + '</div><div data-l="Réalisé vs cible">' + barre + '</div><div class="ry-d" data-l="Détail">' + esc(det) + '</div><div class="puces" data-l="Objectif">' + ["Augmentation", "Réduction", "Maintien"].map(function(o){ return '<button type="button" class="puce mot' + (ch === o ? " choisie" : "") + '" data-ry="' + n + '" data-c="' + ({Augmentation: "G", "Réduction": "I", Maintien: "K"})[o] + '" data-o="' + o + '">' + o + "</button>"; }).join("") + "</div></div>";
       });
+      }
       if(Number(r("B29"))){
         var ev = nombre("C29"), em = (D.notes && D.notes.C29) ? D.notes.C29.em : null, pv = ev === null ? "" : Math.round(ev <= 1 ? ev * 100 : ev), pe = em == null || em === "" ? "" : Math.round(em * 100), pc = "";
         if(!GX){ for(var k2 = 50; k2 <= 100; k2 += 5) pc += '<button type="button" class="puce' + (pv === k2 ? " choisie" : "") + (pe === k2 && pv !== k2 ? " employe" : "") + '" data-p="' + k2 + '">' + k2 + "</button>";
