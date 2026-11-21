@@ -309,12 +309,12 @@ function revOuvrir(D, acces){
     document.getElementById("revoui").onclick = function(){ fermerBareme(); terminer(); };
   }
   // Oui: l'écran se ferme tout de suite; les dernières saisies partent en arrière-plan, puis la rencontre est libérée.
-  // Détail des non-conformités: Date | Étape | Travail (colonnes propres à la rencontre; la Réunion garde la sienne).
+  // Détail des non-conformités: Date | Étape | Travail | Non-conformité (colonnes propres à la rencontre; la Réunion garde la sienne).
   function ncTable(L){
-    var gr = "display:grid;grid-template-columns:110px 220px 1fr;gap:0 12px;", E = esc, m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; };
-    var h = '<div style="' + gr + 'margin-top:20px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>Étape</span><span>Travail</span></div>';
+    var gr = "display:grid;grid-template-columns:100px 200px 1fr 1fr;gap:0 12px;", E = esc, m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; };
+    var h = '<div style="' + gr + 'margin-top:20px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>Étape</span><span>Travail</span><span>Non-conformité</span></div>';
     return h + L.map(function(l){ var tr = [l[2], l[1]].filter(Boolean).join(" · "), det = [l[4], l[5]].filter(Boolean).join(" · ");
-      return '<div style="' + gr + 'font-size:13px;margin-top:14px"><span>' + E(rdIsoDate(l[0])) + "</span><span>" + E(l[3] || "") + "</span><span>" + E(tr) + (det ? '<div style="color:#6E6350">' + E(det) + "</div>" : "") + "</span></div>"; }).join("");
+      return '<div style="' + gr + 'font-size:13px;margin-top:14px"><span>' + E(rdIsoDate(l[0])) + "</span><span>" + E(l[3] || "") + "</span><span>" + E(tr) + "</span><span>" + E(det) + "</span></div>"; }).join("");
   }
   function terminer(){
     removeEventListener("resize", ajuster); var f = REV_FIN; REV_FIN = null; menu();
