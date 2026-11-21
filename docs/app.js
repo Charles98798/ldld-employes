@@ -3151,3 +3151,19 @@ if("serviceWorker" in navigator){
   window.addEventListener("resize", largeur); window.addEventListener("orientationchange", function(){ setTimeout(largeur, 250); });
   if(window.visualViewport) window.visualViewport.addEventListener("resize", largeur);
 })();
+
+// Règle de l'application : dans toute case décimale, un seul séparateur (point ou virgule) est possible.
+(function(){
+  function decimale(el){ return el && el.tagName === "INPUT" && el.getAttribute("inputmode") === "decimal"; }
+  document.addEventListener("beforeinput", function(e){
+    var el = e.target; if(!decimale(el) || !e.data || !/^[.,]+$/.test(e.data)) return;
+    var v = el.value, a = el.selectionStart, b = el.selectionEnd;
+    if(a == null || /[.,]/.test(v.slice(0, a) + v.slice(b)) || e.data.length > 1){ if(e.cancelable) e.preventDefault(); }
+  }, true);
+  document.addEventListener("input", function(e){
+    var el = e.target; if(!decimale(el)) return;
+    var v = el.value, n = 0, pos = el.selectionStart;
+    var w = v.replace(/[.,]/g, function(c, i){ n++; if(n === 1) return c; if(pos != null && i < pos) pos--; return ""; });
+    if(w !== v){ el.value = w; try { el.setSelectionRange(pos, pos); } catch(x){} }
+  }, true);
+})();
