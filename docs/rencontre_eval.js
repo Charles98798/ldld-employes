@@ -37,7 +37,7 @@ function revAdresses(D){
 }
 function revOuvrir(D, acces){
   D = revAdresses(D);
-  var A = acces || revAcces, S = {}, etape = 1, file = [], enCours = false, dernier = "", fenetre = null;
+  var A = acces || revAcces, S = {}, etape = 2, file = [], enCours = false, dernier = "", fenetre = null;
   var NOTES = REV_NOTES;
   function g(a){ var v = D.g && D.g[a]; return v === undefined || v === null ? "" : String(v); }
   function r(a){ if(S.hasOwnProperty(a)) return S[a]; var v = D.r && D.r[a]; return v === undefined || v === null ? "" : v; }
@@ -221,7 +221,7 @@ function revOuvrir(D, acces){
   var vus = {};
 
   function squelette(){
-    app.innerHTML = '<div class="page sans-instant rvpage"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div class="revw rvo" id="revw"><header><div class="haut"><div class="qui"><div class="nom">' + esc(D.employe) + '</div><div class="sous">Rencontre ' + esc(D.rencontre) + " · " + esc(D.annee) + (D.categorie ? " · " + esc(D.categorie) : "") + " · Évaluateur : " + esc(D.evaluateur || "") + ' · Portail rencontre évaluation</div></div><div class="score"><div><div class="lib">Pointage indicatif</div><div class="jauge"><div id="revj"></div></div></div><div class="val" id="revv">—</div></div></div><div class="etapes" id="revp"></div></header><main id="revx"></main><footer><div class="msg" id="revs"></div><button type="button" class="rvb" id="revpre">Précédent</button><button type="button" class="rvb noir" id="revsui">Suivant</button></footer></div></div>';
+    app.innerHTML = '<div class="page sans-instant rvpage"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div class="revw rvo" id="revw"><header><div class="haut"><div class="qui"><div class="nom">' + esc(D.employe) + '</div><div class="sous">Rencontre ' + esc(D.rencontre) + " · " + esc(D.annee) + (D.categorie ? " · " + esc(D.categorie) : "") + (g("A33") ? " · " + esc(g("A33").split(" (")[0]) : "") + " · Évaluateur : " + esc(D.evaluateur || "") + ' · Portail rencontre évaluation</div></div><div class="score"><div><div class="lib">Pointage indicatif</div><div class="jauge"><div id="revj"></div></div></div><div class="val" id="revv">—</div></div></div><div class="etapes" id="revp"></div></header><main id="revx"></main><footer><div class="msg" id="revs"></div><button type="button" class="rvb" id="revpre">Précédent</button><button type="button" class="rvb noir" id="revsui">Suivant</button></footer></div></div>';
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); revFermer(); };
     document.getElementById("revpre").onclick = function(){ aller(etape - 1); };
     document.getElementById("revsui").onclick = function(){ aller(etape + 1); };
@@ -244,10 +244,10 @@ function revOuvrir(D, acces){
     addEventListener("resize", ajuster);
   }
   function pastilles(){
-    var h = ""; for(var i = 1; i <= 12; i++) h += '<button type="button" class="pastille' + (i === etape ? " active" : "") + (faite(i) ? " faite" : "") + '" data-n="' + i + '" aria-label="Étape ' + i + ", " + esc(REV_TITRES[i - 1]) + '"><span class="rond">' + i + '</span><span class="lb">' + esc(REV_TITRES[i - 1]) + "</span></button>";
+    var h = ""; for(var i = 2; i <= 12; i++) h += '<button type="button" class="pastille' + (i === etape ? " active" : "") + (faite(i) ? " faite" : "") + '" data-n="' + i + '" aria-label="Étape ' + (i - 1) + ", " + esc(REV_TITRES[i - 1]) + '"><span class="rond">' + (i - 1) + '</span><span class="lb">' + esc(REV_TITRES[i - 1]) + "</span></button>";
     document.getElementById("revp").innerHTML = h;
     var t = ptsLive().total; document.getElementById("revv").textContent = fmtScore(); document.getElementById("revj").style.width = (t == null ? 0 : Math.max(0, Math.min(100, t))) + "%";
-    document.getElementById("revpre").disabled = etape === 1; document.getElementById("revsui").disabled = etape === 12;
+    document.getElementById("revpre").disabled = etape === 2; document.getElementById("revsui").disabled = etape === 12;
   }
   var SANS_TITRE = {3: 1, 4: 1, 10: 1};   // ces étapes affichent le titre avec le bouton « Voir le barème »
   function titreEtape(){
@@ -265,7 +265,7 @@ function revOuvrir(D, acces){
     if(foc){ var q = x.querySelector('[data-a="' + foc + '"]'); if(q && q.tagName !== "BUTTON") q.focus(); }
     ajuster();
   }
-  function aller(n){ if(n < 1 || n > 12) return; vus[etape] = true; etape = n; majEtape(false); window.scrollTo(0, 0); }
+  function aller(n){ if(n < 2 || n > 12) return; vus[etape] = true; etape = n; majEtape(false); window.scrollTo(0, 0); }
   function revFermer(){ removeEventListener("resize", ajuster); fermerBareme(); if(typeof REV_FIN === "function"){ var f = REV_FIN; REV_FIN = null; f(); } menu(); }
   // Grand écran: une page par étape, mise à l'échelle pour tenir dans la fenêtre sans défilement.
   function ajuster(){ var el = document.getElementById("revw"); if(!el){ removeEventListener("resize", ajuster); return; }
