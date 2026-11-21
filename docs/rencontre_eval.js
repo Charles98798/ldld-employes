@@ -62,7 +62,7 @@ function revOuvrir(D, acces){
   }
   function champ(a, lignes, ph, lecture, cls){
     var v = r(a); cls = cls || "";
-    if(lignes > 1) return '<textarea rows="' + lignes + '" data-a="' + a + '" class="' + cls + '" placeholder="' + esc(ph || "") + '"' + (lecture ? " disabled" : "") + ">" + esc(v) + "</textarea>";
+    if(lignes > 1 || !cls) return '<textarea rows="' + lignes + '" data-a="' + a + '" class="' + cls + '" placeholder="' + esc(ph || "") + '"' + (lecture ? " disabled" : "") + ">" + esc(v) + "</textarea>";
     return '<input type="text" data-a="' + a + '" class="' + cls + '" value="' + esc(v) + '" placeholder="' + esc(ph || "") + '"' + (lecture ? " disabled" : "") + ">";
   }
   function date(a, rose){ var v = r(a); return '<span class="' + (rose && !v ? "rose" : "") + '"><input type="date" data-a="' + a + '" value="' + esc(v) + '"></span>'; }
@@ -269,6 +269,7 @@ function revOuvrir(D, acces){
       else if(b.hasAttribute("data-p")){ ecrire("C29", +b.getAttribute("data-p") / 100); majEtape(true); }
       else if(b.hasAttribute("data-n")) aller(+b.getAttribute("data-n"));
     });
+    w.addEventListener("input", function(e){ var t = e.target; if(t && t.tagName === "TEXTAREA"){ t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; ajuster(); } });
     w.addEventListener("change", function(e){
       var t = e.target; if(!t || t.disabled) return;
       if(t.hasAttribute("data-a")) ecrire(t.getAttribute("data-a"), t.value);
@@ -298,8 +299,10 @@ function revOuvrir(D, acces){
     else corps = "<h1>" + titre + "</h1>" + corps;
     x.innerHTML = corps; pastilles();
     if(foc){ var q = x.querySelector('[data-a="' + foc + '"]'); if(q && q.tagName !== "BUTTON") q.focus(); }
-    ajuster();
+    fitAll(); ajuster();
   }
+  // Aucun texte caché: tout champ texte grandit selon son contenu (plusieurs lignes au besoin).
+  function fitAll(){ var w = document.getElementById("revw"); if(!w) return; var L = w.querySelectorAll("textarea"); for(var i = 0; i < L.length; i++){ L[i].style.height = "auto"; if(L[i].scrollHeight) L[i].style.height = L[i].scrollHeight + 2 + "px"; } }
   function aller(n){ if(n < 2 || n > 12) return; vus[etape] = true; etape = n; majEtape(false); window.scrollTo(0, 0); }
   function confirmerFin(){
     if(fenetre) return;
@@ -336,8 +339,8 @@ function revOuvrir(D, acces){
   function revFermer(){ removeEventListener("resize", ajuster); fermerBareme(); if(typeof REV_FIN === "function"){ var f = REV_FIN; REV_FIN = null; f(); } menu(); }
   // Grand écran: une page par étape, mise à l'échelle pour tenir dans la fenêtre sans défilement.
   function ajuster(){ var el = document.getElementById("revw"); if(!el){ removeEventListener("resize", ajuster); return; }
-    el.style.zoom = 1; el.style.width = ""; if(innerWidth < 1000) return;
-    el.style.width = "1500px"; var h = el.offsetHeight, haut = el.getBoundingClientRect().top + (window.scrollY || 0), z = Math.min((innerWidth - 64) / 1500, Math.max(1, (innerHeight - haut - 8) / h));   // jamais rapetissé pour la hauteur: une page longue défile
+    el.style.zoom = 1; el.style.width = ""; if(innerWidth < 1000){ fitAll(); return; }
+    el.style.width = "1500px"; fitAll(); var h = el.offsetHeight, haut = el.getBoundingClientRect().top + (window.scrollY || 0), z = Math.min((innerWidth - 64) / 1500, Math.max(1, (innerHeight - haut - 8) / h));   // jamais rapetissé pour la hauteur: une page longue défile
     if(z > 1.8) z = 1.8; if(z < .5) z = 1; el.style.zoom = z; }
   // La date de la rencontre est toujours celle du jour: enregistrée une seule fois si la case est vide.
   // Report d'une rencontre à l'autre: le pont envoie D.report (texte validé à la rencontre précédente) pour les cases encore vides; on les inscrit une fois, sans bruit.

@@ -1268,6 +1268,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 .rvo .puces.rose .puce:not(.choisie){background:#fff;border-color:#fff}
 .rvo .puce:disabled{opacity:.6;cursor:default}
 .rvo textarea,.rvo input[type=text]{width:100%;box-sizing:border-box;font:inherit;font-weight:300;font-size:13px;padding:6px 8px;border:0;border-bottom:1px solid #d8d3ca;background:#f6f3ee;border-radius:0;resize:none;color:#000}
+.rvo textarea{overflow:hidden;line-height:1.35;display:block}
 .rvo textarea:focus,.rvo input[type=text]:focus{border-bottom-color:#000;outline:0}
 .rvo textarea:disabled,.rvo input[type=text]:disabled{background:#faf8f5;color:#6E6350}
 .rvo .rose input,.rvo .rose-c{background:#fff}
