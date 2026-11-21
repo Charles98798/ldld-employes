@@ -87,7 +87,7 @@ function ccPresentation(){
     if(!l || !l.length){ z.style.display = "none"; z.innerHTML = ""; return; }
     z.style.display = "";
     z.innerHTML = '<div class="rdt">05 <span>Commentaires clients</span></div><div class="rdp" style="margin-top:-6px"><small>Depuis la dernière réunion</small></div>' + l.map(function(c, i){
-      return '<div class="rdp"'+(i < l.length - 1 ? ' style="margin-bottom:18px"' : '')+'><small>'+rdE(c.date)+ccPastille(c.type)+'</small><div>'+rdPuces(c.texte)+'</div>'+ccVignettes(c.photos)+'</div>'; }).join("");
+      return '<div class="rdp" style="background:#D9D6CE;padding:14px 16px;margin:0 0 14px">'+'<small>'+rdE(c.date)+ccPastille(c.type)+'</small><div>'+rdPuces(c.texte)+'</div>'+ccVignettes(c.photos)+'</div>'; }).join("");
     ccRemplirImgs(z); ccLierVignettes(z);
     var ids = []; l.forEach(function(c){ (c.photos || []).forEach(function(p){ ids.push(p.m); }); });
     ccPhotos(ids, true, function(){ var zz = document.getElementById("rdcc"); if(zz) ccRemplirImgs(zz); });
