@@ -11,9 +11,9 @@ function paQuand(q){ var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(
 function paHeure(q){ var m = /[T ](\d{2}):(\d{2})/.exec(String(q || "")); return m ? (+m[1]) + " h " + m[2] : ""; }
 function paAppel(champ, valeur, id){
   var c = {action: "pa_enregistrer", champ: champ, session: sessionGardee()}; if(valeur !== undefined && valeur !== null) c.valeur = valeur; if(id) c.id = id;
-  return appelService(c).then(function(r){ if(r && r.ok){ PA.d = r.r; return r.r; } throw new Error((r && r.erreur) || "Échec de l'enregistrement."); });
+  return appelService(c).then(function(r){ if(r && r.ok){ PA.d = paNorm(r.r); return r.r; } throw new Error((r && r.erreur) || "Échec de l'enregistrement."); });
 }
-function paLire(){ return Promise.race([appelService({action: "pa_donnees", session: sessionGardee()}), new Promise(function(_, non){ setTimeout(function(){ non(new Error("Lecture trop longue")); }, 25000); })]).then(function(r){ if(r && r.ok){ PA.d = r.r; return r.r; } throw new Error((r && r.erreur) || "Échec."); }); }
+function paLire(){ return Promise.race([appelService({action: "pa_donnees", session: sessionGardee()}), new Promise(function(_, non){ setTimeout(function(){ non(new Error("Lecture trop longue")); }, 25000); })]).then(function(r){ if(r && r.ok){ PA.d = paNorm(r.r); return r.r; } throw new Error((r && r.erreur) || "Échec."); }); }
 
 function paOuvrir(){
   app.innerHTML = '<div class="page ppx pa"><a class="retour" href="#" id="retour">Retour</a><h1>Position et assurance</h1><div id="pa_app"><div class="att" id="pa_att"><i></i></div></div></div>';
@@ -29,6 +29,8 @@ function paAction(champ, valeur, texte){
     .catch(function(e){ PA.enCours = false; paRendu(); paEtat(null, String(e.message || e), true); });
 }
 function paMaintenantLocal(){ var d = new Date(), z = function(n){ return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + z(d.getMonth()+1) + "-" + z(d.getDate()) + "T" + z(d.getHours()) + ":" + z(d.getMinutes()); }
+// Les montants repris de l'an passé ne valent que pour 2027 (première année). Dès l'année suivante, les cases partent vides, sont obligatoires, et la confirmation reste grisée tant qu'elles ne sont pas toutes remplies.
+function paNorm(d){ if(d && d.annee !== 2027 && d.assurance && d.assurance.employes) d.assurance.employes.forEach(function(e){ if(e.prefill){ e.val = null; e.prefill = false; } }); return d; }
 function paBande(num, titre){ return '<div class="sect"><span class="num">' + num + '</span><span class="lab">' + titre + '</span></div>'; }
 function paRendu(){
   var d = PA.d, z = document.getElementById("pa_app"); if(!d || !z) return;
