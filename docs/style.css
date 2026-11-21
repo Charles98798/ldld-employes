@@ -1254,11 +1254,11 @@ select:not(.act){width:100%;box-sizing:border-box}
 .rvo .ev{padding:6px 0;font-size:14px}
 .rvo .rang{display:grid;gap:14px;align-items:center;border-bottom:1px solid #ece8e1;padding:8px 0}
 .rvo .rg2{grid-template-columns:200px 1fr}
-.rvo .rg3{grid-template-columns:240px auto 1fr}
-.rvo .rg3v{grid-template-columns:260px auto 1fr;align-items:start}
+.rvo .rg3{grid-template-columns:440px auto 1fr}
+.rvo .rg3v{grid-template-columns:440px auto 1fr;align-items:start}
 .rvo .rg3e{grid-template-columns:240px auto 1fr}
 .rvo .lab{font-size:13px;font-weight:400}
-.rvo .desc{text-align:justify;font-size:11px;color:#6E6350;font-weight:300;margin-top:2px}
+.rvo .desc{font-size:11px;color:#6E6350;font-weight:300;margin-top:2px}
 .rvo .quot{grid-column:1/-1;font-size:11px;color:#6E6350}
 .rvo .puces{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 .rvo .puce{font:inherit;font-size:12px;min-width:30px;height:30px;padding:0 6px;background:#fff;border:1px solid #d8d3ca;border-radius:0;color:#000;cursor:pointer}
