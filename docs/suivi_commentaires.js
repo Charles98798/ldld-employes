@@ -13,7 +13,11 @@ function suiviPastille(a, n){
 // Pastille de l'Accueil: nombre de commentaires « À traiter » (Direction et gestionnaires) / nombre de réponses non lues (employé)
 function suiviPastilles(){
   var a = app.querySelector('a[data-k="suivi_commentaires"]');
-  if(a) appelService({action: "suivi_compte", session: sessionGardee()}).then(function(r){ if(r && r.ok) suiviPastille(app.querySelector('a[data-k="suivi_commentaires"]'), r.a_traiter); }).catch(function(){});
+  if(a) appelService({action: "suivi_compte", session: sessionGardee()}).then(function(r){ if(!r || !r.ok) return; var t = app.querySelector('a[data-k="suivi_commentaires"]'); if(!t) return;
+    Array.prototype.forEach.call(t.querySelectorAll(".sv-nv, .sv-tot"), function(e){ e.remove(); });
+    if(r.nouveaux){ var v = document.createElement("span"); v.className = "nombre sv-nv"; v.textContent = r.nouveaux; t.appendChild(v); }   // vert: jamais vus
+    if(r.a_traiter){ var k = document.createElement("span"); k.className = "nombre sv-tot"; k.textContent = r.a_traiter; k.style.cssText = "background:#000000;color:#ffffff"; t.appendChild(k); }   // noir: total « À traiter »
+  }).catch(function(){});
   var b = app.querySelector('a[data-k="mes_commentaires"]');
   if(b) appelService({action: "suivi_mes", session: sessionGardee()}).then(function(r){ if(r && r.ok) suiviPastille(app.querySelector('a[data-k="mes_commentaires"]'), r.nouveaux); }).catch(function(){});
 }
@@ -30,7 +34,7 @@ function suiviDessiner(){
   var n = SUIVI.lignes.filter(function(x){ return x.statut === "A_TRAITER"; }).length;
   if(!SUIVI.lignes.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN COMMENTAIRE EN CE MOMENT</div>'; return; }
   el.innerHTML = '<div class="etq">▪ DU PLUS RÉCENT AU PLUS ANCIEN · '+SUIVI.lignes.length+' · À TRAITER '+n+'</div>' + SUIVI.lignes.map(function(x, i){
-    return '<div class="carte" style="margin:10px 0;padding:12px 14px" data-i="'+i+'"><div class="etq" style="margin:0">'+esc(x.nom || "—")+' · '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
+    return '<div class="carte" style="margin:10px 0;padding:12px 14px" data-i="'+i+'"><div class="etq" style="margin:0">'+(x.nouveau ? '<b class="nombre" style="margin-right:8px">Nouveau</b>' : "")+esc(x.nom || "—")+' · '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
       '<div style="margin:6px 0 8px;font-size:14px;line-height:1.35">'+esc(suiviMin(x.texte))+'</div>' +
       '<span class="lbl">En charge</span><select class="bx sv-ch" data-i="'+i+'" style="max-width:220px;margin-bottom:8px"><option value="">—</option>'+SUIVI.resp.concat(x.charge && SUIVI.resp.indexOf(x.charge) < 0 ? [x.charge] : []).map(function(n){ return '<option value="'+esc(n)+'"'+(n === x.charge ? " selected" : "")+'>'+esc(n)+'</option>'; }).join("")+'</select>' +
       '<span class="lbl">Statut</span><select class="bx sv-st" data-i="'+i+'" style="max-width:220px">'+Object.keys(SUIVI_LIB).map(function(k){ return '<option value="'+k+'"'+(k === x.statut ? " selected" : "")+'>'+SUIVI_LIB[k]+'</option>'; }).join("")+'</select>' +
