@@ -11,9 +11,11 @@ function paQuand(q){ var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(
 function paHeure(q){ var m = /[T ](\d{2}):(\d{2})/.exec(String(q || "")); return m ? (+m[1]) + " h " + m[2] : ""; }
 function paAppel(champ, valeur, id){
   var c = {action: "pa_enregistrer", champ: champ, session: sessionGardee()}; if(valeur !== undefined && valeur !== null) c.valeur = valeur; if(id) c.id = id;
-  return Promise.race([appelService(c), new Promise(function(_, non){ setTimeout(function(){ non(new Error("Enregistrement trop long : vérifiez la connexion et réessayez.")); }, 30000); })]).then(function(r){ if(r && r.ok){ PA.d = paNorm(r.r); return r.r; } throw new Error((r && r.erreur) || "Échec de l'enregistrement."); });
+  return Promise.race([appelService(c), new Promise(function(_, non){ setTimeout(function(){ non(new Error("Enregistrement trop long : vérifiez la connexion et réessayez.")); }, 30000); })]).then(function(r){ if(r && r.ok){ PA.d = paNorm(r.r); paCacheEcrire(); return r.r; } throw new Error((r && r.erreur) || "Échec de l'enregistrement."); });
 }
-function paLire(){ return Promise.race([appelService({action: "pa_donnees", session: sessionGardee()}), new Promise(function(_, non){ setTimeout(function(){ non(new Error("Lecture trop longue")); }, 25000); })]).then(function(r){ if(r && r.ok){ PA.d = paNorm(r.r); return r.r; } throw new Error((r && r.erreur) || "Échec."); }); }
+// Dernier état CONNU DU SERVEUR (jamais l'état optimiste), pour afficher les carrés de l'Accueil tout de suite.
+function paCacheEcrire(){ var d = PA.d; if(!d) return; try { localStorage.setItem("ldld-pa-coches", JSON.stringify({annee: d.annee, otpad: {confirme: !!(d.otpad && d.otpad.confirme)}, position: {confirme: !!(d.position && d.position.confirme)}, assurance: {confirme: !!(d.assurance && d.assurance.confirme)}, envoi: d.envoi ? {confirme: !!d.envoi.confirme, quand: d.envoi.quand || null} : null})); } catch(e){} }
+function paLire(){ return Promise.race([appelService({action: "pa_donnees", session: sessionGardee()}), new Promise(function(_, non){ setTimeout(function(){ non(new Error("Lecture trop longue")); }, 25000); })]).then(function(r){ if(r && r.ok){ PA.d = paNorm(r.r); paCacheEcrire(); return r.r; } throw new Error((r && r.erreur) || "Échec."); }); }
 
 function paOuvrir(){
   app.innerHTML = '<div class="page ppx pa"><a class="retour" href="#" id="retour">Retour</a><h1>Position et assurance</h1><div id="pa_app"><div class="att" id="pa_att"><i></i></div></div></div>';
@@ -111,8 +113,8 @@ function paConfirmerVite(champ, appliquer, rendu){
     paAppel(champ).then(function(){ PA.fond[champ] = false; rendu(); })
       .catch(function(e){
         if(n < 3){ setTimeout(function(){ essai(n + 1); }, 2500 * n); return; }
-        PA.fond[champ] = false;
-        paLire().then(function(){ rendu(); paEtat(null, "La confirmation n’a pas pu être enregistrée (" + String((e && e.message) || e) + "). Touchez Confirmer pour réessayer.", true); })
+        PA.fond[champ] = false; PA.d = null; try { localStorage.removeItem("ldld-pa-coches"); } catch(x){}   // on oublie l'état optimiste : le serveur a refusé
+        paLire().then(function(){ rendu(); try { paCoches(); } catch(x){} var ee = document.getElementById("ech_etat"); if(ee) ee.textContent = "Non confirmé : " + String((e && e.message) || e); paEtat(null, "La confirmation n’a pas pu être enregistrée (" + String((e && e.message) || e) + "). Touchez Confirmer pour réessayer.", true); })
           .catch(function(){ paEtat(null, "La confirmation n’a pas pu être enregistrée. Touchez Confirmer pour réessayer.", true); });
       });
   };
@@ -126,7 +128,6 @@ function paCoches(){
     var d = PA.d;
     if(!d){ try { d = JSON.parse(localStorage.getItem("ldld-pa-coches") || "null"); } catch(e){ d = null; } }
     if(!d) d = {};
-    if(PA.d){ try { localStorage.setItem("ldld-pa-coches", JSON.stringify({annee: PA.d.annee, otpad: {confirme: !!(PA.d.otpad && PA.d.otpad.confirme)}, position: {confirme: !!(PA.d.position && PA.d.position.confirme)}, assurance: {confirme: !!(PA.d.assurance && PA.d.assurance.confirme)}, envoi: PA.d.envoi ? {confirme: !!PA.d.envoi.confirme, quand: PA.d.envoi.quand || null} : null})); } catch(e){} }
     var ok = {echelle_salariale: !!(d.otpad && d.otpad.confirme), positionnement_employe: !!(d.position && d.position.confirme && d.assurance && d.assurance.confirme), envoi_salarial: !!(d.envoi && d.envoi.confirme)};
     Object.keys(ok).forEach(function(k){
       var a = document.querySelector('.menu a[data-k="' + k + '"] > span'); if(!a) return;
