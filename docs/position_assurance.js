@@ -73,12 +73,7 @@ function paBas(){
   if(A.confirme) h += '<p class="pa-l">Assurance confirmée par ' + paEsc(A.par) + ' · ' + paEsc(paQuand(A.quand)) + '</p>';
   else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b>' + (E.some(function(e){ return e.prefill; }) ? ' · montants repris de l’an passé' : '') + '</p>';
   h += '<div class="pa-b"><button type="button" class="btn" id="pa_ass_conf"' + ((A.confirme || !complet) ? " disabled" : "") + '>Confirmer l’assurance</button></div>';
-  h += paBande("3", "Envoi");
-  if(d.envoi.confirme) h += '<p class="pa-l">Envoi confirmé par ' + paEsc(d.envoi.par) + ' · ' + paEsc(paQuand(d.envoi.quand)) + '</p>';
-  else h += '<p class="pa-l">' + (d.envoi.pret ? 'Position et assurance confirmées : l’envoi peut être confirmé.' : 'Grisé tant que la position et l’assurance ne sont pas toutes deux confirmées.') + '</p>';
-  h += '<div class="pa-b"><button type="button" class="btn noir" id="pa_env_conf"' + ((d.envoi.confirme || !d.envoi.pret) ? " disabled" : "") + '>Confirmer l’envoi</button></div>';
   z.innerHTML = h;
   document.getElementById("pa_ass_conf").onclick = function(){ paAction("ass_conf", null, "Assurance confirmée."); };
-  document.getElementById("pa_env_conf").onclick = function(){ paAction("env_conf", null, "Envoi confirmé."); };
 }
 var PA_RETOUR = false;
