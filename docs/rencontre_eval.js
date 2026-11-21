@@ -319,7 +319,7 @@ function revOuvrir(D, acces){
   // Grand écran: une page par étape, mise à l'échelle pour tenir dans la fenêtre sans défilement.
   function ajuster(){ var el = document.getElementById("revw"); if(!el){ removeEventListener("resize", ajuster); return; }
     el.style.zoom = 1; el.style.width = ""; if(innerWidth < 1000) return;
-    el.style.width = "1500px"; var h = el.offsetHeight, haut = el.getBoundingClientRect().top + (window.scrollY || 0), z = Math.min((innerWidth - 64) / 1500, (innerHeight - haut - 8) / h);
+    el.style.width = "1500px"; var h = el.offsetHeight, haut = el.getBoundingClientRect().top + (window.scrollY || 0), z = Math.min((innerWidth - 64) / 1500, Math.max(1, (innerHeight - haut - 8) / h));   // jamais rapetissé pour la hauteur: une page longue défile
     if(z > 1.8) z = 1.8; if(z < .5) z = 1; el.style.zoom = z; }
   // La date de la rencontre est toujours celle du jour: enregistrée une seule fois si la case est vide.
   if(!D.apercu && vide("B6")){ var q = new Date(); ecrire("B6", q.getFullYear() + "-" + ("0" + (q.getMonth() + 1)).slice(-2) + "-" + ("0" + q.getDate()).slice(-2), true); }
