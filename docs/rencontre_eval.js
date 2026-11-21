@@ -221,13 +221,13 @@ function revOuvrir(D, acces){
       for(var row = 71; row <= 73; row++) h += '<div class="ligne-tab t3"><div class="lab">' + esc(g("A" + row)) + '</div><div data-l="' + esc(g("C70")) + '">' + date("C" + row) + '</div><div data-l="' + esc(g("E70")) + '">' + champ("E" + row, 1) + "</div></div>";
       return h;
     },
-    9: function(){ return champ("A76", 6); },
+    9: function(){ return champ("A76", 6) + encSuivi(); },
     10: function(){
       var h = '<div class="titre-b">' + btnBareme("exp") + '</div><p class="note">' + esc(g("A91")) + (D.papier === false ? "<br><b>Autoévaluation reçue en ligne : notes de l’employé modifiables (le texte que vous écrivez remplace sa réponse).</b>" : "") + "</p>";
       for(var row = 93; row <= 98; row++) h += '<div class="rang rg3e' + papier() + '"><div class="lab">' + esc(g("A" + row)) + "</div>" + puces("E" + row, 5, {na: true, rose: vide("E" + row), lecture: ro()}) + champ("G" + row, 1, "Commentaire facultatif", false) + "</div>";
       return h;
     },
-    11: function(){ return '<div class="' + papier() + '"><div class="bloc-lab">' + esc(g("A101")) + "</div>" + champ("A102", 4, "", false) + '<div class="bloc-lab" style="margin-top:12px">' + esc(g("A104")) + "</div>" + champ("A105", 4, "", false) + "</div>"; },
+    11: function(){ return '<div class="' + papier() + '"><div class="bloc-lab">' + esc(g("A101")) + "</div>" + champ("A102", 4, "", false) + '<div class="bloc-lab" style="margin-top:12px">' + esc(g("A104")) + "</div>" + champ("A105", 4, "", false) + encSuivi() + "</div>"; },
     12: function(){
       var manque = NOTES.filter(estRose), o = obj(), CR = ["C26", "C27", "C28"], VA = ["E38", "E39", "E40", "E41", "E42"];
       function lib(a){ return g("A" + a.slice(1)); }
@@ -330,6 +330,8 @@ function revOuvrir(D, acces){
     u.onclick = function(){ ecrire("C45", c45); cols.forEach(function(c, i){ ecrire(c + row, av[i]); }); t.remove(); majEtape(false); };
     t.appendChild(u); document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 8000);
   }
+  // Petit encadré d'information sur le suivi des commentaires (disponible aux employés à partir du 10 janvier 2027).
+  function encSuivi(){ return '<div class="encsuivi"><div class="et">Suivi de tes commentaires</div><p>Chaque commentaire et chaque changement que tu proposes est noté et suivi par la direction. À partir du 10 janvier 2027, tu pourras voir dans l’application, sous « Suivi de mes commentaires », où en est chacun : À traiter, En cours, Réglé ou Pris en note, avec notre réponse lorsqu’il est réglé.</p></div>'; }
   function terminer(){
     removeEventListener("resize", ajuster); var f = REV_FIN; REV_FIN = null; menu();
     var t = document.createElement("div"); t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;padding:12px 20px;font-size:14px;z-index:9999";
