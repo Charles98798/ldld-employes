@@ -54,7 +54,7 @@ function echEcarts(){
     var med = echArr(e.maxAvant*(1+t)*e.posMediane, 2), ref = e.ref != null ? e.ref : e.refPasse, ec = ref ? (med / ref - 1) * 100 : null;
     h += '<div class="lab">' + echEsc(e.nom) + '</div><div class="tr"><span>Médiane de l’échelle</span><b>' + echFr(med, 2) + ' $</b></div>' +
       '<div class="tr"><span>Référence<small class="ech-prec" style="white-space:nowrap">Guichet-Emplois Canada/Montréal</small>' + (e.refPasse != null ? '<small class="ech-prec">Montant précédent : ' + echFr(e.refPasse, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + ' $</small>' : '') + '</span>' + echCase("ech_ref" + i, e.ref, "$") + '</div>' +
-      '<div class="tr"><span>Écart</span><b>' + (ec == null ? "—" : (ec >= 0 ? "+ " : "− ") + echFr(Math.abs(ec), 0) + " %") + '</b></div>';
+      '<div class="tr"><span>Écart</span><b>' + echMotEcart(ref ? med / ref - 1 : null) + '</b></div>';
   });
   return h;
 }
@@ -162,3 +162,6 @@ function echAnneeTuile(){
 
 // Taux à 0 = année en cours (ex. 2026) ; taux augmenté = année suivante en préparation (ex. 2027).
 function echBandeau(d){ var plus = d.taux != null && Number(d.taux) > 0; return plus ? "Année suivante en préparation — " + d.annee : "Année en cours — " + (d.anneePrec != null ? d.anneePrec : d.annee - 1); }
+
+// Mot de l'écart, même règle que le courriel salarial (code [Écart Montréal …]) : plus de 2 % au-dessus du marché = « Au-dessus », de −2 % à +2 % inclus = « Égale », sinon « En dessous ». Référence absente = « À confirmer ».
+function echMotEcart(f){ if(f == null || isNaN(f)) return "À confirmer"; return f > 0.02 ? "Au-dessus" : (f >= -0.02 ? "Égale" : "En dessous"); }
