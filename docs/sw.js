@@ -1,6 +1,6 @@
 // Garde le «squelette» de l'application pour qu'elle s'ouvre vite et hors réseau. Les données (messages, documents) ne sont jamais gardées ici.
-var V = "ldld-app-v832";
-var FICHIERS = ["./", "index.html", "style.css", "app.js", "embauche.js", "positionnement.js", "position_assurance.js", "finance.js", "production.js", "etatsfin.js", "echelle.js", "employe_actuel.js", "rencontre_dept.js", "commentaires.js", "evaluation.js", "cle_annuelle.js", "dechiffrement.js", "reunion_copie.js", "rencontre_eval.js", "portrait_original.js", "envoisalarial.js", "inventaire.js", "manifest.webmanifest", "vendor/pdf.min.js", "vendor/pdf.worker.min.js",
+var V = "ldld-app-v833";
+var FICHIERS = ["./", "index.html", "style.css", "app.js", "embauche.js", "positionnement.js", "position_assurance.js", "finance.js", "production.js", "etatsfin.js", "echelle.js", "employe_actuel.js", "rencontre_dept.js", "commentaires.js", "evaluation.js", "cle_annuelle.js", "dechiffrement.js", "reunion_copie.js", "rencontre_eval.js", "suivi_commentaires.js", "portrait_original.js", "envoisalarial.js", "inventaire.js", "manifest.webmanifest", "vendor/pdf.min.js", "vendor/pdf.worker.min.js",
   "plans/plan1.png", "plans/plan2.png", "plans/plan3.png", "plans/plan_stationnement.png", "fonts/Inter.woff2",
   "assets/LDLD_logo_complet_blanc_transparent.png", "assets/LDLD_logo_complet_noir_transparent.png", "assets/LDLD_symbole_blanc_transparent.png"];
 // cache "reload" à l'installation et "no-cache" à chaque lecture: jamais une vieille copie du cache HTTP du navigateur (GitHub Pages: 10 min). Sans cela, des fichiers de versions différentes se mélangeaient et des tuiles restaient muettes.
