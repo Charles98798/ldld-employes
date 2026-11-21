@@ -90,7 +90,7 @@ function echRendu(){
     d.bonusMensuel.map(function(b, i){ return '<div class="tr"><span>' + echEsc(b.lab) + '</span>' + echCase("ech_bm" + i, b.val == null && i === 0 ? 0 : b.val, "$") + '</div>'; }).join("");
   h += '<div class="sect"><span class="num">05</span><span class="lab">Bonification annuelle — gestionnaires</span></div><div class="lab" style="display:flex;justify-content:space-between"><span>Marge brute</span><span>% du salaire annuel</span></div>' +
     d.bonusAnnuel.map(function(b, i){ return '<div class="g6">' + echCase("ech_bam" + i, b.marge, "%") + '<span class="f">' + echEsc(b.mot || "") + '</span><span class="ar"></span>' + echCase("ech_bap" + i, b.pct == null && i === 0 ? 0 : b.pct, "%") + '</div>'; }).join("");
-  h += '<div class="sect"><span class="num">06</span><span class="lab">OTPAD $ ' + d.annee + '</span></div><div id="ech_otpad"></div>';
+  h += '<div class="sect"><span class="num">06</span><span class="lab">OTPAD $</span></div><div id="ech_otpad"></div>';
   h += '<p class="finnote" id="ech_etat"></p>';
   document.getElementById("ech_app").innerHTML = h;
   echOtpadRendu();
