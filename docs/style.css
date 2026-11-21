@@ -1468,3 +1468,5 @@ button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}
 /* OTPAD : cases alignées en haut, « $ » à côté de la case, textes dessous (21 nov.) */
 .otpg{align-items:start}.otpg .l,.otpg .p,.otpg .h{align-self:start}.otpg .l{padding-top:20px}.otpg .p{padding-top:24px}
 .otpc{display:grid;grid-template-columns:70px 14px;justify-content:center;align-items:end;column-gap:4px;row-gap:2px}.otpc small{grid-column:1 / -1;flex-basis:auto;text-align:center}.otpc small:empty{display:none}
+
+.otpg{grid-template-columns:1.3fr 1fr 1fr}

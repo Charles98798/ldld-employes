@@ -112,9 +112,8 @@ function echOtpadEcart(v, p){ if(v == null || !p) return ""; var e = (v / p - 1)
 function echOtpadRendu(){
   var z = document.getElementById("ech_otpad"), d = PA.d; if(!z) return; if(!d){ z.innerHTML = '<div class="att"><i></i></div>'; return; }
   var o = d.otpad, c = function(k, id){ var x = o[k]; return '<div class="otpc"><input id="' + id + '" inputmode="decimal" autocomplete="off" aria-label="OTPAD ' + echEsc(x.lab) + '" class="' + ((x.val == null && x.precedent == null) ? "vide" : "") + '" value="' + echEsc(x.val == null ? (x.precedent == null ? "" : String(x.precedent).replace(".", ",")) : String(x.val).replace(".", ",")) + '"><u>$</u><small class="otpp">Précédent : ' + echEsc(x.precedent == null ? "—" : echFr(x.precedent, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + "\u00a0$") + '</small><small id="' + id + '_e">' + echEsc(echOtpadEcart(x.val, x.precedent)) + '</small></div>'; };
-  var h = '<div class="otpg"><div class="h">Élément</div><div class="h">Auxiliaire</div><div class="h">Technologue</div><div class="h">' + d.anneePrec + '</div>' +
-    '<div class="l">OTPAD $ (par catégorie)</div>' + c("aux", "ech_otp_aux") + c("tech", "ech_otp_tech") +
-    '<div class="p">' + echEsc(echFr(o.aux.precedent, 0) || "—") + ' / ' + echEsc(echFr(o.tech.precedent, 0) || "—") + '</div></div>';
+  var h = '<div class="otpg"><div class="h">Élément</div><div class="h">Auxiliaire</div><div class="h">Technologue</div>' +
+    '<div class="l">OTPAD $ (par catégorie)</div>' + c("aux", "ech_otp_aux") + c("tech", "ech_otp_tech") + '</div>';
   var pret = (o.aux.val != null || o.aux.precedent != null) && (o.tech.val != null || o.tech.precedent != null);
   h += '<div class="otpb"><button type="button" class="btn" id="ech_otp_conf"' + ((o.confirme || !pret) ? " disabled" : "") + '>Confirmer ' + d.annee + '</button><span class="otpq">' +
     (o.confirme ? 'Confirmé par ' + echEsc(o.par) + ' le ' + echEsc(paQuand(o.quand)) : '<b class="pa-rouge">À confirmer</b>') + '</span></div>';
