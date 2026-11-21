@@ -36,10 +36,15 @@ function suiviOuvrir(){
     }).catch(function(){});
   }).catch(function(){ var el = document.getElementById("sv"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
+function suiviVide(emp){
+  return '<div style="text-align:center;padding:48px 0 24px"><svg viewBox="0 0 24 24" width="64" height="64" aria-hidden="true" style="fill:#000000;display:block;margin:0 auto 22px"><path fill-rule="evenodd" d="'+PICTOS["Commentaires et changements"]+'"/></svg>' +
+    '<div style="font-size:16px;letter-spacing:2.5px;text-transform:uppercase;color:#000000">Tout est à jour</div>' +
+    '<p style="max-width:340px;margin:12px auto 0;font-size:14px;line-height:1.45;color:#6E6350">Aucun commentaire ni changement à suivre. Ils apparaîtront ici après '+(emp ? "ta rencontre d’évaluation." : "chaque rencontre d’évaluation terminée.")+'</p></div>';
+}
 function suiviDessiner(){
   var el = document.getElementById("sv"); if(!el) return;
   var n = SUIVI.lignes.filter(function(x){ return x.statut === "A_TRAITER"; }).length;
-  if(!SUIVI.lignes.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN COMMENTAIRE EN CE MOMENT</div>'; return; }
+  if(!SUIVI.lignes.length){ el.innerHTML = suiviVide(false); return; }
   el.innerHTML = '<div class="etq">▪ DU PLUS RÉCENT AU PLUS ANCIEN · '+SUIVI.lignes.length+' · À TRAITER '+n+'</div>' + SUIVI.lignes.map(function(x, i){
     return '<div class="carte" style="margin:10px 0;padding:12px 14px;background:#E3DFD3;color:#000000" data-i="'+i+'"><div class="etq" style="margin:0">'+(x.nouveau ? '<b class="nombre" style="margin-right:8px">Nouveau</b>' : "")+esc(x.nom || "—")+' · '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
       '<div style="margin:6px 0 8px;font-size:14px;line-height:1.35">'+esc(suiviMin(x.texte))+'</div>' +
@@ -88,7 +93,7 @@ function suiviMesOuvrir(){
   appelService({action: "suivi_mes", session: sessionGardee(), lu: true}).then(function(r){
     var el = document.getElementById("sm"); if(!el) return;
     if(!r || !r.ok) throw 0;
-    if(!r.lignes.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN COMMENTAIRE EN CE MOMENT</div>'; return; }
+    if(!r.lignes.length){ el.innerHTML = suiviVide(true); return; }
     el.innerHTML = r.lignes.map(function(x){
       return '<div class="carte" style="margin:10px 0;padding:12px 14px;background:#E3DFD3;color:#000000"><div class="etq" style="margin:0">Rencontre du '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
         '<div style="margin:6px 0 8px;font-size:14px;line-height:1.35">'+esc(suiviMin(x.texte))+'</div><b class="etq" style="font-weight:600;color:#000000">'+SUIVI_EMP[x.statut]+'</b>' +
