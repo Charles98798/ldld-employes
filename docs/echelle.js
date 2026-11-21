@@ -94,7 +94,7 @@ function echRendu(){
   h += '<p class="finnote" id="ech_etat"></p>';
   document.getElementById("ech_app").innerHTML = h;
   echOtpadRendu();
-  paLire().then(function(){ if(document.getElementById("ech_otpad") && !(document.activeElement && document.activeElement.tagName === "INPUT")) echOtpadRendu(); }).catch(function(){ var z = document.getElementById("ech_otpad"); if(z && !PA.d) z.innerHTML = '<p class="finnote">OTPAD indisponible pour le moment.</p>'; });
+  paLire().then(function(){ var zo = document.getElementById("ech_otpad"); if(zo && !(document.activeElement && zo.contains(document.activeElement))) echOtpadRendu(); }).catch(function(){ var z = document.getElementById("ech_otpad"); if(z && !PA.d) z.innerHTML = '<p class="finnote">OTPAD indisponible pour le moment.</p>'; });
   function lier(id, maj, champ, ind){
     var el = document.getElementById(id); if(!el) return;
     el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; var n = echNum(el.value); if(n != null || el.value.trim() === "") { maj(n); if(ind) { document.getElementById("ech_grille").innerHTML = echGrille(); document.getElementById("ech_ecarts").innerHTML = echEcarts(); echLierRefs(); } } };
