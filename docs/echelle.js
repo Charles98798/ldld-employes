@@ -142,8 +142,13 @@ function echLierRefs(){
   var d = ECH.d;
   d.ecarts.forEach(function(e, i){
     var el = document.getElementById("ech_ref" + i); if(!el) return;
-    el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; e.ref = echNum(el.value); var z = document.getElementById("ech_ecarts"); var pos = el.id, v = el.value; z.innerHTML = echEcarts(); echLierRefs(); var n = document.getElementById(pos); if(n){ n.value = v; n.className = v.trim() === "" ? "vide" : ""; n.focus(); try{ n.setSelectionRange(v.length, v.length); }catch(x){} } };
-    el.onchange = function(){ echSauver("ref" + i, echNum(el.value)); };
+    if(e._dern === undefined) e._dern = (e.ref == null ? null : e.ref);
+    // La case est redessinée à chaque frappe (l'écart se recalcule), donc l'événement « change » ne part jamais : on enregistre après une courte pause et à la sortie de la case.
+    var sauver = function(){ clearTimeout(e._t); var n = echNum(el.value); if(el.value.trim() !== "" && n == null) return; if(n === e._dern) return; e._dern = n; echSauver("ref" + i, n); };
+    el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; e.ref = echNum(el.value); clearTimeout(e._t); el.onblur = null; el.onchange = null; var z = document.getElementById("ech_ecarts"); var pos = el.id, v = el.value; z.innerHTML = echEcarts(); echLierRefs(); var n = document.getElementById(pos); if(n){ n.value = v; n.className = v.trim() === "" ? "vide" : ""; n.focus(); try{ n.setSelectionRange(v.length, v.length); }catch(x){} }
+      var t = document.getElementById(pos); e._t = setTimeout(function(){ var c = document.getElementById(pos); if(!c) return; var m = echNum(c.value); if(c.value.trim() !== "" && m == null) return; if(m === e._dern) return; e._dern = m; echSauver("ref" + i, m); }, 1200); };
+    el.onblur = sauver;
+    el.onchange = sauver;
   });
 }
 
