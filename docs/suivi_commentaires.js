@@ -24,9 +24,14 @@ function suiviPastilles(){
 function suiviOuvrir(){
   app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi des commentaires et changements</h1><div id="sv"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
-  appelService({action: "suivi_lire", session: sessionGardee()}).then(function(r){
+  // 1) lecture rapide de l'onglet (sans synchroniser le pont): l'écran s'affiche tout de suite, avec la note si rien
+  // 2) synchronisation avec les rencontres terminées en arrière-plan; l'écran se met à jour seulement si de nouveaux commentaires arrivent
+  appelService({action: "suivi_lire", session: sessionGardee(), sync: false}).then(function(r){
     if(!r || !r.ok) throw 0;
     SUIVI.lignes = r.lignes || []; SUIVI.resp = r.responsables || []; suiviDessiner();
+    return appelService({action: "suivi_lire", session: sessionGardee()}).then(function(r2){
+      if(r2 && r2.ok && document.getElementById("sv") && (r2.lignes || []).length !== SUIVI.lignes.length){ SUIVI.lignes = r2.lignes || []; SUIVI.resp = r2.responsables || SUIVI.resp; suiviDessiner(); }
+    }).catch(function(){});
   }).catch(function(){ var el = document.getElementById("sv"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function suiviDessiner(){
