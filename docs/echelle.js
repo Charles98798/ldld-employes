@@ -163,5 +163,5 @@ function echAnneeTuile(){
 // Taux à 0 = année en cours (ex. 2026) ; taux augmenté = année suivante en préparation (ex. 2027).
 function echBandeau(d){ var plus = d.taux != null && Number(d.taux) > 0; return plus ? "Année suivante en préparation — " + d.annee : "Année en cours — " + (d.anneePrec != null ? d.anneePrec : d.annee - 1); }
 
-// Mot de l'écart, même règle que le courriel salarial (code [Écart Montréal …]) : plus de 2 % au-dessus du marché = « Au-dessus », de −2 % à +2 % inclus = « Égale », sinon « En dessous ». Référence absente = « À confirmer ».
-function echMotEcart(f){ if(f == null || isNaN(f)) return "À confirmer"; return f > 0.02 ? "Au-dessus" : (f >= -0.02 ? "Égale" : "En dessous"); }
+// Mot de l'écart, même règle que le courriel salarial (code [Écart Montréal …]) : +1 % et plus = « Au-dessus », de −0,9 % à +0,9 % = « Égale », −1 % et moins = « En dessous » (règle de Charles, 21 nov.). Référence absente = « À confirmer ».
+function echMotEcart(f){ if(f == null || isNaN(f)) return "À confirmer"; return f >= 0.01 ? "Au-dessus" : (f > -0.01 ? "Égale" : "En dessous"); }
