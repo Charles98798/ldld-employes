@@ -224,7 +224,7 @@ function revOuvrir(D, acces){
     app.innerHTML = '<div class="page sans-instant rvpage"><a class="retour" href="#" id="retour">Retour</a><h1>Rencontre d’évaluation</h1><div class="revw rvo" id="revw"><header><div class="haut"><div class="qui"><div class="nom">' + esc(D.employe) + '</div><div class="sous">Rencontre ' + esc(D.rencontre) + " · " + esc(D.annee) + (D.categorie ? " · " + esc(D.categorie) : "") + (g("A33") ? " · " + esc(g("A33").split(" (")[0]) : "") + " · Évaluateur : " + esc(D.evaluateur || "") + ' · Portail rencontre évaluation</div></div><div class="score"><div><div class="lib">Pointage indicatif</div><div class="jauge"><div id="revj"></div></div></div><div class="val" id="revv">—</div></div></div><div class="etapes" id="revp"></div></header><main id="revx"></main><footer><div class="msg" id="revs"></div><button type="button" class="rvb" id="revpre">Précédent</button><button type="button" class="rvb noir" id="revsui">Suivant</button></footer></div></div>';
     document.getElementById("retour").onclick = function(e){ e.preventDefault(); revFermer(); };
     document.getElementById("revpre").onclick = function(){ aller(etape - 1); };
-    document.getElementById("revsui").onclick = function(){ aller(etape + 1); };
+    document.getElementById("revsui").onclick = function(){ if(etape === 12) confirmerFin(); else aller(etape + 1); };
     var w = document.getElementById("revw");
     w.addEventListener("click", function(e){
       var b = e.target.closest ? e.target.closest("button") : null; if(!b || b.disabled) return;
@@ -247,7 +247,7 @@ function revOuvrir(D, acces){
     var h = ""; for(var i = 2; i <= 12; i++) h += '<button type="button" class="pastille' + (i === etape ? " active" : "") + (faite(i) ? " faite" : "") + '" data-n="' + i + '" aria-label="Étape ' + (i - 1) + ", " + esc(REV_TITRES[i - 1]) + '"><span class="rond">' + (i - 1) + '</span><span class="lb">' + esc(REV_TITRES[i - 1]) + "</span></button>";
     document.getElementById("revp").innerHTML = h;
     var t = ptsLive().total; document.getElementById("revv").textContent = fmtScore(); document.getElementById("revj").style.width = (t == null ? 0 : Math.max(0, Math.min(100, t))) + "%";
-    document.getElementById("revpre").disabled = etape === 2; document.getElementById("revsui").disabled = etape === 12;
+    document.getElementById("revpre").disabled = etape === 2; var sui = document.getElementById("revsui"), fin = etape === 12; sui.textContent = fin ? "Terminer la rencontre" : "Suivant"; sui.disabled = fin && NOTES.some(function(a){ return estRose(a); });
   }
   var SANS_TITRE = {3: 1, 4: 1, 10: 1};   // ces étapes affichent le titre avec le bouton « Voir le barème »
   function titreEtape(){
@@ -266,6 +266,21 @@ function revOuvrir(D, acces){
     ajuster();
   }
   function aller(n){ if(n < 2 || n > 12) return; vus[etape] = true; etape = n; majEtape(false); window.scrollTo(0, 0); }
+  function confirmerFin(){
+    if(fenetre) return;
+    var v = document.createElement("div"); v.className = "revvoile";
+    v.innerHTML = '<div class="revfen"><h2><span>Terminer la rencontre</span></h2><p class="note">Je confirme que toutes les données de la rencontre sont exactes.</p><div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px"><button type="button" class="rvb" id="revnon">Non</button><button type="button" class="rvb noir" id="revoui">Oui</button></div></div>';
+    document.body.appendChild(v); fenetre = v;
+    document.getElementById("revnon").onclick = fermerBareme;
+    document.getElementById("revoui").onclick = function(){ fermerBareme(); terminer(); };
+  }
+  // Oui: l'écran se ferme tout de suite; les dernières saisies partent en arrière-plan, puis la rencontre est libérée.
+  function terminer(){
+    removeEventListener("resize", ajuster); var f = REV_FIN; REV_FIN = null; menu();
+    var t = document.createElement("div"); t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;padding:12px 20px;font-size:14px;z-index:9999";
+    t.textContent = "Rencontre terminée"; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 3500);
+    var n = 0, iv = setInterval(function(){ n++; if((!enCours && !file.length) || n > 200){ clearInterval(iv); if(typeof f === "function") f(); } }, 300);
+  }
   function revFermer(){ removeEventListener("resize", ajuster); fermerBareme(); if(typeof REV_FIN === "function"){ var f = REV_FIN; REV_FIN = null; f(); } menu(); }
   // Grand écran: une page par étape, mise à l'échelle pour tenir dans la fenêtre sans défilement.
   function ajuster(){ var el = document.getElementById("revw"); if(!el){ removeEventListener("resize", ajuster); return; }
