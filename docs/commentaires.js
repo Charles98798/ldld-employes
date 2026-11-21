@@ -4,7 +4,7 @@
 // Les miniatures sont gardées sur l'appareil (cache); l'agrandissement charge la grande version.
 var CC = {liste: {}, img: {}, form: null};
 ["rd_commentaires_lire", "rd_commentaire_ecrire", "rd_commentaire_retirer", "rd_commentaire_photos"].forEach(function(a){ NEUTRE[a] = 1; });
-var CC_TYPES = [["positif", "Positif", "var(--vert)"], ["questionnement", "Questionnement", "#6E6350"], ["negatif", "Négatif", "#000000"]];
+var CC_TYPES = [["positif", "Félicitation", "var(--vert)"], ["questionnement", "Suggestion", "#6E6350"], ["negatif", "À améliorer", "#000000"]];
 
 function ccType(t){ for(var i = 0; i < CC_TYPES.length; i++) if(CC_TYPES[i][0] === t) return CC_TYPES[i]; return CC_TYPES[2]; }
 function ccPastille(t){ var x = ccType(t); return '<span style="display:inline-block;width:11px;height:11px;background:'+x[2]+';margin:0 6px 0 10px;vertical-align:-1px"></span>'+rdE(x[1]); }
