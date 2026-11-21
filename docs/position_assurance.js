@@ -123,7 +123,10 @@ function paConfirmerVite(champ, appliquer, rendu){
 function paCoches(){
   if(typeof MOI === "undefined" || !MOI || MOI.role !== "direction") return;
   var dessiner = function(){
-    var d = PA.d; if(!d) return;
+    var d = PA.d;
+    if(!d){ try { d = JSON.parse(localStorage.getItem("ldld-pa-coches") || "null"); } catch(e){ d = null; } }
+    if(!d) d = {};
+    if(PA.d){ try { localStorage.setItem("ldld-pa-coches", JSON.stringify({annee: PA.d.annee, otpad: {confirme: !!(PA.d.otpad && PA.d.otpad.confirme)}, position: {confirme: !!(PA.d.position && PA.d.position.confirme)}, assurance: {confirme: !!(PA.d.assurance && PA.d.assurance.confirme)}, envoi: PA.d.envoi ? {confirme: !!PA.d.envoi.confirme, quand: PA.d.envoi.quand || null} : null})); } catch(e){} }
     var ok = {echelle_salariale: !!(d.otpad && d.otpad.confirme), positionnement_employe: !!(d.position && d.position.confirme && d.assurance && d.assurance.confirme), envoi_salarial: !!(d.envoi && d.envoi.confirme)};
     Object.keys(ok).forEach(function(k){
       var a = document.querySelector('.menu a[data-k="' + k + '"] > span'); if(!a) return;
