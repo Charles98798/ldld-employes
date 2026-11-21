@@ -173,7 +173,7 @@ function revOuvrir(D, acces){
       return h;
     },
     5: function(){
-      var h = '<div class="deux"><div><div class="bloc-lab">' + esc(g("A44")) + "</div>" + champ("C45", 4) + '</div><div><div class="bloc-lab">' + esc(g("A46")) + "</div>" + champ("C47", 4) + "</div></div>";
+      var h = '<div class="deux"><div><div class="bloc-lab">' + esc(g("A45")) + "</div>" + champ("C45", Math.max(4, String(r("C45")).split("\n").length + 1)) + '</div><div><div class="bloc-lab">' + esc(g("A47")) + "</div>" + champ("C47", Math.max(4, String(r("C47")).split("\n").length + 1)) + "</div></div>";
       h += '<div class="bloc-lab" style="margin-top:12px">' + esc(g("A49")) + '</div><div class="entete-tab t4"><div>' + esc(g("A50")) + "</div><div>" + esc(g("C50")) + "</div><div>" + esc(g("E50")) + "</div><div>" + esc(g("G50")) + "</div></div>";
       for(var row = 51; row <= 53; row++) h += '<div class="ligne-tab t4"><div data-l="' + esc(g("A50")) + '">' + champ("A" + row, 1) + '</div><div data-l="' + esc(g("C50")) + '">' + champ("C" + row, 1) + '</div><div data-l="' + esc(g("E50")) + '">' + champ("E" + row, 1) + '</div><div data-l="' + esc(g("G50")) + '">' + champ("G" + row, 1) + "</div></div>";
       return h;
