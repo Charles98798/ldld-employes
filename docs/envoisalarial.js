@@ -44,7 +44,7 @@ function envOuvrir(){
   envBarreOuvrir("Lecture des salaires…", 30000, {reessayer: envOuvrir, apresFermer: function(){ retirerBoutonBas(); responsable(); }});
   appelService({action: "env_liste", session: sessionGardee(), }).then(function(r){
     if(!document.getElementById("envapp")) return;
-    if(r && r.ok && r.r){ ENVS.d = r.r; envBarreRetirer(); envListe(); }
+    if(r && r.ok && r.r){ ENVS.d = r.r; envBarreRetirer(); envListe(); if(typeof paLire === "function"){ ENVS.paErr = false; paLire().then(function(){ if(document.getElementById("envapp")) envListe(); }).catch(function(){ ENVS.paErr = true; if(document.getElementById("envapp")) envListe(); }); } }
     else envBarreFin(false, String((r && r.erreur) || "Échec"));
   }).catch(function(){ envBarreFin(false, "Réseau indisponible"); });
 }
@@ -53,11 +53,18 @@ function envVisibles(){ return ((ENVS.d && ENVS.d.employes) || []).filter(functi
 function envPrets(){ return envVisibles().filter(function(e){ return e.statut === "Prêt"; }); }
 // Cases à cocher: décochées par défaut (rien ne part sans choix). Clé = nom. Seules les lignes Prêt sont cochables.
 function envCoches(){ ENVS.coches = ENVS.coches || {}; return envPrets().filter(function(e){ return ENVS.coches[e.nom]; }); }
+// Verrou des confirmations annuelles : l'envoi reste verrouillé tant que l'Échelle salariale, la position et l'assurance ne sont pas toutes confirmées (page Position et assurance). Retourne ce qui manque.
+function envManque(){
+  if(typeof PA === "undefined" || !PA.d){ return ENVS.paErr ? ["confirmations illisibles"] : ["vérification en cours"]; }
+  var m = [], d = PA.d; if(!(d.otpad && d.otpad.confirme)) m.push("Échelle salariale"); if(!(d.position && d.position.confirme)) m.push("position"); if(!(d.assurance && d.assurance.confirme)) m.push("assurance");
+  return m;
+}
 function envListe(){
-  var d = ENVS.d, L = envVisibles(), ferme = !!(d.fenetre && d.fenetre.ouverte === false), prets = ferme ? [] : envCoches(), tousPrets = envPrets(), essai = d.mode !== "reel";
+  var d = ENVS.d, manque = envManque(), L = envVisibles(), ferme = !!(d.fenetre && d.fenetre.ouverte === false) || manque.length > 0, prets = ferme ? [] : envCoches(), tousPrets = envPrets(), essai = d.mode !== "reel";
   var h = '';
   // Note du verrou (message de la fenêtre du pont): encadré au contour vert, à droite, en face de « Employés »; le texte n'inclut jamais « Envoi salarial ».
   var note = d.fenetre ? String(d.fenetre.message || (ferme ? "Verrouillé" : "")).replace(/^\s*envoi salarial\s*[:\-–·]?\s*/i, "").trim() : "";
+  if(manque.length) note = "Verrouillé : " + manque.join(", ") + " à confirmer";
   if(note) note = note.charAt(0).toUpperCase() + note.slice(1);
   if(d.annee) h += '<span class="lbl">Année</span><div class="bx" style="border-color:transparent;padding-left:0">'+envE(d.annee)+'</div>';
   h += '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px"><div><span class="lbl">Employés</span>';
