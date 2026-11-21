@@ -1192,14 +1192,14 @@ function aeNum(v){ var n = Number(String(v).replace(/[^0-9,.-]/g,"").replace(","
 function aeRythmeHtml(d){
   if(!d.rythme || !d.rythme.length) return '<p class="aide">Heures travaillées par semaine, charge effectuée, charge non terminée et objectifs atteints : ces points seront examinés dans cet ordre avec votre responsable pendant la rencontre.</p>';
   var h = (d.rythmePeriode ? '<div class="etiq">▪ '+esc(d.rythmePeriode).toUpperCase()+'</div>' : '') + '<p class="aide">À titre indicatif, pour la discussion lors de la rencontre.</p>';
+  // Même mise en page que « Objectifs et charges » du Portrait d'employé (valeur, cible, barre avec repère vert, pastille).
+  h += '<div class="po aerpo"><div class="poind">';
   d.rythme.forEach(function(r){
-    var c = aeNum(r.seuil), n = aeNum(r.realise), barre = "", ok = null;
-    if(c !== null && n !== null){
-      var M = r.auto ? Math.max(c, n) : Math.max(100, c, n); ok = r.inverse ? n <= c : n >= c;
-      barre = '<div class="rb"><i style="width:'+Math.max(0,Math.min(100,n/M*100))+'%"></i><u style="left:'+Math.max(0,Math.min(99,c/M*100))+'%"></u></div><div class="rt'+(ok ? ' ok' : '')+'">'+(ok ? 'Dans la cible' : (r.inverse ? 'Au-dessus de la cible' : 'Sous la cible'))+'</div>';
-    }
-    h += '<div class="rl"><div class="rn">'+esc(r.label)+'</div><div class="rv"><span>Réalisé<b>'+esc(r.realise)+'</b></span><span>Cible<b>'+esc(r.cible)+'</b></span></div>'+barre+'</div>';
+    var c = aeNum(r.seuil), n = aeNum(r.realise), ok = null, mx = 1;
+    if(c !== null && n !== null){ mx = (r.auto ? Math.max(c, n) : Math.max(100, c, n)) || 1; ok = r.inverse ? n <= c : n >= c; }
+    h += '<div class="poir"><div class="t">'+esc(r.label)+'</div><div class="v"><span'+(n === null ? ' class="vide"' : '')+'>'+esc(r.realise || "—")+'</span><em>Cible : '+esc(r.cible)+'</em></div><div><div class="bar"><i style="width:'+(n === null ? 0 : Math.max(0, Math.min(100, n / mx * 100)))+'%"></i>'+(c === null ? '' : '<u style="left:'+Math.max(0, Math.min(99, c / mx * 100))+'%"></u>')+'</div>'+(ok === null ? '<span class="bg nd">Pas de donnée</span>' : '<span class="bg'+(ok ? ' ok' : '')+'">'+(ok ? 'Dans la cible' : (r.inverse ? 'Au-dessus de la cible' : 'Sous la cible'))+'</span>')+'</div></div>';
   });
+  h += '</div></div>';
   return h;
 }
 function aeAfficher(d, papier){   // papier = {id, nom} : saisie par la Direction du papier d'un employé (service ae_papier_enregistrer); absent = autoévaluation de l'employé lui-même
@@ -1298,7 +1298,7 @@ function tableau(){
       var larg = vide ? 0 : Math.min(100, val), pc = Math.min(100, cible);
       var cq = cle === "cn" ? "#000000" : "#8D806A";
       return '<div class="tcarte tk'+(vide ? ' sans' : '')+'"><div class="tct"><span><b class="tq" style="background:'+cq+'"></b>'+nom+'</span>'+(vide ? '' : '<span class="tind '+(ok ? "dans" : "sous")+'">'+(ok ? "Dans la cible" : "Sous la cible")+'</span>')+'</div>' +
-        '<div class="tl">'+(vide ? '' : '<div class="tgros">'+val+'<small>%</small></div>')+'<div class="tcib">Moyenne · cible '+cible+' % '+(sens === "plus" ? "et +" : "et −")+'</div></div>' +
+        '<div class="tl">'+(vide ? '' : '<div class="tgros">'+val+'<small>%</small></div>')+'<div class="tcib">Cible : '+cible+' % '+(sens === "plus" ? "et +" : "et −")+'</div></div>' +
         '<div class="tbarre"><i style="width:'+larg+'%"></i><u style="left:'+pc+'%"></u></div></div>';
     }
     function dessiner(){
@@ -1306,7 +1306,7 @@ function tableau(){
         (m.courant && m.jusquAu ? '<div class="etiq">▪ JUSQU\'AU '+esc(m.jusquAu.slice(8)+"/"+m.jusquAu.slice(5,7))+'</div>' : '');
       if(m.absent) h += '<div class="bandeau">▪ AUCUN TRAVAIL CE MOIS-LÀ</div>';
       else h += carte("CHARGE EFFECTUÉE", m.ce, m.cibleCe || 80, "plus", m, "ce") + carte("CHARGE NON TERMINÉE", m.cn, 5, "moins", m, "cn") + carte("OBJECTIFS ATTEINTS", m.obj, 80, "plus", m, "obj") +
-        graphJours(m) + '<p class="aide">Heures par semaine : '+(m.heures == null ? "—" : String(m.heures).replace(".", ","))+(m.cibleHeures ? ' · cible '+m.cibleHeures : "")+'</p>';
+        graphJours(m) + '<p class="aide">Heures par semaine : '+(m.heures == null ? "—" : String(m.heures).replace(".", ","))+(m.cibleHeures ? ' · cible : '+m.cibleHeures : "")+'</p>';
       el.innerHTML = h; graphJoursActif(el);
       document.getElementById("tp").onclick = function(){ i++; dessiner(); };
       document.getElementById("ts").onclick = function(){ i--; dessiner(); };

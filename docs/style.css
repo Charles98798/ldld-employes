@@ -1485,3 +1485,6 @@ button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}
 .rvo .rvpo{max-width:none;margin:0}.rvo .rvpo .poir{display:grid;grid-template-columns:1.3fr 1.2fr 2.2fr 1.6fr;gap:14px;align-items:center;padding:8px 0}.rvo .rvpo .poir .v{margin:0}.rvo .rvpo .poir .dt{margin:0;padding-left:12px}.rvo .rvpo .rvob{grid-column:1/-1;display:flex;gap:6px;justify-content:flex-end}
 .rvo .rvnote{font-size:11px;color:#6E6350;margin-top:10px}
 @media (max-width:999px){.rvo .rvpo .poir{display:block}.rvo .rvpo .rvob{margin-top:8px;justify-content:flex-start}}
+
+.aerpo{max-width:none;margin:0}
+@media (min-width:1000px){.aerpo .poir{grid-template-columns:1.3fr 1.2fr 2.2fr}}
