@@ -4,13 +4,13 @@ var POS_CACHE = {d: null};
 var POS_FERMER = null;
 function posEmpOuvrir(){
   app.innerHTML = '<div class="page ppx"><a class="retour" href="#" id="retour">Retour</a><h1>Position employé</h1><div id="pp_app" class="sansemp"></div><div class="voile" id="pp_voile"></div></div>';
-  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(typeof envBarreRetirer === "function") envBarreRetirer(); if(POS_FERMER) POS_FERMER(); responsable(); };
+  document.getElementById("retour").onclick = function(e){ e.preventDefault(); if(typeof envBarreRetirer === "function") envBarreRetirer(); if(POS_FERMER) POS_FERMER(); if(typeof PA_RETOUR!=="undefined" && PA_RETOUR){ PA_RETOUR = false; paOuvrir(); } else responsable(); };
   (function(){
 
   // Pont: les mêmes fonctions du classeur (posDonneesLDLD, posEnregistrerLDLD), appelées par le service de l'application.
   function GS(){ var ok=null,ko=null,o={withSuccessHandler:function(f){ok=f;return o},withFailureHandler:function(f){ko=f;return o},
    posDonneesLDLD:function(){ pont({action:'pos_donnees'}) }, posEnregistrerLDLD:function(id,choix){ pont({action:'pos_enregistrer',id:id,choix:choix}) }};
-   function pont(c){ c.session=sessionGardee(); appelService(c).then(function(r){ if(r&&r.ok){ if(c.action==='pos_donnees'){ try{ POS_CACHE.d=r.r }catch(e){} } if(ok) ok(r.r) } else if(ko) ko({message:(r&&r.erreur)||'Échec.'}) }).catch(function(){ if(ko) ko({message:'Réseau indisponible.'}) }) }
+   function pont(c){ c.session=sessionGardee(); appelService(c).then(function(r){ if(r&&r.ok){ if(c.action==='pos_donnees'){ try{ POS_CACHE.d=r.r }catch(e){} } if(c.action==='pos_enregistrer'){ try{ appelService({action:'pa_enregistrer',champ:'pos_modif',session:sessionGardee()}).then(function(x){ if(x&&x.ok&&typeof PA!=='undefined') PA.d=x.r }).catch(function(){}) }catch(e){} } if(ok) ok(r.r) } else if(ko) ko({message:(r&&r.erreur)||'Échec.'}) }).catch(function(){ if(ko) ko({message:'Réseau indisponible.'}) }) }
    return o }
 
 var PRE={d:POS_CACHE.d,err:'',web:true};

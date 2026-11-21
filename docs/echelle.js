@@ -53,7 +53,7 @@ function echEcarts(){
   d.ecarts.forEach(function(e, i){
     var med = echArr(e.maxAvant*(1+t)*e.posMediane, 2), ref = e.ref != null ? e.ref : e.refPasse, ec = ref ? (med / ref - 1) * 100 : null;
     h += '<div class="lab">' + echEsc(e.nom) + '</div><div class="tr"><span>Médiane de l’échelle</span><b>' + echFr(med, 2) + ' $</b></div>' +
-      '<div class="tr"><span>Référence (Guichet-Emplois)</span>' + echCase("ech_ref" + i, e.ref, "$") + '</div>' +
+      '<div class="tr"><span>Référence (Guichet-Emplois)' + (e.refPasse != null ? '<small class="ech-prec">Montant précédent : ' + echFr(e.refPasse, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + ' $</small>' : '') + '</span>' + echCase("ech_ref" + i, e.ref, "$") + '</div>' +
       '<div class="tr"><span>Écart</span><b>' + (ec == null ? "—" : (ec >= 0 ? "+ " : "− ") + echFr(Math.abs(ec), 0) + " %") + '</b></div>';
   });
   return h;
@@ -72,7 +72,7 @@ function echActuelle(){
     var E = null; ((r && r.r && r.r.echelles) || (r && r.echelles) || []).forEach(function(e){ if(e.actuelle) E = e; });
     if(!E){ z.innerHTML = echSel() + '<div class="bandeau">▪ ÉCHELLE EN COURS INDISPONIBLE</div>'; echSelLier(); return; }
     var np = E.echelons.length, cats = Object.keys(E.cats);
-    var g = '<div class="band">Année en cours — ' + E.annee + '</div><div class="sect"><span class="num">04</span><span class="lab">Échelle salariale</span></div><div id="ech_grille"><div class="e5" style="grid-template-columns:58px repeat(' + np + ',minmax(0,1fr));font-size:8.5px;letter-spacing:0"><div class="h"></div>' +
+    var g = '<div class="band">Année en cours — ' + E.annee + '</div><div id="ech_grille"><div class="e5" style="grid-template-columns:58px repeat(' + np + ',minmax(0,1fr));font-size:8.5px;letter-spacing:0"><div class="h"></div>' +
       E.echelons.map(function(p){ return '<div class="h" style="padding:0">' + Math.round(p > 1 ? p : p*100) + '&nbsp;%</div>'; }).join("");
     cats.forEach(function(c){ g += '<div class="l" style="font-size:8.5px;line-height:1.1;text-align:left">' + echEsc(c) + '</div>' + E.cats[c].map(function(v){ return '<div style="padding:0">' + echFr(v, 2) + '</div>'; }).join(""); });
     z.innerHTML = echSel() + g + '</div></div>'; echSelLier();
@@ -85,13 +85,16 @@ function echRendu(){
   h += '<div class="sect"><span class="num">01</span><span class="lab">Taux d’augmentation applicable</span></div><div class="tr"><span>Taux d’augmentation</span>' + echCase("ech_taux", d.taux, "%") + '</div>';
   h += '<div class="sect"><span class="num">02</span><span class="lab">Taux du marché</span></div>' + d.marche.map(function(m, i){ return '<div class="tr"><span>' + echEsc(m.nom) + '</span>' + echCase("ech_mar" + i, m.val, "%") + '</div>'; }).join("");
   h += '<div class="sect"><span class="num">03</span><span class="lab">Écart de la grille avec le marché</span></div><div id="ech_ecarts">' + echEcarts() + '</div>';
-  h += '<div class="sect"><span class="num">04</span><span class="lab">Échelle salariale</span></div><div id="ech_grille">' + echGrille() + '</div>';
-  h += '<div class="sect"><span class="num">05</span><span class="lab">Bonification mensuelle — production</span></div><div class="lab" style="text-align:right">Montant mensuel</div>' +
+  h += '<div id="ech_grille">' + echGrille() + '</div>';   // plus de bande « Échelle salariale » : le titre de la page le dit déjà (2026-11-21)
+  h += '<div class="sect"><span class="num">04</span><span class="lab">Bonification mensuelle — production</span></div><div class="lab" style="text-align:right">Montant mensuel</div>' +
     d.bonusMensuel.map(function(b, i){ return '<div class="tr"><span>' + echEsc(b.lab) + '</span>' + echCase("ech_bm" + i, b.val == null && i === 0 ? 0 : b.val, "$") + '</div>'; }).join("");
-  h += '<div class="sect"><span class="num">06</span><span class="lab">Bonification annuelle — gestionnaires</span></div><div class="lab" style="display:flex;justify-content:space-between"><span>Marge brute</span><span>% du salaire annuel</span></div>' +
+  h += '<div class="sect"><span class="num">05</span><span class="lab">Bonification annuelle — gestionnaires</span></div><div class="lab" style="display:flex;justify-content:space-between"><span>Marge brute</span><span>% du salaire annuel</span></div>' +
     d.bonusAnnuel.map(function(b, i){ return '<div class="g6">' + echCase("ech_bam" + i, b.marge, "%") + '<span class="f">' + echEsc(b.mot || "") + '</span><span class="ar"></span>' + echCase("ech_bap" + i, b.pct == null && i === 0 ? 0 : b.pct, "%") + '</div>'; }).join("");
+  h += '<div class="sect"><span class="num">06</span><span class="lab">OTPAD $ ' + d.annee + '</span></div><div id="ech_otpad"></div>';
   h += '<p class="finnote" id="ech_etat"></p>';
   document.getElementById("ech_app").innerHTML = h;
+  echOtpadRendu();
+  paLire().then(function(){ if(document.getElementById("ech_otpad") && !(document.activeElement && document.activeElement.tagName === "INPUT")) echOtpadRendu(); }).catch(function(){ var z = document.getElementById("ech_otpad"); if(z && !PA.d) z.innerHTML = '<p class="finnote">OTPAD indisponible pour le moment.</p>'; });
   function lier(id, maj, champ, ind){
     var el = document.getElementById(id); if(!el) return;
     el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; var n = echNum(el.value); if(n != null || el.value.trim() === "") { maj(n); if(ind) { document.getElementById("ech_grille").innerHTML = echGrille(); document.getElementById("ech_ecarts").innerHTML = echEcarts(); echLierRefs(); } } };
@@ -102,6 +105,36 @@ function echRendu(){
   d.bonusMensuel.forEach(function(b, i){ lier("ech_bm" + i, function(n){ b.val = n; }, "bm" + i); });
   d.bonusAnnuel.forEach(function(b, i){ lier("ech_bam" + i, function(n){ b.marge = n; }, "bam" + i); lier("ech_bap" + i, function(n){ b.pct = n; }, "bap" + i); });
   echLierRefs();
+}
+// Bande « OTPAD $ AAAA » : un montant par catégorie (Auxiliaire, Technologue). Champ obligatoire vide = blanc + soulignement vert 3 px ; rempli = se fond (1 px #B4AB9B).
+// Historique par année dans le journal du classeur (jamais écrasé : qui et quand). L'assurance n'est PAS ici (page Position et assurance).
+function echOtpadEcart(v, p){ if(v == null || !p) return ""; var e = (v / p - 1) * 100; return (e >= 0 ? "+ " : "− ") + echFr(Math.abs(e), 0) + " % vs " + (PA.d.anneePrec); }
+function echOtpadRendu(){
+  var z = document.getElementById("ech_otpad"), d = PA.d; if(!z) return; if(!d){ z.innerHTML = '<div class="att"><i></i></div>'; return; }
+  var o = d.otpad, c = function(k, id){ var x = o[k]; return '<div class="otpc"><input id="' + id + '" inputmode="decimal" autocomplete="off" aria-label="OTPAD ' + echEsc(x.lab) + '" class="' + (x.val == null ? "vide" : "") + '" value="' + echEsc(x.val == null ? "" : String(x.val).replace(".", ",")) + '"><u>$</u><small class="otpp">Montant précédent : ' + echEsc(x.precedent == null ? "—" : echFr(x.precedent, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + " $") + '</small><small id="' + id + '_e">' + echEsc(echOtpadEcart(x.val, x.precedent)) + '</small></div>'; };
+  var h = '<div class="otpg"><div class="h">Élément</div><div class="h">Auxiliaire</div><div class="h">Technologue</div><div class="h">' + d.anneePrec + '</div>' +
+    '<div class="l">OTPAD $ (par catégorie)</div>' + c("aux", "ech_otp_aux") + c("tech", "ech_otp_tech") +
+    '<div class="p">' + echEsc(echFr(o.aux.precedent, 0) || "—") + ' / ' + echEsc(echFr(o.tech.precedent, 0) || "—") + '</div></div>';
+  var pret = o.aux.val != null && o.tech.val != null;
+  h += '<div class="otpb"><button type="button" class="btn" id="ech_otp_conf"' + ((o.confirme || !pret) ? " disabled" : "") + '>Confirmer ' + d.annee + '</button><span class="otpq">' +
+    (o.confirme ? 'Confirmé par ' + echEsc(o.par) + ' le ' + echEsc(paQuand(o.quand)) : '<b class="pa-rouge">À confirmer</b>') + '</span></div>';
+  h += '<p class="finnote">Chaque année est gardée avec qui l’a confirmée et quand ; une modification après la confirmation demande de confirmer à nouveau.</p>';
+  var hist = [];
+  for(var an = d.anneePrec; an >= d.anneePrec - 5; an--){ var cf = null; (d.historique || []).forEach(function(r){ if(r.an === an && r.rub === "otpad_conf" && !cf) cf = r; }); if(cf) hist.push(an + " : confirmé par " + echEsc(cf.par) + " le " + echEsc(paQuand(cf.quand))); }
+  if(hist.length) h += '<p class="finnote">' + hist.join("<br>") + '</p>';
+  z.innerHTML = h;
+  function lierO(k, id, champ){
+    var el = document.getElementById(id); if(!el) return;
+    el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; var e = document.getElementById(id + "_e"); if(e) e.textContent = echOtpadEcart(echNum(el.value), o[k].precedent); };
+    el.onchange = function(){
+      var n = echNum(el.value), et = document.getElementById("ech_etat");
+      if(n == null){ if(et) et.textContent = "Montant requis."; return; }
+      if(et) et.textContent = "Enregistrement…";
+      paAppel(champ, n).then(function(){ echOtpadRendu(); var e2 = document.getElementById("ech_etat"); if(e2) e2.textContent = "Enregistré à " + paHeure(paMaintenantLocal()); }).catch(function(x){ if(et) et.textContent = String((x && x.message) || x); });
+    };
+  }
+  lierO("aux", "ech_otp_aux", "otpad_aux"); lierO("tech", "ech_otp_tech", "otpad_tech");
+  var b = document.getElementById("ech_otp_conf"); if(b) b.onclick = function(){ var et = document.getElementById("ech_etat"); if(et) et.textContent = "Enregistrement…"; paAppel("otpad_conf").then(function(){ echOtpadRendu(); var e2 = document.getElementById("ech_etat"); if(e2) e2.textContent = d.annee + " confirmé."; }).catch(function(x){ if(et) et.textContent = String((x && x.message) || x); }); };
 }
 function echLierRefs(){
   var d = ECH.d;
