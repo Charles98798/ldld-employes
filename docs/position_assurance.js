@@ -34,21 +34,22 @@ function paRendu(){
   var d = PA.d, z = document.getElementById("pa_app"); if(!d || !z) return;
   var an = d.annee, h = "";
   // 1 Position
-  h += paBande("1", "Position " + an);
+  h += '<div class="tgm"><button type="button" class="tgb' + (PA.vue === "ass" ? "" : " on") + '" data-pv="pos">Position ' + an + '</button><button type="button" class="tgb' + (PA.vue === "ass" ? " on" : "") + '" data-pv="ass">Assurance ' + an + '</button></div><div id="pa_v_pos"' + (PA.vue === "ass" ? ' style="display:none"' : "") + '>';
   if(d.position.confirme) h += '<p class="pa-l">Confirmée par ' + paEsc(d.position.par) + ' · ' + paEsc(paQuand(d.position.quand)) + ' · <a href="#" id="pa_pos_mod" class="pa-mod">Modifier</a></p>';
   else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b></p>';
   var ot = d.otpad || {}, otOk = !!ot.confirme;
   h += '<div class="pa-b"><button type="button" class="btn" id="pa_pos_ouvrir">Ouvrir les positions</button><button type="button" class="btn" id="pa_pos_conf"' + ((d.position.confirme || !otOk) ? " disabled" : "") + '>Confirmer la position</button></div>';
   h += '<p class="pa-l">Échelle salariale ' + an + '\u00a0: ' + (otOk ? 'confirmée par ' + paEsc(ot.par) + ' · ' + paEsc(paQuand(ot.quand)) : '<b class="pa-rouge">à confirmer</b> (requis pour confirmer la position)') + '</p>';
   // 2 Assurance : un montant PAR EMPLOYÉ, repris de l'an passé, à confirmer ou ajuster ("0" s'il n'y en a pas)
-  h += paBande("2", "Assurance " + an);
+  h += '</div><div id="pa_v_ass"' + (PA.vue === "ass" ? "" : ' style="display:none"') + '>';
   h += '<div class="pa-lst">' + d.assurance.employes.map(function(e, i){
     if(paDirection(e)) return "";
     return '<div class="pa-e"><div class="pa-n"><span>' + paEsc(e.nom) + '</span><small>' + paEsc(e.cat) + '</small></div><div class="pa-c"><input id="pa_a' + i + '" data-id="' + paEsc(e.id) + '" inputmode="decimal" autocomplete="off" aria-label="Assurance ' + paEsc(e.nom) + '" class="' + (e.val == null ? "vide" : "") + '" value="' + paEsc(e.val == null ? "" : String(e.val).replace(".", ",")) + '"><u>$</u></div>' +
       '<small class="pa-p">Montant précédent\u00a0: ' + paEsc(e.precedent == null ? "—" : paMontant(e.precedent)) + '</small><small class="pa-p" id="pa_as' + i + '">' + (e.ajusteQuand && !e.prefill ? "Enregistré à " + paEsc(paHeure(e.ajusteQuand)) : "") + '</small></div>';
-  }).join("") + '</div><div id="pa_bas"></div>';  h += '<p class="finnote" id="pa_etat"></p>';
+  }).join("") + '</div><div id="pa_bas"></div></div>';  h += '<p class="finnote" id="pa_etat"></p>';
   z.innerHTML = h;
   var $ = function(i){ return document.getElementById(i); };
+  Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(b){ b.onclick = function(){ PA.vue = b.getAttribute("data-pv"); Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(x){ x.className = "tgb" + (x === b ? " on" : ""); }); $("pa_v_pos").style.display = PA.vue === "ass" ? "none" : ""; $("pa_v_ass").style.display = PA.vue === "ass" ? "" : "none"; }; });
   $("pa_pos_ouvrir").onclick = function(){ PA_RETOUR = true; posEmpOuvrir(); };
   $("pa_pos_conf").onclick = function(){ paAction("pos_conf", null, "Position confirmée."); };
   if($("pa_pos_mod")) $("pa_pos_mod").onclick = function(e){ e.preventDefault(); PA.enCours = false; paAppel("pos_modif").then(function(){ PA_RETOUR = true; posEmpOuvrir(); }).catch(function(x){ paEtat(null, String(x.message || x), true); }); };
