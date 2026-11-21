@@ -81,7 +81,7 @@ function echActuelle(){
   else appelService({action: "embauche_donnees", session: sessionGardee()}).then(function(r){ ECH.act = r; rendre(r); }).catch(function(){ z.innerHTML = echSel() + '<div class="bandeau">▪ ÉCHELLE EN COURS INDISPONIBLE</div>'; echSelLier(); });
 }
 function echRendu(){
-  var d = ECH.d, h = '<div class="band">Année suivante en préparation — ' + d.annee + '</div>';
+  var d = ECH.d, h = '<div class="band" id="ech_bandeau">' + echBandeau(d) + '</div>';
   h += '<div class="sect"><span class="num">01</span><span class="lab">Taux d’augmentation applicable</span></div><div class="tr"><span>Taux d’augmentation</span>' + echCase("ech_taux", d.taux, "%") + '</div>';
   h += '<div class="sect"><span class="num">02</span><span class="lab">Taux du marché</span></div>' + d.marche.map(function(m, i){ return '<div class="tr"><span>' + echEsc(m.nom) + '</span>' + echCase("ech_mar" + i, m.val, "%") + '</div>'; }).join("");
   h += '<div class="sect"><span class="num">03</span><span class="lab">Écart de la grille avec le marché</span></div><div id="ech_ecarts">' + echEcarts() + '</div>';
@@ -100,7 +100,7 @@ function echRendu(){
     el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; var n = echNum(el.value); if(n != null || el.value.trim() === "") { maj(n); if(ind) { document.getElementById("ech_grille").innerHTML = echGrille(); document.getElementById("ech_ecarts").innerHTML = echEcarts(); echLierRefs(); } } };
     el.onchange = function(){ echSauver(champ, echNum(el.value)); };
   }
-  lier("ech_taux", function(n){ d.taux = n; }, "taux", true);
+  lier("ech_taux", function(n){ d.taux = n; var bz = document.getElementById("ech_bandeau"); if(bz) bz.textContent = echBandeau(d); }, "taux", true);
   d.marche.forEach(function(m, i){ lier("ech_mar" + i, function(n){ m.val = n; }, "marche" + i); });
   d.bonusMensuel.forEach(function(b, i){ lier("ech_bm" + i, function(n){ b.val = n; }, "bm" + i); });
   d.bonusAnnuel.forEach(function(b, i){ lier("ech_bam" + i, function(n){ b.marge = n; }, "bam" + i); lier("ech_bap" + i, function(n){ b.pct = n; }, "bap" + i); });
@@ -159,3 +159,6 @@ function echAnneeTuile(){
   if(ECH.d) poser(ECH.d);
   else if(ECH.pre) ECH.pre.then(function(r){ if(r && r.ok) poser(r.r); }).catch(function(){});
 }
+
+// Taux à 0 = année en cours (ex. 2026) ; taux augmenté = année suivante en préparation (ex. 2027).
+function echBandeau(d){ var plus = d.taux != null && Number(d.taux) > 0; return plus ? "Année suivante en préparation — " + d.annee : "Année en cours — " + (d.anneePrec != null ? d.anneePrec : d.annee - 1); }
