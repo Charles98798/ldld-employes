@@ -41,7 +41,7 @@ function suiviDessiner(){
   var n = SUIVI.lignes.filter(function(x){ return x.statut === "A_TRAITER"; }).length;
   if(!SUIVI.lignes.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN COMMENTAIRE EN CE MOMENT</div>'; return; }
   el.innerHTML = '<div class="etq">▪ DU PLUS RÉCENT AU PLUS ANCIEN · '+SUIVI.lignes.length+' · À TRAITER '+n+'</div>' + SUIVI.lignes.map(function(x, i){
-    return '<div class="carte" style="margin:10px 0;padding:12px 14px" data-i="'+i+'"><div class="etq" style="margin:0">'+(x.nouveau ? '<b class="nombre" style="margin-right:8px">Nouveau</b>' : "")+esc(x.nom || "—")+' · '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
+    return '<div class="carte" style="margin:10px 0;padding:12px 14px;background:#E3DFD3;color:#000000" data-i="'+i+'"><div class="etq" style="margin:0">'+(x.nouveau ? '<b class="nombre" style="margin-right:8px">Nouveau</b>' : "")+esc(x.nom || "—")+' · '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
       '<div style="margin:6px 0 8px;font-size:14px;line-height:1.35">'+esc(suiviMin(x.texte))+'</div>' +
       '<span class="lbl">En charge</span><select class="bx sv-ch" data-i="'+i+'" style="max-width:220px;margin-bottom:8px"><option value="">—</option>'+SUIVI.resp.concat(x.charge && SUIVI.resp.indexOf(x.charge) < 0 ? [x.charge] : []).map(function(n){ return '<option value="'+esc(n)+'"'+(n === x.charge ? " selected" : "")+'>'+esc(n)+'</option>'; }).join("")+'</select>' +
       '<span class="lbl">Statut</span><select class="bx sv-st" data-i="'+i+'" style="max-width:220px">'+Object.keys(SUIVI_LIB).map(function(k){ return '<option value="'+k+'"'+(k === x.statut ? " selected" : "")+'>'+SUIVI_LIB[k]+'</option>'; }).join("")+'</select>' +
@@ -90,7 +90,7 @@ function suiviMesOuvrir(){
     if(!r || !r.ok) throw 0;
     if(!r.lignes.length){ el.innerHTML = '<div class="bandeau">▪ AUCUN COMMENTAIRE EN CE MOMENT</div>'; return; }
     el.innerHTML = r.lignes.map(function(x){
-      return '<div class="carte" style="margin:10px 0;padding:12px 14px"><div class="etq" style="margin:0">Rencontre du '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
+      return '<div class="carte" style="margin:10px 0;padding:12px 14px;background:#E3DFD3;color:#000000"><div class="etq" style="margin:0">Rencontre du '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
         '<div style="margin:6px 0 8px;font-size:14px;line-height:1.35">'+esc(suiviMin(x.texte))+'</div><b class="etq" style="font-weight:600;color:#000000">'+SUIVI_EMP[x.statut]+'</b>' +
         (x.reponse ? '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #B4AB9B;font-size:14px">'+esc(suiviMin(x.reponse))+'</div>' : "") + '</div>';
     }).join("");

@@ -1498,3 +1498,5 @@ button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}
 .menu a .sv-tot,.menu a .sv-nv{position:absolute;top:50%;margin:-11px 0 0;height:22px;min-width:22px;box-sizing:border-box;padding:0 6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;letter-spacing:0;line-height:1}
 .menu a .sv-tot{right:28px}
 .menu a .sv-nv{right:54px}
+/* Commentaires et changements: cartes beiges (#E3DFD3), texte noir, petits textes #6E6350 */
+#sv .carte .etq,#sv .carte .lbl,#sm .carte .etq,#sm .carte .lbl{color:#6E6350}
