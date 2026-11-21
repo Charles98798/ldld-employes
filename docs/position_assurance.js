@@ -6,8 +6,8 @@ var PA = {d: null, enCours: false};
 function paEsc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function paMontant(v){ if(v == null) return "—"; var n = Math.round(v*100)/100, e = Math.round(n) === n ? String(n) : n.toFixed(2).replace(".", ","); return e.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " $"; }
 function paNum(t){ t = String(t == null ? "" : t).replace(/\s/g, "").replace("$", "").replace(",", "."); if(t === "") return null; var n = Number(t); return isNaN(n) ? null : n; }
-var PA_MOIS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
-function paQuand(q){ var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(q || "")); return m ? (+m[3]) + " " + PA_MOIS[+m[2]-1] + " " + m[1] + " à " + (+m[4]) + " h " + m[5] : String(q || ""); }
+var PA_MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function paQuand(q){ var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(q || "")); return m ? ((+m[3]) === 1 ? "1er" : (+m[3])) + " " + PA_MOIS[+m[2]-1] + " " + m[1] + " à " + (+m[4]) + " h " + m[5] : String(q || ""); }
 function paHeure(q){ var m = /[T ](\d{2}):(\d{2})/.exec(String(q || "")); return m ? (+m[1]) + " h " + m[2] : ""; }
 function paAppel(champ, valeur, id){
   var c = {action: "pa_enregistrer", champ: champ, session: sessionGardee()}; if(valeur !== undefined && valeur !== null) c.valeur = valeur; if(id) c.id = id;
@@ -69,7 +69,7 @@ function paBas(){
   else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b>' + (E.some(function(e){ return e.prefill; }) ? ' · montants repris de l’an passé' : '') + '</p>';
   h += '<div class="pa-b"><button type="button" class="btn" id="pa_ass_conf"' + ((A.confirme || !complet) ? " disabled" : "") + '>Confirmer l’assurance</button></div>';
   z.innerHTML = h;
-  document.getElementById("pa_ass_conf").onclick = function(){ paOui("Voulez-vous confirmer les assurances\u00a0?", function(){ paAction("ass_conf", null, "Assurance confirmée."); }); };
+  document.getElementById("pa_ass_conf").onclick = function(){ paOui("Voulez-vous confirmer les assurances\u00a0?", function(){ paConfirmerVite("ass_conf", function(d){ var x = d.assurance; x.confirme = true; x.par = paQui(); x.quand = paMaintenantLocal(); }, paRendu); }); };
 }
 var PA_RETOUR = false;
 // Deux boutons seulement : Position (ouvre la liste des positions) et Assurance. Le bouton choisi est noir.
@@ -85,7 +85,7 @@ function paPosBas(){
     h += '<div class="pa-b"><button type="button" class="btn" id="pa_pos_conf"' + ((d.position.confirme || !otOk) ? " disabled" : "") + '>Confirmer la position</button></div>';
     h += '<p class="pa-l">Échelle salariale ' + d.annee + '\u00a0: ' + (otOk ? 'confirmée par ' + paEsc(ot.par) + ' · ' + paEsc(paQuand(ot.quand)) : '<b class="pa-rouge">à confirmer</b> (requis pour confirmer la position)') + '</p><p class="finnote" id="pa_etat"></p>';
     z.innerHTML = h;
-    var c = document.getElementById("pa_pos_conf"); if(c) c.onclick = function(){ if(PA.enCours) return; PA.enCours = true; paAppel("pos_conf").then(function(){ PA.enCours = false; paPosBas(); }).catch(function(e){ PA.enCours = false; var t = document.getElementById("pa_etat"); if(t) t.textContent = String(e.message || e); }); };
+    var c = document.getElementById("pa_pos_conf"); if(c) c.onclick = function(){ paConfirmerVite("pos_conf", function(d){ var x = d.position; x.confirme = true; x.par = paQui(); x.quand = paMaintenantLocal(); }, paPosBas); };
     var m = document.getElementById("pa_pos_mod"); if(m) m.onclick = function(e){ e.preventDefault(); paAppel("pos_modif").then(function(){ paPosBas(); }).catch(function(x){ var t = document.getElementById("pa_etat"); if(t) t.textContent = String(x.message || x); }); };
   };
   if(PA.d) go(); else paLire().then(go).catch(function(){});
@@ -99,4 +99,22 @@ function paOui(question, oui){
   var f = function(){ if(v.parentNode) v.parentNode.removeChild(v); };
   document.getElementById("pa_non").onclick = f;
   document.getElementById("pa_oui").onclick = function(){ f(); oui(); };
+}
+
+// Règle de l'application : au « Oui », c'est terminé à l'écran tout de suite; l'enregistrement se fait en arrière-plan,
+// avec trois essais. Si tout échoue, on le dit discrètement et on relit l'état réel (rien n'est faussement « confirmé »).
+function paQui(){ return (typeof MOI !== "undefined" && MOI && MOI.nom) ? MOI.nom : "vous"; }
+function paConfirmerVite(champ, appliquer, rendu){
+  PA.fond = PA.fond || {}; if(PA.fond[champ]) return; PA.fond[champ] = true;
+  appliquer(PA.d); rendu();
+  var essai = function(n){
+    paAppel(champ).then(function(){ PA.fond[champ] = false; rendu(); })
+      .catch(function(e){
+        if(n < 3){ setTimeout(function(){ essai(n + 1); }, 2500 * n); return; }
+        PA.fond[champ] = false;
+        paLire().then(function(){ rendu(); paEtat(null, "La confirmation n’a pas pu être enregistrée (" + String((e && e.message) || e) + "). Touchez Confirmer pour réessayer.", true); })
+          .catch(function(){ paEtat(null, "La confirmation n’a pas pu être enregistrée. Touchez Confirmer pour réessayer.", true); });
+      });
+  };
+  essai(1);
 }
