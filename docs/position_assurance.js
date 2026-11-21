@@ -7,7 +7,11 @@ function paEsc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function
 function paMontant(v){ if(v == null) return "—"; var n = Math.round(v*100)/100, e = Math.round(n) === n ? String(n) : n.toFixed(2).replace(".", ","); return e.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " $"; }
 function paNum(t){ t = String(t == null ? "" : t).replace(/\s/g, "").replace("$", "").replace(",", "."); if(t === "") return null; var n = Number(t); return isNaN(n) ? null : n; }
 var PA_MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-function paQuand(q){ var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(q || "")); return m ? ((+m[3]) === 1 ? "1er" : (+m[3])) + " " + PA_MOIS[+m[2]-1] + " " + m[1] + " à " + (+m[4]) + " h " + m[5] : String(q || ""); }
+function paQuand(q){
+  var t = String(q || ""), m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(t);
+  if(!m && t){ var dt = new Date(t); if(!isNaN(dt.getTime())){ var p = function(n){ return ("0" + n).slice(-2); }; m = [0, dt.getFullYear(), p(dt.getMonth() + 1), p(dt.getDate()), p(dt.getHours()), p(dt.getMinutes())]; } }   // une date reçue en texte anglais est remise en français
+  return m ? ((+m[3]) === 1 ? "1er" : (+m[3])) + " " + PA_MOIS[+m[2]-1] + " " + m[1] + " à " + (+m[4]) + " h " + m[5] : t;
+}
 function paHeure(q){ var m = /[T ](\d{2}):(\d{2})/.exec(String(q || "")); return m ? (+m[1]) + " h " + m[2] : ""; }
 function paAppel(champ, valeur, id){
   var c = {action: "pa_enregistrer", champ: champ, session: sessionGardee()}; if(valeur !== undefined && valeur !== null) c.valeur = valeur; if(id) c.id = id;
@@ -82,13 +86,8 @@ function paPosBas(){
   var z = document.getElementById("pa_pos_bas"); if(!z) return;
   var go = function(){
     var d = PA.d, ot = d.otpad || {}, otOk = !!ot.confirme, h = "";
-    if(d.position.confirme) h += '<p class="pa-l">Position confirmée par ' + paEsc(d.position.par) + ' · ' + paEsc(paQuand(d.position.quand)) + ' · <a href="#" id="pa_pos_mod" class="pa-mod">Modifier</a></p>';
-    else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b></p>';
-    h += '<div class="pa-b"><button type="button" class="btn" id="pa_pos_conf"' + ((d.position.confirme || !otOk) ? " disabled" : "") + '>Confirmer la position</button></div>';
-    h += '<p class="pa-l">Échelle salariale ' + d.annee + '\u00a0: ' + (otOk ? 'confirmée par ' + paEsc(ot.par) + ' · ' + paEsc(paQuand(ot.quand)) : '<b class="pa-rouge">à confirmer</b> (requis pour confirmer la position)') + '</p><p class="finnote" id="pa_etat"></p>';
+    h += '<p class="pa-l">Échelle salariale ' + d.annee + '\u00a0: ' + (otOk ? 'confirmée par ' + paEsc(ot.par) + ' · ' + paEsc(paQuand(ot.quand)) : '<b class="pa-rouge">à confirmer</b> (requis pour confirmer les positions)') + '</p><p class="finnote" id="pa_etat"></p>';
     z.innerHTML = h;
-    var c = document.getElementById("pa_pos_conf"); if(c) c.onclick = function(){ paConfirmerVite("pos_conf", function(d){ var x = d.position; x.confirme = true; x.par = paQui(); x.quand = paMaintenantLocal(); }, paPosBas); };
-    var m = document.getElementById("pa_pos_mod"); if(m) m.onclick = function(e){ e.preventDefault(); paAppel("pos_modif").then(function(){ paPosBas(); }).catch(function(x){ var t = document.getElementById("pa_etat"); if(t) t.textContent = String(x.message || x); }); };
   };
   if(PA.d) go(); else paLire().then(go).catch(function(){});
 }
