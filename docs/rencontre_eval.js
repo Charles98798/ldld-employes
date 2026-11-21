@@ -110,8 +110,7 @@ function revOuvrir(D, acces){
   var ET = {
     1: function(){
       return '<p class="note">' + esc(g("A7")) + '</p><div class="carte"><div class="grand">' + esc(D.employe || "—") + "</div><div>Rencontre " + esc(D.rencontre) + " · Année " + esc(D.annee) + (D.categorie ? " · " + esc(D.categorie) : "") + '</div><div class="petit">' + esc(g("A33")) + "</div></div>" +
-        '<p class="note">Pour changer d’employé ou de rencontre, choisissez-le dans la feuille (cases B4 et D8), attendez le chargement, puis rouvrez la rencontre.</p>' +
-        '<div class="deux"><div><div class="bloc-lab">Date de la rencontre</div>' + date("B6", true) + '</div><div><div class="bloc-lab">Évaluateur</div><div class="ev">' + esc(D.evaluateur || "—") + "</div></div></div>" +
+        '<div class="deux"><div><div class="bloc-lab">Date de la rencontre</div><div class="ev">' + esc(revAujourdhui()) + '</div></div><div><div class="bloc-lab">Évaluateur</div><div class="ev">' + esc(D.evaluateur || "—") + "</div></div></div>" +
         '<p class="note" style="margin-top:12px">Cliquez sur une note pour l’enregistrer. Une case soulignée en vert reste à remplir. Le contour noir montre la note que l’employé s’est donnée.</p>';
     },
     2: function(){
@@ -215,7 +214,7 @@ function revOuvrir(D, acces){
     if(id === "comp") return ["C26", "C27", "C28"].every(function(a){ return !estRose(a); });
     if(id === "val") return ["E38", "E39", "E40", "E41", "E42"].every(function(a){ return !estRose(a); });
     if(id === "rythme" && Number(r("B29"))) return !estRose("C29") && vus[n];
-    if(id === "rencontre") return !vide("B6");
+    if(id === "rencontre") return true;
     if(id === "bilan") return NOTES.every(function(a){ return !estRose(a); });
     return !!vus[n];
   }
@@ -273,6 +272,8 @@ function revOuvrir(D, acces){
     el.style.zoom = 1; el.style.width = ""; if(innerWidth < 1000) return;
     el.style.width = "1500px"; var h = el.offsetHeight, haut = el.getBoundingClientRect().top + (window.scrollY || 0), z = Math.min((innerWidth - 64) / 1500, (innerHeight - haut - 8) / h);
     if(z > 1.8) z = 1.8; if(z < .5) z = 1; el.style.zoom = z; }
+  // La date de la rencontre est toujours celle du jour: enregistrée une seule fois si la case est vide.
+  if(!D.apercu && vide("B6")){ var q = new Date(); ecrire("B6", q.getFullYear() + "-" + ("0" + (q.getMonth() + 1)).slice(-2) + "-" + ("0" + q.getDate()).slice(-2)); }
   squelette(); majEtape(false);
   return {aller: aller};
 }
