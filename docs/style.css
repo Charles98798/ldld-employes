@@ -1470,3 +1470,6 @@ button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}
 .otpc{display:grid;grid-template-columns:70px 14px;justify-content:center;align-items:end;column-gap:4px;row-gap:2px}.otpc small{grid-column:1 / -1;flex-basis:auto;text-align:center}.otpc small:empty{display:none}
 
 .otpg{grid-template-columns:1.3fr 1fr 1fr}
+
+.ppx .fx.pts{display:block;background:transparent;color:inherit;padding:0;margin:0;font-size:inherit;letter-spacing:normal;text-transform:none;gap:0}.ppx .fx.pts b{color:inherit}.ppx .fx.pts b.manque{background:#fff}
+.ppx .fx.pts b{white-space:nowrap;flex:none}
