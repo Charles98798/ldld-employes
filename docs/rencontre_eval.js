@@ -294,6 +294,7 @@ nc:{ok:true,mois:[2,1,0,3,1,2,1,0,2,1,0,2].map((n,i)=>({label:"JFMAMJJASOND"[i],
 // Écran de départ: page d'accueil de la page web d'origine (rAccueil), reproduite à l'identique.
 var REV_EMPLOYES = [["Camille Roy","Acrylique",true,true,"17 nov. 2026",true],["Julien Tremblay","Céramique",false,true,"24 nov. 2026",true],["Sophie Gagnon","Finition",true,false,"2 déc. 2026",true],["Marc Lavoie","Modélisation",false,true,"—",false],["Isabelle Côté","Administratif",false,false,"9 déc. 2026",false],["Nadia Bergeron","Acrylique",true,true,"15 déc. 2026",true]];
 // liste: [nom, catégorie, rencontre 1 faite, rencontre 2 prévue, date, autoévaluation complétée]. Tous les employés sont proposés.
+function revAujourdhui(){ var d = new Date(); return d.getDate() + (d.getDate() === 1 ? "er " : " ") + REV_MOIS[d.getMonth()] + " " + d.getFullYear(); }
 function revChoix(liste, ouvrir, annee, evaluateur){
   liste = liste.filter(function(e){ return e[5]; });   // seulement les employés dont l'autoévaluation est remplie
   var sel = -1, renc = 1;
@@ -301,7 +302,7 @@ function revChoix(liste, ouvrir, annee, evaluateur){
   function dessiner(){
     var ok = sel >= 0, e = ok ? liste[sel] : null, r2 = ok && ((e[2] && e[3]) || e[6] === 2), mots = ok ? e[0].trim().split(/\s+/) : [], prenom = mots.slice(0, -1).join(" ") || mots[0] || "", nom = mots.length > 1 ? mots[mots.length - 1] : "";
     var h = '<div class="haut"><span></span><div style="text-align:right">Appréciation<br>de la contribution<br><span style="color:#B4AB9B">' + esc(annee) + "</span></div></div>";
-    if(ok) h += '<div class="centre"><div class="k1">Bienvenue à votre rencontre d’évaluation</div><div class="nom" style="--n:' + Math.max(8, (String(prenom) + " " + String(nom)).length) + '"><span>' + esc(prenom) + "</span> <span>" + esc(nom) + '</span></div><div class="mv" aria-hidden="true"><div class="b1"></div><div class="b2"></div><div class="fen"></div></div><div class="renc">Rencontre ' + renc + (evaluateur ? " avec " + esc(evaluateur.trim().split(/\s+/)[0]) : "") + '</div>' + (e[4] && e[4] !== "—" ? '<div class="rdate">' + esc(e[4]) + "</div>" : "") + "</div>";
+    if(ok) h += '<div class="centre"><div class="k1">Bienvenue à votre rencontre d’évaluation</div><div class="nom" style="--n:' + Math.max(8, (String(prenom) + " " + String(nom)).length) + '"><span>' + esc(prenom) + "</span> <span>" + esc(nom) + '</span></div><div class="mv" aria-hidden="true"><div class="b1"></div><div class="b2"></div><div class="fen"></div></div><div class="renc">Rencontre ' + renc + (evaluateur ? " avec " + esc(evaluateur.trim().split(/\s+/)[0]) : "") + '</div>' + '<div class="rdate">' + esc(revAujourdhui()) + "</div>" + "</div>";
     h += '<div class="bas"><div><div class="lab">Employé</div><select id="accEmp"' + (ok ? "" : ' class="rose"') + '><option value="" disabled' + (ok ? "" : " selected") + ">" + (liste.length ? "Choisir un employé" : "Aucune autoévaluation remplie") + "</option>" + liste.map(function(x, i){ return "<option value=\"" + i + "\"" + (ok && i === sel ? " selected" : "") + ">" + esc(x[0]) + "</option>"; }).join("") + "</select></div>";
     if(ok) h += '<div><div class="lab">Rencontre</div>' + [1, 2].filter(function(n){ return n === 1 || r2; }).map(function(n){ return '<button type="button" class="lienR' + (renc === n ? " on" : "") + '" data-accr="' + n + '">0' + n + "</button>"; }).join("&nbsp;&nbsp;&nbsp;") + "</div>";
     h += '<button type="button" class="go" id="accGo"' + (ok ? "" : " disabled") + '>Ouvrir la rencontre</button></div><div class="bl accbl"><a href="#" class="rt" id="accRet" aria-label="Retour">←</a><h1 class="ti">Rencontre d’évaluation</h1></div>';
@@ -313,7 +314,7 @@ function revChoix(liste, ouvrir, annee, evaluateur){
       bt.setAttribute("data-occ", "1"); bt.textContent = "Ouverture en cours"; bt.style.opacity = ".6";   // l'appui se voit tout de suite
       var rendre = function(){ bt.removeAttribute("data-occ"); bt.textContent = t0; bt.style.opacity = ""; };
       var p; try { p = ouvrir(liste[sel][0], renc); } catch(e){ rendre(); throw e; }
-      if(p && p.then) p.then(rendre, rendre); else setTimeout(rendre, 1500);
+      if(p && p.then){ p.then(rendre, rendre); setTimeout(function(){ if(bt.getAttribute("data-occ")){ rendre(); revBandeau("Ouverture trop longue", "Le serveur ne répond pas. Réessaie dans un instant."); } }, 45000); } else setTimeout(rendre, 1500);
     };
     try { ajusterTitre(a.querySelector(".accbl h1.ti")); setTimeout(function(){ try { ajusterTitre(a.querySelector(".accbl h1.ti")); } catch(e){} }, 400); } catch(e){}
     document.getElementById("accRet").onclick = function(){ menu(); };
