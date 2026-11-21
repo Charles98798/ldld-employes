@@ -106,6 +106,16 @@ function revOuvrir(D, acces){
   function cibleNum(t){ var m = /(\d+(?:[.,]\d+)?)/.exec(String(t || "")); return m ? parseFloat(m[1].replace(",", ".")) : null; }
   function valNum(row, v){ var t = String(v == null ? "" : v), pc = t.indexOf("%") >= 0; t = t.split("%").join("").split("h").join("").split(",").join(".").split(" ").join(""); if(t === "") return null; var n = Number(t); if(isNaN(n)) return null; if(row >= 60 && !pc && n <= 1) n = n * 100; return n; }
 
+  // Chiffres de Gestion (règle du 2 novembre): 6 mois avant la rencontre, sans les 14 derniers jours. Période, réalisé et objectifs atteints viennent du serveur (D.gx), comme dans le classeur.
+  function gxTxt(rw){ var x = D.gx; if(!x || !x.ok) return null; var f1 = function(v){ return Math.round(v) + " %"; }; return rw === 59 ? String(Math.round(x.heures * 100) / 100).split(".").join(",") : rw === 60 ? f1(x.ce) : rw === 61 ? f1(x.cn) : f1(x.obj); }
+  function gxEcrire(){
+    var x = D.gx; if(!x || !x.ok) return;
+    var iso = function(t){ var q = String(t || "").split("-"); return q.length === 3 ? ryTxt(q[0] + "-" + q[1] + "-" + q[2]) : ""; };
+    if(x.du && x.au){ var per = "du " + iso(x.du) + " au " + iso(x.au); if(String(r("C56")) !== per) ecrire("C56", per, true); }
+    [59, 60, 61].forEach(function(rw){ var t = gxTxt(rw); if(t !== null && String(r("E" + rw)) !== t) ecrire("E" + rw, t, true); });
+    var o = Math.round(x.obj * 10) / 10, c = Number(r("C29")); if(isFinite(o) && (isNaN(c) || Math.abs(c - o / 100) > 1e-9)) ecrire("C29", o / 100, true);
+  }
+
   // ---- étapes ----
   var ET = {
     1: function(){
@@ -149,7 +159,7 @@ function revOuvrir(D, acces){
     },
     6: function(){
       if(/^(administratif|gestionnaire)/i.test(D.categorie || "")) return '<p class="note">Pas de tableau de bord pour ce poste.</p>';
-      var GX = D.gx && D.gx.ok ? D.gx : null, h = '<p class="note" id="st">' + ptsSous("obj") + "</p>";
+      var GX = D.gx && D.gx.ok ? D.gx : null; gxEcrire(); var h = '<p class="note" id="st">' + ptsSous("obj") + "</p>";
       var cur = String(r("C56") || ""), iso = ryLire(cur) || ["", ""], rose = cur === "" ? " rose" : "";
       h += '<div class="rang rg2"><div class="lab">' + esc(g("A56")) + '</div><div class="ry-per">Du <span class="' + rose + '"><input type="date" data-ry="D" value="' + iso[0] + '"' + (GX ? " disabled" : "") + '></span> au <span class="' + rose + '"><input type="date" data-ry="F" value="' + iso[1] + '"' + (GX ? " disabled" : "") + "></span></div></div>";
       if(!GX) h += '<p class="note">Chiffres de Gestion indisponibles : ' + esc(D.gx ? (D.gx.raison || "?") : "aucune donnée reçue du serveur") + "</p>";
