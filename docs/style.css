@@ -1283,7 +1283,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 .rvo .ry-d{font-size:11px;color:#6E6350}
 .rvo .pctautre{width:70px;margin-left:4px}.rvo .autre{font-size:11px;margin-left:8px}
 .rvo .rosef{background:#fff;padding:0 4px}
-.rvo .verrou{opacity:.85}
+.rvo .verrou{opacity:1}
 .rvo .vide{padding:20px 0;color:#8f877a}
 .rvo .xp{display:block}
 .rvo .xpl{display:grid;grid-template-columns:300px 380px 110px;justify-content:start;gap:16px;align-items:center;border-bottom:1px solid #ece8e1;padding:8px 0}
