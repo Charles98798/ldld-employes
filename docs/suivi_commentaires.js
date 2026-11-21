@@ -24,7 +24,7 @@ function suiviPastilles(){
   }).catch(function(){});
 }
 function suiviOuvrir(){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi des commentaires et changements</h1><div id="sv"></div></div>';
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Commentaires et changements</h1><div id="sv"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   // 1) lecture rapide de l'onglet (sans synchroniser le pont): l'écran s'affiche tout de suite, avec la note si rien
   // 2) synchronisation avec les rencontres terminées en arrière-plan; l'écran se met à jour seulement si de nouveaux commentaires arrivent
@@ -83,7 +83,7 @@ function suiviEnvoyer(i, statut, action, echeance, reponse){
 }
 // Vue employé: statut du commentaire et réponse de la Direction, sans nom, sans courriel.
 function suiviMesOuvrir(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Mes commentaires et changements</h1><div id="sm"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Commentaires et changements</h1><div id="sm"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   appelService({action: "suivi_mes", session: sessionGardee(), lu: true}).then(function(r){
     var el = document.getElementById("sm"); if(!el) return;

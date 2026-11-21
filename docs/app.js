@@ -19,8 +19,7 @@ var PICTOS = {
  "Notre équipe": "M7 1h10v22h-10zM9 4h6v13h-6zM10.5 19h3v2h-3z",
  "Messages envoyés": "M4 4h18v3h-18zM4 7h3v9h-3zM19 7h3v9h-3zM4 16h18v3h-18zM7 7h3v3h-3zM10 10h3v3h-3zM13 10h3v3h-3zM16 7h3v3h-3zM0 5h3v3h-3zM0 10h3v3h-3zM0 15h3v3h-3z",
  "Rencontres demandées": "M9 5h6v6h-6zM7 12h10v10h-10zM18 2h3v10h-3z",
- "Suivi des commentaires et changements": "M7 3h10v3h-10zM18 6h3v6h-3zM16 12h7v3h-7zM18 15h3v2h-3zM7 18h10v3h-10zM3 12h3v6h-3zM1 9h7v3h-7zM3 7h3v2h-3z",
- "Mes commentaires et changements": "M7 3h10v3h-10zM18 6h3v6h-3zM16 12h7v3h-7zM18 15h3v2h-3zM7 18h10v3h-10zM3 12h3v6h-3zM1 9h7v3h-7zM3 7h3v2h-3z",
+ "Commentaires et changements": "M7 3h10v3h-10zM18 6h3v6h-3zM16 12h7v3h-7zM18 15h3v2h-3zM7 18h10v3h-10zM3 12h3v6h-3zM1 9h7v3h-7zM3 7h3v2h-3z",
  "Entretien machinerie": "M9 2h4v10h-4zM4 12h14v4h-14zM4 17h3v5h-3zM8 17h3v5h-3zM12 17h3v5h-3zM16 17h2v5h-2z",
  "Position et assurance": "M4 4h16v3h-16zM4 17h16v3h-16zM4 7h3v10h-3zM17 7h3v10h-3zM10 0h4v4h-4zM10 20h4v4h-4zM0 10h4v4h-4zM20 10h4v4h-4zM10 10h4v4h-4z",
  "Échelle salariale": "M2 3h20v4h-20zM2 9h4v3h-4zM8 9h4v3h-4zM14 9h4v3h-4zM19 9h3v12h-3zM2 14h4v3h-4zM8 14h4v3h-4zM14 14h4v3h-4zM2 19h4v2h-4zM8 19h4v2h-4zM14 19h4v2h-4z",
@@ -639,7 +638,7 @@ var ENT = [
  {id:"rencontre", g:"Mon travail", l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
  {id:"ae_planif", g:"Évaluation", l:"Planification évaluation", p:"Planification évaluation", n:1, d:[0,1,1], f:function(){ aepPlanification(); }},
  {id:"ae_reunion", g:"Évaluation", l:"Rencontre d’évaluation", p:"Rencontre d’évaluation", n:2, d:[0,1,1], f:function(){ revDemarrer(); }},
- {id:"suivi_commentaires", g:"Évaluation", l:"Commentaires et changements", p:"Suivi des commentaires et changements", n:3, d:[0,1,1], f:function(){ if(peutEcrire()) suiviOuvrir(); else suiviMesOuvrir(); }},
+ {id:"suivi_commentaires", g:"Évaluation", l:"Commentaires et changements", p:"Commentaires et changements", n:3, d:[0,1,1], f:function(){ if(peutEcrire()) suiviOuvrir(); else suiviMesOuvrir(); }},
  {id:"autoevaluation", g:"Évaluation", v:1, h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,0,0], i:2, f:function(){ aeEntree(); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
@@ -720,7 +719,7 @@ function menu(){
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
   vis.forEach(function(x){
     if(grp && x.g !== g){ g = x.g; h += '<div class="gtit">▪ '+esc(g)+'</div>'; }
-    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.id === "messages" ? "Calendrier et messages" : (x.id === "suivi_commentaires" && !peutEcrire() ? "Mes commentaires et changements" : x.l)).replace("\u2191", FLECHE_TXT)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(function(n){ return n ? '<b class="nc">'+n+'</b>' : ""; })(grp ? x.n : (x.id === "autoevaluation" ? 1 : (x.id === "suivi_commentaires" ? 2 : x.n)))+'</span></a>';
+    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.id === "messages" ? "Calendrier et messages" : x.l).replace("\u2191", FLECHE_TXT)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(function(n){ return n ? '<b class="nc">'+n+'</b>' : ""; })(grp ? x.n : (x.id === "autoevaluation" ? 1 : (x.id === "suivi_commentaires" ? 2 : x.n)))+'</span></a>';
   });
   if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { enArriere(echPrecharger); setTimeout(function(){ try { enArriere(function(){ posEmpPrecharger(); embPrecharger(); }); } catch(e){} }, 30000); } catch(e){} }
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="envg"></div><div id="auj"></div>' + h +
