@@ -720,7 +720,7 @@ function menu(){
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
   vis.forEach(function(x){
     if(grp && x.g !== g){ g = x.g; h += '<div class="gtit">▪ '+esc(g)+'</div>'; }
-    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.id === "messages" ? "Calendrier et messages" : (x.id === "suivi_commentaires" && !peutEcrire() ? "Mes commentaires et changements" : x.l)).replace("\u2191", FLECHE_TXT)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(x.n ? '<b class="nc">'+x.n+'</b>' : "")+'</span></a>';
+    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.id === "messages" ? "Calendrier et messages" : (x.id === "suivi_commentaires" && !peutEcrire() ? "Mes commentaires et changements" : x.l)).replace("\u2191", FLECHE_TXT)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(function(n){ return n ? '<b class="nc">'+n+'</b>' : ""; })(grp ? x.n : (x.id === "autoevaluation" ? 1 : (x.id === "suivi_commentaires" ? 2 : x.n)))+'</span></a>';
   });
   if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { enArriere(echPrecharger); setTimeout(function(){ try { enArriere(function(){ posEmpPrecharger(); embPrecharger(); }); } catch(e){} }, 30000); } catch(e){} }
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="envg"></div><div id="auj"></div>' + h +
