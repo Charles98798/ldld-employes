@@ -1258,7 +1258,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 .rvo .rg3v{grid-template-columns:260px auto 1fr;align-items:start}
 .rvo .rg3e{grid-template-columns:240px auto 1fr}
 .rvo .lab{font-size:13px;font-weight:400}
-.rvo .desc{font-size:11px;color:#6E6350;font-weight:300;margin-top:2px}
+.rvo .desc{text-align:justify;font-size:11px;color:#6E6350;font-weight:300;margin-top:2px}
 .rvo .quot{grid-column:1/-1;font-size:11px;color:#6E6350}
 .rvo .puces{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 .rvo .puce{font:inherit;font-size:12px;min-width:30px;height:30px;padding:0 6px;background:#fff;border:1px solid #d8d3ca;border-radius:0;color:#000;cursor:pointer}
