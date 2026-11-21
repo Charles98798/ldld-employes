@@ -18,7 +18,7 @@ function suiviPastilles(){
   if(b) appelService({action: "suivi_mes", session: sessionGardee()}).then(function(r){ if(r && r.ok) suiviPastille(app.querySelector('a[data-k="mes_commentaires"]'), r.nouveaux); }).catch(function(){});
 }
 function suiviOuvrir(){
-  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi des commentaires</h1><div id="sv"></div></div>';
+  app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi des commentaires et changements</h1><div id="sv"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   appelService({action: "suivi_lire", session: sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
@@ -70,7 +70,7 @@ function suiviEnvoyer(i, statut, action, echeance, reponse){
 }
 // Vue employé: statut du commentaire et réponse de la Direction, sans nom, sans courriel.
 function suiviMesOuvrir(){
-  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi de mes commentaires</h1><div id="sm"></div></div>';
+  app.innerHTML = '<div class="page"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi de mes commentaires et changements</h1><div id="sm"></div></div>';
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   appelService({action: "suivi_mes", session: sessionGardee(), lu: true}).then(function(r){
     var el = document.getElementById("sm"); if(!el) return;
