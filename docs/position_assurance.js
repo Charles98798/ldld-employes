@@ -37,7 +37,9 @@ function paRendu(){
   h += paBande("1", "Position " + an);
   if(d.position.confirme) h += '<p class="pa-l">Confirmée par ' + paEsc(d.position.par) + ' · ' + paEsc(paQuand(d.position.quand)) + ' · <a href="#" id="pa_pos_mod" class="pa-mod">Modifier</a></p>';
   else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b></p>';
-  h += '<div class="pa-b"><button type="button" class="btn" id="pa_pos_ouvrir">Ouvrir les positions</button><button type="button" class="btn" id="pa_pos_conf"' + (d.position.confirme ? " disabled" : "") + '>Confirmer la position</button></div>';
+  var ot = d.otpad || {}, otOk = !!ot.confirme;
+  h += '<div class="pa-b"><button type="button" class="btn" id="pa_pos_ouvrir">Ouvrir les positions</button><button type="button" class="btn" id="pa_pos_conf"' + ((d.position.confirme || !otOk) ? " disabled" : "") + '>Confirmer la position</button></div>';
+  h += '<p class="pa-l">Échelle salariale ' + an + '\u00a0: ' + (otOk ? 'confirmée par ' + paEsc(ot.par) + ' · ' + paEsc(paQuand(ot.quand)) : '<b class="pa-rouge">à confirmer</b> (requis pour confirmer la position)') + '</p>';
   // 2 Assurance : un montant PAR EMPLOYÉ, repris de l'an passé, à confirmer ou ajuster ("0" s'il n'y en a pas)
   h += paBande("2", "Assurance " + an);
   h += '<div class="pa-lst">' + d.assurance.employes.map(function(e, i){

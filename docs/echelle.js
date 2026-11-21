@@ -94,7 +94,7 @@ function echRendu(){
   h += '<p class="finnote" id="ech_etat"></p>';
   document.getElementById("ech_app").innerHTML = h;
   echOtpadRendu();
-  paLire().then(function(){ var zo = document.getElementById("ech_otpad"); if(zo && !(document.activeElement && zo.contains(document.activeElement))) echOtpadRendu(); }).catch(function(e){ var z = document.getElementById("ech_otpad"); if(z && !PA.d) z.innerHTML = '<p class="finnote">OTPAD indisponible : ' + echEsc(String((e && e.message) || "échec")) + '</p>'; });
+  paLire().then(function(){ var zo = document.getElementById("ech_otpad"); if(zo && !(document.activeElement && zo.contains(document.activeElement))) echOtpadRendu(); echOtpadAuto(); }).catch(function(e){ var z = document.getElementById("ech_otpad"); if(z && !PA.d) z.innerHTML = '<p class="finnote">OTPAD indisponible : ' + echEsc(String((e && e.message) || "échec")) + '</p>'; });
   function lier(id, maj, champ, ind){
     var el = document.getElementById(id); if(!el) return;
     el.oninput = function(){ el.className = el.value.trim() === "" ? "vide" : ""; var n = echNum(el.value); if(n != null || el.value.trim() === "") { maj(n); if(ind) { document.getElementById("ech_grille").innerHTML = echGrille(); document.getElementById("ech_ecarts").innerHTML = echEcarts(); echLierRefs(); } } };
@@ -109,6 +109,13 @@ function echRendu(){
 // Bande « OTPAD $ AAAA » : un montant par catégorie (Auxiliaire, Technologue). Champ obligatoire vide = blanc + soulignement vert 3 px ; rempli = se fond (1 px #B4AB9B).
 // Historique par année dans le journal du classeur (jamais écrasé : qui et quand). L'assurance n'est PAS ici (page Position et assurance).
 function echOtpadEcart(v, p){ if(v == null || !p) return ""; var e = (v / p - 1) * 100; return (e >= 0 ? "+ " : "− ") + echFr(Math.abs(e), 0) + " % vs " + (PA.d.anneePrec); }
+// Les montants préremplis (ceux de l'an passé) s'enregistrent d'eux-mêmes, une seule fois par ouverture: on les retrouve en revenant.
+function echOtpadAuto(){
+  var d = PA.d; if(!d || !d.otpad || PA.auto) return; PA.auto = true;
+  var o = d.otpad, p = Promise.resolve();
+  [["aux", "otpad_aux"], ["tech", "otpad_tech"]].forEach(function(t){ var x = o[t[0]]; if(x && x.val == null && x.precedent != null) p = p.then(function(){ return paAppel(t[1], x.precedent); }); });
+  p.then(function(){ var zo = document.getElementById("ech_otpad"); if(zo && !(document.activeElement && zo.contains(document.activeElement))) echOtpadRendu(); }).catch(function(){ PA.auto = false; });
+}
 function echOtpadRendu(){
   var z = document.getElementById("ech_otpad"), d = PA.d; if(!z) return; if(!d){ z.innerHTML = '<div class="att"><i></i></div>'; return; }
   var o = d.otpad, c = function(k, id){ var x = o[k]; return '<div class="otpc"><input id="' + id + '" inputmode="decimal" autocomplete="off" aria-label="OTPAD ' + echEsc(x.lab) + '" class="' + ((x.val == null && x.precedent == null) ? "vide" : "") + '" value="' + echEsc(x.val == null ? (x.precedent == null ? "" : String(x.precedent).replace(".", ",")) : String(x.val).replace(".", ",")) + '"><u>$</u><small class="otpp">Précédent : ' + echEsc(x.precedent == null ? "—" : echFr(x.precedent, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + "\u00a0$") + '</small><small id="' + id + '_e">' + echEsc(echOtpadEcart(x.val, x.precedent)) + '</small></div>'; };
