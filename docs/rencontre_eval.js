@@ -41,7 +41,6 @@ function revOuvrir(D, acces){
   var NOTES = REV_NOTES;
   function g(a){ var v = D.g && D.g[a]; return v === undefined || v === null ? "" : String(v); }
   function r(a){ if(S.hasOwnProperty(a)) return S[a]; var v = D.r && D.r[a]; return v === undefined || v === null ? "" : v; }
-  function revAuto(L){ var v = L.map(function(a){ var e = emp(a); return e == null || e === "" ? "—" : e; }); return "Autoévaluation de l’employé : " + (v.every(function(x){ return x === "—"; }) ? (D.notes ? "aucune note reçue" : "non reçue du serveur") : v.join(" · ")); }
   function papier(){ return D.papier === false ? " verrou" : ""; }   // autoévaluation reçue en ligne: réponses de l'employé en lecture seule
   function ro(){ return D.papier === false; }
   function vide(a){ var v = r(a); return v === "" || v === null || v === undefined; }
@@ -132,12 +131,12 @@ function revOuvrir(D, acces){
       return h + "</div>";
     },
     3: function(){
-      var h = '<div class="titre-b">' + btnBareme("comp") + '</div><p class="note">' + ptsSous("comp") + '</p><p class="note">' + revAuto(["C26", "C27", "C28"]) + '</p><p class="note" style="margin-top:12px">Notes de 1 à 10 selon le barème.</p>';
+      var h = '<div class="titre-b">' + btnBareme("comp") + '</div><p class="note">' + ptsSous("comp") + '</p><p class="note" style="margin-top:12px">Notes de 1 à 10 selon le barème.</p>';
       ["C26", "C27", "C28"].forEach(function(a, i){ var row = 26 + i; h += '<div class="rang rg3"><div class="lab">' + esc(g("A" + row)) + "</div>" + puces(a, 10, {emp: emp(a), rose: estRose(a)}) + champ("D" + row, 2, "Observations") + "</div>"; });
       return h;
     },
     4: function(){
-      var h = '<div class="titre-b">' + btnBareme("val") + '</div><p class="note">' + ptsSous("val") + '</p><p class="note">' + revAuto(["E38", "E39", "E40", "E41", "E42"]) + "</p>";
+      var h = '<div class="titre-b">' + btnBareme("val") + '</div><p class="note">' + ptsSous("val") + "</p>";
       for(var row = 38; row <= 42; row++){ var a = "E" + row, d = valDef(g("C" + row));
         h += '<div class="rang rg3v"><div class="lab">' + esc(g("A" + row)) + '<div class="desc">' + esc(d[0]) + "</div></div>" + puces(a, 10, {emp: emp(a), rose: estRose(a)}) + '<div class="' + papier() + '">' + champ("I" + row, 1, "Observations de l’employé", ro()) + "</div>" + (d[1] ? '<div class="quot"><b>Au quotidien :</b> ' + esc(d[1]) + "</div>" : "") + "</div>"; }
       return h;
