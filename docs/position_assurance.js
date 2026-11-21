@@ -7,8 +7,8 @@ function paEsc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function
 function paMontant(v){ if(v == null) return "—"; var n = Math.round(v*100)/100, e = Math.round(n) === n ? String(n) : n.toFixed(2).replace(".", ","); return e.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " $"; }
 function paNum(t){ t = String(t == null ? "" : t).replace(/\s/g, "").replace("$", "").replace(",", "."); if(t === "") return null; var n = Number(t); return isNaN(n) ? null : n; }
 var PA_MOIS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
-function paQuand(q){ var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(q || "")); return m ? (+m[3]) + " " + PA_MOIS[+m[2]-1] + " " + m[1] + " à " + (+m[4]) + " h " + m[5] : ""; }
-function paHeure(q){ var m = /T(\d{2}):(\d{2})/.exec(String(q || "")); return m ? (+m[1]) + " h " + m[2] : ""; }
+function paQuand(q){ var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(q || "")); return m ? (+m[3]) + " " + PA_MOIS[+m[2]-1] + " " + m[1] + " à " + (+m[4]) + " h " + m[5] : String(q || ""); }
+function paHeure(q){ var m = /[T ](\d{2}):(\d{2})/.exec(String(q || "")); return m ? (+m[1]) + " h " + m[2] : ""; }
 function paAppel(champ, valeur, id){
   var c = {action: "pa_enregistrer", champ: champ, session: sessionGardee()}; if(valeur !== undefined && valeur !== null) c.valeur = valeur; if(id) c.id = id;
   return appelService(c).then(function(r){ if(r && r.ok){ PA.d = r.r; return r.r; } throw new Error((r && r.erreur) || "Échec de l'enregistrement."); });
