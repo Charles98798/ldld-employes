@@ -227,7 +227,7 @@ function revOuvrir(D, acces){
       for(var row = 93; row <= 98; row++) h += '<div class="rang rg3e' + papier() + '"><div class="lab">' + esc(g("A" + row)) + "</div>" + puces("E" + row, 5, {na: true, rose: vide("E" + row), lecture: ro()}) + champ("G" + row, 1, "Commentaire facultatif", false) + "</div>";
       return h;
     },
-    11: function(){ return '<div class="' + papier() + '"><div class="bloc-lab">' + esc(g("A101")) + "</div>" + champ("A102", 4, "", false) + '<div class="bloc-lab" style="margin-top:12px">' + esc(g("A104")) + "</div>" + champ("A105", 4, "", false) + encSuivi() + "</div>"; },
+    11: function(){ return '<div class="' + papier() + '"><div class="bloc-lab">' + esc(g("A101")) + "</div>" + champ("A102", 4, "", false) + '<div class="bloc-lab" style="margin-top:12px">' + esc(g("A104")) + "</div>" + champ("A105", 4, "", false) + encSuivi(true) + "</div>"; },
     12: function(){
       var manque = NOTES.filter(estRose), o = obj(), CR = ["C26", "C27", "C28"], VA = ["E38", "E39", "E40", "E41", "E42"];
       function lib(a){ return g("A" + a.slice(1)); }
@@ -331,7 +331,7 @@ function revOuvrir(D, acces){
     t.appendChild(u); document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 8000);
   }
   // Encadré d'information sur le suivi des commentaires: pictogramme de bulle dessiné comme ceux de l'accueil (blocs carrés pleins sur une grille de 24), fond taupe, bordure noire.
-  function encSuivi(){ return '<div class="encsuivi"><div class="eic">' + '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M2 3h20v3h-20zM2 6h3v9h-3zM19 6h3v9h-3zM2 15h20v3h-20zM5 18h3v3h-3zM8 8h8v2h-8zM8 11h5v2h-5z"/></svg>' + '</div><div class="etx"><div class="et">On fait le suivi de tes commentaires</div><p>Chaque commentaire et changement proposé est noté. Consulte « Mes commentaires et changements » dans l’application pour voir où il en est et notre réponse.</p></div></div>'; }
+  function encSuivi(ch){ return '<div class="encsuivi"><div class="eic">' + '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M2 3h20v3h-20zM2 6h3v9h-3zM19 6h3v9h-3zM2 15h20v3h-20zM5 18h3v3h-3zM8 8h8v2h-8zM8 11h5v2h-5z"/></svg>' + '</div><div class="etx"><div class="et">On fait le suivi de tes ' + (ch ? "changements" : "commentaires") + '</div><p>' + (ch ? "Chaque changement proposé est noté." : "Chaque commentaire est noté.") + ' Consulte « Mes commentaires et changements » dans l’application pour voir où il en est et notre réponse.</p></div></div>'; }
   function terminer(){
     removeEventListener("resize", ajuster); var f = REV_FIN; REV_FIN = null; menu();
     var t = document.createElement("div"); t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;padding:12px 20px;font-size:14px;z-index:9999";
