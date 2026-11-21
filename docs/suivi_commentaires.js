@@ -12,14 +12,16 @@ function suiviPastille(a, n){
 }
 // Pastille de l'Accueil: nombre de commentaires « À traiter » (Direction et gestionnaires) / nombre de réponses non lues (employé)
 function suiviPastilles(){
-  var a = app.querySelector('a[data-k="suivi_commentaires"]');
-  if(a) appelService({action: "suivi_compte", session: sessionGardee()}).then(function(r){ if(!r || !r.ok) return; var t = app.querySelector('a[data-k="suivi_commentaires"]'); if(!t) return;
+  var a = app.querySelector('a[data-k="suivi_commentaires"]'); if(!a) return;
+  if(!peutEcrire()){   // employé: même tuile, vue « Mes commentaires et changements »
+    appelService({action: "suivi_mes", session: sessionGardee()}).then(function(r){ if(r && r.ok) suiviPastille(app.querySelector('a[data-k="suivi_commentaires"]'), r.nouveaux); }).catch(function(){});
+    return;
+  }
+  appelService({action: "suivi_compte", session: sessionGardee()}).then(function(r){ if(!r || !r.ok) return; var t = app.querySelector('a[data-k="suivi_commentaires"]'); if(!t) return;
     Array.prototype.forEach.call(t.querySelectorAll(".sv-nv, .sv-tot"), function(e){ e.remove(); });
     if(r.nouveaux){ var v = document.createElement("span"); v.className = "nombre sv-nv"; v.textContent = r.nouveaux; t.appendChild(v); }   // vert: jamais vus
     if(r.a_traiter){ var k = document.createElement("span"); k.className = "nombre sv-tot"; k.textContent = r.a_traiter; k.style.cssText = "background:#000000;color:#ffffff"; t.appendChild(k); }   // noir: total « À traiter »
   }).catch(function(){});
-  var b = app.querySelector('a[data-k="mes_commentaires"]');
-  if(b) appelService({action: "suivi_mes", session: sessionGardee()}).then(function(r){ if(r && r.ok) suiviPastille(app.querySelector('a[data-k="mes_commentaires"]'), r.nouveaux); }).catch(function(){});
 }
 function suiviOuvrir(){
   app.innerHTML = '<div class="page" style="padding-bottom:90px"><a class="retour" href="#" id="retour">Retour</a><h1>Suivi des commentaires et changements</h1><div id="sv"></div></div>';

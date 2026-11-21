@@ -639,9 +639,8 @@ var ENT = [
  {id:"rencontre", g:"Mon travail", l:"Demander rencontre", p:"Rencontres demandées", d:[1,1,1], i:7, f:function(){ section(7); }},
  {id:"ae_planif", g:"Évaluation", l:"Planification évaluation", p:"Planification évaluation", n:1, d:[0,1,1], f:function(){ aepPlanification(); }},
  {id:"ae_reunion", g:"Évaluation", l:"Rencontre d’évaluation", p:"Rencontre d’évaluation", n:2, d:[0,1,1], f:function(){ revDemarrer(); }},
- {id:"suivi_commentaires", g:"Évaluation", l:"Commentaires et changements", p:"Suivi des commentaires et changements", n:3, d:[0,1,1], f:function(){ suiviOuvrir(); }},
+ {id:"suivi_commentaires", g:"Évaluation", l:"Commentaires et changements", p:"Suivi des commentaires et changements", n:3, d:[0,1,1], f:function(){ if(peutEcrire()) suiviOuvrir(); else suiviMesOuvrir(); }},
  {id:"autoevaluation", g:"Évaluation", v:1, h:1, l:"Autoévaluation", p:"Autoévaluation", d:[1,0,0], i:2, f:function(){ aeEntree(); }},
- {id:"mes_commentaires", g:"Mon travail", l:"Mes commentaires et changements", p:"Mes commentaires et changements", d:[0,0,1], f:function(){ suiviMesOuvrir(); }},
  {id:"remuneration", g:"Mon compte", l:"Rémunération", p:"Rémunération", d:[1,1,1], i:3, v:1, f:function(){ section(3); }},
  {id:"mon_profil", g:"Mon compte", l:"Mon profil", p:"Mon profil", d:[1,1,1], i:8, f:function(){ section(8); }},
  {id:"contacts", g:"Équipe", l:"Notre équipe", p:"Notre équipe", d:[0,1,1], f:function(){ contactsResp(); }},
@@ -721,7 +720,7 @@ function menu(){
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
   vis.forEach(function(x){
     if(grp && x.g !== g){ g = x.g; h += '<div class="gtit">▪ '+esc(g)+'</div>'; }
-    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.id === "messages" ? "Calendrier et messages" : x.l).replace("\u2191", FLECHE_TXT)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(x.n ? '<b class="nc">'+x.n+'</b>' : "")+'</span></a>';
+    h += '<a href="#" data-k="'+x.id+'"'+(x.i !== undefined ? ' data-i="'+x.i+'"' : "")+'><span>'+picto(x.p)+esc(x.id === "messages" ? "Calendrier et messages" : (x.id === "suivi_commentaires" && !peutEcrire() ? "Mes commentaires et changements" : x.l)).replace("\u2191", FLECHE_TXT)+(x.h && MOI.role === "direction" ? '<b class="ast">*</b>' : "")+(x.n ? '<b class="nc">'+x.n+'</b>' : "")+'</span></a>';
   });
   if(MOI.role === "direction" && !menu.prechargeDir){ menu.prechargeDir = true; try { enArriere(echPrecharger); setTimeout(function(){ try { enArriere(function(){ posEmpPrecharger(); embPrecharger(); }); } catch(e){} }, 30000); } catch(e){} }
   app.innerHTML = '<div class="menu accueil'+(animer ? ' anim' : '')+'"><img class="logo sym" width="110" src="assets/LDLD_symbole_blanc_transparent.png" alt="Lafond Desjardins"><div id="envg"></div><div id="auj"></div>' + h +
