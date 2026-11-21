@@ -174,8 +174,8 @@ function revOuvrir(D, acces){
     },
     5: function(){
       var h = '<div class="deux"><div><div class="bloc-lab">' + esc(g("A45")) + "</div>" + champ("C45", Math.max(4, String(r("C45")).split("\n").length + 1)) + '</div><div><div class="bloc-lab">' + esc(g("A47")) + "</div>" + champ("C47", Math.max(4, String(r("C47")).split("\n").length + 1)) + "</div></div>";
-      h += '<div class="bloc-lab" style="margin-top:12px">' + esc(g("A49")) + '</div><div class="entete-tab t4"><div>' + esc(g("A50")) + "</div><div>" + esc(g("C50")) + "</div><div>" + esc(g("E50")) + "</div><div>" + esc(g("G50")) + "</div></div>";
-      for(var row = 51; row <= 53; row++) h += '<div class="ligne-tab t4"><div data-l="' + esc(g("A50")) + '">' + champ("A" + row, 1) + '</div><div data-l="' + esc(g("C50")) + '">' + champ("C" + row, 1) + '</div><div data-l="' + esc(g("E50")) + '">' + champ("E" + row, 1) + '</div><div data-l="' + esc(g("G50")) + '">' + champ("G" + row, 1) + "</div></div>";
+      h += '<div class="bloc-lab" style="margin-top:12px">' + esc(g("A49")) + '</div><div class="entete-tab t4a"><div>' + esc(g("A50")) + "</div><div>" + esc(g("C50")) + "</div><div>" + esc(g("E50")) + "</div><div>" + esc(g("G50")) + "</div><div>Acquis</div></div>";
+      for(var row = 51; row <= 53; row++) h += '<div class="ligne-tab t4a"><div data-l="' + esc(g("A50")) + '">' + champ("A" + row, 1) + '</div><div data-l="' + esc(g("C50")) + '">' + champ("C" + row, 1) + '</div><div data-l="' + esc(g("E50")) + '">' + champ("E" + row, 1) + '</div><div data-l="' + esc(g("G50")) + '">' + champ("G" + row, 1) + '</div><div class="acq-c"><button type="button" class="acq" data-acq="' + row + '"' + (String(r("C" + row)).trim() ? "" : " disabled") + ' aria-label="Acquis : ajouter aux tâches acquises">Acquis</button></div></div>';
       return h;
     },
     6: function(){
@@ -263,6 +263,7 @@ function revOuvrir(D, acces){
     w.addEventListener("click", function(e){
       var b = e.target.closest ? e.target.closest("button") : null; if(!b || b.disabled) return;
       if(b.hasAttribute("data-bareme")){ ouvrirBareme(b.getAttribute("data-bareme")); return; }
+      if(b.hasAttribute("data-acq")){ acquis(+b.getAttribute("data-acq")); return; }
       if(b.hasAttribute("data-a") && b.hasAttribute("data-v")){ var v = b.getAttribute("data-v"); ecrire(b.getAttribute("data-a"), /^\d+$/.test(v) ? +v : v); majEtape(true); }
       else if(b.hasAttribute("data-ry")){ var n = b.getAttribute("data-ry"); S["R" + n] = b.getAttribute("data-o"); ecrire(b.getAttribute("data-c") + n, true); majEtape(true); }
       else if(b.hasAttribute("data-p")){ ecrire("C29", +b.getAttribute("data-p") / 100); majEtape(true); }
@@ -315,6 +316,16 @@ function revOuvrir(D, acces){
     var h = '<div style="' + gr + 'margin-top:20px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>Dossier</span><span>Étape</span><span>Travail</span><span>Non-conformité</span></div>';
     return h + L.map(function(l){ var tr = [l[2], l[1]].filter(Boolean).join(" · "), det = [l[4], l[5]].filter(Boolean).join(" · ");
       return '<div style="' + gr + 'font-size:13px;margin-top:14px"><span>' + E(rdIsoDate(l[0])) + "</span><span>" + E(l[6] || "—") + "</span><span>" + E(l[3] || "") + "</span><span>" + E(tr) + "</span><span>" + E(det) + "</span></div>"; }).join("");
+  }
+  // « Acquis »: la compétence du plan s'ajoute à Tâches acquises (C45) et la ligne quitte le plan; « Annuler » pendant 8 secondes remet tout.
+  function acquis(row){
+    var cols = ["A", "C", "E", "G"], av = cols.map(function(c){ return String(r(c + row)); }), comp = av[1].trim(); if(!comp) return;
+    var c45 = String(r("C45")), ligne = "- " + comp.replace(/^\s*[-–]\s*/, "");
+    ecrire("C45", (c45.trim() ? c45.replace(/\s+$/, "") + "\n" : "") + ligne); cols.forEach(function(c){ ecrire(c + row, ""); }); majEtape(false);
+    var t = document.createElement("div"); t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;padding:12px 20px;font-size:14px;z-index:9999";
+    t.appendChild(document.createTextNode("Ajouté aux tâches acquises  ")); var u = document.createElement("button"); u.type = "button"; u.textContent = "Annuler"; u.style.cssText = "background:none;border:0;color:#3BEC65;font:inherit;text-decoration:underline;cursor:pointer;padding:0 0 0 8px";
+    u.onclick = function(){ ecrire("C45", c45); cols.forEach(function(c, i){ ecrire(c + row, av[i]); }); t.remove(); majEtape(false); };
+    t.appendChild(u); document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 8000);
   }
   function terminer(){
     removeEventListener("resize", ajuster); var f = REV_FIN; REV_FIN = null; menu();
