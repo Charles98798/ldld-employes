@@ -53,7 +53,7 @@ function echEcarts(){
   d.ecarts.forEach(function(e, i){
     var med = echArr(e.maxAvant*(1+t)*e.posMediane, 2), ref = e.ref != null ? e.ref : e.refPasse, ec = ref ? (med / ref - 1) * 100 : null;
     h += '<div class="lab">' + echEsc(e.nom) + '</div><div class="tr"><span>Médiane de l’échelle</span><b>' + echFr(med, 2) + ' $</b></div>' +
-      '<div class="tr"><span>Référence<small class="ech-prec" style="white-space:nowrap">Guichet-Emplois Canada/Montréal</small>' + (e.refPasse != null ? '<small class="ech-prec">Montant précédent : ' + echFr(e.refPasse, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + ' $</small>' : '') + '</span>' + echCase("ech_ref" + i, e.ref, "$") + '</div>' +
+      '<div class="tr"><span>Référence<small class="ech-prec" style="white-space:nowrap">Guichet-Emplois Canada/Montréal</small>' + (e.refPasse != null ? '<small class="ech-prec">Précédent : ' + echFr(e.refPasse, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + ' $</small>' : '') + '</span>' + echCase("ech_ref" + i, e.ref, "$") + '</div>' +
       '<div class="tr"><span>Écart</span><b>' + echEcartTxt(ref ? med / ref - 1 : null) + '</b></div>';
   });
   return h;
@@ -111,7 +111,7 @@ function echRendu(){
 function echOtpadEcart(v, p){ if(v == null || !p) return ""; var e = (v / p - 1) * 100; return (e >= 0 ? "+ " : "− ") + echFr(Math.abs(e), 0) + " % vs " + (PA.d.anneePrec); }
 function echOtpadRendu(){
   var z = document.getElementById("ech_otpad"), d = PA.d; if(!z) return; if(!d){ z.innerHTML = '<div class="att"><i></i></div>'; return; }
-  var o = d.otpad, c = function(k, id){ var x = o[k]; return '<div class="otpc"><input id="' + id + '" inputmode="decimal" autocomplete="off" aria-label="OTPAD ' + echEsc(x.lab) + '" class="' + (x.val == null ? "vide" : "") + '" value="' + echEsc(x.val == null ? "" : String(x.val).replace(".", ",")) + '"><u>$</u><small class="otpp">Montant précédent : ' + echEsc(x.precedent == null ? "—" : echFr(x.precedent, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + "\u00a0$") + '</small><small id="' + id + '_e">' + echEsc(echOtpadEcart(x.val, x.precedent)) + '</small></div>'; };
+  var o = d.otpad, c = function(k, id){ var x = o[k]; return '<div class="otpc"><input id="' + id + '" inputmode="decimal" autocomplete="off" aria-label="OTPAD ' + echEsc(x.lab) + '" class="' + (x.val == null ? "vide" : "") + '" value="' + echEsc(x.val == null ? "" : String(x.val).replace(".", ",")) + '"><u>$</u><small class="otpp">Précédent : ' + echEsc(x.precedent == null ? "—" : echFr(x.precedent, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + "\u00a0$") + '</small><small id="' + id + '_e">' + echEsc(echOtpadEcart(x.val, x.precedent)) + '</small></div>'; };
   var h = '<div class="otpg"><div class="h">Élément</div><div class="h">Auxiliaire</div><div class="h">Technologue</div><div class="h">' + d.anneePrec + '</div>' +
     '<div class="l">OTPAD $ (par catégorie)</div>' + c("aux", "ech_otp_aux") + c("tech", "ech_otp_tech") +
     '<div class="p">' + echEsc(echFr(o.aux.precedent, 0) || "—") + ' / ' + echEsc(echFr(o.tech.precedent, 0) || "—") + '</div></div>';
