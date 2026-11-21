@@ -72,7 +72,7 @@ function paBas(){
 var PA_RETOUR = false;
 // Deux boutons seulement : Position (ouvre la liste des positions) et Assurance. Le bouton choisi est noir.
 function paBarre(vue){ var an = PA.d ? PA.d.annee : ""; return '<div class="pa-b"><button type="button" class="btn' + (vue === "pos" ? " sel" : "") + '" data-pv="pos">Position ' + an + '</button><button type="button" class="btn' + (vue === "ass" ? " sel" : "") + '" data-pv="ass">Assurance ' + an + '</button></div>'; }
-function paBarreLier(z){ Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(b){ b.onclick = function(){ if(b.getAttribute("data-pv") === "pos"){ PA_RETOUR = true; posEmpOuvrir(); } else paOuvrir(); }; }); }
+function paBarreLier(z){ Array.prototype.forEach.call(z.querySelectorAll("[data-pv]"), function(b){ b.onclick = function(){ if(b.getAttribute("data-pv") === "pos"){ PA_RETOUR = false; posEmpOuvrir(); } else paOuvrir(); }; }); }
 // Bas de la page des positions : confirmation de la position (requiert l'Échelle salariale confirmée).
 function paPosBas(){
   var z = document.getElementById("pa_pos_bas"); if(!z) return;
