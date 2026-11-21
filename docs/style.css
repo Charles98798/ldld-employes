@@ -1264,7 +1264,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 .rvo .puce{font:inherit;font-size:12px;min-width:30px;height:30px;padding:0 6px;background:#fff;border:1px solid #d8d3ca;border-radius:0;color:#000;cursor:pointer}
 .rvo .puce.mot{padding:0 10px;min-width:0;font-size:11px}
 .rvo .puce.choisie{background:#000;border-color:#000;color:#fff}
-.rvo .puce.employe{box-shadow:inset 0 0 0 1px #000;border-color:#000}
+.rvo .puce.employe{box-shadow:inset 0 0 0 2px #000;border-color:#000}
 .rvo .puces.rose .puce:not(.choisie){background:#fff;border-color:#fff}
 .rvo .puce:disabled{opacity:.6;cursor:default}
 .rvo textarea,.rvo input[type=text]{width:100%;box-sizing:border-box;font:inherit;font-weight:300;font-size:13px;padding:6px 8px;border:0;border-bottom:1px solid #d8d3ca;background:#f6f3ee;border-radius:0;resize:none;color:#000}
