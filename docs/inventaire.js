@@ -229,14 +229,14 @@ function invReceptionDessiner(msg){
     var qv = /^\d+$/.test(q.value.trim()) && +q.value.trim() > 0, pv = /^\d+([.,]\d{1,2})?$/.test(p.value.trim());
     q.classList.toggle("rose", !qv); p.classList.toggle("rose", !pv); c.querySelector(".invc").disabled = !(qv && pv && INV_ECRITURE); };
   Array.prototype.forEach.call(z.querySelectorAll(".invf"), function(e){ e.oninput = function(){ maj(e); }; });
-  Array.prototype.forEach.call(z.querySelectorAll(".invc"), function(b){ b.onclick = function(){
+  Array.prototype.forEach.call(z.querySelectorAll(".invc"), function(b){ b.onclick = function(){ paOui("Voulez-vous confirmer cette réception\u00a0?", function(){
     var i = b.getAttribute("data-i"), x = ligne(i), c = document.querySelector('.invlig[data-i="'+i+'"]'); if(!x || !c) return;
     var q = +c.querySelector(".invq").value.trim(), p = c.querySelector(".invp").value.trim().replace(",", "."), avant = {recu: x.recu, prix: x.prix};
     x.recu = x.recu + q; x.prix = +p; delete INV.rsaisie[i]; invReceptionDessiner();   // l'écran se met à jour tout de suite
     invEcrire("inv_recevoir", {id_ligne: i, qte_recue: x.recu, prix: +p}).then(function(r){
       if(!(r && r.ok)){ x.recu = avant.recu; x.prix = avant.prix; invReceptionDessiner("▪ RÉCEPTION REFUSÉE · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase()); }
     }).catch(function(){ x.recu = avant.recu; x.prix = avant.prix; invReceptionDessiner("▪ RÉCEPTION NON ENVOYÉE · RÉSEAU INDISPONIBLE"); });
-  }; });
+  }); }; });
   Array.prototype.forEach.call(z.querySelectorAll(".inva"), function(a){ a.onclick = function(ev){ ev.preventDefault();
     var i = a.getAttribute("data-i"), m = document.querySelector('.invconf[data-i="'+i+'"]'); if(!m) return;
     m.innerHTML = '<div style="margin:10px 0 8px">Annuler cette ligne de commande?</div><div style="display:flex;gap:8px"><button type="button" class="bouton lg invan" style="flex:1;height:46px;padding:0;margin:0">Non</button><button type="button" class="bouton invao" style="flex:1;height:46px;padding:0;margin:0;background:#A33A2B;color:#fff">Oui, annuler</button></div>';
@@ -274,13 +274,13 @@ function invReceptionAncien(){
   Array.prototype.forEach.call(z.querySelectorAll(".invm"), function(e){ e.onclick = function(){ var i = e.getAttribute("data-i"); enr(i); if((INV.recu[i] || 0) > 0) INV.recu[i]--; invReception(); }; });
   Array.prototype.forEach.call(z.querySelectorAll(".invpl"), function(e){ e.onclick = function(){ var i = e.getAttribute("data-i"); enr(i); INV.recu[i] = (INV.recu[i] || 0) + 1; invReception(); }; });
   Array.prototype.forEach.call(z.querySelectorAll(".invprix"), function(e){ e.oninput = function(){ var i = e.getAttribute("data-i"), q = ligne(i); if(q) q.prix = e.value; e.className = "bx invprix" + (String(e.value).trim() ? "" : " rose"); var c = z.querySelector('.invc[data-i="'+i+'"]'); if(c) c.disabled = !((INV.recu[i] || 0) > 0 && String(e.value).trim()); }; });
-  Array.prototype.forEach.call(z.querySelectorAll(".invc"), function(e){ e.onclick = function(){
+  Array.prototype.forEach.call(z.querySelectorAll(".invc"), function(e){ e.onclick = function(){ paOui("Voulez-vous confirmer cette réception\u00a0?", function(){
     var i = e.getAttribute("data-i"), q = ligne(i); if(!q) return; e.disabled = true;
     invEcrire("inv_recevoir", {id_ligne: i, qte_recue: INV.recu[i] || 0, prix: q.prix}).then(function(r){
       if(r && r.ok){ INV.rec = INV.rec.filter(function(w){ return w.id !== i; }); delete INV.recu[i]; invReception(); var b = document.createElement("div"); b.className = "bandeau"; b.style.marginTop = "8px"; b.textContent = r.essai ? "▪ ESSAI · RIEN N’EST ENREGISTRÉ DANS GESTION" : "▪ RÉCEPTION CONFIRMÉE"; var zz = document.getElementById("invapp"); if(zz) zz.insertBefore(b, zz.firstChild.nextSibling); }
       else { var m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(m){ m.style.display = "block"; m.textContent = "▪ NON ENREGISTRÉ · " + String((r && r.erreur) || "RÉESSAYEZ").toUpperCase(); } e.disabled = false; }
     }).catch(function(){ var m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(m){ m.style.display = "block"; m.textContent = "▪ NON ENREGISTRÉ · RÉSEAU INDISPONIBLE"; } e.disabled = false; });
-  }; });
+  }); }; });
   Array.prototype.forEach.call(z.querySelectorAll(".inva"), function(e){ e.onclick = function(ev){ ev.preventDefault();
     var i = e.getAttribute("data-i"), m = z.querySelector('.invmsg[data-i="'+i+'"]'); if(!m) return;
     m.style.display = "block"; m.innerHTML = '<div style="margin-bottom:8px">Annuler cette ligne de commande?</div><div style="display:flex;gap:8px"><button type="button" class="bouton" id="invan" style="flex:1;height:46px;padding:0;margin:0">Non</button><button type="button" class="bouton" id="invao" style="flex:1;height:46px;padding:0;margin:0;background:#A33A2B;color:#fff">Oui, annuler</button></div>';
