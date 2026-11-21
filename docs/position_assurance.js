@@ -118,3 +118,19 @@ function paConfirmerVite(champ, appliquer, rendu){
   };
   essai(1);
 }
+
+// Accueil (Direction) : petit carré vert avec crochet à côté du numéro 1-2-3 quand l'étape de l'année est confirmée.
+function paCoches(){
+  if(typeof MOI === "undefined" || !MOI || MOI.role !== "direction") return;
+  var dessiner = function(){
+    var d = PA.d; if(!d) return;
+    var ok = {echelle_salariale: !!(d.otpad && d.otpad.confirme), positionnement_employe: !!(d.position && d.position.confirme && d.assurance && d.assurance.confirme), envoi_salarial: !!(d.envoi && d.envoi.confirme)};
+    Object.keys(ok).forEach(function(k){
+      var a = document.querySelector('.menu a[data-k="' + k + '"] > span'); if(!a) return;
+      var o = a.querySelector("b.okc"); if(o) o.remove();
+      var b = document.createElement("b"); b.className = "okc" + (ok[k] ? " on" : ""); b.textContent = ok[k] ? "\u2713" : ""; b.setAttribute("aria-label", ok[k] ? "Confirmé" : "À confirmer"); var nc = a.querySelector("b.nc"); if(nc) a.insertBefore(b, nc); else a.appendChild(b);
+    });
+  };
+  dessiner();
+  paLire().then(dessiner).catch(function(){});
+}

@@ -1476,3 +1476,5 @@ button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}
 .pa-b .btn[data-pv].sel{background:#000!important;color:#fff!important}
 
 .pa-voile{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px}.pa-boite{background:#E3DFD3;max-width:360px;width:100%;padding:22px 20px}.pa-boite p{font-size:18px;margin:0 0 16px}.pa-boite .pa-b{margin:0}.pa-boite .btn.sel{background:#000!important;color:#fff!important}
+
+.menu a .okc{position:absolute;right:28px;top:50%;margin-top:-11px;width:22px;height:22px;box-sizing:border-box;background:transparent;border:1px solid #B4AB9B;color:#000;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}.menu a .okc.on{background:#3BEC65;border:0}
