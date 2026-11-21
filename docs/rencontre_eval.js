@@ -207,6 +207,7 @@ function revOuvrir(D, acces){
     },
     7: function(){
       var N = D.nc;
+      if(N && N.ok && !Number(N.n6)) return '<p class="note">Aucune non-conformité signalée au cours des 6 derniers mois. Félicitations!</p>';
       if(!N || !N.ok) return '<p class="note">Les non-conformités ne sont pas disponibles' + (N && N.raison ? " : " + esc(N.raison) : "") + ".</p>";
       // Même courbe et même liste en colonnes (Date | Cas | Étape) que la Réunion de production, pour cet employé seulement.
       var serie = (N.mois || []).map(function(m){ return {m: m.label, v: m.n}; }), lignes = (N.detail || []).slice(0, 6).map(function(d){ var m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; }; return [d.d, m(d.cat), d.dos, m(d.etape), d.type, m(d.com)]; });
