@@ -147,7 +147,8 @@ function demarrage(){
   MOI_PRE = null; var s0 = sessionGardee();
   if(s0 && !lireMoi(s0)) MOI_PRE = appelService({action:"moi", session:s0});   // demandé pendant l'animation, pas après
   if(s0 && !VUE.on) copiePreparer({session: s0}).catch(function(){});   // la clé d'accès à la copie se prépare pendant l'animation: les lectures de l'accueil partent prêtes
-  setTimeout(ouvrirSession, 3900);
+  var rapide = false; try { var rr = JSON.parse(sessionStorage.getItem("ldld-retour") || "null"); rapide = !!(rr && Date.now() - rr.t < 120000); } catch(e){}
+  setTimeout(ouvrirSession, rapide ? 600 : 3900);   // retour après mise à jour: pas d'animation d'ouverture
 }
 var MOI_PRE = null;
 // Identité gardée sur l'appareil (nom, rôle): le menu s'ouvre à la fin de l'animation, la vérification se fait en silence. Effacée à la déconnexion (préfixe ldld-c-).
@@ -695,6 +696,7 @@ function entreesVisibles(){
   return l;
 }
 var LIEN_AUTO = location.hash === "#autoevaluation";
+function lireRetour(){ try { var r = JSON.parse(sessionStorage.getItem("ldld-retour") || "null"); sessionStorage.removeItem("ldld-retour"); return r && r.k && Date.now() - r.t < 120000 ? r.k : null; } catch(e){ return null; } }
 function menu(){
   vueFin();
   var dejaDemande = false; try { dejaDemande = localStorage.getItem("ldld-notif-demande") === "1"; } catch(e){}
@@ -704,6 +706,10 @@ function menu(){
   if(!menu.precharge){ menu.precharge = true; prechargerDocs(); }
   precharger(); setTimeout(prechargerLectures, 400);
   if(MOI && MOI.role === "direction" && !menu.attPre){ menu.attPre = true; setTimeout(function(){ neAttCharger(true).catch(function(){ menu.attPre = false; }); }, 25000); }
+  // Mise à jour automatique: après le rechargement, on revient à la page où l'employé était (même entrée de l'accueil), sans passer par l'accueil.
+  var retour = lireRetour();
+  if(retour && MOI && entreesVisibles().some(function(x){ return x.id === retour; }) && ENT_PAR_ID[retour]){ try { sessionStorage.setItem("ldld-page", retour); } catch(e){} menu.anime = true; if(!menu.onglets){ menu.onglets = true; chargerDroits(); } return ENT_PAR_ID[retour].f(); }
+  try { sessionStorage.removeItem("ldld-page"); } catch(e){}
   var animer = !menu.anime; menu.anime = true;
   if(!menu.onglets){ menu.onglets = true; chargerDroits(); }
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
@@ -721,7 +727,7 @@ function menu(){
   if(animer) Array.prototype.forEach.call(app.querySelectorAll(".menu a:not(.sortie)"), function(a, k){ var dl = (0.7 + Math.min(k, 12) * 0.09) + "s"; a.style.animationDelay = dl; var ic = a.querySelector(".ic"); if(ic) ic.style.animationDelay = dl; });
   if(animer) setTimeout(function(){ var m = app.querySelector(".menu.anim"); if(m) m.classList.remove("anim"); }, 4500);
   Array.prototype.forEach.call(app.querySelectorAll("a[data-k]"), function(a){
-    a.onclick = function(e){ e.preventDefault(); var x = ENT_PAR_ID[a.getAttribute("data-k")]; if(x) x.f(); };
+    a.onclick = function(e){ e.preventDefault(); var x = ENT_PAR_ID[a.getAttribute("data-k")]; if(x){ try { sessionStorage.setItem("ldld-page", a.getAttribute("data-k")); } catch(e2){} x.f(); } };
   });
   var rcf = document.getElementById("rcommefin"); if(rcf) rcf.onclick = function(e){ e.preventDefault(); revenirDeComme(); };
   document.getElementById("sortie").onclick = function(e){ e.preventDefault(); deconnecter(); };
@@ -3118,7 +3124,9 @@ if("serviceWorker" in navigator){
   // Le nouveau code s'installe et prend le relais seul (skipWaiting + clients.claim) ; la page se recharge d'elle-même, d'un coup, dès qu'aucune saisie n'est en cours (on réessaie toutes les 2 secondes).
   navigator.serviceWorker.addEventListener("controllerchange", function(){
     if(!avaitControleur || rechargee) return; rechargee = true;
-    var essai = function(){ var a = document.activeElement; if(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)){ setTimeout(essai, 2000); return; } location.reload(); };
+    var essai = function(){ var a = document.activeElement; if(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)){ setTimeout(essai, 2000); return; }
+      try { var k = sessionStorage.getItem("ldld-page"); if(k) sessionStorage.setItem("ldld-retour", JSON.stringify({k: k, t: Date.now()})); } catch(e){}
+      location.reload(); };
     essai();
   });
   window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").then(function(r){
