@@ -138,6 +138,7 @@ function echOtpadRendu(){
   lierO("aux", "ech_otp_aux", "otpad_aux"); lierO("tech", "ech_otp_tech", "otpad_tech");
   echConfOk();
   var b = document.getElementById("ech_otp_conf"); if(b) b.onclick = function(){
+    echConfOk(); if(b.disabled) return;   // contrôle refait au moment du clic
     paOui("Voulez-vous confirmer l’échelle salariale " + d.annee + "\u00a0?", function(){
       var pre = Promise.resolve(), besoin = false;
       [["aux", "ech_otp_aux", "otpad_aux"], ["tech", "ech_otp_tech", "otpad_tech"]].forEach(function(t){ var n = echNum((document.getElementById(t[1]) || {}).value); if(n != null && o[t[0]].val == null){ besoin = true; pre = pre.then(function(){ return paAppel(t[2], n); }); } });
@@ -180,4 +181,4 @@ function echConfOk(){
   var dejaConf = !!(PA.d && PA.d.otpad && PA.d.otpad.confirme);
   b.disabled = dejaConf || !tout || !PA.d;
 }
-document.addEventListener("input", function(e){ if(e.target && e.target.closest && e.target.closest("#ech_app")) echConfOk(); }, true);
+["input", "change", "blur"].forEach(function(n){ document.addEventListener(n, function(e){ if(e.target && e.target.closest && e.target.closest("#ech_app")) setTimeout(echConfOk, 0); }, true); });
