@@ -1256,7 +1256,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 .rvo .rg2{grid-template-columns:200px 1fr}
 .rvo .rg3{grid-template-columns:440px auto 1fr}
 .rvo .rg3v{grid-template-columns:440px auto 1fr;align-items:start}
-.rvo .rg3e{grid-template-columns:240px auto 1fr}
+.rvo .rg3e{grid-template-columns:440px auto 1fr}
 .rvo .lab{font-size:13px;font-weight:400}
 .rvo .desc{font-size:11px;color:#6E6350;font-weight:300;margin-top:2px}
 .rvo .quot{grid-column:1/-1;font-size:11px;color:#6E6350}
