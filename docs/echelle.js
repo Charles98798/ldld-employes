@@ -54,7 +54,7 @@ function echEcarts(){
     var med = echArr(e.maxAvant*(1+t)*e.posMediane, 2), ref = e.ref != null ? e.ref : e.refPasse, ec = ref ? (med / ref - 1) * 100 : null;
     h += '<div class="lab">' + echEsc(e.nom) + '</div><div class="tr"><span>Médiane de l’échelle</span><b>' + echFr(med, 2) + ' $</b></div>' +
       '<div class="tr"><span>Référence<small class="ech-prec" style="white-space:nowrap">Guichet-Emplois Canada/Montréal</small>' + (e.refPasse != null ? '<small class="ech-prec">Montant précédent : ' + echFr(e.refPasse, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + ' $</small>' : '') + '</span>' + echCase("ech_ref" + i, e.ref, "$") + '</div>' +
-      '<div class="tr"><span>Écart</span><b>' + echMotEcart(ref ? med / ref - 1 : null) + '</b></div>';
+      '<div class="tr"><span>Écart</span><b>' + echEcartTxt(ref ? med / ref - 1 : null) + '</b></div>';
   });
   return h;
 }
@@ -165,3 +165,6 @@ function echBandeau(d){ var plus = d.taux != null && Number(d.taux) > 0; return 
 
 // Mot de l'écart, même règle que le courriel salarial (code [Écart Montréal …]) : +1 % et plus = « Au-dessus », de −0,9 % à +0,9 % = « Égale », −1 % et moins = « En dessous » (règle de Charles, 21 nov.). Référence absente = « À confirmer ».
 function echMotEcart(f){ if(f == null || isNaN(f)) return "À confirmer"; return f >= 0.01 ? "Au-dessus" : (f > -0.01 ? "Égale" : "En dessous"); }
+
+// Écart affiché : valeur exacte (une décimale) et mot, ex. « + 0,7 % · Égale ». Sans référence : « À confirmer ».
+function echEcartTxt(f){ if(f == null || isNaN(f)) return "À confirmer"; var p = f * 100; return (p >= 0 ? "+ " : "− ") + echFr(Math.abs(p), 1) + " % · " + echMotEcart(f); }
