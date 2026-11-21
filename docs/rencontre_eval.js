@@ -23,7 +23,20 @@ function revPtsCalcul(q, expPts, opt){
   return {rows: R, total: tot};
 }
 
+// Le pont SALAIRE envoie la zone A1:L105 en tableaux (lignes × colonnes); la page lit par adresse (« C26 »). On convertit une seule fois.
+function revAdresses(D){
+  function conv(t){
+    if(!Array.isArray(t)) return t;
+    var o = {};
+    t.forEach(function(ligne, i){ (ligne || []).forEach(function(v, j){ if(v !== "" && v !== null && v !== undefined) o[String.fromCharCode(65 + j) + (i + 1)] = v; }); });
+    return o;
+  }
+  var c = {}; for(var k in D) c[k] = D[k];
+  c.g = conv(D.g); c.r = conv(D.r);
+  return c;
+}
 function revOuvrir(D, acces){
+  D = revAdresses(D);
   var A = acces || revAcces, S = {}, etape = 1, file = [], enCours = false, dernier = "", fenetre = null;
   var NOTES = REV_NOTES;
   function g(a){ var v = D.g && D.g[a]; return v === undefined || v === null ? "" : String(v); }
