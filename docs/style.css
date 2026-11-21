@@ -1500,3 +1500,4 @@ button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}
 .menu a .sv-tot{top:50%;margin-top:5px;background:#000000!important;color:#ffffff!important}
 /* Commentaires et changements: cartes beiges (#E3DFD3), texte noir, petits textes #6E6350 */
 #sv .carte .etq,#sv .carte .lbl,#sm .carte .etq,#sm .carte .lbl{color:#6E6350}
+.rvo .encprec{margin:0 0 14px;max-width:760px;border:1px solid #B4AB9B;border-left:3px solid #6E6350;padding:10px 14px;background:transparent}.rvo .encprec .epr-t{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#6E6350;margin-bottom:6px}.rvo .encprec .epr-x{font-size:13px;line-height:1.45;color:#000;white-space:pre-wrap}.rvo .encprec .epr-l{display:block;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#6E6350;margin:8px 0 2px}.rvo .encprec .epr-v,.rvo .encprec .epr-q{margin:0;font-size:12px;color:#6E6350}.rvo .encprec .epr-q{margin-top:8px}

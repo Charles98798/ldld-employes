@@ -216,7 +216,7 @@ function revOuvrir(D, acces){
       return '<div class="nc"><div class="nc-k"><div class="carte"><div class="nc-lab">6 derniers mois</div><div class="grand">' + esc(N.n6) + '</div></div><div class="carte"><div class="nc-lab">12 derniers mois</div><div class="grand">' + esc(N.n12) + '</div></div><div class="carte"><div class="nc-lab">Type le plus fréquent</div><div class="grand t">' + esc(N.typeTop || "—") + '</div></div></div><div class="nc-ch"><div class="nc-lab">Non-conformités par mois</div>' + courbe + '</div><div class="nc-det"><div class="bloc-lab">Détail des 6 derniers mois</div>' + liste + ((N.detail || []).length > 6 ? '<div class="nc-plus">+ ' + ((N.detail || []).length - 6) + " autres non-conformités sur les 6 derniers mois</div>" : "") + "</div></div>";
     },
     8: function(){
-      var h = '<div class="deux"><div><div class="bloc-lab">' + esc(g("A65")) + "</div>" + champ("C65", 4) + '</div><div><div class="bloc-lab">' + esc(g("A67")) + "</div>" + champ("C67", 4) + "</div></div>";
+      var h = precBoite() + '<div class="deux"><div><div class="bloc-lab">' + esc(g("A65")) + "</div>" + champ("C65", 4) + '</div><div><div class="bloc-lab">' + esc(g("A67")) + "</div>" + champ("C67", 4) + "</div></div>";
       h += '<div class="bloc-lab" style="margin-top:12px">' + esc(g("A69")) + '</div><div class="entete-tab t3"><div>' + esc(g("A70")) + "</div><div>" + esc(g("C70")) + "</div><div>" + esc(g("E70")) + "</div></div>";
       for(var row = 71; row <= 73; row++) h += '<div class="ligne-tab t3"><div class="lab">' + esc(g("A" + row)) + '</div><div data-l="' + esc(g("C70")) + '">' + date("C" + row) + '</div><div data-l="' + esc(g("E70")) + '">' + champ("E" + row, 1) + "</div></div>";
       return h;
@@ -332,6 +332,15 @@ function revOuvrir(D, acces){
   }
   // Encadré d'information sur le suivi des commentaires: pictogramme de bulle dessiné comme ceux de l'accueil (blocs carrés pleins sur une grille de 24), fond taupe, bordure noire.
   function encSuivi(ch){ return '<div class="encsuivi"><div class="eic">' + '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M2 3h20v3h-20zM2 6h3v9h-3zM19 6h3v9h-3zM2 15h20v3h-20zM5 18h3v3h-3zM8 8h8v2h-8zM8 11h5v2h-5z"/></svg>' + '</div><div class="etx"><div class="et">On fait le suivi de tes ' + (ch ? "changements" : "commentaires") + '</div><p>' + (ch ? "Chaque changement proposé est noté." : "Chaque commentaire est noté.") + ' Consulte « Commentaires et changements » dans l’application TEAM pour voir où il en est et notre réponse.</p></div></div>'; }
+  // Boîte en lecture seule: priorités et engagements de la rencontre précédente (D.prec envoyé par le pont; false = aucune rencontre précédente).
+  function precBoite(){
+    var P = D.prec; if(P === undefined || P === null) return "";
+    var t = '<div class="encprec"><div class="epr-t">Priorités et engagements de la rencontre précédente</div>';
+    if(!P) return t + '<p class="epr-v">Aucune rencontre précédente.</p></div>';
+    var bloc = function(lab, txt){ return String(txt || "").trim() ? '<div class="epr-b">' + (lab ? '<span class="epr-l">' + esc(lab) + "</span>" : "") + '<div class="epr-x">' + esc(txt) + "</div></div>" : ""; };
+    var c = bloc("", P.priorites) + bloc("Soutien à fournir", P.soutien);
+    return t + (c || '<p class="epr-v">Rien d’inscrit à la rencontre précédente.</p>') + (P.label ? '<div class="epr-q">' + esc(P.label) + "</div>" : "") + "</div>";
+  }
   function terminer(){
     removeEventListener("resize", ajuster); var f = REV_FIN; REV_FIN = null; menu();
     var t = document.createElement("div"); t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;padding:12px 20px;font-size:14px;z-index:9999";
