@@ -295,7 +295,13 @@ function revChoix(liste, ouvrir, annee, evaluateur){
     var a = document.getElementById("rvacc"); a.innerHTML = h;
     document.getElementById("accEmp").onchange = function(){ var v = document.getElementById("accEmp").value; if(v === "") return; sel = +v; renc = liste[sel][6] || 1; dessiner(); };
     Array.prototype.forEach.call(a.querySelectorAll("[data-accr]"), function(b){ b.onclick = function(){ renc = +b.getAttribute("data-accr"); dessiner(); }; });
-    document.getElementById("accGo").onclick = function(){ if(sel >= 0) ouvrir(liste[sel][0], renc); };
+    document.getElementById("accGo").onclick = function(){
+      if(sel < 0) return; var bt = this, t0 = bt.textContent; if(bt.getAttribute("data-occ")) return;
+      bt.setAttribute("data-occ", "1"); bt.textContent = "Ouverture en cours"; bt.style.opacity = ".6";   // l'appui se voit tout de suite
+      var rendre = function(){ bt.removeAttribute("data-occ"); bt.textContent = t0; bt.style.opacity = ""; };
+      var p; try { p = ouvrir(liste[sel][0], renc); } catch(e){ rendre(); throw e; }
+      if(p && p.then) p.then(rendre, rendre); else setTimeout(rendre, 1500);
+    };
     try { ajusterTitre(a.querySelector(".accbl h1.ti")); setTimeout(function(){ try { ajusterTitre(a.querySelector(".accbl h1.ti")); } catch(e){} }, 400); } catch(e){}
     document.getElementById("accRet").onclick = function(){ menu(); };
   }
@@ -328,7 +334,7 @@ function revDemarrer(){
 }
 function revMontrer(liste){
     revChoix(liste, function(nom, renc){
-      revSvc({action: "rencontre_eval_verrou", op: "prendre", nom: nom, rencontre: renc}).then(function(v){
+      return revSvc({action: "rencontre_eval_verrou", op: "prendre", nom: nom, rencontre: renc}).then(function(v){
         if(!v || !v.ok){ revBandeau("Rencontre déjà ouverte", (v && (v.erreur || v.message)) || "Une autre personne a la rencontre ouverte. Une seule personne à la fois. Réessaie dans quelques minutes."); return; }
         return revSvc({action: "rencontre_eval_lire", nom: nom, rencontre: renc}).then(function(d){
           var D = d && d.ok ? (d.D || d.d || d.donnees || d) : null;

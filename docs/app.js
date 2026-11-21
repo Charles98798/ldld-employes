@@ -166,9 +166,10 @@ function datesFr(v){
   if(v && typeof v === "object"){ for(var k in v){ if(Object.prototype.hasOwnProperty.call(v, k)){ var n = datesFr(v[k]); if(n !== v[k]) v[k] = n; } } }
   return v;
 }
+// (filet de dates : seulement pour les données salariales, jamais pour les rencontres ni les évaluations)
 function appelBrut(corps){
   var bg = ARRIERE;
-  return new Promise(function(ok0, ko){ var ok = function(r){ ok0(datesFr(r)); }; var x = {c: corps, ok: ok, ko: ko, bg: bg}; if(bg) FILE_APPELS.push(x); else FILE_APPELS.unshift(x); suiteAppels(); });   // un clic passe avant les préchargements
+  return new Promise(function(ok0, ko){ var ok = function(r){ var a = (corps && corps.action) || ""; if(/^(pa_|ech_|env_)/.test(a)){ try { r = datesFr(r); } catch(e){} } ok0(r); }; var x = {c: corps, ok: ok, ko: ko, bg: bg}; if(bg) FILE_APPELS.push(x); else FILE_APPELS.unshift(x); suiteAppels(); });   // un clic passe avant les préchargements
 }
 var EN_VOL = [];   // appels partis, avec leur heure: si l'appareil les fige (iPhone en arrière-plan), la place est libérée de force
 function suiteAppels(){
