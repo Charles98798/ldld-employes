@@ -330,8 +330,8 @@ function revOuvrir(D, acces){
     u.onclick = function(){ ecrire("C45", c45); cols.forEach(function(c, i){ ecrire(c + row, av[i]); }); t.remove(); majEtape(false); };
     t.appendChild(u); document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 8000);
   }
-  // Petit encadré d'information sur le suivi des commentaires (disponible aux employés à partir du 10 janvier 2027).
-  function encSuivi(){ return '<div class="encsuivi"><div class="et">Suivi de tes commentaires</div><p>Chaque commentaire et chaque changement que tu proposes est noté et suivi par la direction. À partir du 10 janvier 2027, tu pourras voir dans l’application, sous « Suivi de mes commentaires », où en est chacun : À traiter, En cours, Réglé ou Pris en note, avec notre réponse lorsqu’il est réglé.</p></div>'; }
+  // Encadré d'information sur le suivi des commentaires: pictogramme de bulle dessiné comme ceux de l'accueil (blocs carrés pleins sur une grille de 24), fond taupe, bordure noire.
+  function encSuivi(){ return '<div class="encsuivi"><div class="eic">' + '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M2 3h20v3h-20zM2 6h3v9h-3zM19 6h3v9h-3zM2 15h20v3h-20zM5 18h3v3h-3zM8 8h8v2h-8zM8 11h5v2h-5z"/></svg>' + '</div><div class="etx"><div class="et">On fait le suivi de tes commentaires</div><p>Chaque commentaire et changement proposé est noté. Consulte « Suivi de mes commentaires » dans l’application pour voir où il en est et notre réponse.</p></div></div>'; }
   function terminer(){
     removeEventListener("resize", ajuster); var f = REV_FIN; REV_FIN = null; menu();
     var t = document.createElement("div"); t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;padding:12px 20px;font-size:14px;z-index:9999";
