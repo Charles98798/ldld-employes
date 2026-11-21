@@ -20,7 +20,7 @@ function suiviPastilles(){
   appelService({action: "suivi_compte", session: sessionGardee()}).then(function(r){ if(!r || !r.ok) return; var t = app.querySelector('a[data-k="suivi_commentaires"]'); if(!t) return;
     Array.prototype.forEach.call(t.querySelectorAll(".sv-nv, .sv-tot"), function(e){ e.remove(); });
     if(r.nouveaux){ var v = document.createElement("span"); v.className = "nombre sv-nv"; v.textContent = r.nouveaux; t.appendChild(v); }   // vert: jamais vus
-    if(r.a_traiter){ var k = document.createElement("span"); k.className = "nombre sv-tot"; k.textContent = r.a_traiter; k.style.cssText = "background:#000000;color:#ffffff"; t.appendChild(k); }   // noir: total « À traiter »
+    if(r.a_traiter){ var k = document.createElement("span"); k.className = "nombre sv-tot"; k.textContent = r.a_traiter; t.appendChild(k); }   // noir: total « À traiter »
   }).catch(function(){});
 }
 function suiviOuvrir(){

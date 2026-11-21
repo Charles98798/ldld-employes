@@ -1494,9 +1494,9 @@ button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}
 .rvo .rvpo .bg{display:inline-block;grid-template-columns:none;gap:0;margin-top:5px;font-size:11px;font-weight:600;border:1px solid #000;padding:2px 7px;background:transparent}.rvo .rvpo .bg.ok{background:var(--vert);border-color:var(--vert)}.rvo .rvpo .bg.nd{border-color:#e6e1d8;color:#6E6350;font-weight:400}
 
 .rvo .encsuivi{display:flex;align-items:center;gap:16px;margin-top:16px;max-width:760px;border:2px solid #000;padding:14px 18px;background:#E3DFD3}.rvo .encsuivi .eic{flex:none;display:flex}.rvo .encsuivi .ic{width:38px;height:38px;fill:#000}.rvo .encsuivi .et{font-size:15px;font-weight:700;color:#000;margin-bottom:4px}.rvo .encsuivi p{margin:0;font-size:13px;line-height:1.45;color:#000}
-/* Commentaires et changements: pastilles « nouveaux » (verte) et « à traiter » (noire) alignées à gauche du carré d'ordre, même hauteur, sans chevauchement */
-.menu a .sv-tot,.menu a .sv-nv{position:absolute;top:50%;margin:-11px 0 0;height:22px;min-width:22px;box-sizing:border-box;padding:0 6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;letter-spacing:0;line-height:1}
-.menu a .sv-tot{right:28px}
-.menu a .sv-nv{right:54px}
+/* Commentaires et changements: pastilles en coins du carré d'ordre (le titre garde toute sa largeur, jamais sur 2 lignes): verte « nouveaux » en haut à droite, noire « à traiter » en bas à droite, liseré de la couleur du fond */
+.menu a .sv-tot,.menu a .sv-nv{position:absolute;right:-7px;margin:0;height:16px;min-width:16px;box-sizing:border-box;padding:0 4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;letter-spacing:0;line-height:1;border:2px solid #CECCC5;box-sizing:content-box;height:14px;min-width:14px}
+.menu a .sv-nv{top:50%;margin-top:-21px;background:var(--vert)!important;color:#000000!important}
+.menu a .sv-tot{top:50%;margin-top:5px;background:#000000!important;color:#ffffff!important}
 /* Commentaires et changements: cartes beiges (#E3DFD3), texte noir, petits textes #6E6350 */
 #sv .carte .etq,#sv .carte .lbl,#sm .carte .etq,#sm .carte .lbl{color:#6E6350}
