@@ -3,7 +3,7 @@
 ["suivi_lire", "suivi_maj", "suivi_compte", "suivi_mes"].forEach(function(a){ NEUTRE[a] = 1; });
 var SUIVI_LIB = {A_TRAITER: "À traiter", EN_COURS: "En cours", REGLE: "Réglé", PRIS_EN_NOTE: "Pris en note"};
 var SUIVI_EMP = {A_TRAITER: "Reçu", EN_COURS: "En cours", REGLE: "Réglé", PRIS_EN_NOTE: "Pris en note"};
-var SUIVI = {lignes: [], ouvert: null};
+var SUIVI = {lignes: [], resp: [], ouvert: null};
 function suiviDate(d){ var p = String(d || "").slice(0, 10).split("-"); if(p.length < 3) return String(d || ""); return +p[2]+" "+MOIS_LONGS[+p[1]-1].slice(0, 4).toLowerCase()+". "+p[0]; }
 function suiviMin(t){ return typeof rdMin === "function" ? rdMin(t) : String(t || "").toLowerCase(); }
 function suiviPastille(a, n){
@@ -22,7 +22,7 @@ function suiviOuvrir(){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   appelService({action: "suivi_lire", session: sessionGardee()}).then(function(r){
     if(!r || !r.ok) throw 0;
-    SUIVI.lignes = r.lignes || []; suiviDessiner();
+    SUIVI.lignes = r.lignes || []; SUIVI.resp = r.responsables || []; suiviDessiner();
   }).catch(function(){ var el = document.getElementById("sv"); if(el) el.innerHTML = '<div class="bandeau">▪ INDISPONIBLE · RÉESSAYEZ</div>'; });
 }
 function suiviDessiner(){
@@ -32,10 +32,12 @@ function suiviDessiner(){
   el.innerHTML = '<div class="etq">▪ DU PLUS RÉCENT AU PLUS ANCIEN · '+SUIVI.lignes.length+' · À TRAITER '+n+'</div>' + SUIVI.lignes.map(function(x, i){
     return '<div class="carte" style="margin:10px 0;padding:12px 14px" data-i="'+i+'"><div class="etq" style="margin:0">'+esc(x.nom || "—")+' · '+esc(suiviDate(x.date))+' · '+esc(x.section)+'</div>' +
       '<div style="margin:6px 0 8px;font-size:14px;line-height:1.35">'+esc(suiviMin(x.texte))+'</div>' +
-      '<select class="bx sv-st" data-i="'+i+'" style="max-width:220px">'+Object.keys(SUIVI_LIB).map(function(k){ return '<option value="'+k+'"'+(k === x.statut ? " selected" : "")+'>'+SUIVI_LIB[k]+'</option>'; }).join("")+'</select>' +
+      '<span class="lbl">En charge</span><select class="bx sv-ch" data-i="'+i+'" style="max-width:220px;margin-bottom:8px"><option value="">—</option>'+SUIVI.resp.concat(x.charge && SUIVI.resp.indexOf(x.charge) < 0 ? [x.charge] : []).map(function(n){ return '<option value="'+esc(n)+'"'+(n === x.charge ? " selected" : "")+'>'+esc(n)+'</option>'; }).join("")+'</select>' +
+      '<span class="lbl">Statut</span><select class="bx sv-st" data-i="'+i+'" style="max-width:220px">'+Object.keys(SUIVI_LIB).map(function(k){ return '<option value="'+k+'"'+(k === x.statut ? " selected" : "")+'>'+SUIVI_LIB[k]+'</option>'; }).join("")+'</select>' +
       '<div class="sv-det" id="svd'+i+'"></div></div>';
   }).join("");
   Array.prototype.forEach.call(el.querySelectorAll(".sv-st"), function(s){ s.onchange = function(){ suiviChoisir(+s.getAttribute("data-i"), s.value); }; });
+  Array.prototype.forEach.call(el.querySelectorAll(".sv-ch"), function(s){ s.onchange = function(){ var x = SUIVI.lignes[+s.getAttribute("data-i")]; x.charge = s.value; suiviEnvoyer(+s.getAttribute("data-i"), x.statut, x.action, x.echeance, x.reponse); }; });
   SUIVI.lignes.forEach(function(x, i){ if(x.statut !== "A_TRAITER" && x.statut !== "PRIS_EN_NOTE") suiviDetail(i, x.statut); else suiviResume(i); });
 }
 function suiviResume(i){ var x = SUIVI.lignes[i], d = document.getElementById("svd"+i); if(d) d.innerHTML = x.reponse ? '<div style="font-size:12px;color:#6E6350;margin-top:6px">'+esc(suiviMin(x.reponse))+'</div>' : ""; }
@@ -64,7 +66,7 @@ function suiviEnvoyer(i, statut, action, echeance, reponse){
   var x = SUIVI.lignes[i], av = {s: x.statut, a: x.action, e: x.echeance, r: x.reponse};
   x.statut = statut; x.action = action || ""; x.echeance = echeance || ""; x.reponse = reponse || "";   // l'écran est à jour tout de suite, l'enregistrement se fait en arrière-plan
   var m = document.getElementById("svm"+i); if(m) m.textContent = "Enregistré à "+new Date().toLocaleTimeString("fr-CA", {hour: "2-digit", minute: "2-digit"});
-  appelService({action: "suivi_maj", session: sessionGardee(), id: x.id, statut: statut, action: action || "", echeance: echeance || "", reponse: reponse || ""}).then(function(r){
+  appelService({action: "suivi_maj", session: sessionGardee(), id: x.id, statut: statut, action: action || "", echeance: echeance || "", reponse: reponse || "", charge: x.charge || ""}).then(function(r){
     if(!r || !r.ok) throw r;
   }).catch(function(r){ x.statut = av.s; x.action = av.a; x.echeance = av.e; x.reponse = av.r; suiviDessiner(); var mm = document.getElementById("svm"+i); if(mm) mm.textContent = (r && r.erreur) || "Non enregistré. Réessayez."; });
 }
