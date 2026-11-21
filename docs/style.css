@@ -1286,7 +1286,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 .rvo .verrou{opacity:.85}
 .rvo .vide{padding:20px 0;color:#8f877a}
 .rvo .xp{display:block}
-.rvo .xpl{display:grid;grid-template-columns:260px 1fr 110px;gap:16px;align-items:center;border-bottom:1px solid #ece8e1;padding:8px 0}
+.rvo .xpl{display:grid;grid-template-columns:300px 380px 110px;justify-content:start;gap:16px;align-items:center;border-bottom:1px solid #ece8e1;padding:8px 0}
 .rvo .xpl.tot{border-top:1px solid #000;font-weight:400}
 .rvo .xpe{font-size:13px}.rvo .xpv{font-size:11px;color:#6E6350}
 .rvo .xpb{height:9px;background:#ece8e1}.rvo .xpb div{height:9px;background:#000}
