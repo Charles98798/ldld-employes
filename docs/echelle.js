@@ -136,7 +136,15 @@ function echOtpadRendu(){
     };
   }
   lierO("aux", "ech_otp_aux", "otpad_aux"); lierO("tech", "ech_otp_tech", "otpad_tech");
-  var b = document.getElementById("ech_otp_conf"); if(b) b.onclick = function(){ var et = document.getElementById("ech_etat"); if(et) et.textContent = "Enregistrement…"; var pre = Promise.resolve(); [["aux", "ech_otp_aux", "otpad_aux"], ["tech", "ech_otp_tech", "otpad_tech"]].forEach(function(t){ var n = echNum((document.getElementById(t[1]) || {}).value); if(n != null && o[t[0]].val == null) pre = pre.then(function(){ return paAppel(t[2], n); }); }); pre.then(function(){ return paAppel("otpad_conf"); }).then(function(){ echOtpadRendu(); var e2 = document.getElementById("ech_etat"); if(e2) e2.textContent = d.annee + " confirmé."; }).catch(function(x){ if(et) et.textContent = String((x && x.message) || x); }); };
+  echConfOk();
+  var b = document.getElementById("ech_otp_conf"); if(b) b.onclick = function(){
+    paOui("Voulez-vous confirmer l’échelle salariale " + d.annee + "\u00a0?", function(){
+      var pre = Promise.resolve(), besoin = false;
+      [["aux", "ech_otp_aux", "otpad_aux"], ["tech", "ech_otp_tech", "otpad_tech"]].forEach(function(t){ var n = echNum((document.getElementById(t[1]) || {}).value); if(n != null && o[t[0]].val == null){ besoin = true; pre = pre.then(function(){ return paAppel(t[2], n); }); } });
+      var aller = function(){ paConfirmerVite("otpad_conf", function(x){ var c = x.otpad; c.confirme = true; c.par = paQui(); c.quand = paMaintenantLocal(); }, function(){ echOtpadRendu(); var e2 = document.getElementById("ech_etat"); if(e2) e2.textContent = d.annee + " confirmé."; }); };
+      if(besoin) pre.then(aller).catch(function(x){ var e3 = document.getElementById("ech_etat"); if(e3) e3.textContent = String((x && x.message) || x); }); else aller();
+    });
+  };
 }
 function echLierRefs(){
   var d = ECH.d;
@@ -164,3 +172,12 @@ function echMotEcart(f){ if(f == null || isNaN(f)) return "À confirmer"; return
 
 // Écart affiché : valeur exacte (une décimale) et mot, ex. « + 0,7 % · Égale ». Sans référence : « À confirmer ».
 function echEcartTxt(f){ if(f == null || isNaN(f)) return "À confirmer"; var p = f * 100; return (p >= 0 ? "+ " : "− ") + echFr(Math.abs(p), 1) + " % · " + echMotEcart(f); }
+
+// Règle : « Confirmer » reste grisé tant qu'une case de la page est vide (lit les cases à l'écran, à chaque frappe).
+function echConfOk(){
+  var app = document.getElementById("ech_app"), b = document.getElementById("ech_otp_conf"); if(!app || !b) return;
+  var tout = true; Array.prototype.forEach.call(app.querySelectorAll("input"), function(i){ if(i.type === "hidden" || i.type === "button") return; if(i.value.trim() === "" || echNum(i.value) == null) tout = false; });
+  var dejaConf = !!(PA.d && PA.d.otpad && PA.d.otpad.confirme);
+  b.disabled = dejaConf || !tout || !PA.d;
+}
+document.addEventListener("input", function(e){ if(e.target && e.target.closest && e.target.closest("#ech_app")) echConfOk(); }, true);
