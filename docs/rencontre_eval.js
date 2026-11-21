@@ -49,7 +49,7 @@ function revOuvrir(D, acces){
   function emp(a){ var n = D.notes && D.notes[a]; return n ? n.em : null; }
   function envoyer(){
     if(enCours || !file.length) return; enCours = true; var q = file.shift();
-    A.ecrire(q.a, q.v).then(function(){ var n = new Date(); dernier = "Reçu à " + n.getHours() + " h " + ("0" + n.getMinutes()).slice(-2); }).catch(function(err){ dernier = q.s ? "" : "Enregistrement impossible : " + ((err && err.message) || "refusé") + ". Réessaie."; }).then(function(){ enCours = false; var e = document.getElementById("revs"); if(e) e.textContent = dernier; envoyer(); });
+    A.ecrire(q.a, q.v).then(function(){ var n = new Date(); dernier = ""; }).catch(function(err){ dernier = q.s ? "" : "Enregistrement impossible : " + ((err && err.message) || "refusé") + ". Réessaie."; }).then(function(){ enCours = false; var e = document.getElementById("revs"); if(e) e.textContent = dernier; envoyer(); });
   }
   function ecrire(a, v, sil){ S[a] = v; file.push({a: a, v: v, s: sil}); var e = document.getElementById("revs"); if(e && !sil) e.textContent = "Enregistrement…"; envoyer(); }
 
