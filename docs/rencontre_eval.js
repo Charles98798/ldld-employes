@@ -336,7 +336,7 @@ function revOuvrir(D, acces){
     removeEventListener("resize", ajuster); var f = REV_FIN; REV_FIN = null; menu();
     var t = document.createElement("div"); t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;padding:12px 20px;font-size:14px;z-index:9999";
     t.textContent = "Rencontre terminée"; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 3500);
-    var n = 0, iv = setInterval(function(){ n++; if((!enCours && !file.length) || n > 200){ clearInterval(iv); if(typeof f === "function") f(); } }, 300);
+    var n = 0, iv = setInterval(function(){ n++; if((!enCours && !file.length) || n > 200){ clearInterval(iv); if(typeof f === "function") f(true); } }, 300);
   }
   function revFermer(){ removeEventListener("resize", ajuster); fermerBareme(); if(typeof REV_FIN === "function"){ var f = REV_FIN; REV_FIN = null; f(); } menu(); }
   // Grand écran: une page par étape, mise à l'échelle pour tenir dans la fenêtre sans défilement.
@@ -429,7 +429,10 @@ function revMontrer(liste){
           var D = d && d.ok ? (d.D || d.d || d.donnees || d) : null;
           if(!D || !D.g){ revSvc({action: "rencontre_eval_verrou", op: "liberer"}); revBandeau("Chargement impossible", "La rencontre n’a pas pu être lue. Rien n’a été modifié et la rencontre est libérée. Réessaie."); return; }
           var bat = setInterval(function(){ revSvc({action: "rencontre_eval_verrou", op: "battre"}).catch(function(){}); }, 30000);
-          REV_FIN = function(){ clearInterval(bat); revSvc({action: "rencontre_eval_verrou", op: "liberer"}).catch(function(){}); };
+          REV_FIN = function(fini){ clearInterval(bat);
+            // Rencontre terminée (bouton « Terminer » seulement): marqueur inscrit avant de libérer le verrou; sans conséquence si le Service ne le connaît pas encore.
+            var fin = fini === true ? revSvc({action: "rencontre_eval_terminer", nom: nom, rencontre: renc, cle: D.cle}).catch(function(){}) : Promise.resolve();
+            fin.then(function(){ revSvc({action: "rencontre_eval_verrou", op: "liberer"}).catch(function(){}); }); };
           revOuvrir(D, {ecrire: function(adresse, valeur){ return revSvc({action: "rencontre_eval_ecrire", nom: nom, rencontre: renc, adresse: adresse, valeur: valeur, cle: D.cle}).then(function(x){ if(!x || !x.ok) throw new Error((x && (x.erreur || x.message)) || "refus"); return x; }); }});
         });
       }).catch(function(){ revBandeau("Connexion impossible", "Réessaie dans quelques instants."); });
