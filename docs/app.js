@@ -158,9 +158,17 @@ var URL_SERVICE = "https://script.google.com/macros/s/AKfycbwq9SXysg5GHL6GsPFBST
 var MOI = null;   // {nom, poste, responsable} après connexion
 var FILE_APPELS = [], APPELS_EN_COURS = 0, APPELS_MAX = 3, ARRIERE = false;   // au plus 5 appels en même temps; les préchargements (arrière-plan) en occupent au plus 4: une place reste toujours libre pour un clic
 function enArriere(f){ var a = ARRIERE; ARRIERE = true; try { return f(); } finally { ARRIERE = a; } }
+// Filet de sécurité : une date qui arrive du classeur en texte anglais (« Sat Nov 21 2026 09:50:18 GMT-0500 (…) ») est remise au format AAAA-MM-JJTHH:MM:SS (heure de Montréal), que tout l'affichage met ensuite en français.
+var DATE_EN = /^[A-Z][a-z]{2} [A-Z][a-z]{2} \d{1,2} \d{4} \d{2}:\d{2}:\d{2} GMT[+-]\d{4}/;
+function datesFr(v){
+  if(typeof v === "string"){ if(!DATE_EN.test(v)) return v; var d = new Date(v); if(isNaN(d.getTime())) return v;
+    try { var p = {}; new Intl.DateTimeFormat("en-CA", {timeZone: "America/Toronto", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"}).formatToParts(d).forEach(function(x){ p[x.type] = x.value; }); return p.year + "-" + p.month + "-" + p.day + "T" + p.hour + ":" + p.minute + ":" + p.second; } catch(e){ return v; } }
+  if(v && typeof v === "object"){ for(var k in v){ if(Object.prototype.hasOwnProperty.call(v, k)){ var n = datesFr(v[k]); if(n !== v[k]) v[k] = n; } } }
+  return v;
+}
 function appelBrut(corps){
   var bg = ARRIERE;
-  return new Promise(function(ok, ko){ var x = {c: corps, ok: ok, ko: ko, bg: bg}; if(bg) FILE_APPELS.push(x); else FILE_APPELS.unshift(x); suiteAppels(); });   // un clic passe avant les préchargements
+  return new Promise(function(ok0, ko){ var ok = function(r){ ok0(datesFr(r)); }; var x = {c: corps, ok: ok, ko: ko, bg: bg}; if(bg) FILE_APPELS.push(x); else FILE_APPELS.unshift(x); suiteAppels(); });   // un clic passe avant les préchargements
 }
 var EN_VOL = [];   // appels partis, avec leur heure: si l'appareil les fige (iPhone en arrière-plan), la place est libérée de force
 function suiteAppels(){
