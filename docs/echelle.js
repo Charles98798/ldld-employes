@@ -144,3 +144,18 @@ function echLierRefs(){
     el.onchange = function(){ echSauver("ref" + i, echNum(el.value)); };
   });
 }
+
+// Année sur la tuile de l'Accueil (Direction) : taux à 0 = année en cours (ex. 2026) ; taux augmenté = année suivante (ex. 2027). Lue sans rien écrire ; la tuile reste « Échelle salariale » tant que la lecture n'est pas arrivée.
+function echAnneeTuile(){
+  var a = document.querySelector('.menu a[data-k="echelle_salariale"] > span'); if(!a) return;
+  var poser = function(d){
+    if(!d || d.annee == null) return;
+    var an = (d.taux != null && Number(d.taux) > 0) ? d.annee : (d.anneePrec != null ? d.anneePrec : d.annee - 1);
+    var s = document.querySelector('.menu a[data-k="echelle_salariale"] > span'); if(!s) return;
+    var o = s.querySelector("small.anne"); if(o) o.remove();
+    var p = document.createElement("small"); p.className = "anne"; p.textContent = " · " + an;
+    var nc = s.querySelector("b.nc"); if(nc) s.insertBefore(p, nc); else s.appendChild(p);
+  };
+  if(ECH.d) poser(ECH.d);
+  else if(ECH.pre) ECH.pre.then(function(r){ if(r && r.ok) poser(r.r); }).catch(function(){});
+}

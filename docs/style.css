@@ -1462,3 +1462,5 @@ button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}
 .ech .ech-prec{display:block;font-size:11px;color:#6E6350;margin-top:2px}
 .otpc .otpp{flex-basis:100%;text-align:center;font-size:11px;color:#6E6350}
 .pa-lst{margin:6px 0}.pa-e{display:grid;grid-template-columns:1fr auto;gap:0 10px;align-items:center;padding:8px 0}.pa-n{display:flex;flex-direction:column;font-size:14px;min-width:0}.pa-n small{font-size:11px;color:#6E6350}.pa-e .pa-c input{width:96px;height:42px;font-size:18px}.pa-e .pa-p{grid-column:1 / -1;font-size:11px;color:#6E6350}.pa-e .pa-p:empty{display:none}
+
+.menu a small.anne{font-size:.6em;letter-spacing:.04em;color:#6E6350;white-space:nowrap;text-transform:none}
