@@ -639,7 +639,7 @@ var ENT = [
  {id:"retirer_employe", g:"Gestion des employés", l:"Retirer un employé", p:"Retirer un employé", d:[0,0,1], f:function(){ gestionEmployes(); }},
  {id:"portrait", g:"Gestion des employés", l:"Portrait d’un employé", p:"Portrait d’un employé", d:[0,0,1], f:function(){ portraitOriginal(); }},
  {id:"suivi_charge", g:"Gestion des employés", l:"Suivi de charge", p:"Suivi de charge", d:[0,1,1], f:function(){ suiviCharge(); }},
- {id:"echelle_salariale", g:"Gestion des employés", l:"Échelle salariale\u2191taux", p:"Échelle salariale", n:1, d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
+ {id:"echelle_salariale", g:"Gestion des employés", l:"Échelle salariale", p:"Échelle salariale", n:1, d:[0,0,1], v:1, f:function(){ echOuvrir(); }},
  {id:"positionnement_employe", g:"Gestion des employés", l:"Position et assurance", p:"Position et assurance", n:2, d:[0,0,1], f:function(){ paOuvrir(); }},
  {id:"envoi_salarial", g:"Gestion des employés", l:"Envoi salarial", p:"Envoi salarial", n:3, d:[0,0,1], v:1, f:function(){ envOuvrir(); }},
  {id:"inventaire", g:"Atelier", l:"Inventaire", p:"Inventaire", d:[1,1,1], f:function(){ invOuvrir(); }},
