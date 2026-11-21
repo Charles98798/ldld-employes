@@ -118,7 +118,6 @@ function echOtpadRendu(){
   var pret = o.aux.val != null && o.tech.val != null;
   h += '<div class="otpb"><button type="button" class="btn" id="ech_otp_conf"' + ((o.confirme || !pret) ? " disabled" : "") + '>Confirmer ' + d.annee + '</button><span class="otpq">' +
     (o.confirme ? 'Confirmé par ' + echEsc(o.par) + ' le ' + echEsc(paQuand(o.quand)) : '<b class="pa-rouge">À confirmer</b>') + '</span></div>';
-  h += '<p class="finnote">Chaque année est gardée avec qui l’a confirmée et quand ; une modification après la confirmation demande de confirmer à nouveau.</p>';
   var hist = [];
   for(var an = d.anneePrec; an >= d.anneePrec - 5; an--){ var cf = null; (d.historique || []).forEach(function(r){ if(r.an === an && r.rub === "otpad_conf" && !cf) cf = r; }); if(cf) hist.push(an + " : confirmé par " + echEsc(cf.par) + " le " + echEsc(paQuand(cf.quand))); }
   if(hist.length) h += '<p class="finnote">' + hist.join("<br>") + '</p>';

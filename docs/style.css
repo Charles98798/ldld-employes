@@ -1464,3 +1464,7 @@ button.aere.aeresai{border:0;font-family:inherit;color:inherit;cursor:pointer}
 .pa-lst{margin:6px 0}.pa-e{display:grid;grid-template-columns:1fr auto;gap:0 10px;align-items:center;padding:8px 0}.pa-n{display:flex;flex-direction:column;font-size:14px;min-width:0}.pa-n small{font-size:11px;color:#6E6350}.pa-e .pa-c input{width:96px;height:42px;font-size:18px}.pa-e .pa-p{grid-column:1 / -1;font-size:11px;color:#6E6350}.pa-e .pa-p:empty{display:none}
 
 .menu a small.anne{font-size:.6em;letter-spacing:.04em;color:#6E6350;white-space:nowrap;text-transform:none}
+
+/* OTPAD : cases alignées en haut, « $ » à côté de la case, textes dessous (21 nov.) */
+.otpg{align-items:start}.otpg .l,.otpg .p,.otpg .h{align-self:start}.otpg .l{padding-top:20px}.otpg .p{padding-top:24px}
+.otpc{display:grid;grid-template-columns:70px 14px;justify-content:center;align-items:end;column-gap:4px;row-gap:2px}.otpc small{grid-column:1 / -1;flex-basis:auto;text-align:center}.otpc small:empty{display:none}
