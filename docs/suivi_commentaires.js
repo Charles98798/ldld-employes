@@ -28,7 +28,7 @@ function suiviOuvrir(){
   document.getElementById("retour").onclick = function(e){ e.preventDefault(); menu(); };
   // 1) lecture rapide de l'onglet (sans synchroniser le pont): l'écran s'affiche tout de suite, avec la note si rien
   // 2) synchronisation avec les rencontres terminées en arrière-plan; l'écran se met à jour seulement si de nouveaux commentaires arrivent
-  appelService({action: "suivi_lire", session: sessionGardee(), sync: false}).then(function(r){
+  appelService({action: "suivi_lire", session: sessionGardee(), sync: false, resp: true}).then(function(r){
     if(!r || !r.ok) throw 0;
     SUIVI.lignes = r.lignes || []; SUIVI.resp = r.responsables || []; suiviDessiner();
     return appelService({action: "suivi_lire", session: sessionGardee()}).then(function(r2){
