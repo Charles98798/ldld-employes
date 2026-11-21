@@ -49,9 +49,9 @@ function revOuvrir(D, acces){
   function emp(a){ var n = D.notes && D.notes[a]; return n ? n.em : null; }
   function envoyer(){
     if(enCours || !file.length) return; enCours = true; var q = file.shift();
-    A.ecrire(q.a, q.v).then(function(){ var n = new Date(); dernier = "Reçu à " + n.getHours() + " h " + ("0" + n.getMinutes()).slice(-2); }).catch(function(){ dernier = "Enregistrement impossible. Réessaie."; }).then(function(){ enCours = false; var e = document.getElementById("revs"); if(e) e.textContent = dernier; envoyer(); });
+    A.ecrire(q.a, q.v).then(function(){ var n = new Date(); dernier = "Reçu à " + n.getHours() + " h " + ("0" + n.getMinutes()).slice(-2); }).catch(function(err){ dernier = q.s ? "" : "Enregistrement impossible : " + ((err && err.message) || "refusé") + ". Réessaie."; }).then(function(){ enCours = false; var e = document.getElementById("revs"); if(e) e.textContent = dernier; envoyer(); });
   }
-  function ecrire(a, v){ S[a] = v; file.push({a: a, v: v}); var e = document.getElementById("revs"); if(e) e.textContent = "Enregistrement…"; envoyer(); }
+  function ecrire(a, v, sil){ S[a] = v; file.push({a: a, v: v, s: sil}); var e = document.getElementById("revs"); if(e && !sil) e.textContent = "Enregistrement…"; envoyer(); }
 
   // ---- composants ----
   function puces(a, max, o){
@@ -288,7 +288,7 @@ function revOuvrir(D, acces){
     el.style.width = "1500px"; var h = el.offsetHeight, haut = el.getBoundingClientRect().top + (window.scrollY || 0), z = Math.min((innerWidth - 64) / 1500, (innerHeight - haut - 8) / h);
     if(z > 1.8) z = 1.8; if(z < .5) z = 1; el.style.zoom = z; }
   // La date de la rencontre est toujours celle du jour: enregistrée une seule fois si la case est vide.
-  if(!D.apercu && vide("B6")){ var q = new Date(); ecrire("B6", q.getFullYear() + "-" + ("0" + (q.getMonth() + 1)).slice(-2) + "-" + ("0" + q.getDate()).slice(-2)); }
+  if(!D.apercu && vide("B6")){ var q = new Date(); ecrire("B6", q.getFullYear() + "-" + ("0" + (q.getMonth() + 1)).slice(-2) + "-" + ("0" + q.getDate()).slice(-2), true); }
   squelette(); majEtape(false);
   return {aller: aller};
 }
