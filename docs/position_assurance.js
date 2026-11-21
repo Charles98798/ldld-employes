@@ -13,7 +13,7 @@ function paAppel(champ, valeur, id){
   var c = {action: "pa_enregistrer", champ: champ, session: sessionGardee()}; if(valeur !== undefined && valeur !== null) c.valeur = valeur; if(id) c.id = id;
   return appelService(c).then(function(r){ if(r && r.ok){ PA.d = r.r; return r.r; } throw new Error((r && r.erreur) || "Échec de l'enregistrement."); });
 }
-function paLire(){ return appelService({action: "pa_donnees", session: sessionGardee()}).then(function(r){ if(r && r.ok){ PA.d = r.r; return r.r; } throw new Error((r && r.erreur) || "Échec."); }); }
+function paLire(){ return Promise.race([appelService({action: "pa_donnees", session: sessionGardee()}), new Promise(function(_, non){ setTimeout(function(){ non(new Error("Lecture trop longue")); }, 25000); })]).then(function(r){ if(r && r.ok){ PA.d = r.r; return r.r; } throw new Error((r && r.erreur) || "Échec."); }); }
 
 function paOuvrir(){
   app.innerHTML = '<div class="page ppx pa"><a class="retour" href="#" id="retour">Retour</a><h1>Position et assurance</h1><div id="pa_app"><div class="att" id="pa_att"><i></i></div></div></div>';
