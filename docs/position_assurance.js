@@ -43,6 +43,7 @@ function paRendu(){
   // 2 Assurance : un montant PAR EMPLOYÉ, repris de l'an passé, à confirmer ou ajuster ("0" s'il n'y en a pas)
   h += paBande("2", "Assurance " + an);
   h += '<div class="pa-lst">' + d.assurance.employes.map(function(e, i){
+    if(paDirection(e)) return "";
     return '<div class="pa-e"><div class="pa-n"><span>' + paEsc(e.nom) + '</span><small>' + paEsc(e.cat) + '</small></div><div class="pa-c"><input id="pa_a' + i + '" data-id="' + paEsc(e.id) + '" inputmode="decimal" autocomplete="off" aria-label="Assurance ' + paEsc(e.nom) + '" class="' + (e.val == null ? "vide" : "") + '" value="' + paEsc(e.val == null ? "" : String(e.val).replace(".", ",")) + '"><u>$</u></div>' +
       '<small class="pa-p">Montant précédent\u00a0: ' + paEsc(e.precedent == null ? "—" : paMontant(e.precedent)) + '</small><small class="pa-p" id="pa_as' + i + '">' + (e.ajusteQuand && !e.prefill ? "Enregistré à " + paEsc(paHeure(e.ajusteQuand)) : "") + '</small></div>';
   }).join("") + '</div><div id="pa_bas"></div>';  h += '<p class="finnote" id="pa_etat"></p>';
@@ -63,13 +64,15 @@ function paRendu(){
   paBas();
 }
 // Bas de page (total, confirmation de l'assurance, bande Envoi) : mis à jour après chaque saisie sans refaire la liste (le curseur reste en place).
+function paDirection(e){ return /^direction/i.test(String((e && e.cat) || "").trim()); }   // la Direction n'a pas d'assurance à confirmer ici
 function paBas(){
   var d = PA.d, z = document.getElementById("pa_bas"); if(!d || !z) return;
-  var A = d.assurance, h = "";
-  h += '<p class="pa-l">Total ' + d.annee + "\u00a0: <b>" + paEsc(paMontant(A.total)) + '</b> · ' + d.anneePrec + "\u00a0: " + paEsc(paMontant(A.totalPrec)) + '</p>';
+  var A = d.assurance, h = "", E = A.employes.filter(function(e){ return !paDirection(e); });
+  var tot = E.reduce(function(t, e){ return t + (e.val == null ? 0 : Number(e.val)); }, 0), totP = E.reduce(function(t, e){ return t + (e.precedent == null ? 0 : Number(e.precedent)); }, 0), complet = E.every(function(e){ return e.val != null; });
+  h += '<p class="pa-l">Total ' + d.annee + "\u00a0: <b>" + paEsc(paMontant(tot)) + '</b> · ' + d.anneePrec + "\u00a0: " + paEsc(paMontant(totP)) + '</p>';
   if(A.confirme) h += '<p class="pa-l">Assurance confirmée par ' + paEsc(A.par) + ' · ' + paEsc(paQuand(A.quand)) + '</p>';
-  else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b>' + (A.employes.some(function(e){ return e.prefill; }) ? ' · montants repris de l’an passé' : '') + '</p>';
-  h += '<div class="pa-b"><button type="button" class="btn" id="pa_ass_conf"' + ((A.confirme || !A.complet) ? " disabled" : "") + '>Confirmer l’assurance</button></div>';
+  else h += '<p class="pa-l"><b class="pa-rouge">À confirmer</b>' + (E.some(function(e){ return e.prefill; }) ? ' · montants repris de l’an passé' : '') + '</p>';
+  h += '<div class="pa-b"><button type="button" class="btn" id="pa_ass_conf"' + ((A.confirme || !complet) ? " disabled" : "") + '>Confirmer l’assurance</button></div>';
   h += paBande("3", "Envoi");
   if(d.envoi.confirme) h += '<p class="pa-l">Envoi confirmé par ' + paEsc(d.envoi.par) + ' · ' + paEsc(paQuand(d.envoi.quand)) + '</p>';
   else h += '<p class="pa-l">' + (d.envoi.pret ? 'Position et assurance confirmées : l’envoi peut être confirmé.' : 'Grisé tant que la position et l’assurance ne sont pas toutes deux confirmées.') + '</p>';
