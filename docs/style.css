@@ -1351,6 +1351,7 @@ select:not(.act){width:100%;box-sizing:border-box}
 /* Champs obligatoires (15 nov 2026): vide = fond blanc + soulignement vert 3 px, invite grise; rempli = se fond dans l'ensemble (pas de boîte blanche, filet 1 px #B4AB9B, texte noir). Plus de rose. */
 .bx:not(select),.ms,.tl input,.ech .echc input,.ea .fld input{background:transparent;border:1px solid #B4AB9B;color:var(--encre)}
 .bx.rose,.ms.rose,.tl .rose,.ech .echc input.vide,.ea .fld input.vide,select.rose,select:not(.act).rose,.rvacc select.rose,.revt.rose,.rvo .revt.rose,.rvo .rose input,.rvo .rose-c,.rvo .rosef,.ppx #pp_app.sansemp #liste,.ppx .decision select:not(.act),.po .pofx b.manque,.ppx .fx b.manque,.revn.rose .revb:not(.on),.rvo .revn.rose .revb:not(.on),.rvo .puces.rose .puce:not(.choisie){background:#fff!important;color:var(--encre);box-shadow:inset 0 -3px 0 var(--vert)!important;border-color:#B4AB9B}
+.rvo .puces.rose .puce.employe:not(.choisie){box-shadow:inset 0 0 0 2px #000,inset 0 -3px 0 var(--vert)!important;border-color:#000}
 .bx.rose::placeholder,.pe .bx.rose::placeholder,.rvo .rose input::placeholder,.tl .rose::placeholder{color:#8b8579;opacity:1}
 .aere{background:transparent;box-shadow:inset 0 -3px 0 var(--vert)}.aere.ok{box-shadow:none}
 
