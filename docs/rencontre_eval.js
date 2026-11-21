@@ -210,7 +210,7 @@ function revOuvrir(D, acces){
       if(N && N.ok && !Number(N.n6)) return '<p class="note">Aucune non-conformité signalée au cours des 6 derniers mois. Félicitations!</p>';
       if(!N || !N.ok) return '<p class="note">Les non-conformités ne sont pas disponibles' + (N && N.raison ? " : " + esc(N.raison) : "") + ".</p>";
       // Même courbe et même liste en colonnes (Date | Cas | Étape) que la Réunion de production, pour cet employé seulement.
-      var serie = (N.mois || []).map(function(m){ return {m: m.label, v: m.n}; }), lignes = (N.detail || []).slice(0, 6).map(function(d){ var m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; }; return [d.d, m(d.cat), d.dos, m(d.etape), m(d.type), m(d.com)]; });
+      var serie = (N.mois || []).map(function(m){ return {m: m.label, v: m.n}; }), lignes = (N.detail || []).slice(0, 6).map(function(d){ var m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; }; return [d.d, m(d.cat), d.dos, m(d.etape), m(d.type), m(d.com), d.dossier || ""]; });
       var courbe = typeof rdCourbe === "function" ? rdCourbe(serie) : "";
       var liste = typeof rdIsoDate === "function" ? (lignes.length ? ncTable(lignes) : '<div class="nc-plus">Aucune non-conformité sur les 6 derniers mois.</div>') : "";
       return '<div class="nc"><div class="nc-k"><div class="carte"><div class="nc-lab">6 derniers mois</div><div class="grand">' + esc(N.n6) + '</div></div><div class="carte"><div class="nc-lab">12 derniers mois</div><div class="grand">' + esc(N.n12) + '</div></div><div class="carte"><div class="nc-lab">Type le plus fréquent</div><div class="grand t">' + esc(N.typeTop || "—") + '</div></div></div><div class="nc-ch"><div class="nc-lab">Non-conformités par mois</div>' + courbe + '</div><div class="nc-det"><div class="bloc-lab">Détail des 6 derniers mois</div>' + liste + ((N.detail || []).length > 6 ? '<div class="nc-plus">+ ' + ((N.detail || []).length - 6) + " autres non-conformités sur les 6 derniers mois</div>" : "") + "</div></div>";
@@ -309,12 +309,12 @@ function revOuvrir(D, acces){
     document.getElementById("revoui").onclick = function(){ fermerBareme(); terminer(); };
   }
   // Oui: l'écran se ferme tout de suite; les dernières saisies partent en arrière-plan, puis la rencontre est libérée.
-  // Détail des non-conformités: Date | Étape | Travail | Non-conformité (colonnes propres à la rencontre; la Réunion garde la sienne).
+  // Détail des non-conformités: Date | Dossier | Étape | Travail | Non-conformité (colonnes propres à la rencontre; la Réunion garde la sienne).
   function ncTable(L){
-    var gr = "display:grid;grid-template-columns:100px 200px 1fr 1fr;gap:0 12px;", E = esc, m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; };
-    var h = '<div style="' + gr + 'margin-top:20px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>Étape</span><span>Travail</span><span>Non-conformité</span></div>';
+    var gr = "display:grid;grid-template-columns:100px 90px 200px 1fr 1fr;gap:0 12px;", E = esc, m = function(t){ return typeof rdMin === "function" ? rdMin(t) : t; };
+    var h = '<div style="' + gr + 'margin-top:20px;font-size:10px;letter-spacing:.14em;color:#6E6350;text-transform:uppercase"><span>Date</span><span>Dossier</span><span>Étape</span><span>Travail</span><span>Non-conformité</span></div>';
     return h + L.map(function(l){ var tr = [l[2], l[1]].filter(Boolean).join(" · "), det = [l[4], l[5]].filter(Boolean).join(" · ");
-      return '<div style="' + gr + 'font-size:13px;margin-top:14px"><span>' + E(rdIsoDate(l[0])) + "</span><span>" + E(l[3] || "") + "</span><span>" + E(tr) + "</span><span>" + E(det) + "</span></div>"; }).join("");
+      return '<div style="' + gr + 'font-size:13px;margin-top:14px"><span>' + E(rdIsoDate(l[0])) + "</span><span>" + E(l[6] || "—") + "</span><span>" + E(l[3] || "") + "</span><span>" + E(tr) + "</span><span>" + E(det) + "</span></div>"; }).join("");
   }
   function terminer(){
     removeEventListener("resize", ajuster); var f = REV_FIN; REV_FIN = null; menu();
