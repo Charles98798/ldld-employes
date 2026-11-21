@@ -725,7 +725,7 @@ function menu(){
 function texteTient(a){
   var lab = a.firstElementChild; if(!lab) return true;
   var r = document.createRange(); r.selectNodeContents(lab); var nc0 = lab.querySelector(".nc"); if(nc0) r.setEndBefore(nc0);
-  var fin = r.getBoundingClientRect().right, b = a.querySelector(".nombre") || a.querySelector(".nc"), lim = b ? b.getBoundingClientRect().left - 8 : a.getBoundingClientRect().right;
+  var fin = r.getBoundingClientRect().right, b = a.querySelector(".nombre") || a.querySelector(".okc") || a.querySelector(".nc"), lim = b ? b.getBoundingClientRect().left - 8 : a.getBoundingClientRect().right;
   return fin <= lim;
 }
 function ajusterMenu(){
@@ -740,6 +740,8 @@ function ajusterMenu(){
   }
 }
 window.addEventListener("resize", function(){ try { ajusterMenu(); } catch(e){} });
+// La taille se mesure seulement quand la police Inter est prête (sinon un texte de remplacement plus large fait réduire les tuiles à tort).
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ try { ajusterMenu(); } catch(e){} });
 // Étape 2 : messages, lus et écrits par le service Google Apps Script (chaque employé ne reçoit que les siens).
 var MESSAGES = [];
 function lus(){ try { return JSON.parse(localStorage.getItem("ldld-lus") || "[]"); } catch(e){ return []; } }
