@@ -696,6 +696,7 @@ function entreesVisibles(){
   return l;
 }
 var LIEN_AUTO = location.hash === "#autoevaluation";
+var MAJ_ATTENTE = false;
 function lireRetour(){ try { var r = JSON.parse(sessionStorage.getItem("ldld-retour") || "null"); sessionStorage.removeItem("ldld-retour"); return r && r.k && Date.now() - r.t < 120000 ? r.k : null; } catch(e){ return null; } }
 function menu(){
   vueFin();
@@ -710,6 +711,7 @@ function menu(){
   var retour = lireRetour();
   if(retour && MOI && entreesVisibles().some(function(x){ return x.id === retour; }) && ENT_PAR_ID[retour]){ try { sessionStorage.setItem("ldld-page", retour); } catch(e){} menu.anime = true; if(!menu.onglets){ menu.onglets = true; chargerDroits(); } return ENT_PAR_ID[retour].f(); }
   try { sessionStorage.removeItem("ldld-page"); } catch(e){}
+  if(MAJ_ATTENTE){ MAJ_ATTENTE = false; location.reload(); return; }   // mise à jour reçue pendant une page: appliquée au retour à l'accueil
   var animer = !menu.anime; menu.anime = true;
   if(!menu.onglets){ menu.onglets = true; chargerDroits(); }
   var vis = entreesVisibles(), grp = peutEcrire(), h = "", g = "";
@@ -3123,7 +3125,11 @@ if("serviceWorker" in navigator){
   var avaitControleur = !!navigator.serviceWorker.controller, rechargee = false;
   // Le nouveau code s'installe et prend le relais seul (skipWaiting + clients.claim) ; la page se recharge d'elle-même, d'un coup, dès qu'aucune saisie n'est en cours (on réessaie toutes les 2 secondes).
   navigator.serviceWorker.addEventListener("controllerchange", function(){
-    if(!avaitControleur || rechargee) return; rechargee = true;
+    if(!avaitControleur || rechargee) return;
+    // Jamais de rechargement pendant que l'employé est dans une page: la mise à jour s'applique à son retour à l'accueil.
+    var dansPage = false; try { dansPage = !!sessionStorage.getItem("ldld-page"); } catch(e){}
+    if(dansPage){ MAJ_ATTENTE = true; return; }
+    rechargee = true;
     var essai = function(){ var a = document.activeElement; if(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)){ setTimeout(essai, 2000); return; }
       try { var k = sessionStorage.getItem("ldld-page"); if(k) sessionStorage.setItem("ldld-retour", JSON.stringify({k: k, t: Date.now()})); } catch(e){}
       location.reload(); };
