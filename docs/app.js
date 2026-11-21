@@ -3106,7 +3106,12 @@ if(location.hash === "#evaluations") evaluations(); else demarrage();
 if("serviceWorker" in navigator){
   // Nouvelle version : si une autre prend le relais, on recharge une seule fois (hors connexion et saisie en cours)
   var avaitControleur = !!navigator.serviceWorker.controller, rechargee = false;
-  navigator.serviceWorker.addEventListener("controllerchange", function(){ if(!avaitControleur || rechargee) return; rechargee = true; var a = document.activeElement; if(a && /INPUT|TEXTAREA/.test(a.tagName)) return; location.reload(); });
+  // Le nouveau code s'installe et prend le relais seul (skipWaiting + clients.claim) ; la page se recharge d'elle-même, d'un coup, dès qu'aucune saisie n'est en cours (on réessaie toutes les 2 secondes).
+  navigator.serviceWorker.addEventListener("controllerchange", function(){
+    if(!avaitControleur || rechargee) return; rechargee = true;
+    var essai = function(){ var a = document.activeElement; if(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)){ setTimeout(essai, 2000); return; } location.reload(); };
+    essai();
+  });
   window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").then(function(r){
     try { r.update(); } catch(e){}
     // Mise à jour automatique: vérification à chaque retour dans l'application et toutes les 30 secondes tant qu'elle est ouverte
