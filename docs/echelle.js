@@ -111,16 +111,13 @@ function echRendu(){
 function echOtpadEcart(v, p){ if(v == null || !p) return ""; var e = (v / p - 1) * 100; return (e >= 0 ? "+ " : "− ") + echFr(Math.abs(e), 0) + " % vs " + (PA.d.anneePrec); }
 function echOtpadRendu(){
   var z = document.getElementById("ech_otpad"), d = PA.d; if(!z) return; if(!d){ z.innerHTML = '<div class="att"><i></i></div>'; return; }
-  var o = d.otpad, c = function(k, id){ var x = o[k]; return '<div class="otpc"><input id="' + id + '" inputmode="decimal" autocomplete="off" aria-label="OTPAD ' + echEsc(x.lab) + '" class="' + (x.val == null ? "vide" : "") + '" value="' + echEsc(x.val == null ? "" : String(x.val).replace(".", ",")) + '"><u>$</u><small class="otpp">Précédent : ' + echEsc(x.precedent == null ? "—" : echFr(x.precedent, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + "\u00a0$") + '</small><small id="' + id + '_e">' + echEsc(echOtpadEcart(x.val, x.precedent)) + '</small></div>'; };
+  var o = d.otpad, c = function(k, id){ var x = o[k]; return '<div class="otpc"><input id="' + id + '" inputmode="decimal" autocomplete="off" aria-label="OTPAD ' + echEsc(x.lab) + '" class="' + ((x.val == null && x.precedent == null) ? "vide" : "") + '" value="' + echEsc(x.val == null ? (x.precedent == null ? "" : String(x.precedent).replace(".", ",")) : String(x.val).replace(".", ",")) + '"><u>$</u><small class="otpp">Précédent : ' + echEsc(x.precedent == null ? "—" : echFr(x.precedent, 2).replace(/,00$/, "").replace(/(,\d)0$/, "$1") + "\u00a0$") + '</small><small id="' + id + '_e">' + echEsc(echOtpadEcart(x.val, x.precedent)) + '</small></div>'; };
   var h = '<div class="otpg"><div class="h">Élément</div><div class="h">Auxiliaire</div><div class="h">Technologue</div><div class="h">' + d.anneePrec + '</div>' +
     '<div class="l">OTPAD $ (par catégorie)</div>' + c("aux", "ech_otp_aux") + c("tech", "ech_otp_tech") +
     '<div class="p">' + echEsc(echFr(o.aux.precedent, 0) || "—") + ' / ' + echEsc(echFr(o.tech.precedent, 0) || "—") + '</div></div>';
-  var pret = o.aux.val != null && o.tech.val != null;
+  var pret = (o.aux.val != null || o.aux.precedent != null) && (o.tech.val != null || o.tech.precedent != null);
   h += '<div class="otpb"><button type="button" class="btn" id="ech_otp_conf"' + ((o.confirme || !pret) ? " disabled" : "") + '>Confirmer ' + d.annee + '</button><span class="otpq">' +
     (o.confirme ? 'Confirmé par ' + echEsc(o.par) + ' le ' + echEsc(paQuand(o.quand)) : '<b class="pa-rouge">À confirmer</b>') + '</span></div>';
-  var hist = [];
-  for(var an = d.anneePrec; an >= d.anneePrec - 5; an--){ var cf = null; (d.historique || []).forEach(function(r){ if(r.an === an && r.rub === "otpad_conf" && !cf) cf = r; }); if(cf) hist.push(an + " : confirmé par " + echEsc(cf.par) + " le " + echEsc(paQuand(cf.quand))); }
-  if(hist.length) h += '<p class="finnote">' + hist.join("<br>") + '</p>';
   z.innerHTML = h;
   function lierO(k, id, champ){
     var el = document.getElementById(id); if(!el) return;
@@ -133,7 +130,7 @@ function echOtpadRendu(){
     };
   }
   lierO("aux", "ech_otp_aux", "otpad_aux"); lierO("tech", "ech_otp_tech", "otpad_tech");
-  var b = document.getElementById("ech_otp_conf"); if(b) b.onclick = function(){ var et = document.getElementById("ech_etat"); if(et) et.textContent = "Enregistrement…"; paAppel("otpad_conf").then(function(){ echOtpadRendu(); var e2 = document.getElementById("ech_etat"); if(e2) e2.textContent = d.annee + " confirmé."; }).catch(function(x){ if(et) et.textContent = String((x && x.message) || x); }); };
+  var b = document.getElementById("ech_otp_conf"); if(b) b.onclick = function(){ var et = document.getElementById("ech_etat"); if(et) et.textContent = "Enregistrement…"; var pre = Promise.resolve(); [["aux", "ech_otp_aux", "otpad_aux"], ["tech", "ech_otp_tech", "otpad_tech"]].forEach(function(t){ var n = echNum((document.getElementById(t[1]) || {}).value); if(n != null && o[t[0]].val == null) pre = pre.then(function(){ return paAppel(t[2], n); }); }); pre.then(function(){ return paAppel("otpad_conf"); }).then(function(){ echOtpadRendu(); var e2 = document.getElementById("ech_etat"); if(e2) e2.textContent = d.annee + " confirmé."; }).catch(function(x){ if(et) et.textContent = String((x && x.message) || x); }); };
 }
 function echLierRefs(){
   var d = ECH.d;
